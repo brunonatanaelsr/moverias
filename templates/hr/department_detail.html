@@ -1,0 +1,156 @@
+{% extends "hr/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">{{ department.name }}</h1>
+            <p class="text-muted">{{ department.description|default:"Departamento do instituto" }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'admin:hr_department_change' department.pk %}" class="btn btn-primary" target="_blank">
+                <i class="fas fa-edit me-2"></i>Editar
+            </a>
+            <a href="{% url 'hr:department_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações do Departamento -->
+        <div class="col-md-4 mb-4">
+            <div class="card hr-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informações
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Nome:</strong><br>
+                        <span>{{ department.name }}</span>
+                    </div>
+                    
+                    {% if department.description %}
+                        <div class="mb-3">
+                            <strong>Descrição:</strong><br>
+                            <p class="mb-0">{{ department.description }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Gerente:</strong><br>
+                        {% if department.manager %}
+                            <div class="d-flex align-items-center">
+                                {% if department.manager.photo %}
+                                    <img src="{{ department.manager.photo.url }}" class="rounded-circle me-2" 
+                                         style="width: 32px; height: 32px; object-fit: cover;" alt="Foto">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center text-white" 
+                                         style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <strong>{{ department.manager.user.get_full_name }}</strong><br>
+                                    <small class="text-muted">{{ department.manager.job_position.title|default:"Gerente" }}</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <span class="text-muted">Não definido</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-0">
+                        <strong>Total de Funcionários:</strong><br>
+                        <span class="badge bg-primary fs-6">{{ employees.count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Funcionários -->
+        <div class="col-md-8 mb-4">
+            <div class="card hr-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Funcionários ({{ employees.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if employees %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Funcionário</th>
+                                        <th>Cargo</th>
+                                        <th>Contratação</th>
+                                        <th>Status</th>
+                                        <th width="100">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for employee in employees %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if employee.photo %}
+                                                        <img src="{{ employee.photo.url }}" class="employee-photo me-3" alt="Foto">
+                                                    {% else %}
+                                                        <div class="employee-photo me-3 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ employee.user.get_full_name }}</h6>
+                                                        <small class="text-muted">{{ employee.user.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if employee.job_position %}
+                                                    <span class="badge position-badge text-white">
+                                                        {{ employee.job_position.title }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ employee.hire_date|date:"d/m/Y" }}</small><br>
+                                                <small class="text-muted">{{ employee.time_of_service }}</small>
+                                            </td>
+                                            <td>
+                                                {% if employee.is_active %}
+                                                    <span class="badge bg-success">Ativo</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inativo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'hr:employee_detail' employee.pk %}" 
+                                                   class="btn btn-outline-info btn-sm" title="Ver Detalhes">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum funcionário neste departamento</h5>
+                            <p class="text-muted">Adicione funcionários a este departamento para vê-los aqui.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

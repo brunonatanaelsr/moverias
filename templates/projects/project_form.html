@@ -1,0 +1,171 @@
+{% extends 'dashboard_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Editar Matrícula{% else %}Nova Matrícula{% endif %} - Move Marias
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if object %}Editar Matrícula{% else %}Nova Matrícula em Projeto{% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                {% if object %}
+                    Atualize as informações da matrícula
+                {% else %}
+                    Preencha os dados para matricular uma beneficiária em projeto
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'projects:list' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            ← Voltar
+        </a>
+    </div>
+</div>
+
+<div class="max-w-4xl">
+    <form method="post" class="bg-white shadow rounded-lg">
+        {% csrf_token %}
+        
+        <div class="px-6 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="id_beneficiary" class="block text-sm font-medium text-gray-700 mb-2">
+                        Beneficiária *
+                    </label>
+                    {{ form.beneficiary }}
+                    {% if form.beneficiary.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.beneficiary.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="id_project_name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nome do Projeto *
+                    </label>
+                    <input type="text" 
+                           name="project_name" 
+                           id="id_project_name"
+                           value="{% if form.project_name.value %}{{ form.project_name.value }}{% endif %}"
+                           required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
+                    {% if form.project_name.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.project_name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="id_project_description" class="block text-sm font-medium text-gray-700 mb-2">
+                        Descrição do Projeto
+                    </label>
+                    <textarea name="project_description" 
+                              id="id_project_description"
+                              rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">{% if form.project_description.value %}{{ form.project_description.value }}{% endif %}</textarea>
+                    {% if form.project_description.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.project_description.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_coordinator" class="block text-sm font-medium text-gray-700 mb-2">
+                        Coordenador
+                    </label>
+                    <input type="text" 
+                           name="coordinator" 
+                           id="id_coordinator"
+                           value="{% if form.coordinator.value %}{{ form.coordinator.value }}{% endif %}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
+                    {% if form.coordinator.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.coordinator.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if object %}
+                <div>
+                    <label for="id_status" class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.status.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <div>
+                    <label for="id_start_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Data de Início
+                    </label>
+                    <input type="date" 
+                           name="start_date" 
+                           id="id_start_date"
+                           value="{% if form.start_date.value %}{{ form.start_date.value|date:'Y-m-d' }}{% endif %}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
+                    {% if form.start_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.start_date.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_expected_end_date" class="block text-sm font-medium text-gray-700 mb-2">
+                        Previsão de Término
+                    </label>
+                    <input type="date" 
+                           name="expected_end_date" 
+                           id="id_expected_end_date"
+                           value="{% if form.expected_end_date.value %}{{ form.expected_end_date.value|date:'Y-m-d' }}{% endif %}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
+                    {% if form.expected_end_date.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.expected_end_date.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label for="id_objectives" class="block text-sm font-medium text-gray-700 mb-2">
+                        Objetivos
+                    </label>
+                    <textarea name="objectives" 
+                              id="id_objectives"
+                              rows="4"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">{% if form.objectives.value %}{{ form.objectives.value }}{% endif %}</textarea>
+                    {% if form.objectives.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.objectives.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+            <a href="{% url 'projects:list' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Cancelar
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                {% if object %}💾 Salvar Alterações{% else %}✅ Criar Matrícula{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

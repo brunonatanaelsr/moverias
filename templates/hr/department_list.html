@@ -1,0 +1,80 @@
+{% extends "hr/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Departamentos</h1>
+            <p class="text-muted">Estrutura organizacional do instituto</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'admin:hr_department_add' %}" class="btn btn-primary" target="_blank">
+                <i class="fas fa-plus me-2"></i>Novo Departamento
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Departamentos -->
+    <div class="row">
+        {% for department in departments %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card hr-card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-building me-2 text-primary"></i>
+                            {{ department.name }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if department.description %}
+                            <p class="text-muted small">{{ department.description|truncatewords:15 }}</p>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <strong>Gerente:</strong><br>
+                            {% if department.manager %}
+                                <span class="badge bg-success">
+                                    {{ department.manager.user.get_full_name }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">Não definido</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Funcionários:</strong>
+                            <span class="badge bg-info">{{ department.employee_count }}</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100" role="group">
+                            <a href="{% url 'hr:department_detail' department.pk %}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> Ver Detalhes
+                            </a>
+                            <a href="{% url 'admin:hr_department_change' department.pk %}" 
+                               class="btn btn-outline-secondary btn-sm" target="_blank">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card hr-card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum departamento cadastrado</h5>
+                        <p class="text-muted">Crie o primeiro departamento para organizar os funcionários.</p>
+                        <a href="{% url 'admin:hr_department_add' %}" class="btn btn-primary" target="_blank">
+                            <i class="fas fa-plus me-2"></i>Criar Primeiro Departamento
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

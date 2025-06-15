@@ -1,0 +1,129 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}RH - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+.hr-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.hr-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.employee-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.department-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.position-badge {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.status-active {
+    color: #28a745;
+}
+
+.status-inactive {
+    color: #dc3545;
+}
+
+.rating-stars {
+    color: #ffc107;
+}
+
+.hr-sidebar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.hr-nav-link {
+    color: rgba(255,255,255,0.8);
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.hr-nav-link:hover,
+.hr-nav-link.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    text-decoration: none;
+}
+</style>
+{% endblock %}
+
+{% block sidebar %}
+<div class="hr-sidebar">
+    <div class="p-4">
+        <h4 class="text-white mb-4">
+            <i class="fas fa-users"></i> Recursos Humanos
+        </h4>
+        
+        <nav class="nav flex-column">
+            <a href="{% url 'hr:dashboard' %}" class="hr-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+            </a>
+            
+            <a href="{% url 'hr:employee_list' %}" class="hr-nav-link {% if request.resolver_match.url_name|slice:':9' == 'employee_' %}active{% endif %}">
+                <i class="fas fa-user-tie me-2"></i> Funcionários
+            </a>
+            
+            <a href="{% url 'hr:department_list' %}" class="hr-nav-link {% if request.resolver_match.url_name|slice:':11' == 'department_' %}active{% endif %}">
+                <i class="fas fa-building me-2"></i> Departamentos
+            </a>
+            
+            <a href="{% url 'hr:performance_reviews' %}" class="hr-nav-link {% if request.resolver_match.url_name == 'performance_reviews' %}active{% endif %}">
+                <i class="fas fa-star me-2"></i> Avaliações
+            </a>
+            
+            <a href="{% url 'hr:training_records' %}" class="hr-nav-link {% if request.resolver_match.url_name == 'training_records' %}active{% endif %}">
+                <i class="fas fa-graduation-cap me-2"></i> Treinamentos
+            </a>
+            
+            <a href="{% url 'hr:reports_dashboard' %}" class="hr-nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-bar me-2"></i> Relatórios
+            </a>
+            
+            <hr class="border-light opacity-25 my-3">
+            
+            <a href="{% url 'dashboard:home' %}" class="hr-nav-link">
+                <i class="fas fa-arrow-left me-2"></i> Voltar ao Dashboard
+            </a>
+        </nav>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+// Função para busca de funcionários via AJAX
+function searchEmployees(query) {
+    return fetch(`{% url 'hr:employee_search_api' %}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => data.results);
+}
+
+// Inicializar tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

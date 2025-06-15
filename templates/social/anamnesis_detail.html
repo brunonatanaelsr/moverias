@@ -1,0 +1,318 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Anamnese Social - {{ anamnesis.beneficiary.full_name }} - Move Marias{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Anamnese Social</h1>
+            <p class="mt-2 text-sm text-gray-600">
+                {{ anamnesis.beneficiary.full_name }} - {{ anamnesis.created_at|date:"d/m/Y" }}
+            </p>
+        </div>
+        <div class="flex space-x-3">
+            {% if not anamnesis.locked %}
+            <a href="{% url 'social:edit' anamnesis.pk %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                ✏️ Editar
+            </a>
+            {% endif %}
+            <a href="{% url 'social:list' %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                ← Voltar
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Conteúdo Principal -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Dados Familiares -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">👨‍👩‍👧‍👦 Dados Familiares</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Renda Familiar</dt>
+                    <dd class="text-lg font-medium text-gray-900">
+                        {% if anamnesis.income %}
+                            R$ {{ anamnesis.income|floatformat:2 }}
+                        {% else %}
+                            Não informado
+                        {% endif %}
+                    </dd>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <dt class="text-sm font-medium text-gray-500 mb-2">Composição Familiar</dt>
+                <dd class="text-sm text-gray-700 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">{{ anamnesis.family_composition }}</dd>
+            </div>
+        </div>
+
+        <!-- Vulnerabilidades -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">⚠️ Vulnerabilidades Identificadas</h3>
+            
+            <div class="bg-red-50 border border-red-200 p-4 rounded-lg">
+                <p class="text-sm text-red-700 whitespace-pre-wrap">{{ anamnesis.vulnerabilities }}</p>
+            </div>
+            
+            {% if anamnesis.substance_use %}
+            <div class="mt-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Uso de Substâncias</h4>
+                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                    <p class="text-sm text-yellow-700 whitespace-pre-wrap">{{ anamnesis.substance_use }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Observações -->
+        {% if anamnesis.observations %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">📝 Observações Gerais</h3>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-sm text-gray-700 whitespace-pre-wrap">{{ anamnesis.observations }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <!-- Informações da Beneficiária -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">👤 Beneficiária</h3>
+            
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-purple-move rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="text-white text-2xl font-bold">{{ anamnesis.beneficiary.full_name|first }}</span>
+                </div>
+                <h4 class="text-lg font-medium text-gray-900">{{ anamnesis.beneficiary.full_name }}</h4>
+                <p class="text-sm text-gray-500">{{ anamnesis.beneficiary.neighbourhood }}</p>
+            </div>
+            
+            <div class="pt-4 border-t border-gray-200">
+                <a href="{% url 'dashboard:beneficiary_detail' anamnesis.beneficiary.pk %}" 
+                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                    Ver Perfil Completo
+                </a>
+            </div>
+        </div>
+
+        <!-- Status da Anamnese -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">📋 Status da Anamnese</h3>
+            
+            <dl class="space-y-3">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Criada em</dt>
+                    <dd class="text-sm text-gray-900">{{ anamnesis.created_at|date:"d/m/Y H:i" }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Técnica responsável</dt>
+                    <dd class="text-sm text-gray-900">{{ anamnesis.signed_by_technician.get_full_name|default:anamnesis.signed_by_technician.username }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Status</dt>
+                    <dd class="text-sm">
+                        {% if anamnesis.locked %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                🔒 Bloqueada para edição
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✏️ Editável
+                            </span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Assinatura da Beneficiária</dt>
+                    <dd class="text-sm">
+                        {% if anamnesis.signed_by_beneficiary %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✅ Assinado
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                ⏳ Não assinado
+                            </span>
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Ações -->
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">⚡ Ações</h3>
+            
+            <div class="space-y-3">
+                {% if not anamnesis.locked %}
+                <a href="{% url 'social:edit' anamnesis.pk %}" 
+                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                    ✏️ Editar Anamnese
+                </a>
+                {% endif %}
+                
+                <button type="button" 
+                        onclick="printAnamnesis()"
+                        class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    🖨️ Imprimir
+                </button>
+                
+                <a href="{% url 'projects:create' %}?beneficiary={{ anamnesis.beneficiary.pk }}" 
+                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    🎯 Matricular em Projeto
+                </a>
+                
+                <a href="{% url 'evolution:create' %}?beneficiary={{ anamnesis.beneficiary.pk }}" 
+                   class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    📈 Novo Registro de Evolução
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function printAnamnesis() {
+    try {
+        // Adicionar classe para print
+        document.body.classList.add('printing');
+        
+        // Aguardar um momento para aplicar estilos
+        setTimeout(() => {
+            // Verificar se o browser suporta print
+            if (window.print) {
+                window.print();
+            } else {
+                alert('Seu navegador não suporta a função de impressão. Tente usar Ctrl+P (Windows) ou Cmd+P (Mac).');
+            }
+            
+            // Remover classe após print
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+            }, 1000);
+        }, 100);
+        
+    } catch (error) {
+        console.error('Erro ao imprimir:', error);
+        alert('Erro ao abrir janela de impressão. Tente usar Ctrl+P (Windows) ou Cmd+P (Mac).');
+        document.body.classList.remove('printing');
+    }
+}
+
+// Atalho de teclado para impressão
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        printAnamnesis();
+    }
+});
+</script>
+
+<style>
+@media print {
+    /* Ocultar elementos desnecessários */
+    .no-print, 
+    nav, 
+    .flex.justify-between, 
+    .flex.space-x-3, 
+    .bg-white.shadow.rounded-lg:last-child,
+    button,
+    .border.border-gray-300,
+    .hover\\:bg-gray-50 {
+        display: none !important;
+    }
+    
+    /* Remover sombras e bordas */
+    .bg-white {
+        box-shadow: none !important;
+        border: none !important;
+    }
+    
+    /* Layout para impressão */
+    .grid.lg\\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Configurações gerais de impressão */
+    * {
+        color: #000 !important;
+        background: transparent !important;
+    }
+    
+    body {
+        margin: 0;
+        padding: 1rem;
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Evitar quebras de página inadequadas */
+    .bg-white.shadow.rounded-lg {
+        page-break-inside: avoid;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border: 1px solid #ddd;
+    }
+    
+    /* Cabeçalho de impressão */
+    .print-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #000;
+        padding-bottom: 1rem;
+    }
+    
+    /* Melhorar legibilidade de textos */
+    .text-gray-600,
+    .text-gray-700,
+    .text-gray-800 {
+        color: #333 !important;
+    }
+    
+    .text-sm {
+        font-size: 11pt !important;
+    }
+    
+    .font-medium,
+    .font-semibold {
+        font-weight: bold !important;
+    }
+}
+
+/* Adicionar cabeçalho de impressão quando body tem classe printing */
+body.printing::before {
+    content: "ANAMNESE SOCIAL - MOVE MARIAS";
+    display: block;
+    text-align: center;
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #000;
+}
+
+@media print {
+    body.printing::before {
+        display: block !important;
+    }
+}
+</style>
+{% endblock %}

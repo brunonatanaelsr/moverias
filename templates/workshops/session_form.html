@@ -1,0 +1,68 @@
+{% extends 'dashboard_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Nova Sessão - {{ workshop.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Nova Sessão</h1>
+                <p class="mt-2 text-sm text-gray-600">{{ workshop.name }}</p>
+            </div>
+            <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                ← Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg">
+        <div class="px-6 py-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Informações da Sessão -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900">Informações da Sessão</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{ form.session_number|as_crispy_field }}
+                            {{ form.date|as_crispy_field }}
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{ form.start_time|as_crispy_field }}
+                            {{ form.end_time|as_crispy_field }}
+                        </div>
+                        
+                        {{ form.topic|as_crispy_field }}
+                    </div>
+
+                    <!-- Conteúdo -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-medium text-gray-900">Conteúdo e Materiais</h3>
+                        
+                        {{ form.content_covered|as_crispy_field }}
+                        {{ form.materials_used|as_crispy_field }}
+                        {{ form.observations|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                        Criar Sessão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Plano de Ação - {{ action_plan.beneficiary.full_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Plano de Ação</h1>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Beneficiária: {{ action_plan.beneficiary.full_name }}
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{% url 'coaching:action_plan_edit' action_plan.pk %}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Editar
+                    </a>
+                    <a href="{% url 'coaching:action_plan_list' %}" 
+                       class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-6">
+            <div class="space-y-6">
+                <!-- Informações da Beneficiária -->
+                <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-900 mb-2">Informações da Beneficiária</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-700">Nome:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.beneficiary.full_name }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Idade:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.beneficiary.age }} anos</span>
+                        </div>
+                        {% if action_plan.beneficiary.phone %}
+                        <div>
+                            <span class="font-medium text-gray-700">Telefone:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.beneficiary.phone }}</span>
+                        </div>
+                        {% endif %}
+                        {% if action_plan.beneficiary.email %}
+                        <div>
+                            <span class="font-medium text-gray-700">Email:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.beneficiary.email }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Objetivo Principal -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Objetivo Principal</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ action_plan.main_goal }}</p>
+                    </div>
+                </div>
+
+                <!-- Áreas Prioritárias -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Áreas Prioritárias</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ action_plan.priority_areas }}</p>
+                    </div>
+                </div>
+
+                <!-- Ações Específicas -->
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Ações Específicas</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ action_plan.actions }}</p>
+                    </div>
+                </div>
+
+                <!-- Apoio do Instituto -->
+                {% if action_plan.institute_support %}
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Apoio do Instituto</h3>
+                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ action_plan.institute_support }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Revisão Semestral -->
+                {% if action_plan.semester_review %}
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-3">Revisão Semestral</h3>
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p class="text-gray-900 whitespace-pre-wrap">{{ action_plan.semester_review }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Metadados -->
+                <div class="bg-gray-50 px-4 py-3 rounded-lg">
+                    <h3 class="text-sm font-medium text-gray-900 mb-2">Informações do Registro</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-700">Criado em:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Última atualização:</span>
+                            <span class="ml-2 text-gray-900">{{ action_plan.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

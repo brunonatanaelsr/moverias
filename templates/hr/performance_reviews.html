@@ -1,0 +1,170 @@
+{% extends "hr/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Avaliações de Desempenho</h1>
+            <p class="text-muted">Gerenciar avaliações dos funcionários</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'admin:hr_performancereview_add' %}" class="btn btn-primary" target="_blank">
+                <i class="fas fa-plus me-2"></i>Nova Avaliação
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card hr-card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" name="status" id="status">
+                        <option value="">Todos os status</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Avaliações -->
+    <div class="card hr-card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-star me-2"></i>
+                Avaliações ({{ page_obj.paginator.count }})
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Funcionário</th>
+                                <th>Período</th>
+                                <th>Avaliador</th>
+                                <th>Nota Geral</th>
+                                <th>Status</th>
+                                <th width="120">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if review.employee.photo %}
+                                                <img src="{{ review.employee.photo.url }}" class="employee-photo me-3" alt="Foto">
+                                            {% else %}
+                                                <div class="employee-photo me-3 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ review.employee.user.get_full_name }}</h6>
+                                                <small class="text-muted">{{ review.employee.job_position.title|default:"Sem cargo" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small>{{ review.review_period_start|date:"m/Y" }} - {{ review.review_period_end|date:"m/Y" }}</small><br>
+                                        <small class="text-muted">{{ review.review_date|date:"d/m/Y" }}</small>
+                                    </td>
+                                    <td>
+                                        <span>{{ review.reviewer.user.get_full_name|default:"Sistema" }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rating-stars me-2">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.overall_rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <span class="badge bg-primary">{{ review.overall_rating }}/5</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if review.status == 'completed' %}
+                                            <span class="badge bg-success">{{ review.get_status_display }}</span>
+                                        {% elif review.status == 'pending' %}
+                                            <span class="badge bg-warning">{{ review.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ review.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{% url 'admin:hr_performancereview_change' review.pk %}" 
+                                               class="btn btn-outline-primary" title="Ver/Editar" target="_blank">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                {% if page_obj.has_other_pages %}
+                    <div class="card-footer">
+                        <nav aria-label="Paginação de avaliações">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma avaliação encontrada</h5>
+                    <p class="text-muted">Crie a primeira avaliação de desempenho.</p>
+                    <a href="{% url 'admin:hr_performancereview_add' %}" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-plus me-2"></i>Criar Primeira Avaliação
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

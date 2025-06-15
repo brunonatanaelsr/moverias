@@ -1,0 +1,94 @@
+{# Template personalizado para logout #}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sair - Move Marias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-move': '#8B5CF6',
+                        'pink-move': '#EC4899',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div>
+                <div class="mx-auto h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    <span class="text-3xl font-bold text-purple-move">MM</span>
+                </div>
+                <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
+                    Até logo!
+                </h2>
+                <p class="mt-2 text-center text-sm text-white/80">
+                    Você tem certeza que deseja sair do sistema?
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-xl p-8">
+                <div class="text-center mb-6">
+                    <div class="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Confirmar Logout</h3>
+                    <p class="text-sm text-gray-600">
+                        Ao sair, você precisará fazer login novamente para acessar o sistema.
+                    </p>
+                </div>
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div class="flex space-x-4">
+                        <button type="submit" 
+                                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Sair do Sistema
+                        </button>
+                        
+                        <a href="{% url 'dashboard:home' %}" 
+                           class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-4 rounded-lg text-center transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Voltar
+                        </a>
+                    </div>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-xs text-gray-500">
+                        Sua sessão permanecerá ativa até que você confirme o logout.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <p class="text-xs text-white/60">
+                    © 2025 Move Marias - Sistema de Gestão de Beneficiárias
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-focus no botão de logout após 2 segundos
+        setTimeout(function() {
+            document.querySelector('button[type="submit"]').focus();
+        }, 2000);
+    </script>
+</body>
+</html>

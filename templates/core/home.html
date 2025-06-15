@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Move Marias - Transformando Vidas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-move': '#8B5CF6',
+                        'pink-move': '#EC4899',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-purple-move to-pink-move min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="text-center text-white">
+            <h1 class="text-6xl font-bold mb-4">Move Marias 💜</h1>
+            <p class="text-xl mb-8 opacity-90">Sistema de Gestão e Acompanhamento Social</p>
+            <p class="text-lg mb-12 opacity-75 max-w-2xl mx-auto">
+                Plataforma dedicada ao atendimento, acompanhamento e desenvolvimento de beneficiárias 
+                em situação de vulnerabilidade social, promovendo autonomia e transformação de vidas.
+            </p>
+            
+            <div class="space-x-4">
+                <a href="{% url 'account_login' %}" 
+                   class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-purple-move bg-white hover:bg-gray-100 transition-colors">
+                    Fazer Login
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-4xl mb-4">👥</div>
+                <h3 class="text-xl font-bold mb-2">Gestão de Beneficiárias</h3>
+                <p class="opacity-90">Cadastro completo e acompanhamento personalizado de cada beneficiária.</p>
+            </div>
+            
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-4xl mb-4">📋</div>
+                <h3 class="text-xl font-bold mb-2">Anamnese Social</h3>
+                <p class="opacity-90">Avaliação social detalhada para identificar necessidades e vulnerabilidades.</p>
+            </div>
+            
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                <div class="text-4xl mb-4">🎯</div>
+                <h3 class="text-xl font-bold mb-2">Projetos e Evoluções</h3>
+                <p class="opacity-90">Acompanhamento de projetos e registro da evolução de cada beneficiária.</p>
+            </div>
+        </div>
+
+        <div class="mt-16 text-center text-white">
+            <p class="opacity-75">
+                © 2025 Move Marias. Todos os direitos reservados. 
+                Desenvolvido com 💜 para a transformação social.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

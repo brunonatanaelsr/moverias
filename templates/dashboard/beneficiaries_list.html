@@ -1,0 +1,50 @@
+<!-- Copilot: template beneficiaries_list.html.
+     - Tabela responsiva HTMX search (?q=).
+     - Cada linha botão Ver hx-get="…/detail" hx-target="#modal".
+-->
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Beneficiárias - Move Marias{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Beneficiárias</h1>
+            <p class="mt-2 text-sm text-gray-600">Gerencie as beneficiárias do Move Marias</p>
+        </div>
+        <a href="{% url 'dashboard:beneficiary_create' %}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+            <span class="mr-2">➕</span>
+            Nova Beneficiária
+        </a>
+    </div>
+</div>
+
+<div class="bg-white shadow rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <!-- Barra de busca -->
+        <div class="mb-6">
+            <div class="relative">
+                <input type="text" 
+                       name="search" 
+                       placeholder="Buscar por nome..."
+                       value="{{ search_query }}"
+                       hx-get="{% url 'dashboard:beneficiaries_list' %}"
+                       hx-target="#beneficiaries-table"
+                       hx-trigger="keyup changed delay:300ms, search"
+                       hx-include="[name='search']"
+                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-move focus:border-purple-move sm:text-sm">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-gray-400">🔍</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de beneficiárias -->
+        <div id="beneficiaries-table">
+            {% include 'dashboard/partials/beneficiaries_table.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

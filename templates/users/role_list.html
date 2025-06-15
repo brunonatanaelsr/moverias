@@ -1,0 +1,188 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Funções do Sistema - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-user-tag text-primary me-2"></i>
+                        Funções do Sistema
+                    </h1>
+                    <p class="text-muted mb-0">Gerencie as funções e permissões do sistema</p>
+                </div>
+                <a href="{% url 'users:role_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Nova Função
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Cards -->
+    <div class="row">
+        {% for role in roles %}
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-tag me-2"></i>
+                            {{ role.name }}
+                        </h6>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'users:role_update' role.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Editar
+                                    </a>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item text-danger" 
+                                            hx-delete="{% url 'users:role_delete' role.pk %}"
+                                            hx-confirm="Tem certeza que deseja excluir esta função?">
+                                        <i class="fas fa-trash me-2"></i>Excluir
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">{{ role.description }}</p>
+                    
+                    <!-- Permissions -->
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Permissões
+                        </h6>
+                        {% if role.permissions.all %}
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for permission in role.permissions.all %}
+                                <span class="badge bg-light text-dark border">
+                                    {{ permission.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-0">Nenhuma permissão específica</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Users Count -->
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-users text-info me-1"></i>
+                            <span class="text-muted">Usuários:</span>
+                            <strong>{{ role.users.count }}</strong>
+                        </div>
+                        <div>
+                            {% if role.is_active %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Ativa
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Inativa
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Criada em {{ role.created_at|date:"d/m/Y" }}
+                        </small>
+                        <a href="{% url 'users:role_update' role.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>
+                            Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-user-tag fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma função cadastrada</h5>
+                    <p class="text-muted mb-4">Crie a primeira função do sistema para começar a organizar as permissões dos usuários.</p>
+                    <a href="{% url 'users:role_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Criar Primeira Função
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- System Roles Info -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Funções Padrão do Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center mb-3">
+                                <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                     style="width: 48px; height: 48px;">
+                                    <i class="fas fa-crown"></i>
+                                </div>
+                                <h6 class="mb-1">Admin</h6>
+                                <p class="text-muted small mb-0">Acesso total ao sistema e todas as funcionalidades</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center mb-3">
+                                <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                     style="width: 48px; height: 48px;">
+                                    <i class="fas fa-users-cog"></i>
+                                </div>
+                                <h6 class="mb-1">Coordenador</h6>
+                                <p class="text-muted small mb-0">Gestão de equipes, relatórios e supervisão geral</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                     style="width: 48px; height: 48px;">
+                                    <i class="fas fa-user-md"></i>
+                                </div>
+                                <h6 class="mb-1">Técnico</h6>
+                                <p class="text-muted small mb-0">Atendimento direto aos beneficiários e registros</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center mb-3">
+                                <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-2" 
+                                     style="width: 48px; height: 48px;">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <h6 class="mb-1">Assistente</h6>
+                                <p class="text-muted small mb-0">Suporte administrativo e atividades básicas</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Registros de Evolução - Move Marias{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Registros de Evolução</h1>
+            <p class="mt-2 text-sm text-gray-600">
+                Acompanhe o progresso das beneficiárias
+            </p>
+        </div>
+        <a href="{% url 'evolution:create' %}" 
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+            + Novo Registro
+        </a>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="mb-6">
+    <form method="get" class="flex items-center space-x-4">
+        <div class="flex-1">
+            <input type="text" 
+                   name="search" 
+                   value="{{ request.GET.search }}"
+                   placeholder="Buscar por nome da beneficiária..."
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
+        </div>
+        <button type="submit" 
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+            🔍 Buscar
+        </button>
+    </form>
+</div>
+
+<!-- Evolution Records List -->
+<div class="bg-white shadow overflow-hidden sm:rounded-md">
+    {% if records %}
+        <ul class="divide-y divide-gray-200">
+            {% for record in records %}
+            <li>
+                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">📈</span>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <h3 class="text-lg font-medium text-gray-900">{{ record.beneficiary.full_name }}</h3>
+                                    <div class="mt-1 flex items-center space-x-4 text-xs text-gray-500">
+                                        <span>📅 {{ record.date|date:"d/m/Y" }}</span>
+                                        <span>👩‍💼 {{ record.author.get_full_name|default:record.author.username }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'evolution:detail' record.pk %}" 
+                               class="text-purple-move hover:text-purple-700 text-sm font-medium">
+                                Ver
+                            </a>
+                            <a href="{% url 'evolution:edit' record.pk %}" 
+                               class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                                Editar
+                            </a>
+                        </div>
+                    </div>
+                    {% if record.description %}
+                        <div class="mt-2 ml-14">
+                            <p class="text-sm text-gray-600">{{ record.description|truncatechars:150 }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="text-center py-12">
+            <div class="text-gray-400 text-6xl mb-4">📈</div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum registro encontrado</h3>
+            <p class="text-gray-500 mb-6">Comece criando o primeiro registro de evolução.</p>
+            <a href="{% url 'evolution:create' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                + Criar Primeiro Registro
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

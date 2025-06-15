@@ -1,0 +1,86 @@
+<div class="overflow-x-auto">
+    {% if beneficiaries %}
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nome
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data de Nascimento
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bairro
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Telefone
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data de Cadastro
+                    </th>
+                    <th scope="col" class="relative px-6 py-3">
+                        <span class="sr-only">Ações</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for beneficiary in beneficiaries %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ beneficiary.full_name }}</div>
+                        {% if beneficiary.nis %}
+                            <div class="text-sm text-gray-500">NIS: {{ beneficiary.nis }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ beneficiary.dob|date:"d/m/Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ beneficiary.neighbourhood }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ beneficiary.phone_1 }}
+                        {% if beneficiary.phone_2 %}
+                            <br><span class="text-gray-500">{{ beneficiary.phone_2 }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ beneficiary.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button hx-get="{% url 'dashboard:beneficiary_detail' beneficiary.pk %}"
+                                hx-target="#modal"
+                                class="text-purple-move hover:text-purple-700 mr-3">
+                            Ver
+                        </button>
+                        <a href="{% url 'dashboard:beneficiary_edit' beneficiary.pk %}" class="text-gray-600 hover:text-gray-900">Editar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="text-center py-12">
+            <div class="text-gray-400 text-6xl mb-4">👥</div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">
+                {% if search_query %}
+                    Nenhuma beneficiária encontrada
+                {% else %}
+                    Nenhuma beneficiária cadastrada
+                {% endif %}
+            </h3>
+            <p class="text-gray-500 mb-6">
+                {% if search_query %}
+                    Tente uma busca diferente ou cadastre uma nova beneficiária.
+                {% else %}
+                    Comece cadastrando a primeira beneficiária do sistema.
+                {% endif %}
+            </p>
+            <a href="{% url 'dashboard:beneficiary_create' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                <span class="mr-2">➕</span>
+                Nova Beneficiária
+            </a>
+        </div>
+    {% endif %}
+</div>

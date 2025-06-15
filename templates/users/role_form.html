@@ -1,0 +1,221 @@
+{% extends 'dashboard_base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if object %}Editar Função{% else %}Nova Função{% endif %} - Move Marias
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-user-tag text-primary me-2"></i>
+                        {% if object %}Editar Função{% else %}Nova Função{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        {% if object %}
+                            Atualize as informações da função {{ object.name }}
+                        {% else %}
+                            Crie uma nova função para organizar permissões de usuários
+                        {% endif %}
+                    </p>
+                </div>
+                <a href="{% url 'users:role_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Form Card -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Dados da Função
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Informações Básicas
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        <i class="fas fa-check-circle text-success me-1"></i>
+                                        Função Ativa
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{ form.description|as_crispy_field }}
+
+                        <!-- Permissions -->
+                        <div class="row mb-3 mt-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Permissões
+                                </h6>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.permissions.id_for_label }}" class="form-label">
+                                        Permissões Específicas
+                                    </label>
+                                    <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                                        {% for permission in form.permissions %}
+                                        <div class="form-check mb-2">
+                                            {{ permission.tag }}
+                                            <label class="form-check-label" for="{{ permission.id_for_label }}">
+                                                {{ permission.choice_label }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Selecione as permissões específicas que esta função deve ter.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'users:role_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        {% if object %}Atualizar{% else %}Criar{% endif %} Função
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Dicas sobre Funções
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Nome da Função
+                        </h6>
+                        <p class="small text-muted">
+                            Use nomes claros e descritivos como "Coordenador de Projetos" ou "Assistente Social".
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-primary">
+                            <i class="fas fa-file-alt me-1"></i>
+                            Descrição
+                        </h6>
+                        <p class="small text-muted">
+                            Descreva brevemente as responsabilidades e o escopo desta função.
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-primary">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Permissões
+                        </h6>
+                        <p class="small text-muted">
+                            Selecione apenas as permissões necessárias. Lembre-se do princípio do menor privilégio.
+                        </p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Atenção:</strong> Alterações nas permissões afetarão todos os usuários com esta função.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permission Categories -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Categorias de Permissões
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            <strong>Usuários</strong>
+                        </div>
+                        <p class="small text-muted mb-3">Gerenciar usuários do sistema, criar, editar e visualizar perfis.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user-friends text-success me-2"></i>
+                            <strong>Beneficiários</strong>
+                        </div>
+                        <p class="small text-muted mb-3">Cadastrar e gerenciar beneficiários e suas informações.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-project-diagram text-warning me-2"></i>
+                            <strong>Projetos</strong>
+                        </div>
+                        <p class="small text-muted mb-3">Criar e gerenciar projetos e inscrições.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-chart-line text-info me-2"></i>
+                            <strong>Relatórios</strong>
+                        </div>
+                        <p class="small text-muted mb-0">Visualizar e gerar relatórios do sistema.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "dashboard_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if object %}Editar Registro de Evolução{% else %}Novo Registro de Evolução{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        {% if object %}
+                            Editar Registro de Evolução
+                        {% else %}
+                            Novo Registro de Evolução
+                        {% endif %}
+                    </h1>
+                    {% if object %}
+                        <p class="mt-1 text-sm text-gray-500">
+                            Beneficiária: {{ object.beneficiary.full_name }}
+                        </p>
+                    {% endif %}
+                </div>
+                <a href="{% url 'evolution:list' %}" 
+                   class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Voltar
+                </a>
+            </div>
+        </div>
+
+        <div class="px-6 py-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Beneficiária -->
+                <div>
+                    <label for="{{ form.beneficiary.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Beneficiária *
+                    </label>
+                    {% if object %}
+                        <!-- Em edição, mostrar apenas o nome (não permitir mudança) -->
+                        <p class="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                            {{ object.beneficiary.full_name }}
+                        </p>
+                    {% else %}
+                        {{ form.beneficiary|as_crispy_field }}
+                    {% endif %}
+                </div>
+
+                <!-- Data -->
+                <div>
+                    {{ form.date|as_crispy_field }}
+                    <p class="mt-1 text-sm text-gray-500">Formato: DD/MM/AAAA</p>
+                </div>
+
+                <!-- Descrição -->
+                <div>
+                    {{ form.description|as_crispy_field }}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Descreva detalhadamente a evolução, progressos, dificuldades e observações relevantes.
+                    </p>
+                </div>
+
+                <!-- Opções de Assinatura -->
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.signature_required }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.signature_required.id_for_label }}" class="font-medium text-gray-700">
+                                Requer Assinatura da Beneficiária
+                            </label>
+                            <p class="text-gray-500">Marque se este registro precisa ser assinado pela beneficiária</p>
+                        </div>
+                    </div>
+
+                    {% if object and object.signature_required %}
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                {{ form.signed_by_beneficiary }}
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="{{ form.signed_by_beneficiary.id_for_label }}" class="font-medium text-gray-700">
+                                    Assinado pela Beneficiária
+                                </label>
+                                <p class="text-gray-500">Marque quando a beneficiária assinar este registro</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                    <a href="{% url 'evolution:list' %}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        {% if object %}
+                            Atualizar Registro
+                        {% else %}
+                            Criar Registro
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus no primeiro campo
+    const firstField = document.querySelector('form input:not([type="hidden"]), form select, form textarea');
+    if (firstField) {
+        firstField.focus();
+    }
+
+    // Configurar campo de data
+    const dateField = document.querySelector('input[type="date"]');
+    if (dateField && !dateField.value) {
+        // Definir data atual como padrão
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+
+    // Mostrar/ocultar campo de assinatura baseado na checkbox
+    const signatureRequired = document.querySelector('input[name="signature_required"]');
+    const signedByBeneficiary = document.querySelector('input[name="signed_by_beneficiary"]');
+    
+    if (signatureRequired && signedByBeneficiary) {
+        const signedContainer = signedByBeneficiary.closest('.flex');
+        
+        function toggleSignedField() {
+            if (signatureRequired.checked) {
+                signedContainer.style.display = 'flex';
+            } else {
+                signedContainer.style.display = 'none';
+                signedByBeneficiary.checked = false;
+            }
+        }
+        
+        signatureRequired.addEventListener('change', toggleSignedField);
+        toggleSignedField(); // Execute na inicialização
+    }
+});
+</script>
+{% endblock %}
