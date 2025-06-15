@@ -8,6 +8,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.core.cache import cache
+from django.conf import settings
+from django.db.models import Q, Prefetch
 from formtools.wizard.views import SessionWizardView
 from .models import SocialAnamnesis
 from .forms import (
@@ -41,11 +44,17 @@ class SocialAnamnesisWizard(LoginRequiredMixin, UserPassesTestMixin, SessionWiza
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
         if step == 'step1':
-            # Passar dados do beneficiário se especificado na URL
+            # Passar dados do beneficiário se especificado na URL (com otimização)
             beneficiary_id = self.request.GET.get('beneficiary')
             if beneficiary_id:
                 try:
-                    beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+                    # Cache da beneficiária
+                    cache_key = f"beneficiary_{beneficiary_id}"
+                    beneficiary = cache.get(cache_key)
+                    if beneficiary is None:
+                        beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+                        cache.set(cache_key, beneficiary, settings.CACHE_TIMEOUT['SHORT'])
+                    
                     kwargs['initial'] = {'beneficiary': beneficiary}
                 except Beneficiary.DoesNotExist:
                     pass
@@ -86,12 +95,30 @@ class SocialAnamnesisUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
     def test_func(self):
         return is_technician(self.request.user)
     
+    def get_object(self, queryset=None):
+        """Otimizar query do objeto"""
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        cache_key = f"social_anamnesis_{pk}"
+        anamnesis = cache.get(cache_key)
+        
+        if anamnesis is None:
+            anamnesis = SocialAnamnesis.objects.select_related(
+                'beneficiary', 'created_by'
+            ).get(pk=pk)
+            cache.set(cache_key, anamnesis, settings.CACHE_TIMEOUT['MEDIUM'])
+        
+        return anamnesis
+    
     def form_valid(self, form):
         # Definir usuário atual para validação no modelo
         form.instance._current_user = self.request.user
         
         try:
             response = super().form_valid(form)
+            
+            # Invalidar cache
+            cache.delete(f"social_anamnesis_{self.object.pk}")
+            
             messages.success(self.request, 'Anamnese social atualizada com sucesso!')
             return response
         except Exception as e:
@@ -108,6 +135,20 @@ class SocialAnamnesisDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
     
     def test_func(self):
         return is_technician(self.request.user)
+    
+    def get_object(self, queryset=None):
+        """Otimizar query do objeto"""
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        cache_key = f"social_anamnesis_{pk}"
+        anamnesis = cache.get(cache_key)
+        
+        if anamnesis is None:
+            anamnesis = SocialAnamnesis.objects.select_related(
+                'beneficiary', 'created_by'
+            ).get(pk=pk)
+            cache.set(cache_key, anamnesis, settings.CACHE_TIMEOUT['MEDIUM'])
+        
+        return anamnesis
 
 
 class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
@@ -122,20 +163,50 @@ class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         return is_technician(self.request.user)
     
     def get_queryset(self):
-        queryset = super().get_queryset()
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                beneficiary__full_name__icontains=search
+        """Query otimizada com cache e select_related"""
+        search = self.request.GET.get('search', '')
+        locked_filter = self.request.GET.get('locked', '')
+        
+        # Cache key baseada nos filtros
+        cache_key = f"social_anamnesis_list_{search}_{locked_filter}"
+        queryset = cache.get(cache_key)
+        
+        if queryset is None:
+            queryset = SocialAnamnesis.objects.select_related(
+                'beneficiary', 'created_by'
             )
+            
+            if search:
+                queryset = queryset.filter(
+                    Q(beneficiary__full_name__icontains=search) |
+                    Q(beneficiary__cpf__icontains=search)
+                )
+            
+            if locked_filter:
+                queryset = queryset.filter(locked=locked_filter == 'true')
+            
+            queryset = queryset.order_by('-created_at')
+            
+            # Cache por tempo curto (5 minutos)
+            cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['SHORT'])
+        
         return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        context['locked_filter'] = self.request.GET.get('locked', '')
+        return context
 
 
 @login_required
 @user_passes_test(is_technician)
 def lock_anamnesis(request, pk):
     """Bloquear/desbloquear anamnese para edição"""
-    anamnesis = get_object_or_404(SocialAnamnesis, pk=pk)
+    anamnesis = get_object_or_404(
+        SocialAnamnesis.objects.select_related('beneficiary'), 
+        pk=pk
+    )
     
     if request.method == 'POST':
         if request.user.is_superuser:

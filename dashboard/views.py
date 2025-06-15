@@ -2,6 +2,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse
+from django.utils import timezone
+from django.db.models import Count, Q
+from datetime import timedelta
 from members.models import Beneficiary
 from members.forms import BeneficiaryForm
 from workshops.models import Workshop
@@ -15,13 +18,28 @@ def is_technician(user):
 @login_required
 @user_passes_test(is_technician)
 def dashboard_home(request):
-    """Dashboard principal"""
+    """Dashboard principal com otimizações de performance"""
+    # Estatísticas com consultas otimizadas
+    total_beneficiaries = Beneficiary.objects.count()
+    
+    # Beneficiárias recentes (sem select_related pois não há created_by)
+    recent_beneficiaries = Beneficiary.objects.order_by('-created_at')[:5]
+    
+    # Workshops com otimizações
+    workshop_stats = Workshop.objects.aggregate(
+        total=Count('id'),
+        active=Count('id', filter=Q(status='ativo'))
+    )
+    
+    # Workshops recentes (removendo select_related desnecessário)
+    recent_workshops = Workshop.objects.order_by('-created_at')[:3]
+    
     context = {
-        'total_beneficiaries': Beneficiary.objects.count(),
-        'recent_beneficiaries': Beneficiary.objects.order_by('-created_at')[:5],
-        'total_workshops': Workshop.objects.count(),
-        'active_workshops': Workshop.objects.filter(status='ativo').count(),
-        'recent_workshops': Workshop.objects.order_by('-created_at')[:3],
+        'total_beneficiaries': total_beneficiaries,
+        'recent_beneficiaries': recent_beneficiaries,
+        'total_workshops': workshop_stats['total'],
+        'active_workshops': workshop_stats['active'],
+        'recent_workshops': recent_workshops,
     }
     return render(request, 'dashboard/home.html', context)
 
@@ -29,17 +47,28 @@ def dashboard_home(request):
 @login_required
 @user_passes_test(is_technician)
 def beneficiaries_list(request):
-    """Lista de beneficiárias com busca HTMX"""
+    """Lista de beneficiárias com busca HTMX e otimizações"""
     search_query = request.GET.get('q', '')
+    
+    # Query sem select_related pois não há campo created_by
     beneficiaries = Beneficiary.objects.all()
     
     if search_query:
         beneficiaries = beneficiaries.filter(
-            full_name__icontains=search_query
+            Q(full_name__icontains=search_query) |
+            Q(cpf__icontains=search_query) |
+            Q(phone_1__icontains=search_query) |
+            Q(phone_2__icontains=search_query)
         )
     
+    # Paginação para melhor performance
+    from django.core.paginator import Paginator
+    paginator = Paginator(beneficiaries.order_by('full_name'), 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'beneficiaries': beneficiaries.order_by('full_name'),
+        'page_obj': page_obj,
         'search_query': search_query,
     }
     

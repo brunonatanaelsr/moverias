@@ -1,0 +1,139 @@
+# Move Marias - Production Crontab Configuration
+# Install with: crontab /var/www/movemarias/deploy/crontab
+# View with: crontab -l
+
+# Environment variables
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+SHELL=/bin/bash
+MAILTO=admin@movemarias.org
+
+# Project variables
+PROJECT_DIR=/var/www/movemarias
+PYTHON=$PROJECT_DIR/venv/bin/python
+MANAGE=$PYTHON $PROJECT_DIR/manage.py
+
+# =============================================================================
+# MONITORING AND HEALTH CHECKS
+# =============================================================================
+
+# System monitor every 5 minutes
+*/5 * * * * $PYTHON $PROJECT_DIR/deploy/system_monitor.py >> /var/log/movemarias/monitor.log 2>&1
+
+# Health check every minute
+* * * * * curl -f -s http://localhost:8000/health/ > /dev/null || echo "$(date): Health check failed" >> /var/log/movemarias/health_failures.log
+
+# Check for high memory usage every 10 minutes
+*/10 * * * * if [ $(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100.0}') -gt 85 ]; then echo "$(date): High memory usage detected" >> /var/log/movemarias/alerts.log; fi
+
+# Check for high disk usage every hour
+0 * * * * if [ $(df / | awk 'NR==2 {print $5}' | sed 's/%//') -gt 90 ]; then echo "$(date): Low disk space detected" >> /var/log/movemarias/alerts.log; fi
+
+# Check for failed Django processes every 5 minutes
+*/5 * * * * if ! pgrep -f "gunicorn.*movemarias" > /dev/null; then echo "$(date): Django process not running" >> /var/log/movemarias/alerts.log; $PROJECT_DIR/deploy/manage_services.sh restart; fi
+
+# =============================================================================
+# BACKUPS
+# =============================================================================
+
+# Full system backup daily at 2 AM
+0 2 * * * $PROJECT_DIR/deploy/backup_system.sh >> /var/log/movemarias/backup.log 2>&1
+
+# Database backup every 6 hours
+0 */6 * * * $MANAGE backup_database >> /var/log/movemarias/db_backup.log 2>&1
+
+# Quick backup of uploaded files daily at 6 AM
+0 6 * * * if [ -d "$PROJECT_DIR/media" ]; then tar -czf "/var/backups/movemarias/quick_media_$(date +\%Y\%m\%d).tar.gz" -C "$PROJECT_DIR" media; fi
+
+# =============================================================================
+# MAINTENANCE AND CLEANUP
+# =============================================================================
+
+# Clean old log files weekly (Sunday at 3 AM)
+0 3 * * 0 find /var/log/movemarias -name "*.log" -mtime +30 -delete
+
+# Clean old backup files monthly (first day at 4 AM)
+0 4 1 * * find /var/backups/movemarias -name "*.gz" -mtime +90 -delete
+
+# Clean Django sessions weekly (Sunday at 5 AM)
+0 5 * * 0 $MANAGE clearsessions >> /var/log/movemarias/maintenance.log 2>&1
+
+# Clean old cache entries daily at midnight
+0 0 * * * $MANAGE clear_cache >> /var/log/movemarias/maintenance.log 2>&1
+
+# Clean temporary files weekly
+0 4 * * 0 find /tmp -name "*movemarias*" -mtime +7 -delete
+
+# =============================================================================
+# SECURITY MONITORING
+# =============================================================================
+
+# Check for failed login attempts every 15 minutes
+*/15 * * * * if [ -f /var/log/movemarias/security.log ]; then grep "Login FAILED" /var/log/movemarias/security.log | tail -10 | grep "$(date '+\%Y-\%m-\%d \%H:')" >> /var/log/movemarias/failed_logins.log 2>/dev/null; fi
+
+# SSL certificate expiration check daily at 6 AM
+0 6 * * * openssl x509 -in /etc/ssl/certs/movemarias.crt -noout -checkend 2592000 || echo "$(date): SSL certificate expires in less than 30 days" >> /var/log/movemarias/ssl_alerts.log
+
+# Check for suspicious activity hourly
+0 * * * * grep -i "hack\|attack\|exploit\|injection" /var/log/nginx/access.log | tail -5 >> /var/log/movemarias/security_alerts.log 2>/dev/null
+
+# =============================================================================
+# PERFORMANCE MONITORING
+# =============================================================================
+
+# Check for slow requests every 30 minutes
+*/30 * * * * if [ -f /var/log/movemarias/performance.log ]; then grep "Slow request" /var/log/movemarias/performance.log | tail -10 | grep "$(date '+\%Y-\%m-\%d \%H:')" >> /var/log/movemarias/slow_requests.log 2>/dev/null; fi
+
+# Database performance check daily at 1 AM
+0 1 * * * $MANAGE check_database_performance >> /var/log/movemarias/db_performance.log 2>&1
+
+# Generate daily performance report at 11 PM
+0 23 * * * $PYTHON $PROJECT_DIR/deploy/generate_performance_report.py >> /var/log/movemarias/performance_reports.log 2>&1
+
+# =============================================================================
+# APPLICATION SPECIFIC
+# =============================================================================
+
+# Update search indexes daily at 3 AM (if using search)
+0 3 * * * $MANAGE update_index >> /var/log/movemarias/search_index.log 2>&1
+
+# Generate analytics reports weekly (Monday at 7 AM)
+0 7 * * 1 $MANAGE generate_analytics_report >> /var/log/movemarias/analytics.log 2>&1
+
+# Check for data consistency monthly (first day at 8 AM)
+0 8 1 * * $MANAGE check_data_integrity >> /var/log/movemarias/data_integrity.log 2>&1
+
+# Send weekly summary report (Sunday at 9 PM)
+0 21 * * 0 $PYTHON $PROJECT_DIR/deploy/weekly_report.py >> /var/log/movemarias/weekly_reports.log 2>&1
+
+# =============================================================================
+# RESTART AND RELOAD
+# =============================================================================
+
+# Restart services weekly (Sunday at 2 AM) to prevent memory leaks
+0 2 * * 0 $PROJECT_DIR/deploy/manage_services.sh restart >> /var/log/movemarias/service_restart.log 2>&1
+
+# Reload Nginx configuration daily at 4 AM (if configs change)
+0 4 * * * nginx -t && systemctl reload nginx >> /var/log/movemarias/nginx_reload.log 2>&1
+
+# =============================================================================
+# NOTIFICATION AND ALERTING
+# =============================================================================
+
+# Send daily status report at 8 AM
+0 8 * * * $PYTHON $PROJECT_DIR/deploy/daily_status_report.py >> /var/log/movemarias/status_reports.log 2>&1
+
+# Check and send alerts for critical issues every 5 minutes
+*/5 * * * * $PYTHON $PROJECT_DIR/deploy/alert_manager.py >> /var/log/movemarias/alerts.log 2>&1
+
+# =============================================================================
+# LOG ROTATION AND ARCHIVING
+# =============================================================================
+
+# Compress old logs daily at 1 AM
+0 1 * * * find /var/log/movemarias -name "*.log" -mtime +1 -exec gzip {} \;
+
+# Archive very old logs monthly
+0 2 1 * * find /var/log/movemarias -name "*.gz" -mtime +90 -exec mv {} /var/backups/movemarias/archived_logs/ \;
+
+# Clean archive monthly (keep 1 year)
+0 3 1 * * find /var/backups/movemarias/archived_logs -name "*.gz" -mtime +365 -delete

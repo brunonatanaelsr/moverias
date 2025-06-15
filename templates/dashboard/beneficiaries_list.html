@@ -14,8 +14,10 @@
             <p class="mt-2 text-sm text-gray-600">Gerencie as beneficiárias do Move Marias</p>
         </div>
         <a href="{% url 'dashboard:beneficiary_create' %}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
-            <span class="mr-2">➕</span>
+           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700 transition-colors">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
             Nova Beneficiária
         </a>
     </div>
@@ -23,24 +25,9 @@
 
 <div class="bg-white shadow rounded-lg">
     <div class="px-4 py-5 sm:p-6">
-        <!-- Barra de busca -->
-        <div class="mb-6">
-            <div class="relative">
-                <input type="text" 
-                       name="search" 
-                       placeholder="Buscar por nome..."
-                       value="{{ search_query }}"
-                       hx-get="{% url 'dashboard:beneficiaries_list' %}"
-                       hx-target="#beneficiaries-table"
-                       hx-trigger="keyup changed delay:300ms, search"
-                       hx-include="[name='search']"
-                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-purple-move focus:border-purple-move sm:text-sm">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-400">🔍</span>
-                </div>
-            </div>
-        </div>
-
+        <!-- Enhanced Search Component -->
+        {% include 'partials/dynamic_search.html' with search_url='/dashboard/beneficiaries/' placeholder='Buscar por nome, CPF ou telefone...' %}
+        
         <!-- Tabela de beneficiárias -->
         <div id="beneficiaries-table">
             {% include 'dashboard/partials/beneficiaries_table.html' %}

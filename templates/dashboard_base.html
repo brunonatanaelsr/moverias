@@ -15,6 +15,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- HTMX Extensions -->
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/loading-states.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -22,11 +24,16 @@
                     colors: {
                         'purple-move': '#8B5CF6',
                         'pink-move': '#EC4899',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
                     }
                 }
             }
         }
     </script>
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-100 min-h-screen">
     <nav class="bg-gradient-to-r from-purple-move to-pink-move shadow-lg">
@@ -162,6 +169,15 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+            }
+        });
+    </script>
+
+    <!-- Include reusable components -->
+    {% include 'partials/toast_notifications.html' %}
+    {% include 'partials/modal.html' %}
+    
+    {% block extra_scripts %}{% endblock %}
             }
         });
     </script>

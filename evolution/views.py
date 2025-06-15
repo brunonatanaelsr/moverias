@@ -3,6 +3,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.core.cache import cache
+from django.conf import settings
+from django.db.models import Q
 from .models import EvolutionRecord
 from members.models import Beneficiary
 
@@ -24,13 +27,48 @@ class EvolutionRecordListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         return is_technician(self.request.user)
     
     def get_queryset(self):
-        queryset = super().get_queryset().select_related('beneficiary')
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                beneficiary__full_name__icontains=search
+        """Query otimizada com cache e múltiplos filtros"""
+        search = self.request.GET.get('search', '')
+        signature_filter = self.request.GET.get('signature_required', '')
+        
+        # Cache key baseada nos filtros
+        cache_key = f"evolution_records_{search}_{signature_filter}"
+        queryset = cache.get(cache_key)
+        
+        if queryset is None:
+            queryset = EvolutionRecord.objects.select_related(
+                'beneficiary', 'author', 'signed_by_beneficiary'
             )
-        return queryset.order_by('-date')
+            
+            if search:
+                queryset = queryset.filter(
+                    Q(beneficiary__full_name__icontains=search) |
+                    Q(content__icontains=search)
+                )
+            
+            if signature_filter:
+                if signature_filter == 'required':
+                    queryset = queryset.filter(signature_required=True)
+                elif signature_filter == 'signed':
+                    queryset = queryset.filter(signed_by_beneficiary__isnull=False)
+                elif signature_filter == 'pending':
+                    queryset = queryset.filter(
+                        signature_required=True,
+                        signed_by_beneficiary__isnull=True
+                    )
+            
+            queryset = queryset.order_by('-date')
+            
+            # Cache por tempo curto (5 minutos)
+            cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['SHORT'])
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        context['signature_filter'] = self.request.GET.get('signature_required', '')
+        return context
 
 
 class EvolutionRecordDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -42,6 +80,20 @@ class EvolutionRecordDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
     
     def test_func(self):
         return is_technician(self.request.user)
+    
+    def get_object(self, queryset=None):
+        """Otimizar query do objeto"""
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        cache_key = f"evolution_record_{pk}"
+        record = cache.get(cache_key)
+        
+        if record is None:
+            record = EvolutionRecord.objects.select_related(
+                'beneficiary', 'author', 'signed_by_beneficiary'
+            ).get(pk=pk)
+            cache.set(cache_key, record, settings.CACHE_TIMEOUT['MEDIUM'])
+        
+        return record
 
 
 class EvolutionRecordCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -55,17 +107,43 @@ class EvolutionRecordCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateV
     def test_func(self):
         return is_technician(self.request.user)
     
+    def get_form(self, form_class=None):
+        """Otimizar queryset das beneficiárias no formulário"""
+        form = super().get_form(form_class)
+        if 'beneficiary' in form.fields:
+            form.fields['beneficiary'].queryset = Beneficiary.objects.order_by('full_name')
+        return form
+    
     def get_initial(self):
         initial = super().get_initial()
-        # Se beneficiário foi passado na URL
+        # Se beneficiário foi passado na URL (com cache)
         beneficiary_id = self.request.GET.get('beneficiary')
         if beneficiary_id:
             try:
-                beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+                cache_key = f"beneficiary_{beneficiary_id}"
+                beneficiary = cache.get(cache_key)
+                if beneficiary is None:
+                    beneficiary = Beneficiary.objects.get(pk=beneficiary_id)
+                    cache.set(cache_key, beneficiary, settings.CACHE_TIMEOUT['SHORT'])
+                
                 initial['beneficiary'] = beneficiary
             except Beneficiary.DoesNotExist:
                 pass
         return initial
+    
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
+        
+        # Invalidar caches relacionados
+        cache_keys = [
+            f"evolution_records__{signature_filter}"
+            for signature_filter in ['', 'required', 'signed', 'pending']
+        ]
+        cache.delete_many(cache_keys)
+        
+        messages.success(self.request, f'Registro de evolução para {form.instance.beneficiary.full_name} criado com sucesso!')
+        return response
     
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -85,7 +163,30 @@ class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
     def test_func(self):
         return is_technician(self.request.user)
     
+    def get_object(self, queryset=None):
+        """Otimizar query do objeto"""
+        pk = self.kwargs.get(self.pk_url_kwarg)
+        cache_key = f"evolution_record_{pk}"
+        record = cache.get(cache_key)
+        
+        if record is None:
+            record = EvolutionRecord.objects.select_related(
+                'beneficiary', 'author', 'signed_by_beneficiary'
+            ).get(pk=pk)
+            cache.set(cache_key, record, settings.CACHE_TIMEOUT['MEDIUM'])
+        
+        return record
+    
     def form_valid(self, form):
         response = super().form_valid(form)
+        
+        # Invalidar caches
+        cache.delete(f"evolution_record_{self.object.pk}")
+        cache_keys = [
+            f"evolution_records__{signature_filter}"
+            for signature_filter in ['', 'required', 'signed', 'pending']
+        ]
+        cache.delete_many(cache_keys)
+        
         messages.success(self.request, f'Registro de evolução para {form.instance.beneficiary.full_name} atualizado com sucesso!')
         return response

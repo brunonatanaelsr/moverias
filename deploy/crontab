@@ -1,0 +1,28 @@
+# Crontab configuration for Move Marias monitoring
+
+# Run system monitor every 5 minutes
+*/5 * * * * /var/www/movemarias/deploy/monitor.sh >> /var/log/movemarias/monitor.log 2>&1
+
+# Health check every minute
+* * * * * curl -f http://localhost:8000/health/ > /dev/null 2>&1 || echo "$(date): Health check failed" >> /var/log/movemarias/health_failures.log
+
+# Database backup daily at 2 AM
+0 2 * * * /var/www/movemarias/venv/bin/python /var/www/movemarias/manage.py backup_database
+
+# Clean old log files weekly
+0 3 * * 0 find /var/log/movemarias -name "*.log" -mtime +30 -delete
+
+# SSL certificate check daily
+0 6 * * * /var/www/movemarias/deploy/monitor.sh | grep -i ssl >> /var/log/movemarias/ssl_check.log
+
+# System resource alert if high usage
+*/10 * * * * [ $(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100.0}') -gt 90 ] && echo "$(date): High memory usage detected" >> /var/log/movemarias/alerts.log
+
+# Disk space alert
+0 */6 * * * [ $(df / | awk 'NR==2 {print $5}' | sed 's/%//') -gt 85 ] && echo "$(date): Low disk space detected" >> /var/log/movemarias/alerts.log
+
+# Check for failed login attempts
+*/15 * * * * grep "Login FAILED" /var/log/movemarias/security.log | tail -10 | grep "$(date '+%Y-%m-%d %H:')" >> /var/log/movemarias/failed_logins.log 2>/dev/null
+
+# Performance monitoring - check for slow requests
+*/30 * * * * grep "Slow request" /var/log/movemarias/performance.log | tail -10 | grep "$(date '+%Y-%m-%d %H:')" >> /var/log/movemarias/slow_requests.log 2>/dev/null
