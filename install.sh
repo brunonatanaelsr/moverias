@@ -216,6 +216,11 @@ install_python_dependencies() {
     $APP_PATH/venv/bin/pip install -r requirements.txt
     check_result "Falha ao instalar dependências do requirements.txt" "Dependências do requirements.txt instaladas"
     
+    # Garante versão estável do Django compatível com django_cryptography
+    log "Garantindo compatibilidade Django 4.2 LTS com django-cryptography..."
+    $APP_PATH/venv/bin/pip install "Django>=4.2,<4.3"
+    check_result "Falha ao instalar Django 4.2 LTS" "Django 4.2 LTS instalado com sucesso"
+    
     # Instalar pacotes adicionais
     log "Instalando pacotes Python adicionais..."
     $APP_PATH/venv/bin/pip install gunicorn psycopg2-binary redis django-redis
@@ -269,6 +274,16 @@ EOF
 # Executar migrações Django
 setup_django() {
     log "Configurando Django..."
+    
+    # Criar diretórios para arquivos estáticos e media
+    mkdir -p $APP_PATH/staticfiles
+    mkdir -p $APP_PATH/media
+    
+    # Configurar permissões dos diretórios
+    chown -R www-data:www-data $APP_PATH/staticfiles
+    chown -R www-data:www-data $APP_PATH/media
+    chmod -R 755 $APP_PATH/staticfiles
+    chmod -R 755 $APP_PATH/media
     
     # Coletar arquivos estáticos
     $APP_PATH/venv/bin/python manage.py collectstatic --noinput
