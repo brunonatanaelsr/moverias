@@ -1,0 +1,439 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Dashboard - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Enhanced Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h2 mb-1 fw-bold">Dashboard Move Marias</h1>
+                            <p class="mb-0 opacity-90">Visão geral do sistema e indicadores principais</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="small opacity-75">Última atualização</div>
+                            <div class="fw-semibold">{{ "now"|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main KPIs Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Total Beneficiárias -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-gradient rounded-circle p-3 me-3">
+                            <i class="fas fa-users fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Total de Beneficiárias</div>
+                            <div class="h4 mb-0 fw-bold text-primary">{{ total_beneficiaries }}</div>
+                            <div class="small text-success">
+                                <i class="fas fa-arrow-up me-1"></i>+{{ new_beneficiaries_week }} esta semana
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuários Ativos -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-gradient rounded-circle p-3 me-3">
+                            <i class="fas fa-user-check fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Usuários Ativos</div>
+                            <div class="h4 mb-0 fw-bold text-success">{{ active_users }}</div>
+                            <div class="small text-info">
+                                <i class="fas fa-clock me-1"></i>{{ recent_logins }} acessos recentes
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workshops Ativos -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-gradient rounded-circle p-3 me-3">
+                            <i class="fas fa-chalkboard-teacher fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Workshops Ativos</div>
+                            <div class="h4 mb-0 fw-bold text-warning">{{ active_workshops }}</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-list me-1"></i>{{ total_workshops }} total
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projetos Ativos -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-gradient rounded-circle p-3 me-3">
+                            <i class="fas fa-project-diagram fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Projetos Ativos</div>
+                            <div class="h4 mb-0 fw-bold text-info">{{ active_projects }}</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-tasks me-1"></i>{{ total_projects }} total
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary KPIs -->
+    <div class="row g-4 mb-4">
+        <!-- Entrevistas Sociais -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-purple rounded-circle p-3 me-3" style="background: #6f42c1;">
+                            <i class="fas fa-clipboard-list fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Entrevistas Sociais</div>
+                            <div class="h5 mb-0 fw-bold">{{ total_interviews }}</div>
+                            <div class="small">
+                                <span class="text-warning">{{ pending_interviews }} pendentes</span> |
+                                <span class="text-success">{{ completed_interviews }} finalizadas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evoluções -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-gradient rounded-circle p-3 me-3" style="background: linear-gradient(45deg, #20c997, #0dcaf0);">
+                            <i class="fas fa-chart-line fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Registros de Evolução</div>
+                            <div class="h5 mb-0 fw-bold">{{ total_evolutions }}</div>
+                            <div class="small text-success">
+                                <i class="fas fa-plus me-1"></i>{{ evolutions_month }} este mês
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atividades do Sistema -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-gradient rounded-circle p-3 me-3">
+                            <i class="fas fa-history fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Atividades do Sistema</div>
+                            <div class="h5 mb-0 fw-bold">{{ activities_today }}</div>
+                            <div class="small text-muted">
+                                <i class="fas fa-calendar-week me-1"></i>{{ activities_week }} esta semana
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Novas Beneficiárias -->
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-gradient rounded-circle p-3 me-3" style="background: linear-gradient(45deg, #fd7e14, #ffc107);">
+                            <i class="fas fa-user-plus fa-lg text-white"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Novas Beneficiárias</div>
+                            <div class="h5 mb-0 fw-bold">{{ new_beneficiaries_month }}</div>
+                            <div class="small text-muted">Últimos 30 dias</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics Row -->
+    <div class="row g-4 mb-4">
+        <!-- Demographics Chart -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <div class="bg-info bg-gradient rounded-circle p-2 me-3">
+                            <i class="fas fa-chart-pie text-white"></i>
+                        </div>
+                        <span>Distribuição por Faixa Etária</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3 mb-2">
+                                <i class="fas fa-child text-primary fa-lg"></i>
+                            </div>
+                            <div class="h5 mb-1 fw-bold text-primary">{{ age_stats.children }}</div>
+                            <div class="small text-muted">Crianças<br>(0-17 anos)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3 mb-2">
+                                <i class="fas fa-user text-success fa-lg"></i>
+                            </div>
+                            <div class="h5 mb-1 fw-bold text-success">{{ age_stats.adults }}</div>
+                            <div class="small text-muted">Adultos<br>(18-59 anos)</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-warning bg-opacity-10 rounded-3 p-3 mb-2">
+                                <i class="fas fa-user-friends text-warning fa-lg"></i>
+                            </div>
+                            <div class="h5 mb-1 fw-bold text-warning">{{ age_stats.elderly }}</div>
+                            <div class="small text-muted">Idosos<br>(60+ anos)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workshop Status -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <div class="bg-warning bg-gradient rounded-circle p-2 me-3">
+                            <i class="fas fa-chart-bar text-white"></i>
+                        </div>
+                        <span>Status dos Workshops</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Ativas</small>
+                            <small class="fw-semibold text-success">{{ active_workshops }}</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {% widthratio active_workshops total_workshops 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Finalizadas</small>
+                            <small class="fw-semibold text-primary">{{ completed_workshops }}</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: {% widthratio completed_workshops total_workshops 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Canceladas</small>
+                            <small class="fw-semibold text-danger">{{ cancelled_workshops }}</small>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: {% widthratio cancelled_workshops total_workshops 100 %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <div class="bg-primary bg-gradient rounded-circle p-2 me-3">
+                            <i class="fas fa-bolt text-white"></i>
+                        </div>
+                        <span>Ações Rápidas</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'dashboard:beneficiary_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nova Beneficiária
+                        </a>
+                        <a href="#" class="btn btn-outline-success">
+                            <i class="fas fa-clipboard-list me-2"></i>Nova Entrevista
+                        </a>
+                        <a href="#" class="btn btn-outline-warning">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>Novo Workshop
+                        </a>
+                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-info">
+                            <i class="fas fa-users-cog me-2"></i>Gerenciar Usuários
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Tables Row -->
+    <div class="row g-4">
+        <!-- Recent Beneficiaries -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <div class="bg-primary bg-gradient rounded-circle p-2 me-3">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                            <span>Beneficiárias Recentes</span>
+                        </h5>
+                        <a href="{% url 'dashboard:beneficiaries_list' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Ver Todas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_beneficiaries %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="border-0 px-4 py-3">Nome</th>
+                                        <th class="border-0 py-3">Bairro</th>
+                                        <th class="border-0 py-3">Data Cadastro</th>
+                                        <th class="border-0 py-3">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for beneficiary in recent_beneficiaries %}
+                                    <tr>
+                                        <td class="px-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                    <i class="fas fa-user text-primary"></i>
+                                                </div>
+                                                <span class="fw-semibold">{{ beneficiary.full_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-3">{{ beneficiary.neighbourhood|default:"-" }}</td>
+                                        <td class="py-3">{{ beneficiary.created_at|date:"d/m/Y" }}</td>
+                                        <td class="py-3">
+                                            <a href="{% url 'dashboard:beneficiary_detail' beneficiary.pk %}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhuma beneficiária cadastrada ainda</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 d-flex align-items-center">
+                            <div class="bg-success bg-gradient rounded-circle p-2 me-3">
+                                <i class="fas fa-history text-white"></i>
+                            </div>
+                            <span>Atividades Recentes</span>
+                        </h5>
+                        <a href="{% url 'users:activity_list' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-external-link-alt me-1"></i>Ver Todas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_activities %}
+                        <div class="list-group list-group-flush">
+                            {% for activity in recent_activities %}
+                            <div class="list-group-item border-0 py-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-{% if activity.action == 'create' %}success{% elif activity.action == 'update' %}warning{% elif activity.action == 'delete' %}danger{% else %}info{% endif %} bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-{% if activity.action == 'create' %}plus{% elif activity.action == 'update' %}edit{% elif activity.action == 'delete' %}trash{% else %}info{% endif %} text-{% if activity.action == 'create' %}success{% elif activity.action == 'update' %}warning{% elif activity.action == 'delete' %}danger{% else %}info{% endif %}"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">{{ activity.user.full_name }}</div>
+                                            <div class="small text-muted">{{ activity.description }}</div>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ activity.timestamp|timesince }} atrás</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhuma atividade recente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}
