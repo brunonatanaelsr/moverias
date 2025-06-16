@@ -7,27 +7,35 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Header -->
+    <!-- Enhanced Header -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0">
-                        <i class="fas fa-user-plus text-primary me-2"></i>
-                        {% if object %}Editar Usuário{% else %}Novo Usuário{% endif %}
-                    </h1>
-                    <p class="text-muted mb-0">
-                        {% if object %}
-                            Atualize as informações do usuário {{ object.full_name }}
-                        {% else %}
-                            Preencha os dados para criar um novo usuário
-                        {% endif %}
-                    </p>
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-4">
+                                <i class="fas fa-{% if object %}user-edit{% else %}user-plus{% endif %} fa-2x text-white"></i>
+                            </div>
+                            <div>
+                                <h1 class="h2 mb-1 fw-bold">
+                                    {% if object %}Editar Usuário{% else %}Novo Usuário{% endif %}
+                                </h1>
+                                <p class="mb-0 opacity-90">
+                                    {% if object %}
+                                        Atualize as informações do usuário {{ object.full_name }}
+                                    {% else %}
+                                        Preencha os dados para criar um novo usuário no sistema
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-light">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Voltar para Lista
+                        </a>
+                    </div>
                 </div>
-                <a href="{% url 'users:user_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>
-                    Voltar
-                </a>
             </div>
         </div>
     </div>
@@ -35,16 +43,29 @@
     <!-- Form Card -->
     <div class="row">
         <div class="col-lg-8 col-xl-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-user me-2"></i>
-                        Dados do Usuário
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 p-4">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <div class="bg-primary bg-gradient rounded-circle p-2 me-3">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <span>Dados do Usuário</span>
                     </h5>
                 </div>
-                <div class="card-body">
-                    <form method="post" novalidate>
+                <div class="card-body p-4">
+                    <form method="post" novalidate id="userForm">
                         {% csrf_token %}
+                        
+                        <!-- Progress Indicator -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between text-muted small mb-2">
+                                <span>Progresso do Cadastro</span>
+                                <span id="progressText">0% completo</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar" id="progressBar" style="width: 0%"></div>
+                            </div>
+                        </div>
                         
                         <!-- Personal Information -->
                         <div class="row mb-3">
@@ -144,18 +165,111 @@
                             </div>
                         </div>
 
-                        <!-- Actions -->
-                        <div class="row mt-4">
+                        <!-- Enhanced Actions Section -->
+                        <div class="row mt-5">
                             <div class="col-12">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'users:user_list' %}" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i>
-                                        Cancelar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>
-                                        {% if object %}Atualizar{% else %}Criar{% endif %} Usuário
-                                    </button>
+                                <!-- Action Card with Gradient Background -->
+                                <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
+                                    <div class="card-body p-4">
+                                        <!-- Header Section -->
+                                        <div class="d-flex align-items-center mb-4">
+                                            <div class="bg-primary bg-gradient rounded-circle p-3 me-3">
+                                                <i class="fas fa-{% if object %}save{% else %}rocket{% endif %} fa-lg text-white"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1 text-primary fw-bold">
+                                                    {% if object %}
+                                                        Atualizar Usuário
+                                                    {% else %}
+                                                        Finalizar Novo Cadastro
+                                                    {% endif %}
+                                                </h5>
+                                                <p class="mb-0 text-muted">
+                                                    {% if object %}
+                                                        Confirme as alterações realizadas no perfil do usuário
+                                                    {% else %}
+                                                        Revise os dados e confirme a criação do novo usuário
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Progress Indicator -->
+                                        <div class="mb-4">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <small class="text-muted fw-semibold">
+                                                    <i class="fas fa-tasks me-1"></i>
+                                                    Progresso do Formulário
+                                                </small>
+                                                <small class="text-primary fw-bold">
+                                                    <span id="progressText">0% completo</span>
+                                                </small>
+                                            </div>
+                                            <div class="progress shadow-sm" style="height: 10px; border-radius: 10px;">
+                                                <div class="progress-bar bg-gradient progress-bar-striped progress-bar-animated" 
+                                                     id="progressBar" 
+                                                     style="width: 0%; border-radius: 10px;"
+                                                     role="progressbar"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex flex-column flex-md-row gap-3 align-items-stretch">
+                                            <!-- Cancel Button -->
+                                            <button type="button" 
+                                                    class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center"
+                                                    onclick="if(confirm('Tem certeza que deseja cancelar? {% if not object %}Todos os dados serão perdidos.{% else %}As alterações não serão salvas.{% endif %}')) window.location.href='{% url 'users:user_list' %}'">
+                                                <i class="fas fa-times me-2"></i>
+                                                Cancelar
+                                            </button>
+                                            
+                                            <!-- Primary Submit Button -->
+                                            <button type="submit" 
+                                                    class="btn btn-{% if object %}warning{% else %}success{% endif %} btn-lg shadow-lg flex-fill d-flex align-items-center justify-content-center position-relative"
+                                                    style="min-height: 60px; font-weight: 600; letter-spacing: 0.5px; border-radius: 12px;">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                                                        <i class="fas fa-{% if object %}save{% else %}check-circle{% endif %} fa-lg text-white"></i>
+                                                    </div>
+                                                    <div class="text-start">
+                                                        <div class="fs-5 mb-0">
+                                                            {% if object %}
+                                                                Salvar Alterações
+                                                            {% else %}
+                                                                ✨ Finalizar Cadastro
+                                                            {% endif %}
+                                                        </div>
+                                                        <small class="opacity-90 d-block">
+                                                            {% if object %}
+                                                                Confirmar atualizações
+                                                            {% else %}
+                                                                Criar novo usuário
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Success Animation Effect -->
+                                                <div class="position-absolute top-0 start-0 w-100 h-100 rounded-3 bg-white opacity-0 pointer-events-none" 
+                                                     id="submitPulse" 
+                                                     style="border-radius: 12px; transition: opacity 0.3s ease;"></div>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Additional Info -->
+                                        <div class="mt-3 p-3 bg-light bg-opacity-50 rounded-3">
+                                            <div class="d-flex align-items-center text-muted">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <small>
+                                                    {% if object %}
+                                                        As alterações entrarão em vigor imediatamente após salvar.
+                                                    {% else %}
+                                                        O usuário receberá um email com as credenciais de acesso.
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -164,45 +278,95 @@
             </div>
         </div>
 
-        <!-- Help Card -->
+        <!-- Enhanced Help Card -->
         <div class="col-lg-4 col-xl-6">
-            <div class="card bg-light">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Informações Importantes
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 p-4">
+                    <h6 class="card-title mb-0 d-flex align-items-center">
+                        <div class="bg-info bg-gradient rounded-circle p-2 me-3">
+                            <i class="fas fa-info-circle text-white"></i>
+                        </div>
+                        <span>Guia de Preenchimento</span>
                     </h6>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h6 class="text-primary">
-                            <i class="fas fa-users me-1"></i>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <h6 class="text-primary d-flex align-items-center mb-3">
+                            <i class="fas fa-users me-2"></i>
                             Funções do Sistema
                         </h6>
-                        <ul class="list-unstyled small">
-                            <li><strong>Admin:</strong> Acesso total ao sistema</li>
-                            <li><strong>Coordenador:</strong> Gestão de equipes e relatórios</li>
-                            <li><strong>Técnico:</strong> Atendimento direto aos beneficiários</li>
-                            <li><strong>Assistente:</strong> Suporte administrativo</li>
-                        </ul>
+                        <div class="list-group list-group-flush">
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-danger me-2">Admin</span>
+                                    <small>Acesso total ao sistema</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-warning me-2">Coord.</span>
+                                    <small>Gestão de equipes e relatórios</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-success me-2">Técnico</span>
+                                    <small>Atendimento direto aos beneficiários</small>
+                                </div>
+                            </div>
+                            <div class="list-group-item border-0 px-0 py-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-info me-2">Assist.</span>
+                                    <small>Suporte administrativo</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <h6 class="text-primary">
-                            <i class="fas fa-shield-alt me-1"></i>
-                            Permissões
+                    <div class="mb-4">
+                        <h6 class="text-primary d-flex align-items-center mb-3">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Permissões Especiais
                         </h6>
-                        <ul class="list-unstyled small">
-                            <li><strong>Usuário Ativo:</strong> Pode acessar o sistema</li>
-                            <li><strong>Acesso ao Admin:</strong> Pode acessar o painel administrativo</li>
-                            <li><strong>Super Usuário:</strong> Permissões totais (use com cuidado)</li>
-                        </ul>
+                        <div class="bg-light rounded-3 p-3">
+                            <div class="small">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <span><strong>Usuário Ativo:</strong> Pode acessar o sistema</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-cog text-warning me-2"></i>
+                                    <span><strong>Acesso Admin:</strong> Painel administrativo</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-crown text-danger me-2"></i>
+                                    <span><strong>Super Usuário:</strong> Permissões totais</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {% if not object %}
-                    <div class="alert alert-info">
-                        <i class="fas fa-lightbulb me-1"></i>
-                        <strong>Dica:</strong> A senha inicial pode ser alterada pelo usuário no primeiro acesso.
+                    <div class="alert alert-primary border-0 shadow-sm">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-lightbulb text-primary me-2 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1">Dica Importante</h6>
+                                <small class="mb-0">A senha inicial pode ser alterada pelo usuário no primeiro acesso ao sistema.</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if object %}
+                    <div class="alert alert-warning border-0 shadow-sm">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading mb-1">Atenção</h6>
+                                <small class="mb-0">Alterações nas permissões entrarão em vigor no próximo login do usuário.</small>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -210,4 +374,230 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('userForm');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const submitPulse = document.getElementById('submitPulse');
+    
+    // Lista de campos obrigatórios
+    const requiredFields = ['id_full_name', 'id_email', 'id_username', 'id_role'];
+    {% if not object %}
+    requiredFields.push('id_password1', 'id_password2');
+    {% endif %}
+    
+    // Função para calcular o progresso
+    function updateProgress() {
+        let filledFields = 0;
+        
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field && field.value.trim() !== '') {
+                filledFields++;
+            }
+        });
+        
+        const progress = Math.round((filledFields / requiredFields.length) * 100);
+        progressBar.style.width = progress + '%';
+        progressText.textContent = progress + '% completo';
+        
+        // Atualizar cor e animação da barra de progresso
+        progressBar.className = 'progress-bar bg-gradient progress-bar-striped progress-bar-animated';
+        if (progress < 30) {
+            progressBar.classList.add('bg-danger');
+        } else if (progress < 70) {
+            progressBar.classList.add('bg-warning');
+        } else {
+            progressBar.classList.add('bg-success');
+        }
+        
+        // Atualizar estado do botão submit
+        updateSubmitButton(progress);
+    }
+    
+    function updateSubmitButton(progress) {
+        const iconClass = '{% if object %}save{% else %}check-circle{% endif %}';
+        const buttonText = '{% if object %}Salvar Alterações{% else %}✨ Finalizar Cadastro{% endif %}';
+        const subText = '{% if object %}Confirmar atualizações{% else %}Criar novo usuário{% endif %}';
+        
+        if (progress === 100) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-{% if object %}warning{% else %}success{% endif %}');
+            submitBtn.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                        <i class="fas fa-${iconClass} fa-lg text-white"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="fs-5 mb-0">${buttonText}</div>
+                        <small class="opacity-90 d-block">${subText}</small>
+                    </div>
+                </div>
+            `;
+            
+            // Efeito de pulso quando habilitado
+            if (submitPulse) {
+                submitPulse.style.opacity = '0.2';
+                setTimeout(() => {
+                    if (submitPulse) submitPulse.style.opacity = '0';
+                }, 300);
+            }
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-success', 'btn-warning');
+            submitBtn.classList.add('btn-secondary');
+            submitBtn.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                        <i class="fas fa-hourglass-half fa-lg text-white"></i>
+                    </div>
+                    <div class="text-start">
+                        <div class="fs-5 mb-0">Complete os Campos</div>
+                        <small class="opacity-90 d-block">${progress}% preenchido</small>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Adicionar listeners aos campos
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', updateProgress);
+            field.addEventListener('change', updateProgress);
+            
+            // Efeito visual ao focar no campo
+            field.addEventListener('focus', function() {
+                this.parentNode.style.transform = 'scale(1.02)';
+                this.parentNode.style.transition = 'transform 0.2s ease';
+            });
+            
+            field.addEventListener('blur', function() {
+                this.parentNode.style.transform = 'scale(1)';
+            });
+        }
+    });
+    
+    // Validação em tempo real de email
+    const emailField = document.getElementById('id_email');
+    if (emailField) {
+        emailField.addEventListener('blur', function() {
+            const email = this.value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email && !emailRegex.test(email)) {
+                this.classList.add('is-invalid');
+                
+                if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Por favor, insira um email válido.';
+                    this.parentNode.appendChild(feedback);
+                }
+            } else {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.remove();
+                }
+            }
+        });
+    }
+    
+    // Validação de confirmação de senha
+    {% if not object %}
+    const password1 = document.getElementById('id_password1');
+    const password2 = document.getElementById('id_password2');
+    
+    if (password1 && password2) {
+        function validatePasswords() {
+            if (password2.value && password1.value !== password2.value) {
+                password2.classList.add('is-invalid');
+                
+                if (!password2.nextElementSibling || !password2.nextElementSibling.classList.contains('invalid-feedback')) {
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>As senhas não coincidem.';
+                    password2.parentNode.appendChild(feedback);
+                }
+            } else {
+                password2.classList.remove('is-invalid');
+                const feedback = password2.parentNode.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.remove();
+                }
+            }
+        }
+        
+        password2.addEventListener('input', validatePasswords);
+        password1.addEventListener('input', validatePasswords);
+    }
+    {% endif %}
+    
+    // Calcular progresso inicial
+    updateProgress();
+    
+    // Animação de submit melhorada
+    form.addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                    <i class="fas fa-spinner fa-spin fa-lg text-white"></i>
+                </div>
+                <div class="text-start">
+                    <div class="fs-5 mb-0">Processando...</div>
+                    <small class="opacity-90 d-block">{% if object %}Salvando alterações{% else %}Criando usuário{% endif %}</small>
+                </div>
+            </div>
+        `;
+        
+        // Efeito visual de success
+        if (submitPulse) {
+            submitPulse.style.opacity = '0.3';
+            submitPulse.style.animation = 'pulse 1s infinite';
+        }
+    });
+    
+    // Adicionar CSS personalizado para animações
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.1; transform: scale(1.05); }
+            100% { opacity: 0.3; transform: scale(1); }
+        }
+        
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+            border-color: #667eea;
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            transform: none !important;
+        }
+        
+        .progress-bar-animated {
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+        
+        @keyframes progress-bar-stripes {
+            0% { background-position: 1rem 0; }
+            100% { background-position: 0 0; }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
 {% endblock %}
