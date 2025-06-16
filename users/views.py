@@ -247,6 +247,15 @@ class UserActivityListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['users'] = CustomUser.objects.filter(is_active=True).order_by('full_name')
+        
+        # Calcular número de usuários únicos nas atividades
+        activities = context['activities']
+        if activities:
+            unique_users = activities.values_list('user', flat=True).distinct()
+            context['unique_users_count'] = len(set(unique_users))
+        else:
+            context['unique_users_count'] = 0
+            
         return context
 
 

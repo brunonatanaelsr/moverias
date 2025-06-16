@@ -15,11 +15,14 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Environment setup
+# Environment setup with better defaults for easy deployment
 env = environ.Env(
-    DEBUG=(bool, True),
-    SECRET_KEY=(str, 'django-insecure-dev-key'),
+    DEBUG=(bool, False),  # Production-safe default
+    SECRET_KEY=(str, ''),
     DATABASE_URL=(str, ''),
+    ALLOWED_HOSTS=(list, []),
+    USE_S3=(bool, False),  # Local storage by default
+    ENVIRONMENT=(str, 'development'),
 )
 
 # Read .env file if it exists
