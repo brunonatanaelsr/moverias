@@ -1,6 +1,6 @@
 <!-- Enhanced Beneficiaries Table Partial with HTMX -->
 <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-    {% if beneficiaries %}
+    {% if page_obj %}
     <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
             <tr>
@@ -25,7 +25,7 @@
             </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
-            {% for beneficiary in beneficiaries %}
+            {% for beneficiary in page_obj %}
             <tr class="hover:bg-gray-50 transition-colors" id="beneficiary-{{ beneficiary.id }}">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">

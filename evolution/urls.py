@@ -11,4 +11,5 @@ urlpatterns = [
     path('create/', views.EvolutionRecordCreateView.as_view(), name='create'),
     path('<int:pk>/', views.EvolutionRecordDetailView.as_view(), name='detail'),
     path('<int:pk>/edit/', views.EvolutionRecordUpdateView.as_view(), name='edit'),
+    path('<int:pk>/delete/', views.EvolutionRecordDeleteView.as_view(), name='delete'),
 ]

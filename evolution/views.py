@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.cache import cache
@@ -37,7 +37,7 @@ class EvolutionRecordListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         
         if queryset is None:
             queryset = EvolutionRecord.objects.select_related(
-                'beneficiary', 'author', 'signed_by_beneficiary'
+                'beneficiary', 'author'
             )
             
             if search:
@@ -89,7 +89,7 @@ class EvolutionRecordDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
         
         if record is None:
             record = EvolutionRecord.objects.select_related(
-                'beneficiary', 'author', 'signed_by_beneficiary'
+                'beneficiary', 'author'
             ).get(pk=pk)
             cache.set(cache_key, record, settings.CACHE_TIMEOUT['MEDIUM'])
         
@@ -171,7 +171,7 @@ class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
         
         if record is None:
             record = EvolutionRecord.objects.select_related(
-                'beneficiary', 'author', 'signed_by_beneficiary'
+                'beneficiary', 'author'
             ).get(pk=pk)
             cache.set(cache_key, record, settings.CACHE_TIMEOUT['MEDIUM'])
         
@@ -190,3 +190,41 @@ class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
         
         messages.success(self.request, f'Registro de evolução para {form.instance.beneficiary.full_name} atualizado com sucesso!')
         return response
+
+
+class EvolutionRecordDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Excluir registro de evolução"""
+    
+    model = EvolutionRecord
+    template_name = 'evolution/evolution_confirm_delete.html'
+    success_url = reverse_lazy('evolution:list')
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        """Override delete para adicionar log e invalidar cache"""
+        self.object = self.get_object()
+        
+        # Log da atividade
+        from users.models import UserActivity
+        UserActivity.objects.create(
+            user=request.user,
+            action='delete',
+            description=f'Excluiu registro de evolução de {self.object.beneficiary.full_name}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        # Invalidar caches
+        cache.delete(f"evolution_record_{self.object.pk}")
+        cache_keys = [
+            f"evolution_records__{signature_filter}"
+            for signature_filter in ['', 'required', 'signed', 'pending']
+        ]
+        cache.delete_many(cache_keys)
+        
+        success_url = self.get_success_url()
+        self.object.delete()
+        
+        messages.success(request, f'Registro de evolução de {self.object.beneficiary.full_name} excluído com sucesso!')
+        return redirect(success_url)

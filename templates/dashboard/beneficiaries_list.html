@@ -6,27 +6,89 @@
 
 {% block title %}Beneficiárias - Move Marias{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard:home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move">
+                <i class="fas fa-home mr-2" aria-hidden="true"></i>
+                Dashboard
+            </a>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
+                <span class="text-sm font-medium text-gray-500">Beneficiárias</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
 {% block content %}
-<div class="mb-8">
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Beneficiárias</h1>
-            <p class="mt-2 text-sm text-gray-600">Gerencie as beneficiárias do Move Marias</p>
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                        <i class="fas fa-users mr-3 text-purple-move" aria-hidden="true"></i>
+                        Beneficiárias
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-600">
+                        Gerencie as beneficiárias do Move Marias
+                        {% if total_count %}
+                            <span class="font-medium">({{ total_count }} cadastradas)</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <!-- Export Button -->
+                    <button type="button"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            hx-get="{% url 'dashboard:beneficiaries_export' %}"
+                            hx-trigger="click"
+                            aria-label="Exportar lista de beneficiárias">
+                        <i class="fas fa-download mr-2" aria-hidden="true"></i>
+                        Exportar
+                    </button>
+                    
+                    <!-- New Beneficiary Button -->
+                    <a href="{% url 'dashboard:beneficiary_create' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-move-dark transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <i class="fas fa-plus mr-2" aria-hidden="true"></i>
+                        Nova Beneficiária
+                    </a>
+                </div>
+            </div>
         </div>
-        <a href="{% url 'dashboard:beneficiary_create' %}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700 transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-            </svg>
-            Nova Beneficiária
-        </a>
     </div>
-</div>
 
 <div class="bg-white shadow rounded-lg">
     <div class="px-4 py-5 sm:p-6">
         <!-- Enhanced Search Component -->
-        {% include 'partials/dynamic_search.html' with search_url='/dashboard/beneficiaries/' placeholder='Buscar por nome, CPF ou telefone...' %}
+        <div class="search-container bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6" role="search">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <!-- Main Search Input -->
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400" aria-hidden="true"></i>
+                    </div>
+                    <input type="text" 
+                           name="q" 
+                           id="search-input"
+                           class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                           placeholder="Buscar por nome, telefone ou bairro..."
+                           value="{{ search_query|default:'' }}"
+                           hx-get="{% url 'dashboard:beneficiaries_list' %}"
+                           hx-trigger="keyup changed delay:300ms, search"
+                           hx-target="#beneficiaries-table"
+                           autocomplete="off"
+                           aria-label="Campo de busca">
+                </div>
+            </div>
+        </div>
         
         <!-- Tabela de beneficiárias -->
         <div id="beneficiaries-table">

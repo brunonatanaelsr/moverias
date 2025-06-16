@@ -14,6 +14,7 @@ urlpatterns = [
     path('users/', include('users.urls')),  # User management
     path('social/', include('social.urls')),  # Social anamnesis
     path('projects/', include('projects.urls')),  # Projects and enrollments
+    path('members/', include('members.urls')),  # Beneficiary management
     path('evolution/', include('evolution.urls')),  # Evolution records
     path('coaching/', include('coaching.urls')),  # Action plans and wheel of life
     path('workshops/', include('workshops.urls')),  # Workshop management

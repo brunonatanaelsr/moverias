@@ -1,0 +1,93 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Confirmar Exclusão - Move Marias{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard:home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move">
+                <i class="fas fa-home mr-2"></i>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                <a href="{% url 'social:list' %}" class="text-sm font-medium text-gray-700 hover:text-purple-move">
+                    Anamneses Sociais
+                </a>
+            </div>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+                <span class="text-sm font-medium text-gray-500">Excluir</span>
+            </div>
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-red-50 px-6 py-4 border-b border-red-200">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h1 class="text-lg font-medium text-red-900">Confirmar Exclusão</h1>
+                    <p class="text-sm text-red-700">Esta ação não pode ser desfeita</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-6">
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Anamnese Social</h3>
+                <div class="space-y-2">
+                    <p><strong>Beneficiária:</strong> {{ object.beneficiary.full_name }}</p>
+                    <p><strong>Data:</strong> {{ object.date|date:"d/m/Y" }}</p>
+                    <p><strong>Técnica:</strong> {{ object.signed_by_technician.get_full_name }}</p>
+                    <p><strong>Renda Familiar:</strong> R$ {{ object.income|floatformat:2 }}</p>
+                </div>
+            </div>
+            
+            <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-600"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Atenção!</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Você está prestes a excluir permanentemente esta anamnese social. Esta ação:</p>
+                            <ul class="list-disc list-inside mt-2">
+                                <li>Não pode ser desfeita</li>
+                                <li>Removerá todos os dados relacionados</li>
+                                <li>Será registrada no log de auditoria</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" class="flex items-center justify-end space-x-3">
+                {% csrf_token %}
+                <a href="{% url 'social:detail' object.pk %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
+                    <i class="fas fa-trash mr-2"></i>
+                    Confirmar Exclusão
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

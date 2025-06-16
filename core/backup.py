@@ -14,25 +14,41 @@ from django.apps import apps
 import boto3
 from pathlib import Path
 import logging
+from cryptography.fernet import Fernet
+import subprocess
 
 logger = logging.getLogger('movemarias')
 
 class BackupManager:
     """Comprehensive backup management system"""
     
-    def __init__(self, backup_dir=None):
-        self.backup_dir = Path(backup_dir or settings.BASE_DIR / 'backups')
+    def __init__(self):
+        self.backup_dir = Path(settings.BASE_DIR) / 'backups'
         self.backup_dir.mkdir(exist_ok=True)
         
-        # Configure cloud storage if available
-        self.s3_client = None
-        if hasattr(settings, 'AWS_ACCESS_KEY_ID'):
-            self.s3_client = boto3.client(
-                's3',
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-1')
-            )
+        # Generate or load encryption key
+        self.key_file = self.backup_dir / '.backup_key'
+        self.encryption_key = self._get_or_create_encryption_key()
+        self.cipher = Fernet(self.encryption_key) if self.encryption_key else None
+    
+    def _get_or_create_encryption_key(self):
+        """Get or create encryption key for backups"""
+        try:
+            if self.key_file.exists():
+                with open(self.key_file, 'rb') as f:
+                    return f.read()
+            else:
+                # Generate new key
+                key = Fernet.generate_key()
+                with open(self.key_file, 'wb') as f:
+                    f.write(key)
+                # Secure the key file
+                os.chmod(self.key_file, 0o600)
+                logger.info("Generated new backup encryption key")
+                return key
+        except Exception as e:
+            logger.warning(f"Could not initialize encryption: {e}")
+            return None
     
     def create_full_backup(self, include_media=True):
         """Create a complete system backup"""
@@ -305,6 +321,192 @@ class BackupManager:
                 continue
         
         return sorted(backups, key=lambda x: x['created'], reverse=True)
+    
+    def create_encrypted_backup(self):
+        """Create encrypted backup of the database"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        
+        # Determine database type and create appropriate backup
+        db_config = settings.DATABASES['default']
+        engine = db_config['ENGINE']
+        
+        try:
+            if 'sqlite' in engine:
+                backup_file = self._backup_sqlite_encrypted(timestamp)
+            elif 'postgresql' in engine:
+                backup_file = self._backup_postgresql_encrypted(timestamp)
+            else:
+                # Fallback to regular backup
+                backup_file = self.create_full_backup()
+                if self.cipher:
+                    backup_file = self._encrypt_file(backup_file, timestamp)
+            
+            logger.info(f"Encrypted backup created: {backup_file}")
+            return backup_file
+            
+        except Exception as e:
+            logger.error(f"Encrypted backup failed: {e}")
+            raise
+    
+    def _backup_sqlite_encrypted(self, timestamp):
+        """Backup SQLite database with encryption"""
+        db_path = settings.DATABASES['default']['NAME']
+        backup_filename = f"backup_sqlite_{timestamp}.db.gz.enc"
+        backup_path = self.backup_dir / backup_filename
+        
+        try:
+            # Read and compress database
+            with open(db_path, 'rb') as db_file:
+                db_data = db_file.read()
+            
+            compressed_data = gzip.compress(db_data)
+            
+            # Encrypt compressed data if cipher available
+            if self.cipher:
+                encrypted_data = self.cipher.encrypt(compressed_data)
+            else:
+                encrypted_data = compressed_data
+                backup_filename = backup_filename.replace('.enc', '')
+                backup_path = self.backup_dir / backup_filename
+            
+            # Write backup
+            with open(backup_path, 'wb') as backup_file:
+                backup_file.write(encrypted_data)
+            
+            return backup_path
+            
+        except Exception as e:
+            logger.error(f"SQLite encrypted backup failed: {e}")
+            raise
+    
+    def _backup_postgresql_encrypted(self, timestamp):
+        """Backup PostgreSQL database with encryption"""
+        db_config = settings.DATABASES['default']
+        backup_filename = f"backup_postgres_{timestamp}.sql.gz.enc"
+        backup_path = self.backup_dir / backup_filename
+        
+        try:
+            # Create pg_dump command
+            cmd = [
+                'pg_dump',
+                '--no-password',
+                '--clean',
+                '--create',
+                '--verbose',
+            ]
+            
+            # Add connection parameters
+            if db_config.get('HOST'):
+                cmd.extend(['--host', db_config['HOST']])
+            if db_config.get('PORT'):
+                cmd.extend(['--port', str(db_config['PORT'])])
+            if db_config.get('USER'):
+                cmd.extend(['--username', db_config['USER']])
+            
+            cmd.append(db_config['NAME'])
+            
+            # Set password via environment
+            env = os.environ.copy()
+            if db_config.get('PASSWORD'):
+                env['PGPASSWORD'] = db_config['PASSWORD']
+            
+            # Run pg_dump
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                env=env,
+                check=True
+            )
+            
+            # Compress and encrypt
+            compressed_data = gzip.compress(result.stdout.encode())
+            
+            if self.cipher:
+                encrypted_data = self.cipher.encrypt(compressed_data)
+            else:
+                encrypted_data = compressed_data
+                backup_filename = backup_filename.replace('.enc', '')
+                backup_path = self.backup_dir / backup_filename
+            
+            # Write encrypted backup
+            with open(backup_path, 'wb') as backup_file:
+                backup_file.write(encrypted_data)
+            
+            return backup_path
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"PostgreSQL encrypted backup failed: {e.stderr}")
+            raise
+        except Exception as e:
+            logger.error(f"PostgreSQL encrypted backup failed: {e}")
+            raise
+    
+    def _encrypt_file(self, file_path, timestamp):
+        """Encrypt an existing backup file"""
+        if not self.cipher:
+            return file_path
+        
+        try:
+            # Read original file
+            with open(file_path, 'rb') as f:
+                data = f.read()
+            
+            # Compress if not already compressed
+            if not file_path.name.endswith('.gz'):
+                data = gzip.compress(data)
+            
+            # Encrypt
+            encrypted_data = self.cipher.encrypt(data)
+            
+            # Write encrypted file
+            encrypted_path = file_path.with_suffix(f'.{timestamp}.enc')
+            with open(encrypted_path, 'wb') as f:
+                f.write(encrypted_data)
+            
+            # Remove original
+            os.remove(file_path)
+            
+            return encrypted_path
+            
+        except Exception as e:
+            logger.error(f"File encryption failed: {e}")
+            raise
+    
+    def verify_encrypted_backup(self, backup_file):
+        """Verify encrypted backup integrity"""
+        if not self.cipher:
+            logger.warning("No encryption key available for verification")
+            return False
+        
+        backup_path = Path(backup_file)
+        
+        try:
+            # Try to decrypt and decompress
+            with open(backup_path, 'rb') as f:
+                encrypted_data = f.read()
+            
+            if backup_path.name.endswith('.enc'):
+                decrypted_data = self.cipher.decrypt(encrypted_data)
+            else:
+                decrypted_data = encrypted_data
+            
+            if backup_path.name.endswith('.gz') or backup_path.name.endswith('.gz.enc'):
+                decompressed_data = gzip.decompress(decrypted_data)
+            else:
+                decompressed_data = decrypted_data
+            
+            # Basic integrity check
+            if len(decompressed_data) > 0:
+                logger.info(f"Encrypted backup verification successful: {backup_file}")
+                return True
+            else:
+                logger.error(f"Encrypted backup verification failed: empty data")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Encrypted backup verification failed: {e}")
+            return False
 
 # Management command for backups
 class Command(BaseCommand):

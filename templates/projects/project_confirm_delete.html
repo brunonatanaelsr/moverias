@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmar Exclusão de Matrícula{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão</h4>
+                </div>
+                <div class="card-body">
+                    <p class="fs-5">Você tem certeza que deseja excluir a matrícula de <strong>{{ projectenrollment.beneficiary.full_name }}</strong> no projeto <strong>"{{ projectenrollment.project.name }}"</strong>?</p>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Informações da Matrícula</h6>
+                        <ul class="mb-0">
+                            <li><strong>Beneficiária:</strong> {{ projectenrollment.beneficiary.full_name }}</li>
+                            <li><strong>Projeto:</strong> {{ projectenrollment.project.name }}</li>
+                            <li><strong>Dia/Turno:</strong> {{ projectenrollment.weekday_display }} - {{ projectenrollment.shift_display }}</li>
+                            <li><strong>Horário:</strong> {{ projectenrollment.start_time|time:"H:i" }}</li>
+                            <li><strong>Status:</strong> {{ projectenrollment.get_status_display }}</li>
+                            <li><strong>Data de Matrícula:</strong> {{ projectenrollment.created_at|date:"d/m/Y" }}</li>
+                        </ul>
+                    </div>
+
+                    <p class="text-muted">Esta ação não poderá ser desfeita.</p>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'projects:enrollment-list' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt"></i> Sim, Excluir Matrícula
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

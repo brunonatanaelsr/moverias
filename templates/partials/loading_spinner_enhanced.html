@@ -1,0 +1,199 @@
+<!-- Enhanced Loading Spinner Component -->
+<div class="loading-spinner flex items-center justify-center p-4" role="status" aria-label="Carregando">
+    <div class="relative">
+        <!-- Main spinner -->
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-200 border-t-purple-600"></div>
+        
+        <!-- Pulse effect -->
+        <div class="absolute inset-0 rounded-full animate-pulse bg-purple-100 opacity-20"></div>
+    </div>
+    
+    <!-- Loading text with animation -->
+    <span class="ml-3 text-gray-600 font-medium">
+        <span class="sr-only">Carregando, aguarde...</span>
+        <span aria-hidden="true" class="animate-pulse">Carregando...</span>
+    </span>
+</div>
+
+<!-- Skeleton Loading for cards -->
+<div class="skeleton-card bg-white rounded-lg shadow-lg p-6 animate-pulse hidden">
+    <div class="flex items-center space-x-4">
+        <div class="rounded-full bg-gray-200 h-12 w-12"></div>
+        <div class="flex-1 space-y-2">
+            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+    </div>
+    <div class="mt-4 space-y-2">
+        <div class="h-4 bg-gray-200 rounded"></div>
+        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+    </div>
+</div>
+
+<!-- Skeleton Loading for table rows -->
+<div class="skeleton-table-row animate-pulse hidden">
+    <div class="flex items-center space-x-4 p-4 border-b">
+        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+        <div class="h-4 bg-gray-200 rounded w-1/6"></div>
+    </div>
+</div>
+
+<!-- Alternative spinner styles -->
+<div class="hidden">
+    <!-- Dots loader -->
+    <div class="flex space-x-1 justify-center items-center p-4" id="dots-loader">
+        <div class="h-3 w-3 bg-purple-600 rounded-full animate-bounce" style="animation-delay: -0.3s;"></div>
+        <div class="h-3 w-3 bg-purple-600 rounded-full animate-bounce" style="animation-delay: -0.15s;"></div>
+        <div class="h-3 w-3 bg-purple-600 rounded-full animate-bounce"></div>
+    </div>
+    
+    <!-- Pulse loader -->
+    <div class="flex justify-center items-center p-4" id="pulse-loader">
+        <div class="w-8 h-8 bg-purple-600 rounded-full animate-pulse"></div>
+    </div>
+    
+    <!-- Progress bar loader -->
+    <div class="w-full bg-gray-200 rounded-full h-2" id="progress-loader">
+        <div class="bg-purple-600 h-2 rounded-full animate-pulse" style="width: 45%"></div>
+    </div>
+</div>
+
+<!-- Full page loading overlay -->
+<div class="full-page-loading fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 hidden" id="full-page-loader">
+    <div class="text-center">
+        <div class="relative inline-block">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600"></div>
+            <div class="absolute inset-0 rounded-full animate-pulse bg-purple-100 opacity-20"></div>
+        </div>
+        <p class="mt-4 text-gray-600 font-medium">Carregando página...</p>
+        <p class="mt-1 text-sm text-gray-500">Por favor, aguarde</p>
+    </div>
+</div>
+
+<style>
+    /* Custom loading animations */
+    @keyframes shimmer {
+        0% { background-position: -200px 0; }
+        100% { background-position: calc(200px + 100%) 0; }
+    }
+    
+    .skeleton-card,
+    .skeleton-table-row {
+        background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
+    }
+    
+    .skeleton-card > div > div,
+    .skeleton-table-row > div > div {
+        background: transparent;
+    }
+    
+    /* HTMX loading states */
+    .htmx-indicator {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .htmx-request .htmx-indicator {
+        opacity: 1;
+    }
+    
+    .htmx-request.htmx-swapping {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Loading spinner variants */
+    .loading-dots {
+        display: inline-block;
+    }
+    
+    .loading-dots:after {
+        content: '';
+        animation: loading-dots 1.5s steps(4, end) infinite;
+    }
+    
+    @keyframes loading-dots {
+        0%, 20% {
+            color: rgba(0,0,0,0);
+            text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        40% {
+            color: rgba(139, 92, 246, 1);
+            text-shadow:
+                .25em 0 0 rgba(0,0,0,0),
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        60% {
+            text-shadow:
+                .25em 0 0 rgba(139, 92, 246, 1),
+                .5em 0 0 rgba(0,0,0,0);
+        }
+        80%, 100% {
+            text-shadow:
+                .25em 0 0 rgba(139, 92, 246, 1),
+                .5em 0 0 rgba(139, 92, 246, 1);
+        }
+    }
+</style>
+
+<script>
+    // Loading spinner utilities
+    window.LoadingSpinner = {
+        show: function(type = 'default') {
+            const spinner = document.querySelector('.loading-spinner');
+            if (spinner) {
+                spinner.classList.remove('hidden');
+            }
+        },
+        
+        hide: function() {
+            const spinner = document.querySelector('.loading-spinner');
+            if (spinner) {
+                spinner.classList.add('hidden');
+            }
+        },
+        
+        showFullPage: function() {
+            const loader = document.getElementById('full-page-loader');
+            if (loader) {
+                loader.classList.remove('hidden');
+            }
+        },
+        
+        hideFullPage: function() {
+            const loader = document.getElementById('full-page-loader');
+            if (loader) {
+                loader.classList.add('hidden');
+            }
+        },
+        
+        showSkeleton: function(type = 'card') {
+            const skeleton = document.querySelector(`.skeleton-${type}`);
+            if (skeleton) {
+                skeleton.classList.remove('hidden');
+            }
+        },
+        
+        hideSkeleton: function(type = 'card') {
+            const skeleton = document.querySelector(`.skeleton-${type}`);
+            if (skeleton) {
+                skeleton.classList.add('hidden');
+            }
+        }
+    };
+    
+    // Auto-show/hide loading states for HTMX requests
+    document.body.addEventListener('htmx:beforeRequest', function(evt) {
+        LoadingSpinner.show();
+    });
+    
+    document.body.addEventListener('htmx:afterRequest', function(evt) {
+        LoadingSpinner.hide();
+    });
+</script>

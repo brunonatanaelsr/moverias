@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Move Marias - Sistema de Gestão e Acompanhamento Social">
+    <meta name="keywords" content="gestão social, beneficiárias, projetos sociais, assistência social">
+    <meta name="author" content="Move Marias">
+    
+    <!-- Preconnect para otimização de performance -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <title>{% block title %}Move Marias{% endblock %}</title>
+    
+    <!-- Font Awesome com SRI -->
+    <link rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" 
+            integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" 
+            crossorigin="anonymous"></script>
+    
+    <!-- HTMX Extensions -->
+    <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/loading-states.js"></script>
+    
+    <!-- Configuração customizada do Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'purple-move': '#8B5CF6',
+                        'pink-move': '#EC4899',
+                        'purple-move-dark': '#7C3AED',
+                        'pink-move-dark': '#DB2777',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'slide-down': 'slideDown 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        }
+                    },
+                    screens: {
+                        'xs': '475px',
+                    }
+                }
+            },
+            darkMode: 'class',
+        }
+    </script>
+    
+    <!-- Meta tags para PWA -->
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Move Marias">
+    
+    <!-- Styles personalizados -->
+    <style>
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #8B5CF6;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7C3AED;
+        }
+        
+        /* Focus styles para acessibilidade */
+        .focus-visible:focus {
+            outline: 2px solid #8B5CF6;
+            outline-offset: 2px;
+        }
+        
+        /* Reduce motion para usuários com preferências de acessibilidade */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+        /* Loading states para HTMX */
+        .htmx-request {
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .htmx-request.htmx-swapping {
+            opacity: 0.5;
+        }
+        
+        .htmx-added {
+            opacity: 0;
+        }
+        
+        .htmx-settling {
+            opacity: 1;
+            transition: opacity 1s ease;
+        }
+        
+        /* Navbar responsive improvements */
+        .navbar-item {
+            position: relative;
+        }
+        
+        .navbar-item::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 50%;
+            background-color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-item:hover::after {
+            width: 100%;
+            left: 0;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen antialiased">
+    <!-- Skip to main content link para acessibilidade -->
+    <a href="#main-content" 
+       class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-move text-white px-4 py-2 rounded-md z-50">
+        Pular para o conteúdo principal
+    </a>
+    
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-purple-move to-pink-move shadow-lg sticky top-0 z-40" 
+         role="navigation" 
+         aria-label="Navegação principal">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo e Navigation Links -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-white text-xl font-bold flex items-center">
+                            <span role="img" aria-label="coração roxo">💜</span>
+                            <span class="ml-1">Move Marias</span>
+                        </h1>
+                    </div>
+                    
+                    <!-- Desktop Navigation -->
+                    <div class="hidden lg:block">
+                        <div class="ml-10 flex items-baseline space-x-2">
+                            <a href="{% url 'dashboard:home' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20"
+                               aria-current="{% if request.resolver_match.url_name == 'home' %}page{% endif %}">
+                                <i class="fas fa-home mr-2" aria-hidden="true"></i>
+                                Dashboard
+                            </a>
+                            <a href="{% url 'dashboard:beneficiaries_list' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
+                                <i class="fas fa-users mr-2" aria-hidden="true"></i>
+                                Beneficiárias
+                            </a>
+                            <a href="{% url 'projects:list' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
+                                <i class="fas fa-project-diagram mr-2" aria-hidden="true"></i>
+                                Projetos
+                            </a>
+                            <a href="{% url 'workshops:workshop_list' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
+                                <i class="fas fa-chalkboard-teacher mr-2" aria-hidden="true"></i>
+                                Oficinas
+                            </a>
+                            <a href="{% url 'coaching:action_plan_list' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
+                                <i class="fas fa-bullhorn mr-2" aria-hidden="true"></i>
+                                Coaching
+                            </a>
+                            
+                            {% if user.is_staff or user.role == 'admin' or user.role == 'coordenador' %}
+                            <a href="{% url 'users:user_list' %}" 
+                               class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
+                                <i class="fas fa-user-cog mr-2" aria-hidden="true"></i>
+                                Usuários
+                            </a>
+                            
+                            <!-- Admin Dropdown -->
+                            <div class="relative inline-block text-left">
+                                <button type="button" 
+                                        class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center transition-all focus:outline-none focus:bg-white focus:bg-opacity-20" 
+                                        id="admin-menu-button" 
+                                        aria-expanded="false" 
+                                        aria-haspopup="true"
+                                        aria-label="Menu administrativo">
+                                    <i class="fas fa-cogs mr-2" aria-hidden="true"></i>
+                                    Admin
+                                    <i class="fas fa-chevron-down ml-1 transition-transform" aria-hidden="true"></i>
+                                </button>
+                                
+                                <div class="hidden absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in" 
+                                     id="admin-menu" 
+                                     role="menu" 
+                                     aria-orientation="vertical" 
+                                     aria-labelledby="admin-menu-button">
+                                    <div class="py-1" role="none">
+                                        <a href="{% url 'core:email_config' %}" 
+                                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100 focus:outline-none" 
+                                           role="menuitem">
+                                            <i class="fas fa-envelope text-purple-600 mr-3" aria-hidden="true"></i>
+                                            Configurar Email
+                                        </a>
+                                        <a href="{% url 'core:system_monitoring' %}" 
+                                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100 focus:outline-none" 
+                                           role="menuitem">
+                                            <i class="fas fa-chart-line text-green-600 mr-3" aria-hidden="true"></i>
+                                            Monitoramento
+                                        </a>
+                                        <a href="/admin/" 
+                                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100 focus:outline-none" 
+                                           role="menuitem">
+                                            <i class="fas fa-tools text-blue-600 mr-3" aria-hidden="true"></i>
+                                            Painel Admin
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile menu button -->
+                    <div class="lg:hidden ml-4">
+                        <button type="button" 
+                                class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-md transition-colors focus:outline-none focus:bg-white focus:bg-opacity-20"
+                                id="mobile-menu-button"
+                                aria-controls="mobile-menu"
+                                aria-expanded="false"
+                                aria-label="Abrir menu principal">
+                            <i class="fas fa-bars text-xl" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- User menu -->
+                <div class="flex items-center space-x-4">
+                    <!-- Notification Bell -->
+                    <button type="button" 
+                            class="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-md transition-colors focus:outline-none focus:bg-white focus:bg-opacity-20 relative"
+                            id="notification-button"
+                            aria-label="Notificações">
+                        <i class="fas fa-bell" aria-hidden="true"></i>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            3
+                        </span>
+                    </button>
+                    
+                    <span class="text-white text-sm hidden sm:block">
+                        Olá, {{ user.get_full_name|default:user.username }}
+                    </span>
+                    <a href="{% url 'account_logout' %}" 
+                       class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-30 transition-colors focus:outline-none focus:bg-opacity-30">
+                        <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>
+                        <span class="hidden sm:inline">Sair</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div class="lg:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-purple-move-dark">
+                <a href="{% url 'dashboard:home' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-home mr-2" aria-hidden="true"></i>
+                    Dashboard
+                </a>
+                <a href="{% url 'dashboard:beneficiaries_list' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-users mr-2" aria-hidden="true"></i>
+                    Beneficiárias
+                </a>
+                <a href="{% url 'projects:list' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-project-diagram mr-2" aria-hidden="true"></i>
+                    Projetos
+                </a>
+                <a href="{% url 'workshops:workshop_list' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-chalkboard-teacher mr-2" aria-hidden="true"></i>
+                    Oficinas
+                </a>
+                <a href="{% url 'coaching:action_plan_list' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-bullhorn mr-2" aria-hidden="true"></i>
+                    Coaching
+                </a>
+                
+                {% if user.is_staff or user.role == 'admin' or user.role == 'coordenador' %}
+                <a href="{% url 'users:user_list' %}" 
+                   class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
+                    <i class="fas fa-user-cog mr-2" aria-hidden="true"></i>
+                    Usuários
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main id="main-content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8" role="main">
+        <!-- Breadcrumbs -->
+        {% block breadcrumbs %}
+        {% endblock %}
+        
+        <!-- Messages -->
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="alert alert-dismissible fade show animate-slide-down" role="alert">
+                        {% if message.tags == 'error' %}
+                            <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                                <i class="fas fa-exclamation-circle mr-3 text-red-500" aria-hidden="true"></i>
+                                <span class="flex-1">{{ message }}</span>
+                                <button type="button" class="ml-3 text-red-500 hover:text-red-700" onclick="this.parentElement.parentElement.remove()">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        {% elif message.tags == 'warning' %}
+                            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-3 text-yellow-500" aria-hidden="true"></i>
+                                <span class="flex-1">{{ message }}</span>
+                                <button type="button" class="ml-3 text-yellow-500 hover:text-yellow-700" onclick="this.parentElement.parentElement.remove()">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        {% elif message.tags == 'info' %}
+                            <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
+                                <i class="fas fa-info-circle mr-3 text-blue-500" aria-hidden="true"></i>
+                                <span class="flex-1">{{ message }}</span>
+                                <button type="button" class="ml-3 text-blue-500 hover:text-blue-700" onclick="this.parentElement.parentElement.remove()">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        {% else %}
+                            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center">
+                                <i class="fas fa-check-circle mr-3 text-green-500" aria-hidden="true"></i>
+                                <span class="flex-1">{{ message }}</span>
+                                <button type="button" class="ml-3 text-green-500 hover:text-green-700" onclick="this.parentElement.parentElement.remove()">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="px-4 py-6 sm:px-0">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white mt-auto">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <p class="text-sm">© 2025 Move Marias. Todos os direitos reservados.</p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-heart" aria-hidden="true"></i>
+                        <span class="sr-only">Apoio</span>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        <span class="sr-only">Informações</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal container for HTMX -->
+    <div id="modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <!-- Modal content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-move"></div>
+            <span class="text-gray-700">Carregando...</span>
+        </div>
+    </div>
+
+    <script>
+        // Functionality for mobile menu
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    const expanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+                    mobileMenuButton.setAttribute('aria-expanded', !expanded);
+                });
+            }
+            
+            // Admin dropdown functionality
+            const adminButton = document.getElementById('admin-menu-button');
+            const adminMenu = document.getElementById('admin-menu');
+            
+            if (adminButton && adminMenu) {
+                adminButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    adminMenu.classList.toggle('hidden');
+                    const expanded = adminButton.getAttribute('aria-expanded') === 'true';
+                    adminButton.setAttribute('aria-expanded', !expanded);
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!adminButton.contains(e.target) && !adminMenu.contains(e.target)) {
+                        adminMenu.classList.add('hidden');
+                        adminButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
+        
+        // HTMX modal functions
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            if (evt.detail.target.id === 'modal') {
+                document.getElementById('modal').classList.remove('hidden');
+            }
+        });
+
+        // Close modal function
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').innerHTML = '';
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // Loading overlay functions
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+        
+        // HTMX loading states
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            showLoading();
+        });
+        
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            hideLoading();
+        });
+        
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+    </script>
+
+    <!-- Include reusable components -->
+    {% include 'partials/toast_notifications.html' %}
+    {% include 'partials/modal.html' %}
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

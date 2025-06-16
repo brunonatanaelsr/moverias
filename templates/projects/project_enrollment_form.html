@@ -1,0 +1,52 @@
+{% extends "dashboard_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+{% if object %}Editar Matrícula{% else %}Nova Matrícula{% endif %} - Move Marias
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% if object %}Editar Matrícula{% else %}Nova Matrícula em Projeto{% endif %}
+            </h1>
+            <p class="mt-2 text-sm text-gray-600">
+                {% if object %}
+                    Atualize as informações da matrícula
+                {% else %}
+                    Preencha os dados para matricular uma beneficiária em projeto
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'projects:enrollment-list' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            ← Voltar
+        </a>
+    </div>
+</div>
+
+<div class="max-w-4xl">
+    <form method="post" class="bg-white shadow rounded-lg">
+        {% csrf_token %}
+        
+        <div class="px-6 py-8">
+            {{ form|crispy }}
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'projects:enrollment-list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                    {% if object %}Atualizar{% else %}Criar{% endif %} Matrícula
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

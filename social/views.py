@@ -5,7 +5,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import CreateView, UpdateView, DetailView, ListView
+from django.views.generic import CreateView, UpdateView, DetailView, ListView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.cache import cache
@@ -103,7 +103,7 @@ class SocialAnamnesisUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
         
         if anamnesis is None:
             anamnesis = SocialAnamnesis.objects.select_related(
-                'beneficiary', 'created_by'
+                'beneficiary', 'signed_by_technician'
             ).get(pk=pk)
             cache.set(cache_key, anamnesis, settings.CACHE_TIMEOUT['MEDIUM'])
         
@@ -144,7 +144,7 @@ class SocialAnamnesisDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
         
         if anamnesis is None:
             anamnesis = SocialAnamnesis.objects.select_related(
-                'beneficiary', 'created_by'
+                'beneficiary', 'signed_by_technician'
             ).get(pk=pk)
             cache.set(cache_key, anamnesis, settings.CACHE_TIMEOUT['MEDIUM'])
         
@@ -173,7 +173,7 @@ class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         
         if queryset is None:
             queryset = SocialAnamnesis.objects.select_related(
-                'beneficiary', 'created_by'
+                'beneficiary', 'signed_by_technician'
             )
             
             if search:
@@ -185,7 +185,7 @@ class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
             if locked_filter:
                 queryset = queryset.filter(locked=locked_filter == 'true')
             
-            queryset = queryset.order_by('-created_at')
+            queryset = queryset.order_by('-date')
             
             # Cache por tempo curto (5 minutos)
             cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['SHORT'])
@@ -218,3 +218,47 @@ def lock_anamnesis(request, pk):
             messages.error(request, 'Apenas administradores podem alterar o status de bloqueio.')
     
     return redirect('social:detail', pk=pk)
+
+
+class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Excluir anamnese social"""
+    
+    model = SocialAnamnesis
+    template_name = 'social/anamnesis_confirm_delete.html'
+    success_url = reverse_lazy('social:list')
+    
+    def test_func(self):
+        return self.request.user.is_superuser  # Apenas superusuários podem excluir
+    
+    def get_object(self, queryset=None):
+        """Verificar se a anamnese pode ser excluída"""
+        obj = super().get_object(queryset)
+        if obj.locked:
+            messages.error(self.request, 'Não é possível excluir uma anamnese bloqueada.')
+            return redirect('social:detail', pk=obj.pk)
+        return obj
+    
+    def delete(self, request, *args, **kwargs):
+        """Override delete para adicionar log e invalidar cache"""
+        self.object = self.get_object()
+        
+        # Log da atividade
+        from users.models import UserActivity
+        UserActivity.objects.create(
+            user=request.user,
+            action='delete',
+            description=f'Excluiu anamnese social de {self.object.beneficiary.full_name}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        # Invalidar cache
+        cache.delete(f"social_anamnesis_{self.object.pk}")
+        cache_keys = [f"social_anamnesis_list_{search}_{locked_filter}" 
+                     for search in ['', 'test'] for locked_filter in ['', 'true', 'false']]
+        cache.delete_many(cache_keys)
+        
+        success_url = self.get_success_url()
+        self.object.delete()
+        
+        messages.success(request, f'Anamnese social de {self.object.beneficiary.full_name} excluída com sucesso!')
+        return redirect(success_url)

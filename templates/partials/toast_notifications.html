@@ -1,28 +1,40 @@
 <!-- Toast Notifications Component -->
-<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+<div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full">
     <!-- Success Toast -->
-    <div class="hidden bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 translate-x-full" 
-         id="success-toast-template">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span class="toast-message">Operação realizada com sucesso!</span>
-        <button class="ml-4 text-green-200 hover:text-white" onclick="closeToast(this)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="hidden bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 translate-x-full" 
+         id="success-toast-template"
+         role="alert"
+         aria-live="polite">
+        <div class="flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+        <span class="toast-message flex-1 text-sm font-medium">Operação realizada com sucesso!</span>
+        <button class="flex-shrink-0 ml-2 text-green-200 hover:text-white focus:outline-none focus:text-white transition-colors" 
+                onclick="closeToast(this)"
+                aria-label="Fechar notificação">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>
     </div>
 
     <!-- Error Toast -->
-    <div class="hidden bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 translate-x-full" 
-         id="error-toast-template">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <span class="toast-message">Erro ao realizar operação!</span>
-        <button class="ml-4 text-red-200 hover:text-white" onclick="closeToast(this)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="hidden bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center space-x-3 transform transition-all duration-300 translate-x-full" 
+         id="error-toast-template"
+         role="alert"
+         aria-live="assertive">
+        <div class="flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <span class="toast-message flex-1 text-sm font-medium">Erro ao realizar operação!</span>
+        <button class="flex-shrink-0 ml-2 text-red-200 hover:text-white focus:outline-none focus:text-white transition-colors" 
+                onclick="closeToast(this)"
+                aria-label="Fechar notificação">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
         </button>

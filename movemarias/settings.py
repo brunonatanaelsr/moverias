@@ -11,6 +11,14 @@ import environ
 import os
 from pathlib import Path
 import dj_database_url
+from .security import validate_secret_key, SECURITY_SETTINGS, CSP_SETTINGS, RATE_LIMIT_SETTINGS
+
+# Sentry configuration - import only in production
+if os.environ.get('ENVIRONMENT') == 'production':
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,11 +36,15 @@ env = environ.Env(
 # Read .env file if it exists
 environ.Env.read_env(BASE_DIR / '.env')
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env('DEBUG')
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+# Validate secret key in production
+if not DEBUG:
+    validate_secret_key(SECRET_KEY)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
@@ -62,6 +74,9 @@ THIRD_PARTY_APPS = [
     'formtools',
     'django_htmx',
     'django_extensions',
+    # Celery apps (only when Celery is installed)
+    # 'django_celery_beat',
+    # 'django_celery_results',
 ]
 
 LOCAL_APPS = [
@@ -84,15 +99,18 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.security_middleware.SecurityMiddleware',  # Nosso middleware de segurança
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django_otp.middleware.OTPMiddleware',
+    'core.security_middleware.AuditMiddleware',  # Middleware de auditoria
     'django_htmx.middleware.HtmxMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.security_middleware.PerformanceMiddleware',  # Middleware de performance
 ]
 
 # Custom User Model
@@ -199,19 +217,31 @@ CACHE_TIMEOUT = {
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+# Password validation with enhanced security
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME': 'core.password_validators.AdvancedPasswordValidator',
+        'OPTIONS': {
+            'min_length': 12,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME': 'core.password_validators.HaveIBeenPwnedValidator',
     },
+]
+
+# Enhanced password hashing
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',  # Hasher mais seguro
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
 
 
@@ -329,5 +359,193 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # File upload settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
-FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+
+# Enhanced Security Settings
+from .security import SECURITY_SETTINGS, CSP_SETTINGS, RATE_LIMIT_SETTINGS, validate_secret_key
+
+# Validate secret key in production
+if not DEBUG:
+    validate_secret_key(SECRET_KEY)
+
+# Apply security settings based on environment
+if not DEBUG:
+    # Production security settings
+    for setting, value in SECURITY_SETTINGS.items():
+        globals()[setting] = value
+    
+    # Content Security Policy
+    for setting, value in CSP_SETTINGS.items():
+        globals()[setting] = value
+else:
+    # Development - minimal security for testing
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+# Enhanced session settings
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
+
+# Enhanced CSRF settings
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+
+# Security headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+X_FRAME_OPTIONS = 'DENY'
+
+# Rate limiting settings (for future middleware implementation)
+RATE_LIMITING = RATE_LIMIT_SETTINGS
+
+# Logging for security events
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'security': {
+            'format': '[SECURITY] {levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'maxBytes': 1024*1024*15,  # 15MB
+            'backupCount': 10,
+            'formatter': 'security',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['security_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'core.audit': {
+            'handlers': ['security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# Sentry Configuration for Error Monitoring
+if not DEBUG and os.environ.get('SENTRY_DSN'):
+    # Import Sentry if available
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+        from sentry_sdk.integrations.redis import RedisIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        
+        sentry_sdk.init(
+            dsn=env('SENTRY_DSN'),
+            environment=env('SENTRY_ENVIRONMENT', default='production'),
+            integrations=[
+                DjangoIntegration(
+                    transaction_style='url',
+                    middleware_spans=True,
+                    signals_spans=True,
+                    cache_spans=True,
+                ),
+                RedisIntegration(),
+                CeleryIntegration(
+                    monitor_beat_tasks=True,
+                    propagate_traces=True,
+                ),
+            ],
+            # Performance monitoring
+            traces_sample_rate=0.1,  # 10% of transactions
+            send_default_pii=False,  # Don't send personal data
+            
+            # Error filtering
+            before_send=lambda event, hint: event if not DEBUG else None,
+            
+            # Release tracking
+            release=env('SENTRY_RELEASE', default=None),
+            
+            # Additional options
+            max_breadcrumbs=50,
+            attach_stacktrace=True,
+        )
+    except ImportError:
+        # Sentry not available, continue without it
+        pass
+
+# Celery Configuration for Background Tasks
+if REDIS_URL:
+    CELERY_BROKER_URL = env('CELERY_BROKER_URL', default=f"{REDIS_URL.replace('/0', '/1')}")
+    CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default=f"{REDIS_URL.replace('/0', '/2')}")
+    
+    # Celery settings
+    CELERY_ACCEPT_CONTENT = ['json']
+    CELERY_TASK_SERIALIZER = 'json'
+    CELERY_RESULT_SERIALIZER = 'json'
+    CELERY_TIMEZONE = TIME_ZONE
+    CELERY_ENABLE_UTC = True
+    
+    # Task routing
+    CELERY_TASK_ROUTES = {
+        'core.tasks.backup_database': {'queue': 'backup'},
+        'core.tasks.send_email': {'queue': 'email'},
+        'core.tasks.generate_report': {'queue': 'reports'},
+    }
+    
+    # Task time limits
+    CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+    CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutes
+    
+    # Worker settings
+    CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+    CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+    
+    # Beat scheduler
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+    
+    # Monitoring
+    CELERY_SEND_TASK_EVENTS = True
+    CELERY_TASK_SEND_SENT_EVENT = True
+
+# Health check endpoints
+HEALTH_CHECK = {
+    'CHECKS': [
+        'django.contrib.auth.models.User',
+        'core.health_checks.redis_check',
+        'core.health_checks.celery_check',
+    ]
+}
+
+# Production optimizations
+if not DEBUG:
+    # Database connection pooling
+    DATABASES['default']['CONN_MAX_AGE'] = 60
+    
+    # Static files compression
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+    
+    # Template caching
+    TEMPLATES[0]['OPTIONS']['loaders'] = [
+        ('django.template.loaders.cached.Loader', [
+            'django.template.loaders.filesystem.Loader',
+            'django.template.loaders.app_directories.Loader',
+        ]),
+    ]

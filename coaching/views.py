@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from .models import ActionPlan, WheelOfLife
@@ -90,6 +90,36 @@ class ActionPlanUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return response
 
 
+class ActionPlanDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Excluir plano de ação"""
+    
+    model = ActionPlan
+    template_name = 'coaching/action_plan_confirm_delete.html'
+    success_url = reverse_lazy('coaching:action_plan_list')
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        """Override delete para adicionar log"""
+        self.object = self.get_object()
+        
+        # Log da atividade
+        from users.models import UserActivity
+        UserActivity.objects.create(
+            user=request.user,
+            action='delete',
+            description=f'Excluiu plano de ação de {self.object.beneficiary.full_name}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        success_url = self.get_success_url()
+        self.object.delete()
+        
+        messages.success(request, f'Plano de ação de {self.object.beneficiary.full_name} excluído com sucesso!')
+        return redirect(success_url)
+
+
 class WheelOfLifeListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     """Lista de rodas da vida"""
     
@@ -174,3 +204,33 @@ class WheelOfLifeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         response = super().form_valid(form)
         messages.success(self.request, f'Roda da vida para {form.instance.beneficiary.full_name} atualizada com sucesso!')
         return response
+
+
+class WheelOfLifeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Excluir roda da vida"""
+    
+    model = WheelOfLife
+    template_name = 'coaching/wheel_confirm_delete.html'
+    success_url = reverse_lazy('coaching:wheel_list')
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        """Override delete para adicionar log"""
+        self.object = self.get_object()
+        
+        # Log da atividade
+        from users.models import UserActivity
+        UserActivity.objects.create(
+            user=request.user,
+            action='delete',
+            description=f'Excluiu roda da vida de {self.object.beneficiary.full_name}',
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        success_url = self.get_success_url()
+        self.object.delete()
+        
+        messages.success(request, f'Roda da vida de {self.object.beneficiary.full_name} excluída com sucesso!')
+        return redirect(success_url)

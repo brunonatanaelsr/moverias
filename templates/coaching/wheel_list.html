@@ -91,7 +91,7 @@
                                             {{ wheel.average_score|floatformat:1 }}/10
                                         </div>
                                         <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ wheel.average_score|mul:10 }}%"></div>
+                                            <div class="bg-blue-600 h-2 rounded-full" style="width: {% widthratio wheel.average_score 10 100 %}%"></div>
                                         </div>
                                     </div>
                                 </td>
@@ -99,15 +99,25 @@
                                     {{ wheel.created_at|date:"d/m/Y H:i" }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center justify-end space-x-2">
                                         <a href="{% url 'coaching:wheel_detail' wheel.pk %}" 
-                                           class="text-blue-600 hover:text-blue-900">
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                           title="Ver detalhes">
+                                            <i class="fas fa-eye mr-1"></i>
                                             Ver
                                         </a>
                                         <a href="{% url 'coaching:wheel_edit' wheel.pk %}" 
-                                           class="text-indigo-600 hover:text-indigo-900">
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                           title="Editar">
+                                            <i class="fas fa-edit mr-1"></i>
                                             Editar
                                         </a>
+                                        <button onclick="confirmDelete('{{ wheel.pk }}', '{{ wheel.beneficiary.full_name }}', '{{ wheel.date|date:"d/m/Y" }}')"
+                                                class="inline-flex items-center px-2.5 py-1.5 border border-red-300 shadow-sm text-xs font-medium rounded text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                title="Excluir">
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Excluir
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -191,4 +201,13 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmDelete(wheelId, beneficiaryName, date) {
+    if (confirm(`Tem certeza que deseja excluir a avaliação da roda da vida de "${beneficiaryName}" do dia ${date}?\n\nEsta ação não pode ser desfeita.`)) {
+        // Redirecionar para a página de confirmação de exclusão
+        window.location.href = `/coaching/wheel-of-life/${wheelId}/delete/`;
+    }
+}
+</script>
 {% endblock %}

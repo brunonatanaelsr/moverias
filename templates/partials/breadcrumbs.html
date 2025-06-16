@@ -1,0 +1,167 @@
+<!-- Breadcrumbs Component -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <!-- Home breadcrumb -->
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard:home' %}" 
+               class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move transition-colors focus:outline-none focus:text-purple-move">
+                <i class="fas fa-home mr-2" aria-hidden="true"></i>
+                Dashboard
+            </a>
+        </li>
+        
+        <!-- Dynamic breadcrumbs -->
+        {% block breadcrumb_items %}
+        {% endblock %}
+    </ol>
+</nav>
+
+<!-- Breadcrumb item template -->
+<template id="breadcrumb-item-template">
+    <li>
+        <div class="flex items-center">
+            <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
+            <a href="#" class="text-sm font-medium text-gray-700 hover:text-purple-move transition-colors focus:outline-none focus:text-purple-move">
+                Item
+            </a>
+        </div>
+    </li>
+</template>
+
+<!-- Current page breadcrumb template -->
+<template id="breadcrumb-current-template">
+    <li aria-current="page">
+        <div class="flex items-center">
+            <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
+            <span class="text-sm font-medium text-gray-500">
+                Current Page
+            </span>
+        </div>
+    </li>
+</template>
+
+<script>
+    // Breadcrumb utilities
+    window.Breadcrumbs = {
+        add: function(name, url = null) {
+            const breadcrumbNav = document.querySelector('[aria-label="Breadcrumb"] ol');
+            if (!breadcrumbNav) return;
+            
+            const li = document.createElement('li');
+            const div = document.createElement('div');
+            div.className = 'flex items-center';
+            
+            // Add chevron
+            const chevron = document.createElement('i');
+            chevron.className = 'fas fa-chevron-right text-gray-400 mx-2';
+            chevron.setAttribute('aria-hidden', 'true');
+            div.appendChild(chevron);
+            
+            if (url) {
+                // Clickable breadcrumb item
+                const link = document.createElement('a');
+                link.href = url;
+                link.className = 'text-sm font-medium text-gray-700 hover:text-purple-move transition-colors focus:outline-none focus:text-purple-move';
+                link.textContent = name;
+                div.appendChild(link);
+            } else {
+                // Current page breadcrumb
+                li.setAttribute('aria-current', 'page');
+                const span = document.createElement('span');
+                span.className = 'text-sm font-medium text-gray-500';
+                span.textContent = name;
+                div.appendChild(span);
+            }
+            
+            li.appendChild(div);
+            breadcrumbNav.appendChild(li);
+        },
+        
+        clear: function() {
+            const breadcrumbNav = document.querySelector('[aria-label="Breadcrumb"] ol');
+            if (!breadcrumbNav) return;
+            
+            // Keep only the home breadcrumb
+            const items = breadcrumbNav.querySelectorAll('li');
+            for (let i = 1; i < items.length; i++) {
+                items[i].remove();
+            }
+        },
+        
+        setCurrent: function(name) {
+            // Remove any existing current page breadcrumb
+            const currentItem = document.querySelector('[aria-current="page"]');
+            if (currentItem) {
+                currentItem.remove();
+            }
+            
+            // Add new current page breadcrumb
+            this.add(name);
+        }
+    };
+    
+    // Auto-update breadcrumbs based on page title
+    document.addEventListener('DOMContentLoaded', function() {
+        const pageTitle = document.title.replace(' - Move Marias', '');
+        if (pageTitle && pageTitle !== 'Dashboard') {
+            Breadcrumbs.setCurrent(pageTitle);
+        }
+    });
+</script>
+
+<style>
+    /* Enhanced breadcrumb styles */
+    nav[aria-label="Breadcrumb"] {
+        position: relative;
+    }
+    
+    nav[aria-label="Breadcrumb"]::before {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(to right, #e5e7eb, transparent);
+    }
+    
+    /* Breadcrumb hover effects */
+    nav[aria-label="Breadcrumb"] a {
+        position: relative;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    nav[aria-label="Breadcrumb"] a:hover {
+        background-color: rgba(139, 92, 246, 0.1);
+    }
+    
+    nav[aria-label="Breadcrumb"] a:focus {
+        background-color: rgba(139, 92, 246, 0.1);
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+    }
+    
+    /* Responsive breadcrumbs */
+    @media (max-width: 640px) {
+        nav[aria-label="Breadcrumb"] ol {
+            flex-wrap: wrap;
+        }
+        
+        nav[aria-label="Breadcrumb"] li {
+            margin-bottom: 4px;
+        }
+        
+        /* Hide intermediate breadcrumbs on small screens */
+        nav[aria-label="Breadcrumb"] li:not(:first-child):not(:last-child) {
+            display: none;
+        }
+        
+        /* Show ellipsis for hidden items */
+        nav[aria-label="Breadcrumb"] li:nth-child(2)::before {
+            content: '...';
+            margin: 0 8px;
+            color: #6b7280;
+        }
+    }
+</style>

@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from core.validators import validate_cpf, validate_phone, validate_rg, validate_full_name, sanitize_input
+from core.forms import SecureCPFField, SecurePhoneField
 from .models import Beneficiary
 import re
 
@@ -9,7 +11,7 @@ class BeneficiaryForm(forms.ModelForm):
         model = Beneficiary
         fields = [
             'full_name', 'dob', 'nis', 'phone_1', 'phone_2', 
-            'rg', 'cpf', 'address', 'neighbourhood', 'reference'
+            'rg', 'cpf', 'address', 'neighbourhood', 'reference', 'status'
         ]
         widgets = {
             'full_name': forms.TextInput(attrs={
@@ -53,62 +55,107 @@ class BeneficiaryForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Ponto de referência próximo'
             }),
+            'status': forms.Select(attrs={
+                'class': 'form-select'
+            }),
         }
 
     def clean_cpf(self):
-        """Validação básica de CPF"""
+        """Validação robusta de CPF"""
         cpf = self.cleaned_data.get('cpf')
         if cpf:
+            # Sanitizar entrada
+            cpf = sanitize_input(cpf)
+            
             # Remover formatação
             cpf_digits = re.sub(r'\D', '', cpf)
             
-            # Verificar se tem 11 dígitos
-            if len(cpf_digits) != 11:
-                raise ValidationError('CPF deve ter 11 dígitos.')
+            # Usar validador robusto
+            if not validate_cpf(cpf_digits):
+                raise ValidationError('CPF inválido. Verifique os dígitos informados.')
             
-            # Verificar se não são todos iguais
-            if cpf_digits == cpf_digits[0] * 11:
-                raise ValidationError('CPF inválido.')
+            # Verificar se CPF já existe no sistema
+            existing = Beneficiary.objects.filter(cpf=cpf_digits).exclude(pk=self.instance.pk if self.instance else None)
+            if existing.exists():
+                raise ValidationError('Este CPF já está cadastrado no sistema.')
             
             return cpf_digits
         return cpf
 
     def clean_phone_1(self):
-        """Validação de telefone"""
+        """Validação robusta de telefone"""
         phone = self.cleaned_data.get('phone_1')
         if phone:
-            # Remover formatação
-            phone_digits = re.sub(r'\D', '', phone)
+            # Sanitizar entrada
+            phone = sanitize_input(phone)
             
-            # Verificar se tem pelo menos 10 dígitos
-            if len(phone_digits) < 10:
-                raise ValidationError('Telefone deve ter pelo menos 10 dígitos.')
+            # Usar validador robusto
+            if not validate_phone(phone):
+                raise ValidationError('Telefone inválido. Use o formato (11) 99999-9999.')
             
             return phone
         return phone
 
     def clean_phone_2(self):
-        """Validação de telefone secundário"""
+        """Validação robusta de telefone secundário"""
         phone = self.cleaned_data.get('phone_2')
         if phone:
-            # Remover formatação
-            phone_digits = re.sub(r'\D', '', phone)
+            # Sanitizar entrada
+            phone = sanitize_input(phone)
             
-            # Verificar se tem pelo menos 10 dígitos
-            if len(phone_digits) < 10:
-                raise ValidationError('Telefone deve ter pelo menos 10 dígitos.')
+            # Usar validador robusto
+            if not validate_phone(phone):
+                raise ValidationError('Telefone inválido. Use o formato (11) 99999-9999.')
             
             return phone
         return phone
 
     def clean_full_name(self):
-        """Validação do nome completo"""
+        """Validação robusta do nome completo"""
         name = self.cleaned_data.get('full_name')
         if name:
-            # Verificar se tem pelo menos nome e sobrenome
-            name_parts = name.strip().split()
-            if len(name_parts) < 2:
-                raise ValidationError('Por favor, informe nome e sobrenome.')
+            # Sanitizar entrada
+            name = sanitize_input(name)
+            
+            # Usar validador robusto
+            is_valid, message = validate_full_name(name)
+            if not is_valid:
+                raise ValidationError(message)
             
             return name.title()  # Capitalizar nome
         return name
+    
+    def clean_rg(self):
+        """Validação de RG"""
+        rg = self.cleaned_data.get('rg')
+        if rg:
+            # Sanitizar entrada
+            rg = sanitize_input(rg)
+            
+            # Usar validador robusto
+            if not validate_rg(rg):
+                raise ValidationError('RG inválido. Verifique o número informado.')
+            
+            return rg
+        return rg
+    
+    def clean_address(self):
+        """Sanitizar endereço"""
+        address = self.cleaned_data.get('address')
+        if address:
+            return sanitize_input(address)
+        return address
+    
+    def clean_neighbourhood(self):
+        """Sanitizar bairro"""
+        neighbourhood = self.cleaned_data.get('neighbourhood')
+        if neighbourhood:
+            return sanitize_input(neighbourhood)
+        return neighbourhood
+    
+    def clean_reference(self):
+        """Sanitizar ponto de referência"""
+        reference = self.cleaned_data.get('reference')
+        if reference:
+            return sanitize_input(reference)
+        return reference

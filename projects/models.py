@@ -10,6 +10,21 @@ from django.utils.text import slugify
 from members.models import Beneficiary
 
 
+class Project(models.Model):
+    name = models.CharField('Nome do Projeto', max_length=100, unique=True)
+    description = models.TextField('Descrição', blank=True, null=True)
+    # Optional: Add a status field if projects can be active/inactive
+    # status = models.CharField('Status', max_length=20, choices=[('ATIVO', 'Ativo'), ('INATIVO', 'Inativo')], default='ATIVO')
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Projeto'
+        verbose_name_plural = 'Projetos'
+
+    def __str__(self):
+        return self.name
+
+
 class ProjectEnrollment(models.Model):
     WEEKDAY_CHOICES = [
         (0, 'Segunda-feira'),
@@ -33,11 +48,7 @@ class ProjectEnrollment(models.Model):
     ]
     
     beneficiary = models.ForeignKey(Beneficiary, on_delete=models.CASCADE, related_name='project_enrollments')
-    project_name = models.CharField('Nome do Projeto', max_length=80)
-    # project_manager = models.ForeignKey('hr.Employee', on_delete=models.SET_NULL, null=True, blank=True,
-    #                                   related_name='managed_projects', 
-    #                                   verbose_name='Gerente do Projeto',
-    #                                   help_text='Funcionário responsável pela gestão do projeto')  # HR DESABILITADO
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='enrollments', verbose_name='Projeto')
     weekday = models.PositiveSmallIntegerField('Dia da Semana', choices=WEEKDAY_CHOICES)
     shift = models.CharField('Turno', max_length=10, choices=SHIFT_CHOICES)
     start_time = models.TimeField('Horário de Início')
@@ -46,12 +57,13 @@ class ProjectEnrollment(models.Model):
     created_at = models.DateTimeField('Data de Matrícula', auto_now_add=True)
 
     class Meta:
-        ordering = ['project_name', 'weekday', 'start_time']
+        ordering = ['project__name', 'weekday', 'start_time']
         verbose_name = 'Matrícula em Projeto'
         verbose_name_plural = 'Matrículas em Projetos'
 
     def __str__(self):
-        return f"{self.beneficiary.full_name} - {self.project_name} ({self.get_status_display()})"
+        project_name_str = self.project.name if self.project_id and self.project else "Projeto não definido"
+        return f"{self.beneficiary.full_name} - {project_name_str} ({self.get_status_display()})"
 
     def save(self, *args, **kwargs):
         if not self.enrollment_code:
@@ -59,7 +71,7 @@ class ProjectEnrollment(models.Model):
             super().save(*args, **kwargs)
             # Gerar código único baseado nos dados
             timestamp = int(self.created_at.timestamp())
-            code_base = f"{self.project_name}-{self.beneficiary.id}-{timestamp}"
+            code_base = f"{self.project.name}-{self.beneficiary.id}-{timestamp}"
             self.enrollment_code = slugify(code_base)
             # Salvar novamente com o código
             super().save(update_fields=['enrollment_code'])

@@ -1,5 +1,6 @@
 # Security configurations for Move Marias
 import os
+import secrets
 from django.core.exceptions import ImproperlyConfigured
 
 def get_env_variable(var_name, default=None):
@@ -11,6 +12,23 @@ def get_env_variable(var_name, default=None):
             return default
         error_msg = f"Set the {var_name} environment variable"
         raise ImproperlyConfigured(error_msg)
+
+def generate_secret_key():
+    """Generate a secure secret key"""
+    return secrets.token_urlsafe(50)
+
+def validate_secret_key(secret_key):
+    """Validate secret key security"""
+    if not secret_key:
+        raise ImproperlyConfigured("SECRET_KEY is required")
+    
+    if len(secret_key) < 50:
+        raise ImproperlyConfigured("SECRET_KEY must be at least 50 characters long")
+    
+    if secret_key.startswith('django-insecure-'):
+        raise ImproperlyConfigured("Do not use django-insecure- keys in production")
+    
+    return True
 
 # Security settings for production
 SECURITY_SETTINGS = {
@@ -32,11 +50,30 @@ SECURITY_SETTINGS = {
     'SESSION_COOKIE_SECURE': True,
     'SESSION_COOKIE_HTTPONLY': True,
     'SESSION_COOKIE_SAMESITE': 'Strict',
+    'SESSION_COOKIE_AGE': 3600,  # 1 hour
     
     # CSRF Security
     'CSRF_COOKIE_SECURE': True,
     'CSRF_COOKIE_HTTPONLY': True,
     'CSRF_COOKIE_SAMESITE': 'Strict',
+    'CSRF_FAILURE_VIEW': 'core.views.csrf_failure',
+}
+
+# Content Security Policy
+CSP_SETTINGS = {
+    'CSP_DEFAULT_SRC': ["'self'"],
+    'CSP_SCRIPT_SRC': ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    'CSP_STYLE_SRC': ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+    'CSP_IMG_SRC': ["'self'", "data:", "https:"],
+    'CSP_FONT_SRC': ["'self'", "https://cdn.jsdelivr.net"],
+}
+
+# Rate limiting settings
+RATE_LIMIT_SETTINGS = {
+    'LOGIN_ATTEMPTS': 5,  # max attempts per IP
+    'LOGIN_TIMEOUT': 300,  # 5 minutes
+    'API_REQUESTS_PER_MINUTE': 60,
+    'CONTACT_FORM_PER_HOUR': 5,
 }
 
 # Allowed hosts for production

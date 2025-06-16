@@ -1,22 +1,22 @@
 {% extends 'dashboard_base.html' %}
 
-{% block title %}{{ enrollment.project_name }} - {{ enrollment.beneficiary.full_name }} - Move Marias{% endblock %}
+{% block title %}{{ enrollment.project.name }} - {{ enrollment.beneficiary.full_name }} - Move Marias{% endblock %}
 
 {% block content %}
 <div class="mb-8">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-3xl font-bold text-gray-900">{{ enrollment.project_name }}</h1>
+            <h1 class="text-3xl font-bold text-gray-900">{{ enrollment.project.name }}</h1>
             <p class="mt-2 text-sm text-gray-600">
                 Matrícula de {{ enrollment.beneficiary.full_name }}
             </p>
         </div>
         <div class="flex space-x-3">
-            <a href="{% url 'projects:edit' enrollment.pk %}" 
+            <a href="{% url 'projects:enrollment-update' enrollment.pk %}" 
                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
                 ✏️ Editar
             </a>
-            <a href="{% url 'projects:list' %}" 
+            <a href="{% url 'projects:enrollment-list' %}" 
                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 ← Voltar
             </a>
@@ -33,15 +33,14 @@
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Nome do Projeto</dt>
-                    <dd class="text-sm text-gray-900 font-medium">{{ enrollment.project_name }}</dd>
+                    <dd class="text-sm text-gray-900 font-medium">{{ enrollment.project.name }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">Status</dt>
                     <dd class="text-sm">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                            {% if enrollment.status == 'active' %}bg-green-100 text-green-800
-                            {% elif enrollment.status == 'completed' %}bg-blue-100 text-blue-800
-                            {% elif enrollment.status == 'suspended' %}bg-yellow-100 text-yellow-800
+                            {% if enrollment.status == 'ATIVO' %}bg-green-100 text-green-800
+                            {% elif enrollment.status == 'DESLIGADO' %}bg-red-100 text-red-800
                             {% else %}bg-gray-100 text-gray-800{% endif %}">
                             {{ enrollment.get_status_display }}
                         </span>
@@ -55,6 +54,12 @@
                     <dt class="text-sm font-medium text-gray-500">Data de Criação</dt>
                     <dd class="text-sm text-gray-900">{{ enrollment.created_at|date:"d/m/Y" }}</dd>
                 </div>
+                {% if enrollment.project.description %}
+                <div class="md:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">Descrição do Projeto</dt>
+                    <dd class="text-sm text-gray-900">{{ enrollment.project.description }}</dd>
+                </div>
+                {% endif %}
             </dl>
         </div>
 

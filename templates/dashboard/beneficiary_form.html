@@ -131,13 +131,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="id_rg" class="block text-sm font-medium text-gray-700 mb-2">
-                            RG *
+                            RG (opcional)
                         </label>
                         <input type="text" 
                                name="rg" 
                                id="id_rg"
                                value="{% if form.rg.value %}{{ form.rg.value }}{% endif %}"
-                               required 
                                placeholder="XX.XXX.XXX-X"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
                         {% if form.rg.errors %}
@@ -147,13 +146,12 @@
                     
                     <div>
                         <label for="id_cpf" class="block text-sm font-medium text-gray-700 mb-2">
-                            CPF *
+                            CPF (opcional)
                         </label>
                         <input type="text" 
                                name="cpf" 
                                id="id_cpf"
                                value="{% if form.cpf.value %}{{ form.cpf.value }}{% endif %}"
-                               required 
                                placeholder="000.000.000-00"
                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-move focus:border-purple-move">
                         {% if form.cpf.errors %}

@@ -1,0 +1,217 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Nova Beneficiária{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-sm rounded-lg p-6">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Nova Beneficiária</h2>
+        <a href="{% url 'members:beneficiary-list' %}" 
+           class="text-gray-600 hover:text-gray-900 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            Voltar à Lista
+        </a>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nome -->
+            <div>
+                <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Nome Completo *
+                </label>
+                {{ form.full_name }}
+                {% if form.full_name.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.full_name.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Data de Nascimento -->
+            <div>
+                <label for="{{ form.dob.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Data de Nascimento *
+                </label>
+                {{ form.dob }}
+                {% if form.dob.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.dob.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- CPF -->
+            <div>
+                <label for="{{ form.cpf.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    CPF
+                </label>
+                {{ form.cpf }}
+                {% if form.cpf.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.cpf.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- RG -->
+            <div>
+                <label for="{{ form.rg.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    RG
+                </label>
+                {{ form.rg }}
+                {% if form.rg.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.rg.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Telefone Principal -->
+            <div>
+                <label for="{{ form.phone_1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Telefone Principal *
+                </label>
+                {{ form.phone_1 }}
+                {% if form.phone_1.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.phone_1.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Telefone Secundário -->
+            <div>
+                <label for="{{ form.phone_2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Telefone Secundário
+                </label>
+                {{ form.phone_2 }}
+                {% if form.phone_2.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.phone_2.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- NIS -->
+            <div>
+                <label for="{{ form.nis.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    NIS
+                </label>
+                {{ form.nis }}
+                {% if form.nis.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.nis.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Status -->
+            <div>
+                <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Status *
+                </label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="mt-1 text-sm text-red-600">
+                        {% for error in form.status.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Endereço -->
+        <div>
+            <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                Endereço *
+            </label>
+            {{ form.address }}
+            {% if form.address.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.address.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Bairro -->
+        <div>
+            <label for="{{ form.neighbourhood.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                Bairro *
+            </label>
+            {{ form.neighbourhood }}
+            {% if form.neighbourhood.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.neighbourhood.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Ponto de Referência -->
+        <div>
+            <label for="{{ form.reference.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                Ponto de Referência
+            </label>
+            {{ form.reference }}
+            {% if form.reference.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {% for error in form.reference.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Botões -->
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <a href="{% url 'members:beneficiary-list' %}" 
+               class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                Cancelar
+            </a>
+            <button type="submit" 
+                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Criar Beneficiária
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+/* Estilização para os campos do formulário */
+.form-control {
+    @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
+}
+
+select.form-control {
+    @apply bg-white;
+}
+
+textarea.form-control {
+    @apply resize-vertical;
+}
+</style>
+{% endblock %}

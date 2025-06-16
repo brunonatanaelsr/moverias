@@ -1,0 +1,454 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Dashboard - Move Marias{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="flex mb-6" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+        <li class="inline-flex items-center">
+            <a href="{% url 'dashboard:home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move">
+                <i class="fas fa-home mr-2" aria-hidden="true"></i>
+                Dashboard
+            </a>
+        </li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8" hx-ext="loading-states">
+    <!-- Welcome Header -->
+    <div class="bg-gradient-to-r from-purple-600 via-purple-move to-pink-move rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-8 sm:p-10">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="text-6xl animate-bounce-subtle">💜</div>
+                    </div>
+                    <div class="ml-6">
+                        <h1 class="text-3xl font-bold text-white">
+                            Bem-vinda, {{ user.get_full_name|default:user.username }}!
+                        </h1>
+                        <p class="mt-2 text-purple-100">
+                            Transformando vidas através do cuidado e empoderamento feminino
+                        </p>
+                    </div>
+                </div>
+                <div class="hidden lg:block text-right text-purple-100">
+                    <div class="text-sm">{{ "now"|date:"l, d \d\e F \d\e Y" }}</div>
+                    <div class="text-2xl font-bold">{{ "now"|date:"H:i" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Beneficiárias -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-purple-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Beneficiárias</h3>
+                        <p class="text-3xl font-bold text-purple-600">{{ stats.total_beneficiaries|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Total cadastradas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projetos Ativos -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-project-diagram text-green-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Projetos</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ stats.active_projects|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Ativos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Oficinas em Andamento -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chalkboard-teacher text-blue-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Oficinas</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ stats.active_workshops|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Em andamento</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registros de Evolução -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-indigo-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Registros de Evolução</h3>
+                        <p class="text-3xl font-bold text-indigo-600">{{ evolution_stats.total|default:0 }}</p>
+                        <p class="text-sm text-gray-500">{{ evolution_stats.month|default:0 }} este mês</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Anamneses Sociais -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clipboard-list text-orange-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Anamneses Sociais</h3>
+                        <p class="text-3xl font-bold text-orange-600">{{ anamnesis_stats.total|default:0 }}</p>
+                        <p class="text-sm text-gray-500">{{ anamnesis_stats.completed|default:0 }} finalizadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Planos de Ação -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bullseye text-yellow-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Planos de Ação</h3>
+                        <p class="text-3xl font-bold text-yellow-600">{{ action_plan_stats.total|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Coaching</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodas da Vida -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-circle-notch text-teal-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Rodas da Vida</h3>
+                        <p class="text-3xl font-bold text-teal-600">{{ wheel_stats.total|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Avaliações</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-300">
+            <div class="p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-check text-pink-600 text-xl" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-900">Atendimentos</h3>
+                        <p class="text-3xl font-bold text-pink-600">{{ stats.monthly_sessions|default:0 }}</p>
+                        <p class="text-sm text-gray-500">Este mês</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Ações Rápidas</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Nova Beneficiária -->
+                <a href="{% url 'dashboard:beneficiary_create' %}" 
+                   class="group bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg text-white hover:from-purple-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-user-plus text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Nova Beneficiária</h3>
+                            <p class="text-sm text-purple-100">Cadastrar nova beneficiária no sistema</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Nova Anamnese -->
+                <a href="{% url 'social:anamnesis_create' %}" 
+                   class="group bg-gradient-to-r from-orange-500 to-orange-600 p-6 rounded-lg text-white hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-clipboard-list text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Nova Anamnese</h3>
+                            <p class="text-sm text-orange-100">Criar anamnese social</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Novo Projeto -->
+                <a href="{% url 'projects:project-create' %}" 
+                   class="group bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white hover:from-green-600 hover:to-green-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-folder-plus text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Novo Projeto</h3>
+                            <p class="text-sm text-green-100">Criar novo projeto</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Registro de Evolução -->
+                <a href="{% url 'evolution:create' %}" 
+                   class="group bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Registro de Evolução</h3>
+                            <p class="text-sm text-blue-100">Documentar progresso</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Plano de Ação -->
+                <a href="{% url 'coaching:action_plan_create' %}" 
+                   class="group bg-gradient-to-r from-yellow-500 to-yellow-600 p-6 rounded-lg text-white hover:from-yellow-600 hover:to-yellow-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-bullseye text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Plano de Ação</h3>
+                            <p class="text-sm text-yellow-100">Criar plano de coaching</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Nova Oficina -->
+                <a href="{% url 'workshops:workshop_create' %}" 
+                   class="group bg-gradient-to-r from-pink-500 to-pink-600 p-6 rounded-lg text-white hover:from-pink-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105">
+                    <div class="flex items-center">
+                        <i class="fas fa-chalkboard-teacher text-2xl mr-4" aria-hidden="true"></i>
+                        <div>
+                            <h3 class="font-semibold">Nova Oficina</h3>
+                            <p class="text-sm text-pink-100">Criar nova oficina</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & Upcoming Events -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Activity -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Atividades Recentes</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4" id="recent-activities-list">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-user-plus text-blue-500"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">Nova beneficiária cadastrada</p>
+                            <p class="text-sm text-gray-500">Maria Silva foi adicionada ao sistema</p>
+                            <p class="text-xs text-gray-400 mt-1">Há 2 horas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-calendar-check text-green-500"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">Oficina agendada</p>
+                            <p class="text-sm text-gray-500">Nova oficina de empoderamento feminino</p>
+                            <p class="text-xs text-gray-400 mt-1">Há 4 horas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-900">Atenção necessária</p>
+                            <p class="text-sm text-gray-500">Algumas beneficiárias precisam de acompanhamento</p>
+                            <p class="text-xs text-gray-400 mt-1">Ontem</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Próximos Eventos</h2>
+            </div>
+            <div class="p-6">
+                {% if upcoming_events %}
+                    <div class="space-y-4">
+                        {% for event in upcoming_events %}
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-calendar text-blue-600 text-sm" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ event.name }}</p>
+                                <p class="text-xs text-gray-500">{{ event.start_date|date:"d/m/Y" }} - {{ event.facilitator }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-calendar text-gray-400 text-4xl mb-4" aria-hidden="true"></i>
+                        <p class="text-gray-500">Nenhum evento agendado</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    {% if user.is_staff %}
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-xl font-semibold text-gray-900">Status do Sistema</h2>
+            <a href="{% url 'core:system_monitoring' %}" class="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                Ver detalhes
+                <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+            </a>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Database Status -->
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-database text-green-600" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900">Database</h3>
+                    <p class="text-sm text-green-600">Operacional</p>
+                </div>
+
+                <!-- Cache Status -->
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-server text-yellow-600" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900">Cache</h3>
+                    <p class="text-sm text-yellow-600">Configurando</p>
+                </div>
+
+                <!-- Backup Status -->
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i class="fas fa-shield-alt text-blue-600" aria-hidden="true"></i>
+                    </div>
+                    <h3 class="text-sm font-medium text-gray-900">Backup</h3>
+                    <p class="text-sm text-blue-600">Ativo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Refresh stats every 5 minutes
+    setInterval(function() {
+        // Auto refresh stats via HTMX
+        htmx.trigger(document.body, 'refreshStats');
+    }, 300000);
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add smooth animations to cards
+        const cards = document.querySelectorAll('.hover\\:shadow-xl');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Sync notifications with recent activities
+        syncNotificationsWithActivities();
+    });
+    
+    // Function to sync notifications with recent activities
+    function syncNotificationsWithActivities() {
+        // Get notifications from the bell dropdown
+        const notificationDropdown = document.querySelector('#notification-dropdown .max-h-96');
+        const recentActivitiesList = document.getElementById('recent-activities-list');
+        
+        if (notificationDropdown && recentActivitiesList) {
+            // Clone notifications to recent activities
+            const notifications = notificationDropdown.querySelectorAll('.px-4.py-3.hover\\:bg-gray-50');
+            
+            // Clear current activities
+            recentActivitiesList.innerHTML = '';
+            
+            // Copy up to 3 most recent notifications
+            for (let i = 0; i < Math.min(3, notifications.length); i++) {
+                const notification = notifications[i];
+                const clonedNotification = notification.cloneNode(true);
+                
+                // Remove hover class and padding for activities list
+                clonedNotification.classList.remove('px-4', 'py-3', 'hover:bg-gray-50', 'border-b', 'border-gray-100');
+                
+                recentActivitiesList.appendChild(clonedNotification);
+            }
+        }
+    }
+    
+    // Listen for new notifications and update activities
+    window.addEventListener('notificationAdded', function() {
+        syncNotificationsWithActivities();
+    });
+</script>
+{% endblock %}

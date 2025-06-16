@@ -76,6 +76,11 @@ class UserDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         context['recent_activities'] = user_obj.activities.order_by('-timestamp')[:10]
         context['user_groups'] = user_obj.groups.all()
         context['user_permissions'] = user_obj.user_permissions.all()
+        # Anamneses sociais onde o usuário é beneficiária OU técnica responsável
+        from social.models import SocialAnamnesis
+        context['social_anamneses'] = SocialAnamnesis.objects.filter(
+            Q(beneficiary=user_obj) | Q(signed_by_technician=user_obj)
+        ).order_by('-date')
         return context
 
 
