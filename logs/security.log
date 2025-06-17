@@ -1,2 +1,4 @@
 [SECURITY] WARNING 2025-06-16 13:50:09,811 Forbidden (CSRF token missing.): /monitoring/clear-cache/
 [SECURITY] WARNING 2025-06-16 17:19:23,940 Forbidden (CSRF token from the 'X-Csrftoken' HTTP header has incorrect length.): /members/1/toggle-status/
+[SECURITY] WARNING 2025-06-17 11:43:58,702 Forbidden (CSRF token from POST incorrect.): /accounts/login/
+[SECURITY] WARNING 2025-06-17 11:44:03,030 Forbidden (CSRF token from POST incorrect.): /accounts/login/
