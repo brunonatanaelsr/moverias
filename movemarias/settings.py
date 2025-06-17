@@ -10,7 +10,6 @@
 import environ
 import os
 from pathlib import Path
-import dj_database_url
 from .security import validate_secret_key, SECURITY_SETTINGS, CSP_SETTINGS, RATE_LIMIT_SETTINGS
 
 # Sentry configuration - import only in production
