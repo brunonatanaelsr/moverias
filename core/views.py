@@ -126,3 +126,11 @@ Sistema Move Marias
     }
     
     return render(request, 'core/email_config.html', context)
+
+def csrf_failure(request, reason=""):
+    """View para tratar falhas de CSRF"""
+    context = {
+        'reason': reason,
+        'title': 'Erro de Segurança CSRF',
+    }
+    return render(request, 'core/csrf_failure.html', context, status=403)

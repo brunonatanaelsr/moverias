@@ -139,17 +139,22 @@ WSGI_APPLICATION = 'movemarias.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Default: SQLite for development
+# SQLite configuration for both development and production
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            # Increase timeout for concurrent access
+            'timeout': 30,
+        }
     }
 }
 
-# If DATABASE_URL is set, use it (for production with Postgres)
-if env('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
+# Optimize SQLite for production use
+if not DEBUG:
+    # Enable connection pooling for better performance
+    DATABASES['default']['CONN_MAX_AGE'] = 60
 
 
 # Cache Configuration
@@ -542,7 +547,8 @@ if not DEBUG:
     # Static files compression
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
     
-    # Template caching
+    # Template caching - disable APP_DIRS when using custom loaders
+    TEMPLATES[0]['APP_DIRS'] = False
     TEMPLATES[0]['OPTIONS']['loaders'] = [
         ('django.template.loaders.cached.Loader', [
             'django.template.loaders.filesystem.Loader',

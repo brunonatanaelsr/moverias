@@ -11,7 +11,6 @@ from django.core import serializers
 from django.db import connection
 from django.conf import settings
 from django.apps import apps
-import boto3
 from pathlib import Path
 import logging
 from cryptography.fernet import Fernet
@@ -83,11 +82,7 @@ class BackupManager:
             # 5. Compress backup
             archive_path = self._compress_backup(backup_path)
             
-            # 6. Upload to cloud if configured
-            if self.s3_client:
-                self._upload_to_cloud(archive_path)
-            
-            # 7. Clean old backups
+            # 6. Clean old backups
             self._cleanup_old_backups()
             
             logger.info(f"Backup created successfully: {archive_path}")
@@ -185,20 +180,10 @@ class BackupManager:
         return archive_path
     
     def _upload_to_cloud(self, archive_path):
-        """Upload backup to cloud storage"""
-        if not self.s3_client:
-            return
-        
-        bucket_name = getattr(settings, 'BACKUP_S3_BUCKET', None)
-        if not bucket_name:
-            return
-        
-        try:
-            key = f"backups/{archive_path.name}"
-            self.s3_client.upload_file(str(archive_path), bucket_name, key)
-            logger.info(f"Backup uploaded to S3: {key}")
-        except Exception as e:
-            logger.error(f"Failed to upload backup to S3: {str(e)}")
+        """Upload backup to cloud storage - DISABLED for local storage"""
+        # S3 upload disabled - using local storage only
+        logger.info("Cloud backup upload disabled - using local storage")
+        pass
     
     def _cleanup_old_backups(self, keep_days=30):
         """Remove old backup files"""

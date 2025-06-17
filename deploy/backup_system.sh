@@ -1,13 +1,12 @@
 #!/bin/bash
-# Move Marias - Automated Backup Script
-# Comprehensive backup solution for production environment
+# Move Marias - SQLite Backup Script
+# Simplified backup solution for SQLite production environment
 
 set -e
 
 # Configuration
 BACKUP_DIR="/var/backups/movemarias"
 PROJECT_DIR="/var/www/movemarias"
-DB_NAME="movemarias_prod"
 DAYS_TO_KEEP=30
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
@@ -33,27 +32,19 @@ warning() {
 # Create backup directory
 mkdir -p "$BACKUP_DIR"/{database,files,logs}
 
-log "🔄 Starting Move Marias backup process..."
+log "🔄 Starting Move Marias SQLite backup process..."
 
-# 1. Database Backup
-log "📊 Backing up database..."
-if command -v pg_dump >/dev/null 2>&1; then
-    pg_dump "$DB_NAME" | gzip > "$BACKUP_DIR/database/db_${TIMESTAMP}.sql.gz"
-    if [ $? -eq 0 ]; then
-        log "✅ Database backup completed: db_${TIMESTAMP}.sql.gz"
-    else
-        error "❌ Database backup failed"
-        exit 1
-    fi
+# 1. Database Backup (SQLite)
+log "📊 Backing up SQLite database..."
+if [ -f "$PROJECT_DIR/db.sqlite3" ]; then
+    # Create SQLite backup using .backup command for better integrity
+    sqlite3 "$PROJECT_DIR/db.sqlite3" ".backup $BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3"
+    
+    # Compress the backup
+    gzip "$BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3"
+    log "✅ SQLite backup completed: db_${TIMESTAMP}.sqlite3.gz"
 else
-    # SQLite backup
-    if [ -f "$PROJECT_DIR/db.sqlite3" ]; then
-        cp "$PROJECT_DIR/db.sqlite3" "$BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3"
-        gzip "$BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3"
-        log "✅ SQLite backup completed: db_${TIMESTAMP}.sqlite3.gz"
-    else
-        warning "⚠️  No database file found"
-    fi
+    warning "⚠️  No SQLite database file found at $PROJECT_DIR/db.sqlite3"
 fi
 
 # 2. Media Files Backup
@@ -83,6 +74,7 @@ tar -czf "$BACKUP_DIR/files/config_${TIMESTAMP}.tar.gz" \
     --exclude='venv' \
     --exclude='media' \
     --exclude='staticfiles' \
+    --exclude='db.sqlite3' \
     -C "$(dirname $PROJECT_DIR)" "$(basename $PROJECT_DIR)"
 log "✅ Configuration backup completed: config_${TIMESTAMP}.tar.gz"
 
@@ -98,11 +90,12 @@ fi
 # 6. Create backup manifest
 log "📋 Creating backup manifest..."
 cat > "$BACKUP_DIR/manifest_${TIMESTAMP}.txt" << EOF
-Move Marias Backup Manifest
-===========================
+Move Marias SQLite Backup Manifest
+=================================
 Date: $(date)
 Timestamp: $TIMESTAMP
 Server: $(hostname)
+Database Type: SQLite
 Django Version: $(cd $PROJECT_DIR && python manage.py --version 2>/dev/null || echo "Unknown")
 
 Files in this backup:
@@ -126,12 +119,12 @@ for backup_file in "$BACKUP_DIR"/*/"*${TIMESTAMP}*"; do
     fi
 done
 
-# Test database backup integrity
-if [ -f "$BACKUP_DIR/database/db_${TIMESTAMP}.sql.gz" ]; then
-    if gzip -t "$BACKUP_DIR/database/db_${TIMESTAMP}.sql.gz"; then
-        log "✓ Database backup integrity - OK"
+# Test SQLite backup integrity
+if [ -f "$BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3.gz" ]; then
+    if gzip -t "$BACKUP_DIR/database/db_${TIMESTAMP}.sqlite3.gz"; then
+        log "✓ SQLite backup integrity - OK"
     else
-        error "✗ Database backup corruption detected"
+        error "✗ SQLite backup corruption detected"
         BACKUP_ERRORS=$((BACKUP_ERRORS + 1))
     fi
 fi
@@ -154,7 +147,7 @@ log "💾 Total backup size: $TOTAL_SIZE"
 if [ -n "$SLACK_WEBHOOK_URL" ]; then
     if [ $BACKUP_ERRORS -eq 0 ]; then
         curl -X POST -H 'Content-type: application/json' \
-            --data "{\"text\":\"✅ Move Marias backup completed successfully\nTimestamp: $TIMESTAMP\nSize: $TOTAL_SIZE\"}" \
+            --data "{\"text\":\"✅ Move Marias SQLite backup completed successfully\nTimestamp: $TIMESTAMP\nSize: $TOTAL_SIZE\"}" \
             "$SLACK_WEBHOOK_URL" >/dev/null 2>&1
     else
         curl -X POST -H 'Content-type: application/json' \
@@ -165,7 +158,7 @@ fi
 
 # 11. Final status
 if [ $BACKUP_ERRORS -eq 0 ]; then
-    log "🎉 Backup process completed successfully!"
+    log "🎉 SQLite backup process completed successfully!"
     log "📁 Backup location: $BACKUP_DIR"
     log "🏷️  Backup timestamp: $TIMESTAMP"
     exit 0

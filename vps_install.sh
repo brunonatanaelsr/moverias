@@ -19,7 +19,7 @@ PROJECT_NAME="movemarias"
 PROJECT_DIR="/var/www/movemarias"
 REPO_URL="https://github.com/brunonatanaelsr/02.git"
 DOMAIN="move.squadsolucoes.com.br"
-EMAIL="admin@movemarias.org"
+EMAIL="admin@squadsolucoes.com.br"
 DB_NAME="movemarias_prod"
 DB_USER="movemarias_user"
 
@@ -75,34 +75,20 @@ install_system_deps() {
         python3-certbot-nginx \
         redis-server \
         supervisor \
-        postgresql \
-        postgresql-contrib \
         fail2ban \
         ufw \
         htop \
         unzip
 }
 
-# Setup PostgreSQL
-setup_postgresql() {
-    log "Setting up PostgreSQL database..."
+# Setup SQLite - no configuration needed
+setup_database() {
+    log "Database setup: Using SQLite (built-in, no configuration needed)..."
     
-    # Generate random password for database user
-    DB_PASSWORD=$(openssl rand -base64 32)
+    # SQLite database will be created automatically by Django
+    # No additional setup required
     
-    # Create database and user
-    sudo -u postgres psql << EOF
-CREATE DATABASE ${DB_NAME};
-CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';
-GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
-ALTER USER ${DB_USER} CREATEDB;
-\q
-EOF
-    
-    # Save database credentials
-    echo "DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}" >> /tmp/db_config.env
-    
-    log "PostgreSQL configured. Database: ${DB_NAME}, User: ${DB_USER}"
+    log "SQLite database ready - file will be created as db.sqlite3"
 }
 
 # Setup Redis
@@ -130,36 +116,45 @@ setup_project() {
     git clone "$REPO_URL" "$PROJECT_DIR"
     cd "$PROJECT_DIR"
     
-    # Create virtual environment
-    python3.10 -m venv venv
-    source venv/bin/activate
+    # Remove existing virtual environment if it exists
+    if [ -d "$PROJECT_DIR/venv" ]; then
+        log "Removing existing virtual environment..."
+        rm -rf "$PROJECT_DIR/venv"
+    fi
     
-    # Upgrade pip
-    pip install --upgrade pip setuptools wheel
+    # Create virtual environment with explicit path
+    log "Creating virtual environment with Python 3.10..."
+    python3.10 -m venv "$PROJECT_DIR/venv"
     
-    # Install Python dependencies
-    pip install -r requirements.txt
+    # Verify virtual environment was created
+    if [ ! -f "$PROJECT_DIR/venv/bin/python" ]; then
+        error "Failed to create virtual environment"
+    fi
     
-    # Create .env file from production template
-    cp .env.production .env
+    log "Virtual environment created successfully"
     
-    # Generate Django secret key
-    SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    # Upgrade pip using virtual environment Python
+    "$PROJECT_DIR/venv/bin/python" -m pip install --upgrade pip setuptools wheel
     
-    # Generate Django cryptography key
-    CRYPTO_KEY=$(python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+    # Install Python dependencies using virtual environment pip
+    "$PROJECT_DIR/venv/bin/pip" install -r requirements.txt
     
-    # Update .env file with generated values and database config
+    # Create .env file from example template
+    cp .env.example .env
+    
+    # Generate Django secret key (using Python from virtual environment)
+    SECRET_KEY=$(./venv/bin/python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+    
+    # Generate Django cryptography key (using Python from virtual environment)
+    CRYPTO_KEY=$(./venv/bin/python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())')
+    
+    # Update .env file with generated values
     sed -i "s/SECRET_KEY=.*/SECRET_KEY=${SECRET_KEY}/" .env
     sed -i "s/DJANGO_CRYPTOGRAPHY_KEY=.*/DJANGO_CRYPTOGRAPHY_KEY=${CRYPTO_KEY}/" .env
     sed -i "s/ALLOWED_HOSTS=.*/ALLOWED_HOSTS=${DOMAIN},www.${DOMAIN}/" .env
     sed -i "s/CSRF_TRUSTED_ORIGINS=.*/CSRF_TRUSTED_ORIGINS=https:\/\/${DOMAIN},https:\/\/www.${DOMAIN}/" .env
     
-    # Add database configuration from PostgreSQL setup
-    if [ -f /tmp/db_config.env ]; then
-        cat /tmp/db_config.env >> .env
-        rm /tmp/db_config.env
-    fi
+    # No database configuration needed for SQLite
     
     # Set permissions
     chown -R www-data:www-data "$PROJECT_DIR"
@@ -172,22 +167,21 @@ setup_django() {
     log "Setting up Django application..."
     
     cd "$PROJECT_DIR"
-    source venv/bin/activate
     
     # Create media and static directories
     mkdir -p "$PROJECT_DIR/media"
     mkdir -p "$PROJECT_DIR/staticfiles"
     
-    # Run migrations
-    python manage.py migrate
+    # Run migrations (using virtual environment Python)
+    ./venv/bin/python manage.py migrate
     
-    # Collect static files
-    python manage.py collectstatic --noinput
+    # Collect static files (using virtual environment Python)
+    ./venv/bin/python manage.py collectstatic --noinput
     
-    # Create superuser (non-interactive)
+    # Create superuser (non-interactive, using virtual environment Python)
     echo "from users.models import CustomUser; \
     if not CustomUser.objects.filter(username='admin').exists(): \
-        CustomUser.objects.create_superuser('admin', '${EMAIL}', 'MoveMarias2025!')" | python manage.py shell
+        CustomUser.objects.create_superuser('admin', '${EMAIL}', 'MoveMarias2025!')" | ./venv/bin/python manage.py shell
     
     # Set proper permissions for static and media directories
     chown -R www-data:www-data "$PROJECT_DIR/staticfiles"
@@ -303,7 +297,7 @@ final_checks() {
     log "Performing final checks..."
     
     # Check services
-    services=("nginx" "movemarias" "postgresql" "redis-server")
+    services=("nginx" "movemarias" "redis-server")
     for service in "${services[@]}"; do
         if systemctl is-active --quiet "$service"; then
             log "✓ $service is running"
@@ -328,7 +322,7 @@ main() {
     update_system
     install_python
     install_system_deps
-    setup_postgresql
+    setup_database
     setup_redis
     setup_project
     setup_django
