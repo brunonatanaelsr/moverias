@@ -45,7 +45,13 @@ SECRET_KEY = env('SECRET_KEY')
 if not DEBUG:
     validate_secret_key(SECRET_KEY)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost', 
+    '127.0.0.1', 
+    'move.squadsolucoes.com.br', 
+    'www.move.squadsolucoes.com.br',
+    '145.79.6.36'  # VPS IP
+])
 
 
 # Application definition
@@ -288,20 +294,27 @@ SERVER_EMAIL = env('SERVER_EMAIL', default='Move Marias <server@movemarias.org>'
 # Email timeout settings
 EMAIL_TIMEOUT = 30
 
-# Security settings
+# Security settings - Simplified for deployment
 if not DEBUG:
-    SECURE_HSTS_SECONDS = 31536000  # 1 ano
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # Removed SECURE_SSL_REDIRECT to allow HTTP during initial setup
+    # SECURE_SSL_REDIRECT = True  # Commented out for now
+    
+    # Keep basic security headers but relax SSL requirements
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
     X_FRAME_OPTIONS = 'DENY'
+    
+    # Relax session/cookie security for HTTP
+    SESSION_COOKIE_SECURE = False  # Set to False for HTTP
+    CSRF_COOKIE_SECURE = False     # Set to False for HTTP
+    
+    # HSTS settings commented out until SSL is properly configured
+    # SECURE_HSTS_SECONDS = 31536000  # 1 ano
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
 else:
-    # Configurações de desenvolvimento mais seguras
+    # Configurações de desenvolvimento
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
@@ -381,25 +394,15 @@ if not DEBUG:
     for setting, value in CSP_SETTINGS.items():
         globals()[setting] = value
 else:
-    # Development - minimal security for testing
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-
-# Enhanced session settings
+    # Enhanced session settings
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SAMESITE = 'Lax'  # Changed from Strict to Lax for better compatibility
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
 
 # Enhanced CSRF settings
 CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Strict'
-
-# Security headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_SAMESITE = 'Lax'  # Changed from Strict to Lax for better compatibility
 
 # Rate limiting settings (for future middleware implementation)
 RATE_LIMITING = RATE_LIMIT_SETTINGS
