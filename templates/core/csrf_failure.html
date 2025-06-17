@@ -1,0 +1,62 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Erro de Segurança{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-shield-alt text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h2 class="card-title text-dark mb-3">{{ title }}</h2>
+                    
+                    <p class="card-text text-muted mb-4">
+                        {{ message }}
+                    </p>
+                    
+                    {% if reason %}
+                    <div class="alert alert-warning" role="alert">
+                        <small><strong>Motivo:</strong> {{ reason }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button onclick="window.location.reload()" class="btn btn-primary me-md-2">
+                            <i class="fas fa-refresh me-2"></i>Recarregar Página
+                        </button>
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Voltar ao Início
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    Se o problema persistir, entre em contato com o suporte técnico.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 15px;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+
+.fas {
+    opacity: 0.8;
+}
+</style>
+{% endblock %}
