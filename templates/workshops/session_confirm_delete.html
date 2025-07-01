@@ -1,0 +1,229 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Exclusão - Sessão: {{ session.topic }} - MoveMarias{% endblock %}
+
+{% block content %}
+{% include 'workshops/workshops_nav.html' %}
+
+<div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Confirmar Exclusão</h1>
+                    <p class="text-gray-600 mt-1">Esta ação não pode ser desfeita</p>
+                </div>
+                <div class="flex-shrink-0">
+                    <div class="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.98-.833-2.75 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações da Sessão -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Sessão a ser excluída:</h2>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-8 w-8 text-red-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10a2 2 0 002 2h4a2 2 0 002-2V11m-6 0h12"/>
+                        </svg>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-medium text-red-800">{{ session.topic }}</h3>
+                        <div class="mt-2 text-sm text-red-700 space-y-1">
+                            <p><strong>Oficina:</strong> {{ session.workshop.name }}</p>
+                            <p><strong>Facilitador:</strong> {{ session.workshop.facilitator }}</p>
+                            <p><strong>Data e Hora:</strong> {{ session.session_date|date:"d/m/Y às H:i" }}</p>
+                            <p><strong>Duração:</strong> {{ session.duration }} minutos</p>
+                            {% if session.description %}
+                                <p><strong>Descrição:</strong> {{ session.description|truncatechars:100 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impacto da Exclusão -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Impacto da exclusão:</h2>
+            
+            <div class="space-y-3">
+                <!-- Registros de Presença -->
+                <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">Registros de Presença</span>
+                    </div>
+                    <span class="text-sm font-medium text-gray-900">{{ session.attendances.count }} serão excluídos</span>
+                </div>
+
+                <!-- Participantes Afetados -->
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">Participantes com Registro</span>
+                    </div>
+                    <span class="text-sm font-medium text-gray-900">{{ session.unique_participants|default:session.attendances.count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas da Sessão -->
+        {% if session.attendances.count > 0 %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Dados da sessão que serão perdidos:</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ session.attendances.count }}</div>
+                        <div class="text-sm text-blue-800">Total de Registros</div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ session.present_count|default:0 }}</div>
+                        <div class="text-sm text-green-800">Presenças</div>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-red-600">{{ session.absent_count|default:0 }}</div>
+                        <div class="text-sm text-red-800">Ausências</div>
+                    </div>
+                </div>
+
+                {% if session.present_count > 0 %}
+                    <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-900 mb-2">Taxa de Presença:</h4>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            {% with percentage=session.attendance_percentage|default:0 %}
+                                <div class="bg-green-500 h-3 rounded-full" style="width: {{ percentage }}%"></div>
+                            {% endwith %}
+                        </div>
+                        <p class="text-sm text-gray-600 mt-1">
+                            {{ session.attendance_percentage|default:0|floatformat:1 }}% de presença
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Lista de Participantes (se houver) -->
+        {% if session.attendances.count > 0 and session.attendances.count <= 10 %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Participantes que terão registros excluídos:</h2>
+                
+                <div class="space-y-2">
+                    {% for attendance in session.attendances.all %}
+                        <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <span class="text-blue-600 font-medium text-xs">
+                                            {{ attendance.enrollment.beneficiary.name|first|upper }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">
+                                        {{ attendance.enrollment.beneficiary.name }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div>
+                                {% if attendance.attended %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Presente
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Ausente
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Confirmação -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.98-.833-2.75 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Atenção!</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Esta ação é <strong>irreversível</strong>. Todos os dados relacionados a esta sessão serão permanentemente excluídos, incluindo:</p>
+                            <ul class="mt-2 list-disc list-inside">
+                                <li>Todos os registros de presença dos participantes</li>
+                                <li>Histórico de participação desta sessão específica</li>
+                                <li>Dados estatísticos da sessão</li>
+                                <li>Informações sobre desempenho e frequência</li>
+                            </ul>
+                            <p class="mt-2"><strong>Importante:</strong> Esta exclusão afetará relatórios e estatísticas da oficina.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" class="flex flex-col sm:flex-row gap-3">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                        onclick="return confirm('Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita e afetará {{ session.attendances.count }} registro(s) de presença.')">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Sim, Excluir Sessão
+                </button>
+                
+                <a href="{% url 'workshops:session-list' %}" 
+                   class="inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancelar
+                </a>
+            </form>
+        </div>
+
+        <!-- Alternativas -->
+        <div class="bg-blue-50 rounded-lg p-4 mt-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Considere estas alternativas</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Editar a sessão em vez de excluir (alterar data, tópico, etc.)</li>
+                            <li>Fazer backup dos registros de presença antes da exclusão</li>
+                            <li>Verificar se há relatórios que dependem desta sessão</li>
+                            <li>Consultar outros técnicos antes de prosseguir</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

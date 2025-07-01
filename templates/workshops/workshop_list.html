@@ -4,6 +4,8 @@
 {% block title %}Oficinas - Move Marias{% endblock %}
 
 {% block content %}
+{% include 'workshops/workshops_nav.html' %}
+
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="mb-8">
@@ -14,12 +16,47 @@
                     Gerencie oficinas, sessões e participantes
                 </p>
             </div>
-            <a href="{% url 'workshops:workshop_create' %}" 
+            <a href="{% url 'workshops:workshop-create' %}" 
                class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Nova Oficina
+            </a>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Ações Rápidas</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="{% url 'workshops:enrollment-list' %}" 
+               class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                Ver Matrículas
+            </a>
+            <a href="{% url 'workshops:session-list' %}" 
+               class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Ver Sessões
+            </a>
+            <a href="{% url 'workshops:evaluation-list' %}" 
+               class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <svg class="w-5 h-5 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                </svg>
+                Ver Avaliações
+            </a>
+            <a href="{% url 'workshops:enrollment-create' %}" 
+               class="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Nova Matrícula
             </a>
         </div>
     </div>
@@ -90,7 +127,7 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+                            <a href="{% url 'workshops:workshop-detail' workshop.pk %}" 
                                class="text-purple-600 hover:text-purple-900">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -132,11 +169,11 @@
                     </div>
                     
                     <div class="mt-6 flex space-x-3">
-                        <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+                        <a href="{% url 'workshops:workshop-detail' workshop.pk %}" 
                            class="flex-1 bg-purple-50 text-purple-700 text-center px-3 py-2 text-sm font-medium rounded-md hover:bg-purple-100">
                             Ver Detalhes
                         </a>
-                        <a href="{% url 'workshops:workshop_report' workshop.pk %}" 
+                        <a href="{% url 'workshops:workshop-report' workshop.pk %}" 
                            class="flex-1 bg-gray-50 text-gray-700 text-center px-3 py-2 text-sm font-medium rounded-md hover:bg-gray-100">
                             Relatório
                         </a>
@@ -152,7 +189,7 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma oficina encontrada</h3>
                     <p class="mt-1 text-sm text-gray-500">Comece criando uma nova oficina.</p>
                     <div class="mt-6">
-                        <a href="{% url 'workshops:workshop_create' %}" 
+                        <a href="{% url 'workshops:workshop-create' %}" 
                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
                             <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>

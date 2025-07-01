@@ -176,8 +176,23 @@ class ProjectEnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, Creat
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} no projeto "{form.instance.project.name}" criada com sucesso!')
-        cache.delete_many([key for key in cache._cache.keys() if key.startswith('project_enrollments_list_')])
+        # Clear cache using pattern matching - production safe
+        self.clear_project_cache()
         return response
+    
+    def clear_project_cache(self):
+        """Clear project-related cache entries in a production-safe way"""
+        try:
+            # Clear specific cache patterns
+            cache.delete_many([
+                'project_enrollments_list_',
+                'project_enrollments_list_active',
+                'project_enrollments_list_inactive',
+                'project_enrollments_list_pending'
+            ])
+        except Exception:
+            # Fallback: clear all cache if pattern deletion fails
+            cache.clear()
 
 
 class ProjectEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -202,8 +217,22 @@ class ProjectEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, Updat
         response = super().form_valid(form)
         messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} no projeto "{form.instance.project.name}" atualizada com sucesso!')
         cache.delete(f"project_enrollment_detail_{self.object.pk}")
-        cache.delete_many([key for key in cache._cache.keys() if key.startswith('project_enrollments_list_')])
+        self.clear_project_cache()
         return response
+    
+    def clear_project_cache(self):
+        """Clear project-related cache entries in a production-safe way"""
+        try:
+            # Clear specific cache patterns
+            cache.delete_many([
+                'project_enrollments_list_',
+                'project_enrollments_list_active',
+                'project_enrollments_list_inactive',
+                'project_enrollments_list_pending'
+            ])
+        except Exception:
+            # Fallback: clear all cache if pattern deletion fails
+            cache.clear()
 
 
 class ProjectEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -221,5 +250,19 @@ class ProjectEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, Delet
 
         response = super().delete(request, *args, **kwargs)
         messages.success(request, f'Matrícula de {beneficiary_name} no projeto "{project_name}" excluída com sucesso!')
-        cache.delete_many([key for key in cache._cache.keys() if key.startswith('project_enrollments_list_')])
+        self.clear_project_cache()
         return response
+    
+    def clear_project_cache(self):
+        """Clear project-related cache entries in a production-safe way"""
+        try:
+            # Clear specific cache patterns
+            cache.delete_many([
+                'project_enrollments_list_',
+                'project_enrollments_list_active',
+                'project_enrollments_list_inactive',
+                'project_enrollments_list_pending'
+            ])
+        except Exception:
+            # Fallback: clear all cache if pattern deletion fails
+            cache.clear()

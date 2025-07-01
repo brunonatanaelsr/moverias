@@ -10,6 +10,8 @@
 {% endblock %}
 
 {% block content %}
+{% include 'workshops/workshops_nav.html' %}
+
 <div class="max-w-4xl mx-auto">
     <div class="mb-8">
         <div class="flex items-center justify-between">
@@ -29,7 +31,7 @@
                     {% endif %}
                 </p>
             </div>
-            <a href="{% url 'workshops:workshop_list' %}" 
+            <a href="{% url 'workshops:workshop-list' %}" 
                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 ← Voltar
             </a>
@@ -82,7 +84,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-4">
-                    <a href="{% url 'workshops:workshop_list' %}" 
+                    <a href="{% url 'workshops:workshop-list' %}" 
                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Cancelar
                     </a>

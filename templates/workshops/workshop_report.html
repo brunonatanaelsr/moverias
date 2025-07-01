@@ -12,6 +12,8 @@
 {% endblock %}
 
 {% block content %}
+{% include 'workshops/workshops_nav.html' %}
+
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="mb-8 no-print">
@@ -28,7 +30,7 @@
                     </svg>
                     Imprimir
                 </button>
-                <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+                <a href="{% url 'workshops:workshop-detail' workshop.pk %}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     ← Voltar
                 </a>

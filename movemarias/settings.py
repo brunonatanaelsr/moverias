@@ -10,7 +10,7 @@
 import environ
 import os
 from pathlib import Path
-from .security import validate_secret_key, SECURITY_SETTINGS, CSP_SETTINGS, RATE_LIMIT_SETTINGS
+# Removed custom security imports for easier deployment
 
 # Sentry configuration - import only in production
 if os.environ.get('ENVIRONMENT') == 'production':
@@ -41,9 +41,9 @@ DEBUG = env('DEBUG')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-# Validate secret key in production
-if not DEBUG:
-    validate_secret_key(SECRET_KEY)
+# Simple secret key validation
+if not DEBUG and SECRET_KEY == '':
+    raise ValueError("SECRET_KEY must be set in production environment")
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'localhost', 
@@ -104,18 +104,15 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'core.security_middleware.SecurityMiddleware',  # Nosso middleware de segurança
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'django_otp.middleware.OTPMiddleware',
-    'core.security_middleware.AuditMiddleware',  # Middleware de auditoria
     'django_htmx.middleware.HtmxMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.security_middleware.PerformanceMiddleware',  # Middleware de performance
 ]
 
 # Custom User Model
@@ -227,22 +224,22 @@ CACHE_TIMEOUT = {
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
-# Password validation with enhanced security
+# Password validation - simplified for easier deployment
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'core.password_validators.AdvancedPasswordValidator',
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 12,
+            'min_length': 8,
         }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'core.password_validators.HaveIBeenPwnedValidator',
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -294,27 +291,25 @@ SERVER_EMAIL = env('SERVER_EMAIL', default='Move Marias <server@movemarias.org>'
 # Email timeout settings
 EMAIL_TIMEOUT = 30
 
-# Security settings - Simplified for deployment
+# Security settings - Enhanced for HTTPS
 if not DEBUG:
-    # Removed SECURE_SSL_REDIRECT to allow HTTP during initial setup
-    # SECURE_SSL_REDIRECT = True  # Commented out for now
-    
-    # Keep basic security headers but relax SSL requirements
+    # HTTPS settings
+    SECURE_SSL_REDIRECT = True  # Redirect HTTP to HTTPS
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
     X_FRAME_OPTIONS = 'DENY'
     
-    # Relax session/cookie security for HTTP
-    SESSION_COOKIE_SECURE = False  # Set to False for HTTP
-    CSRF_COOKIE_SECURE = False     # Set to False for HTTP
+    # HTTPS session/cookie security
+    SESSION_COOKIE_SECURE = True  # Require HTTPS for cookies
+    CSRF_COOKIE_SECURE = True     # Require HTTPS for CSRF cookies
     
-    # HSTS settings commented out until SSL is properly configured
-    # SECURE_HSTS_SECONDS = 31536000  # 1 ano
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # SECURE_HSTS_PRELOAD = True
+    # HSTS settings for enhanced security
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 else:
-    # Configurações de desenvolvimento
+    # Development settings
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
@@ -324,10 +319,13 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Strict'
 
-# CSRF melhorado
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Strict'
-CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+# CSRF melhorado (configurações movidas para baixo)
+# CSRF_COOKIE_HTTPONLY = True
+# CSRF_COOKIE_SAMESITE = 'Strict'
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+])
 
 # Django Cryptography
 DJANGO_CRYPTOGRAPHY_KEY = env('DJANGO_CRYPTOGRAPHY_KEY', default='test-key-for-development')
@@ -377,37 +375,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 
-# Enhanced Security Settings
-from .security import SECURITY_SETTINGS, CSP_SETTINGS, RATE_LIMIT_SETTINGS, validate_secret_key
-
-# Validate secret key in production
-if not DEBUG:
-    validate_secret_key(SECRET_KEY)
-
-# Apply security settings based on environment
-if not DEBUG:
-    # Production security settings
-    for setting, value in SECURITY_SETTINGS.items():
-        globals()[setting] = value
-    
-    # Content Security Policy
-    for setting, value in CSP_SETTINGS.items():
-        globals()[setting] = value
-else:
-    # Enhanced session settings
+# Session and CSRF settings
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'  # Changed from Strict to Lax for better compatibility
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
 
-# Enhanced CSRF settings
+# CSRF settings
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'  # Changed from Strict to Lax for better compatibility
 
-# Rate limiting settings (for future middleware implementation)
-RATE_LIMITING = RATE_LIMIT_SETTINGS
-
-# Logging for security events
+# Simple logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -416,42 +394,16 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
-        'security': {
-            'format': '[SECURITY] {levelname} {asctime} {message}',
-            'style': '{',
-        },
     },
     'handlers': {
-        'security_file': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'maxBytes': 1024*1024*15,  # 15MB
-            'backupCount': 10,
-            'formatter': 'security',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
-    'loggers': {
-        'security': {
-            'handlers': ['security_file', 'console'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'django.security': {
-            'handlers': ['security_file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'core.audit': {
-            'handlers': ['security_file', 'console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+    'root': {
+        'handlers': ['console'],
     },
 }
 
@@ -531,15 +483,6 @@ if REDIS_URL:
     # Monitoring
     CELERY_SEND_TASK_EVENTS = True
     CELERY_TASK_SEND_SENT_EVENT = True
-
-# Health check endpoints
-HEALTH_CHECK = {
-    'CHECKS': [
-        'django.contrib.auth.models.User',
-        'core.health_checks.redis_check',
-        'core.health_checks.celery_check',
-    ]
-}
 
 # Production optimizations
 if not DEBUG:

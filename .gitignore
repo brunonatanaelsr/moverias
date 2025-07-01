@@ -1,0 +1,111 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Environment files
+.env.local
+.env.production
+.env.vps
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.backup
+backups/
+
+# Documentation files (temporary)
+CREDENCIAIS.md
+DEPLOY_CHECKLIST.md
+DEPLOY_GUIDE.md
+INFRASTRUCTURE_COMPLETE.md
+LOCAL_STORAGE_DEPLOYMENT.md
+MELHORIAS_IMPLEMENTADAS.md
+README_DEPLOYMENT.md
+RELATORIO_*.md
+VPS_INSTALLATION_GUIDE.md
+
+# Scripts temporários
+config.sh
+check_static_files.sh
+deploy_update.sh
+generate_keys.py
+install.sh
+install_simplified.sh
+precheck.sh
+quick_deploy.sh
+setup_ssl.sh
+test_auth.py
+verify_*.sh
+
+# Test files
+tests/test_security_performance.py
+core/test_utils.py
+core/tests/
+
+# Docker (não estamos usando)
+Dockerfile
+docker-compose.yml
+
+# Management commands específicos
+core/management/commands/create_sample_data.py
+core/management/commands/test_email.py
+core/management/commands/test_system.py
+
+# Deploy scripts antigos
+deploy/Dockerfile
+deploy/crontab
+deploy/docker-compose.yml
+deploy/manage_services.sh
+deploy/monitor.sh
+
+# Requirements dev
+requirements_dev.txt
+
+# Templates antigos
+templates/dashboard_base_new.html
+templates/dashboard_base_old.html

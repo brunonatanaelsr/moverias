@@ -55,40 +55,40 @@ class Workshop(models.Model):
 
     @property
     def attendance_rate(self):
-        total_possible = sum(session.enrollments.count() for session in self.sessions.all())
-        total_present = sum(session.attendances.filter(present=True).count() for session in self.sessions.all())
+        total_possible = 0
+        total_present = 0
+        for session in self.sessions.all():
+            session_attendances = session.attendances.all()
+            total_possible += session_attendances.count()
+            total_present += session_attendances.filter(attended=True).count()
         return (total_present / total_possible * 100) if total_possible > 0 else 0
 
 
 class WorkshopSession(models.Model):
     workshop = models.ForeignKey(Workshop, on_delete=models.CASCADE, related_name='sessions')
-    session_number = models.PositiveIntegerField('Número da Sessão')
-    date = models.DateField('Data da Sessão')
+    session_date = models.DateField('Data da Sessão')
     start_time = models.TimeField('Horário de Início')
     end_time = models.TimeField('Horário de Término')
     topic = models.CharField('Tópico/Tema', max_length=200)
-    content_covered = models.TextField('Conteúdo Abordado', blank=True)
-    materials_used = models.TextField('Materiais Utilizados', blank=True)
-    observations = models.TextField('Observações', blank=True)
+    notes = models.TextField('Observações', blank=True)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
 
     class Meta:
-        ordering = ['session_number']
+        ordering = ['session_date', 'start_time']
         verbose_name = 'Sessão da Oficina'
         verbose_name_plural = 'Sessões da Oficina'
-        unique_together = ['workshop', 'session_number']
 
     def __str__(self):
-        return f"{self.workshop.name} - Sessão {self.session_number}"
+        return f"{self.workshop.name} - {self.topic} ({self.session_date})"
 
     @property
     def attendance_count(self):
-        return self.attendances.filter(present=True).count()
+        return self.attendances.filter(attended=True).count()
 
     @property
     def attendance_percentage(self):
         total = self.attendances.count()
-        present = self.attendances.filter(present=True).count()
+        present = self.attendances.filter(attended=True).count()
         return (present / total * 100) if total > 0 else 0
 
 
@@ -104,11 +104,7 @@ class WorkshopEnrollment(models.Model):
     beneficiary = models.ForeignKey(Beneficiary, on_delete=models.CASCADE, related_name='workshop_enrollments')
     enrollment_date = models.DateField('Data de Inscrição')
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='ativo')
-    completion_date = models.DateField('Data de Conclusão', null=True, blank=True)
-    final_grade = models.DecimalField('Nota Final', max_digits=4, decimal_places=2, null=True, blank=True,
-                                    validators=[MinValueValidator(0), MaxValueValidator(10)])
-    certificate_issued = models.BooleanField('Certificado Emitido', default=False)
-    observations = models.TextField('Observações', blank=True)
+    notes = models.TextField('Observações', blank=True)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
 
     class Meta:
@@ -123,74 +119,41 @@ class WorkshopEnrollment(models.Model):
     @property
     def attendance_rate(self):
         total_sessions = self.attendances.count()
-        present_sessions = self.attendances.filter(present=True).count()
+        present_sessions = self.attendances.filter(attended=True).count()
         return (present_sessions / total_sessions * 100) if total_sessions > 0 else 0
 
 
 class SessionAttendance(models.Model):
     session = models.ForeignKey(WorkshopSession, on_delete=models.CASCADE, related_name='attendances')
     enrollment = models.ForeignKey(WorkshopEnrollment, on_delete=models.CASCADE, related_name='attendances')
-    present = models.BooleanField('Presente', default=False)
-    late = models.BooleanField('Chegou Atrasado', default=False)
-    left_early = models.BooleanField('Saiu Mais Cedo', default=False)
-    participation_quality = models.CharField('Qualidade da Participação', max_length=20, choices=[
-        ('excelente', 'Excelente'),
-        ('boa', 'Boa'),
-        ('regular', 'Regular'),
-        ('baixa', 'Baixa'),
-    ], blank=True)
+    attended = models.BooleanField('Presente', default=False)
     notes = models.TextField('Observações sobre a Participação', blank=True)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
 
     class Meta:
-        ordering = ['session__session_number']
+        ordering = ['session__session_date']
         verbose_name = 'Presença em Sessão'
         verbose_name_plural = 'Presenças em Sessões'
         unique_together = ['session', 'enrollment']
 
     def __str__(self):
-        status = "Presente" if self.present else "Ausente"
+        status = "Presente" if self.attended else "Ausente"
         return f"{self.enrollment.beneficiary.full_name} - {self.session} - {status}"
 
 
 class WorkshopEvaluation(models.Model):
-    EVALUATION_TYPES = [
-        ('inicial', 'Avaliação Inicial'),
-        ('processual', 'Avaliação Processual'),
-        ('final', 'Avaliação Final'),
-    ]
-
     enrollment = models.ForeignKey(WorkshopEnrollment, on_delete=models.CASCADE, related_name='evaluations')
-    evaluation_type = models.CharField('Tipo de Avaliação', max_length=20, choices=EVALUATION_TYPES)
-    date = models.DateField('Data da Avaliação')
-    
-    # Critérios de avaliação (escala 1-5)
-    technical_skills = models.PositiveIntegerField('Habilidades Técnicas', 
-                                                 validators=[MinValueValidator(1), MaxValueValidator(5)])
-    creativity = models.PositiveIntegerField('Criatividade',
-                                           validators=[MinValueValidator(1), MaxValueValidator(5)])
-    participation = models.PositiveIntegerField('Participação',
-                                              validators=[MinValueValidator(1), MaxValueValidator(5)])
-    collaboration = models.PositiveIntegerField('Colaboração',
-                                              validators=[MinValueValidator(1), MaxValueValidator(5)])
-    punctuality = models.PositiveIntegerField('Pontualidade',
-                                            validators=[MinValueValidator(1), MaxValueValidator(5)])
-    
-    strengths = models.TextField('Pontos Fortes')
-    improvement_areas = models.TextField('Áreas para Melhoria')
-    recommendations = models.TextField('Recomendações', blank=True)
-    evaluator = models.CharField('Avaliador', max_length=100)
+    rating = models.PositiveIntegerField('Avaliação (1-5)', 
+                                       validators=[MinValueValidator(1), MaxValueValidator(5)])
+    feedback = models.TextField('Feedback sobre a oficina')
+    suggestions = models.TextField('Sugestões para melhorias', blank=True)
+    evaluation_date = models.DateTimeField('Data da Avaliação', auto_now_add=True)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
 
     class Meta:
-        ordering = ['-date']
+        ordering = ['-evaluation_date']
         verbose_name = 'Avaliação de Oficina'
         verbose_name_plural = 'Avaliações de Oficinas'
 
     def __str__(self):
-        return f"{self.enrollment} - {self.get_evaluation_type_display()} - {self.date}"
-
-    @property
-    def overall_score(self):
-        return (self.technical_skills + self.creativity + self.participation + 
-                self.collaboration + self.punctuality) / 5
+        return f"{self.enrollment} - Avaliação: {self.rating}/5"

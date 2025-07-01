@@ -1,81 +1,91 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
-from django.db.models import Q, Count, Avg, Prefetch
-from django.utils import timezone
-from django.http import JsonResponse
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.conf import settings
+from django.db.models import Q, Count, Avg, Prefetch
+from django.utils import timezone
+from django.http import JsonResponse
 from .models import Workshop, WorkshopSession, WorkshopEnrollment, SessionAttendance, WorkshopEvaluation
+from .forms import (
+    WorkshopForm, WorkshopSessionForm, WorkshopEnrollmentForm, 
+    SessionAttendanceForm, WorkshopEvaluationForm, BulkAttendanceForm
+)
 from members.models import Beneficiary
 
 
-class WorkshopListView(LoginRequiredMixin, ListView):
+def is_technician(user):
+    """Verifica se o usuário pertence ao grupo Técnica"""
+    return user.groups.filter(name='Tecnica').exists() or user.is_superuser
+
+
+# CRUD Views for Workshop Model
+
+class WorkshopListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Workshop
     template_name = 'workshops/workshop_list.html'
     context_object_name = 'workshops'
-    paginate_by = 10
+    paginate_by = 15
+
+    def test_func(self):
+        return is_technician(self.request.user)
 
     def get_queryset(self):
-        # Cache key baseada nos parâmetros de filtro
+        queryset = Workshop.objects.annotate(
+            participant_count=Count('enrollments', filter=Q(enrollments__status='ativo'))
+        )
+        
         search = self.request.GET.get('search', '')
         status = self.request.GET.get('status', '')
         workshop_type = self.request.GET.get('type', '')
         
-        cache_key = f"workshops_list_{search}_{status}_{workshop_type}"
-        queryset = cache.get(cache_key)
-        
-        if queryset is None:
-            queryset = Workshop.objects.annotate(
-                participant_count=Count('enrollments', filter=Q(enrollments__status='ativo'))
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) |
+                Q(facilitator__icontains=search) |
+                Q(description__icontains=search)
             )
+        
+        if status:
+            queryset = queryset.filter(status=status)
             
-            if search:
-                queryset = queryset.filter(
-                    Q(name__icontains=search) |
-                    Q(facilitator__icontains=search) |
-                    Q(description__icontains=search)
-                )
-            
-            if status:
-                queryset = queryset.filter(status=status)
-                
-            if workshop_type:
-                queryset = queryset.filter(workshop_type=workshop_type)
-            
-            # Cache por tempo médio (30 minutos)
-            cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['MEDIUM'])
-            
-        return queryset
+        if workshop_type:
+            queryset = queryset.filter(workshop_type=workshop_type)
+        
+        return queryset.order_by('-start_date')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['workshop_types'] = Workshop.WORKSHOP_TYPES
         context['status_choices'] = Workshop.STATUS_CHOICES
+        context['search_query'] = self.request.GET.get('search', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        context['selected_type'] = self.request.GET.get('type', '')
         return context
 
 
-class WorkshopDetailView(LoginRequiredMixin, DetailView):
+class WorkshopDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Workshop
     template_name = 'workshops/workshop_detail.html'
     context_object_name = 'workshop'
 
+    def test_func(self):
+        return is_technician(self.request.user)
+
     def get_object(self, queryset=None):
-        """Otimizar query do objeto principal"""
         pk = self.kwargs.get(self.pk_url_kwarg)
         cache_key = f"workshop_detail_{pk}"
         workshop = cache.get(cache_key)
         
         if workshop is None:
             workshop = Workshop.objects.prefetch_related(
-                Prefetch('sessions', queryset=WorkshopSession.objects.order_by('session_number')),
+                Prefetch('sessions', queryset=WorkshopSession.objects.order_by('session_date')),
                 Prefetch('enrollments', queryset=WorkshopEnrollment.objects.select_related('beneficiary').filter(status='ativo'))
             ).get(pk=pk)
             
-            # Cache por tempo longo (1 hora)
             cache.set(cache_key, workshop, settings.CACHE_TIMEOUT['LONG'])
         
         return workshop
@@ -84,332 +94,433 @@ class WorkshopDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         workshop = self.get_object()
         
-        # Usar dados já carregados via prefetch_related
         context['sessions'] = workshop.sessions.all()
         context['enrollments'] = workshop.enrollments.all()
         
-        # Cache para avaliações recentes
-        cache_key = f"workshop_evaluations_{workshop.pk}"
-        recent_evaluations = cache.get(cache_key)
+        # Avaliações recentes
+        recent_evaluations = WorkshopEvaluation.objects.select_related(
+            'enrollment__beneficiary'
+        ).filter(
+            enrollment__workshop=workshop
+        ).order_by('-evaluation_date')[:5]
         
-        if recent_evaluations is None:
-            recent_evaluations = WorkshopEvaluation.objects.select_related(
-                'enrollment__beneficiary', 'evaluator'
-            ).filter(
-                enrollment__workshop=workshop
-            ).order_by('-date')[:5]
-            
-            cache.set(cache_key, list(recent_evaluations), settings.CACHE_TIMEOUT['SHORT'])
-            
         context['recent_evaluations'] = recent_evaluations
+        context['average_rating'] = WorkshopEvaluation.objects.filter(
+            enrollment__workshop=workshop
+        ).aggregate(avg_rating=Avg('rating'))['avg_rating']
+        
         return context
 
 
-class WorkshopCreateView(LoginRequiredMixin, CreateView):
+class WorkshopCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Workshop
+    form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
-    fields = ['name', 'description', 'workshop_type', 'facilitator', 'location', 
-              'start_date', 'end_date', 'max_participants', 'objectives', 'materials_needed']
-    success_url = reverse_lazy('workshops:workshop_list')
+    success_url = reverse_lazy('workshops:workshop-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
 
     def form_valid(self, form):
-        messages.success(self.request, 'Oficina criada com sucesso!')
+        messages.success(self.request, f'Oficina "{form.instance.name}" criada com sucesso!')
         return super().form_valid(form)
 
 
-class WorkshopUpdateView(LoginRequiredMixin, UpdateView):
+class WorkshopUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Workshop
+    form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
-    fields = ['name', 'description', 'workshop_type', 'facilitator', 'location', 
-              'start_date', 'end_date', 'status', 'max_participants', 'objectives', 'materials_needed']
-    success_url = reverse_lazy('workshops:workshop_list')
+    success_url = reverse_lazy('workshops:workshop-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
 
     def form_valid(self, form):
-        messages.success(self.request, 'Oficina atualizada com sucesso!')
+        messages.success(self.request, f'Oficina "{form.instance.name}" atualizada com sucesso!')
+        cache.delete(f"workshop_detail_{self.object.pk}")
         return super().form_valid(form)
 
 
-class SessionListView(LoginRequiredMixin, ListView):
+class WorkshopDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Workshop
+    template_name = 'workshops/workshop_confirm_delete.html'
+    success_url = reverse_lazy('workshops:workshop-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        workshop = self.get_object()
+        if workshop.enrollments.exists():
+            messages.error(request, f'Não é possível excluir a oficina "{workshop.name}" pois existem matrículas associadas a ela.')
+            return redirect('workshops:workshop-list')
+        
+        workshop_name = workshop.name
+        response = super().delete(request, *args, **kwargs)
+        messages.success(self.request, f'Oficina "{workshop_name}" excluída com sucesso!')
+        return response
+
+
+# CRUD Views for WorkshopEnrollment Model
+
+class WorkshopEnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = WorkshopEnrollment
+    template_name = 'workshops/enrollment_list_general.html'
+    context_object_name = 'enrollments'
+    paginate_by = 20
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def get_queryset(self):
+        search = self.request.GET.get('search', '')
+        workshop_filter = self.request.GET.get('workshop', '')
+        status = self.request.GET.get('status', '')
+        
+        queryset = WorkshopEnrollment.objects.select_related('beneficiary', 'workshop')
+        
+        if search:
+            queryset = queryset.filter(
+                Q(beneficiary__full_name__icontains=search) |
+                Q(workshop__name__icontains=search)
+            )
+        
+        if workshop_filter:
+            queryset = queryset.filter(workshop_id=workshop_filter)
+        
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        return queryset.order_by('-enrollment_date', 'workshop__name')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['workshops'] = Workshop.objects.all().order_by('name')
+        context['status_choices'] = WorkshopEnrollment.STATUS_CHOICES
+        context['search_query'] = self.request.GET.get('search', '')
+        context['selected_workshop'] = self.request.GET.get('workshop', '')
+        context['selected_status'] = self.request.GET.get('status', '')
+        return context
+
+
+class WorkshopEnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = WorkshopEnrollment
+    form_class = WorkshopEnrollmentForm
+    template_name = 'workshops/enrollment_form.html'
+    success_url = reverse_lazy('workshops:enrollment-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Pré-selecionar oficina se passado via GET
+        workshop_id = self.request.GET.get('workshop')
+        if workshop_id:
+            try:
+                workshop = Workshop.objects.get(pk=workshop_id)
+                kwargs['initial'] = kwargs.get('initial', {})
+                kwargs['initial']['workshop'] = workshop
+            except Workshop.DoesNotExist:
+                pass
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        workshop_id = self.request.GET.get('workshop')
+        workshop = None
+        if workshop_id:
+            try:
+                workshop = Workshop.objects.get(pk=workshop_id)
+            except Workshop.DoesNotExist:
+                workshop = None
+        context['workshop'] = workshop
+
+        # Filtrar beneficiárias ativas e não matriculadas nesta oficina
+        if workshop:
+            enrolled_ids = WorkshopEnrollment.objects.filter(workshop=workshop, status='ativo').values_list('beneficiary_id', flat=True)
+            beneficiaries = Beneficiary.objects.filter(status='ATIVA').exclude(id__in=enrolled_ids).order_by('full_name')
+        else:
+            # Se não há oficina selecionada, mostrar todas ativas
+            beneficiaries = Beneficiary.objects.filter(status='ATIVA').order_by('full_name')
+        context['beneficiaries'] = beneficiaries
+
+        if not Workshop.objects.filter(status__in=['planejamento', 'ativo']).exists():
+            messages.warning(self.request, "Não existem oficinas ativas. Crie uma oficina antes de realizar matrículas.")
+        return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} na oficina "{form.instance.workshop.name}" criada com sucesso!')
+        return response
+
+
+class WorkshopEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = WorkshopEnrollment
+    form_class = WorkshopEnrollmentForm
+    template_name = 'workshops/enrollment_form.html'
+    success_url = reverse_lazy('workshops:enrollment-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} na oficina "{form.instance.workshop.name}" atualizada com sucesso!')
+        return response
+
+
+class WorkshopEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = WorkshopEnrollment
+    template_name = 'workshops/enrollment_confirm_delete.html'
+    success_url = reverse_lazy('workshops:enrollment-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        enrollment = self.get_object()
+        beneficiary_name = enrollment.beneficiary.full_name
+        workshop_name = enrollment.workshop.name
+
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, f'Matrícula de {beneficiary_name} na oficina "{workshop_name}" excluída com sucesso!')
+        return response
+
+
+# CRUD Views for WorkshopSession Model
+
+class WorkshopSessionListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = WorkshopSession
     template_name = 'workshops/session_list.html'
     context_object_name = 'sessions'
     paginate_by = 20
-
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
     def get_queryset(self):
-        workshop_id = self.kwargs.get('workshop_id')
-        if workshop_id:
-            return WorkshopSession.objects.filter(workshop_id=workshop_id)
-        return WorkshopSession.objects.all()
-
+        workshop_filter = self.request.GET.get('workshop', '')
+        
+        queryset = WorkshopSession.objects.select_related('workshop')
+        
+        if workshop_filter:
+            queryset = queryset.filter(workshop_id=workshop_filter)
+        
+        return queryset.order_by('-session_date', 'start_time')
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        workshop_id = self.kwargs.get('workshop_id')
-        if workshop_id:
-            context['workshop'] = get_object_or_404(Workshop, id=workshop_id)
+        context['workshops'] = Workshop.objects.filter(status__in=['ativo', 'planejamento']).order_by('name')
+        context['selected_workshop'] = self.request.GET.get('workshop', '')
         return context
 
 
-class SessionCreateView(LoginRequiredMixin, CreateView):
+class WorkshopSessionCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = WorkshopSession
+    form_class = WorkshopSessionForm
     template_name = 'workshops/session_form.html'
-    fields = ['session_number', 'date', 'start_time', 'end_time', 'topic', 
-              'content_covered', 'materials_used', 'observations']
+    success_url = reverse_lazy('workshops:session-list')
 
-    def get_initial(self):
-        initial = super().get_initial()
-        workshop_id = self.kwargs.get('workshop_id')
-        if workshop_id:
-            workshop = get_object_or_404(Workshop, id=workshop_id)
-            initial['workshop'] = workshop
-            # Auto-incrementar número da sessão
-            last_session = workshop.sessions.order_by('-session_number').first()
-            initial['session_number'] = (last_session.session_number + 1) if last_session else 1
-        return initial
+    def test_func(self):
+        return is_technician(self.request.user)
 
     def form_valid(self, form):
-        workshop_id = self.kwargs.get('workshop_id')
-        if workshop_id:
-            form.instance.workshop = get_object_or_404(Workshop, id=workshop_id)
-        messages.success(self.request, 'Sessão criada com sucesso!')
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy('workshops:session_list', kwargs={'workshop_id': self.object.workshop.id})
+        response = super().form_valid(form)
+        messages.success(self.request, f'Sessão da oficina "{form.instance.workshop.name}" criada com sucesso!')
+        return response
 
 
-@login_required
-def enrollment_list(request, workshop_id):
-    """Lista otimizada de inscrições com cache e select_related"""
-    # Cache do workshop
-    cache_key = f"workshop_{workshop_id}"
-    workshop = cache.get(cache_key)
-    if workshop is None:
-        workshop = get_object_or_404(Workshop, id=workshop_id)
-        cache.set(cache_key, workshop, settings.CACHE_TIMEOUT['MEDIUM'])
-    
-    # Query otimizada das inscrições
-    enrollments = WorkshopEnrollment.objects.select_related(
-        'beneficiary', 'workshop'
-    ).filter(workshop_id=workshop_id)
-    
-    search = request.GET.get('search')
-    if search:
-        enrollments = enrollments.filter(
-            beneficiary__full_name__icontains=search
-        )
-    
-    status = request.GET.get('status')
-    if status:
-        enrollments = enrollments.filter(status=status)
-    
-    # Ordenação para performance
-    enrollments = enrollments.order_by('beneficiary__full_name')
-    
-    context = {
-        'workshop': workshop,
-        'enrollments': enrollments,
-        'status_choices': WorkshopEnrollment.STATUS_CHOICES,
-    }
-    return render(request, 'workshops/enrollment_list.html', context)
+class WorkshopSessionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = WorkshopSession
+    form_class = WorkshopSessionForm
+    template_name = 'workshops/session_form.html'
+    success_url = reverse_lazy('workshops:session-list')
 
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'Sessão da oficina "{form.instance.workshop.name}" atualizada com sucesso!')
+        return response
+
+
+class WorkshopSessionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = WorkshopSession
+    template_name = 'workshops/session_confirm_delete.html'
+    success_url = reverse_lazy('workshops:session-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        session = self.get_object()
+        workshop_name = session.workshop.name
+
+        response = super().delete(request, *args, **kwargs)
+        messages.success(request, f'Sessão da oficina "{workshop_name}" excluída com sucesso!')
+        return response
+
+
+# Views for Attendance Management
 
 @login_required
-def enrollment_create(request, workshop_id):
-    """Criar inscrição otimizada com bulk operations"""
-    # Cache do workshop
-    cache_key = f"workshop_{workshop_id}"
-    workshop = cache.get(cache_key)
-    if workshop is None:
-        workshop = get_object_or_404(Workshop.objects.select_related('created_by'), id=workshop_id)
-        cache.set(cache_key, workshop, settings.CACHE_TIMEOUT['MEDIUM'])
+@user_passes_test(is_technician)
+def bulk_attendance(request, session_id):
+    """View para registro em massa de presenças"""
+    session = get_object_or_404(WorkshopSession, id=session_id)
     
     if request.method == 'POST':
-        beneficiary_id = request.POST.get('beneficiary')
-        if beneficiary_id:
-            beneficiary = get_object_or_404(
-                Beneficiary.objects.select_related('created_by'), 
-                id=beneficiary_id
+        form = BulkAttendanceForm(request.POST, session=session)
+        if form.is_valid():
+            # Processar presenças
+            enrollments = WorkshopEnrollment.objects.filter(
+                workshop=session.workshop,
+                status='ativo'
             )
             
-            # Verificar se já existe inscrição (query otimizada)
-            if WorkshopEnrollment.objects.filter(
-                workshop_id=workshop_id, 
-                beneficiary_id=beneficiary_id
-            ).exists():
-                messages.error(request, 'Esta beneficiária já está inscrita nesta oficina.')
-            else:
-                enrollment = WorkshopEnrollment.objects.create(
-                    workshop=workshop,
-                    beneficiary=beneficiary,
-                    enrollment_date=timezone.now().date()
+            for enrollment in enrollments:
+                field_name = f'attendance_{enrollment.id}'
+                attended = form.cleaned_data.get(field_name, False)
+                
+                # Atualizar ou criar registro de presença
+                attendance, created = SessionAttendance.objects.get_or_create(
+                    session=session,
+                    enrollment=enrollment,
+                    defaults={'attended': attended}
                 )
                 
-                # Bulk create dos registros de presença para melhor performance
-                sessions = workshop.sessions.all()
-                attendance_records = [
-                    SessionAttendance(session=session, enrollment=enrollment)
-                    for session in sessions
-                ]
-                
-                if attendance_records:
-                    SessionAttendance.objects.bulk_create(attendance_records)
-                
-                # Invalidar caches relacionados
-                cache.delete(f"workshop_detail_{workshop_id}")
-                cache.delete(f"workshop_evaluations_{workshop_id}")
-                
-                messages.success(request, f'{beneficiary.full_name} foi inscrita com sucesso!')
-                return redirect('workshops:enrollment_list', workshop_id=workshop.id)
+                if not created:
+                    attendance.attended = attended
+                    attendance.save()
+            
+            messages.success(request, f'Presenças da sessão "{session.topic}" registradas com sucesso!')
+            return redirect('workshops:session-list')
+    else:
+        form = BulkAttendanceForm(session=session)
     
-    # Beneficiárias que ainda não estão inscritas (query otimizada)
-    enrolled_beneficiaries = WorkshopEnrollment.objects.filter(
-        workshop_id=workshop_id
-    ).values_list('beneficiary_id', flat=True)
-    
-    available_beneficiaries = Beneficiary.objects.exclude(
-        id__in=enrolled_beneficiaries
-    ).select_related('created_by').order_by('full_name')
-    
-    context = {
-        'workshop': workshop,
-        'beneficiaries': available_beneficiaries,
-    }
-    return render(request, 'workshops/enrollment_form.html', context)
+    return render(request, 'workshops/bulk_attendance.html', {
+        'form': form,
+        'session': session
+    })
 
+
+# CRUD Views for WorkshopEvaluation Model
+
+class WorkshopEvaluationListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = WorkshopEvaluation
+    template_name = 'workshops/evaluation_list.html'
+    context_object_name = 'evaluations'
+    paginate_by = 20
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def get_queryset(self):
+        workshop_filter = self.request.GET.get('workshop', '')
+        
+        queryset = WorkshopEvaluation.objects.select_related('enrollment__beneficiary', 'enrollment__workshop')
+        
+        if workshop_filter:
+            queryset = queryset.filter(enrollment__workshop_id=workshop_filter)
+        
+        return queryset.order_by('-evaluation_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['workshops'] = Workshop.objects.all().order_by('name')
+        context['selected_workshop'] = self.request.GET.get('workshop', '')
+        return context
+
+
+class WorkshopEvaluationCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = WorkshopEvaluation
+    form_class = WorkshopEvaluationForm
+    template_name = 'workshops/evaluation_form.html'
+    success_url = reverse_lazy('workshops:evaluation-list')
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Avaliação registrada com sucesso!')
+        return response
+
+
+# API Views for AJAX calls
 
 @login_required
-def attendance_register(request, session_id):
-    """Registrar presença com bulk update otimizado"""
-    session = get_object_or_404(
-        WorkshopSession.objects.select_related('workshop'), 
-        id=session_id
-    )
+@user_passes_test(is_technician)
+def get_workshop_stats(request, workshop_id):
+    """API para obter estatísticas de uma oficina"""
+    workshop = get_object_or_404(Workshop, id=workshop_id)
     
-    attendances = SessionAttendance.objects.select_related(
-        'enrollment__beneficiary'
-    ).filter(session=session).order_by('enrollment__beneficiary__full_name')
-    
-    if request.method == 'POST':
-        # Bulk update para melhor performance
-        attendance_updates = []
-        
-        for attendance in attendances:
-            present = request.POST.get(f'present_{attendance.id}') == 'on'
-            late = request.POST.get(f'late_{attendance.id}') == 'on'
-            left_early = request.POST.get(f'left_early_{attendance.id}') == 'on'
-            participation_quality = request.POST.get(f'participation_{attendance.id}')
-            notes = request.POST.get(f'notes_{attendance.id}', '')
-            
-            attendance.present = present
-            attendance.late = late
-            attendance.left_early = left_early
-            attendance.participation_quality = participation_quality
-            attendance.notes = notes
-            attendance_updates.append(attendance)
-        
-        # Bulk update
-        if attendance_updates:
-            SessionAttendance.objects.bulk_update(
-                attendance_updates,
-                ['present', 'late', 'left_early', 'participation_quality', 'notes']
-            )
-        
-        # Invalidar caches relacionados
-        cache.delete(f"workshop_detail_{session.workshop.id}")
-        cache.delete(f"workshop_evaluations_{session.workshop.id}")
-        
-        messages.success(request, 'Presença registrada com sucesso!')
-        return redirect('workshops:workshop_detail', pk=session.workshop.id)
-    
-    context = {
-        'session': session,
-        'attendances': attendances,
-        'participation_choices': SessionAttendance._meta.get_field('participation_quality').choices,
-    }
-    return render(request, 'workshops/attendance_register.html', context)
-
-
-@login_required
-def workshop_report(request, workshop_id):
-    """Relatório otimizado com cache e aggregate queries"""
-    # Cache do relatório
-    cache_key = f"workshop_report_{workshop_id}"
-    report_data = cache.get(cache_key)
-    
-    if report_data is None:
-        workshop = get_object_or_404(
-            Workshop.objects.select_related('created_by'),
-            id=workshop_id
-        )
-        
-        # Estatísticas com queries agregadas otimizadas
-        enrollment_stats = workshop.enrollments.aggregate(
-            total=Count('id'),
-            active=Count('id', filter=Q(status='ativo')),
-            completed=Count('id', filter=Q(status='concluido'))
-        )
-        
-        total_enrollments = enrollment_stats['total']
-        active_enrollments = enrollment_stats['active']
-        completed_enrollments = enrollment_stats['completed']
-        
-        # Taxa de frequência geral com query otimizada
-        total_sessions = workshop.sessions.count()
-        if total_sessions > 0:
-            attendance_stats = SessionAttendance.objects.filter(
-                session__workshop=workshop
-            ).aggregate(
-                total_possible=Count('id'),
-                total_present=Count('id', filter=Q(present=True))
-            )
-            
-            total_possible = attendance_stats['total_possible']
-            total_present = attendance_stats['total_present']
-            attendance_rate = (total_present / total_possible * 100) if total_possible > 0 else 0
-        else:
-            attendance_rate = 0
-        
-        # Avaliações recentes otimizadas
-        recent_evaluations = WorkshopEvaluation.objects.select_related(
-            'enrollment__beneficiary', 'evaluator'
-        ).filter(
+    stats = {
+        'total_enrollments': workshop.enrollments.filter(status='ativo').count(),
+        'total_sessions': workshop.sessions.count(),
+        'average_rating': WorkshopEvaluation.objects.filter(
             enrollment__workshop=workshop
-        ).order_by('-date')[:10]
-        
-        # Participantes com baixa frequência (calculado de forma otimizada)
-        low_attendance_enrollments = []
-        active_enrollments_qs = workshop.enrollments.select_related(
-            'beneficiary'
-        ).filter(status='ativo')
-        
-        for enrollment in active_enrollments_qs:
-            # Usar property que já existe no modelo
-            if hasattr(enrollment, 'attendance_rate') and enrollment.attendance_rate < 70:
-                low_attendance_enrollments.append(enrollment)
-        
-        report_data = {
-            'workshop': workshop,
-            'total_enrollments': total_enrollments,
-            'active_enrollments': active_enrollments,
-            'completed_enrollments': completed_enrollments,
-            'attendance_rate': attendance_rate,
-            'recent_evaluations': list(recent_evaluations),
-            'low_attendance': low_attendance_enrollments,
-        }
-        
-        # Cache por tempo médio (30 minutos)
-        cache.set(cache_key, report_data, settings.CACHE_TIMEOUT['MEDIUM'])
+        ).aggregate(avg=Avg('rating'))['avg'] or 0,
+        'completion_rate': 0  # Calcular baseado nas presenças
+    }
     
-    return render(request, 'workshops/workshop_report.html', report_data)
+    return JsonResponse(stats)
+
+
+# Workshop Report View
+
+@login_required
+@user_passes_test(is_technician)
+def workshop_report(request, pk):
+    """Gera relatório detalhado da oficina"""
+    workshop = get_object_or_404(Workshop, pk=pk)
+    
+    # Estatísticas da oficina
+    total_sessions = workshop.sessions.count()
+    total_enrollments = workshop.enrollments.filter(status='ativo').count()
+    
+    # Dados de presença
+    attendance_data = []
+    for session in workshop.sessions.all():
+        session_attendance = SessionAttendance.objects.filter(session=session)
+        present_count = session_attendance.filter(attended=True).count()
+        total_enrolled = session_attendance.count()
+        
+        attendance_data.append({
+            'session': session,
+            'present': present_count,
+            'total': total_enrolled,
+            'percentage': (present_count / total_enrolled * 100) if total_enrolled > 0 else 0
+        })
+    
+    # Avaliações
+    evaluations = WorkshopEvaluation.objects.filter(workshop=workshop)
+    avg_rating = evaluations.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
     
     context = {
         'workshop': workshop,
+        'total_sessions': total_sessions,
         'total_enrollments': total_enrollments,
-        'active_enrollments': active_enrollments,
-        'completed_enrollments': completed_enrollments,
-        'attendance_rate': attendance_rate,
-        'recent_evaluations': recent_evaluations,
-        'low_attendance': low_attendance,
-        'sessions': workshop.sessions.all(),
+        'attendance_data': attendance_data,
+        'evaluations': evaluations,
+        'avg_rating': avg_rating,
     }
+    
     return render(request, 'workshops/workshop_report.html', context)
+
+
+def clear_workshop_cache():
+    """Clear workshop-related cache entries in a production-safe way"""
+    try:
+        # Clear specific cache patterns
+        cache.delete_many([
+            'workshop_list_',
+            'workshop_detail_',
+            'workshop_enrollments_',
+            'workshop_sessions_'
+        ])
+    except Exception:
+        # Fallback: clear all cache if pattern deletion fails
+        cache.clear()

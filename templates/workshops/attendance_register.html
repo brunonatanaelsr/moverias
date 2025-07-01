@@ -3,6 +3,8 @@
 {% block title %}Registro de Presença - {{ session.workshop.name }}{% endblock %}
 
 {% block content %}
+{% include 'workshops/workshops_nav.html' %}
+
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="mb-8">
@@ -16,7 +18,7 @@
                     {{ session.date|date:"d/m/Y" }} - {{ session.start_time }} às {{ session.end_time }}
                 </p>
             </div>
-            <a href="{% url 'workshops:workshop_detail' session.workshop.pk %}" 
+            <a href="{% url 'workshops:workshop-detail' session.workshop.pk %}" 
                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 ← Voltar
             </a>
@@ -168,7 +170,7 @@
                 
                 {% if attendances %}
                 <div class="mt-8 flex justify-end space-x-4">
-                    <a href="{% url 'workshops:workshop_detail' session.workshop.pk %}" 
+                    <a href="{% url 'workshops:workshop-detail' session.workshop.pk %}" 
                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Cancelar
                     </a>

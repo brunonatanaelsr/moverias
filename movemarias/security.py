@@ -30,32 +30,32 @@ def validate_secret_key(secret_key):
     
     return True
 
-# Security settings for production
+# Security settings for production (relaxed for easier deployment)
 SECURITY_SETTINGS = {
-    # HTTPS Settings
-    'SECURE_SSL_REDIRECT': True,
+    # HTTPS Settings - relaxed for initial deployment
+    'SECURE_SSL_REDIRECT': False,  # Disabled for HTTP testing
     'SECURE_PROXY_SSL_HEADER': ('HTTP_X_FORWARDED_PROTO', 'https'),
     
-    # HSTS Settings
-    'SECURE_HSTS_SECONDS': 31536000,  # 1 year
-    'SECURE_HSTS_INCLUDE_SUBDOMAINS': True,
-    'SECURE_HSTS_PRELOAD': True,
+    # HSTS Settings - disabled for initial deployment
+    'SECURE_HSTS_SECONDS': 0,  # Disabled
+    'SECURE_HSTS_INCLUDE_SUBDOMAINS': False,
+    'SECURE_HSTS_PRELOAD': False,
     
     # Content Security
     'SECURE_CONTENT_TYPE_NOSNIFF': True,
     'SECURE_BROWSER_XSS_FILTER': True,
-    'X_FRAME_OPTIONS': 'DENY',
+    'X_FRAME_OPTIONS': 'SAMEORIGIN',  # Relaxed from DENY
     
-    # Session Security
-    'SESSION_COOKIE_SECURE': True,
+    # Session Security - relaxed
+    'SESSION_COOKIE_SECURE': False,  # Allow HTTP cookies
     'SESSION_COOKIE_HTTPONLY': True,
-    'SESSION_COOKIE_SAMESITE': 'Strict',
-    'SESSION_COOKIE_AGE': 3600,  # 1 hour
+    'SESSION_COOKIE_SAMESITE': 'Lax',  # Relaxed from Strict
+    'SESSION_COOKIE_AGE': 86400,  # 24 hours (increased)
     
-    # CSRF Security
-    'CSRF_COOKIE_SECURE': True,
-    'CSRF_COOKIE_HTTPONLY': True,
-    'CSRF_COOKIE_SAMESITE': 'Strict',
+    # CSRF Security - relaxed
+    'CSRF_COOKIE_SECURE': False,  # Allow HTTP cookies
+    'CSRF_COOKIE_HTTPONLY': False,  # Allow JS access if needed
+    'CSRF_COOKIE_SAMESITE': 'Lax',  # Relaxed from Strict
     'CSRF_FAILURE_VIEW': 'core.views.csrf_failure',
 }
 

@@ -188,7 +188,7 @@
                                 {{ workshop.total_participants }}/{{ workshop.max_participants }} participantes
                             </p>
                         </div>
-                        <a href="{% url 'workshops:workshop_detail' workshop.pk %}" 
+                        <a href="{% url 'workshops:workshop-detail' workshop.pk %}" 
                            class="text-purple-move hover:text-purple-700 text-sm font-medium">
                             Ver
                         </a>
@@ -196,14 +196,14 @@
                     {% endfor %}
                 </div>
                 <div class="mt-4">
-                    <a href="{% url 'workshops:workshop_list' %}" class="text-sm font-medium text-purple-move hover:text-purple-700">
+                    <a href="{% url 'workshops:workshop-list' %}" class="text-sm font-medium text-purple-move hover:text-purple-700">
                         Ver todas as oficinas →
                     </a>
                 </div>
             {% else %}
                 <p class="text-gray-500 text-sm">Nenhuma oficina cadastrada ainda.</p>
                 <div class="mt-4">
-                    <a href="{% url 'workshops:workshop_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                    <a href="{% url 'workshops:workshop-create' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
                         Criar primeira oficina
                     </a>
                 </div>
@@ -269,7 +269,7 @@
                     </div>
                 </a>
                 
-                <a href="{% url 'workshops:workshop_create' %}" class="block w-full text-left px-4 py-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                <a href="{% url 'workshops:workshop-create' %}" class="block w-full text-left px-4 py-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
                     <div class="flex items-center">
                         <span class="text-purple-500 text-lg mr-3">🎨</span>
                         <div>

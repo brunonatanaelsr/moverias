@@ -1,17 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.conf import settings
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Avg, Min, Max
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Beneficiary, Consent
 from .forms import BeneficiaryForm
+from workshops.models import WorkshopEnrollment
+from projects.models import ProjectEnrollment
+from social.models import SocialAnamnesis
 
 
 def is_technician(user):
@@ -208,3 +211,137 @@ def toggle_beneficiary_status(request, pk):
     
     # Sempre redirecionar para a lista de beneficiárias
     return redirect('members:beneficiary-list')
+
+
+class BeneficiaryReportView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Beneficiary
+    template_name = 'members/beneficiary_report.html'
+    context_object_name = 'beneficiary'
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        beneficiary = self.object
+
+        # Oficinas
+        context['workshop_enrollments'] = WorkshopEnrollment.objects.filter(beneficiary=beneficiary).select_related('workshop')
+        # Projetos
+        context['project_enrollments'] = ProjectEnrollment.objects.filter(beneficiary=beneficiary).select_related('project')
+        # Anamneses
+        context['social_anamneses'] = SocialAnamnesis.objects.filter(beneficiary=beneficiary)
+        # Cadastro completo
+        required_fields = ['full_name', 'dob', 'cpf', 'rg', 'address', 'neighbourhood', 'phone_1']
+        missing_fields = [f for f in required_fields if not getattr(beneficiary, f, None)]
+        context['missing_fields'] = missing_fields
+        context['is_complete'] = not missing_fields
+        # Vulnerabilidade (exemplo: renda, filhos, anamnese)
+        # Busca a última anamnese social
+        last_anamnesis = beneficiary.social_anamnesis.order_by('-date').first() if hasattr(beneficiary, 'social_anamnesis') else None
+        vulnerable_keywords = ['vulnerabilidade', 'baixa renda', 'violência', 'risco', 'social', 'extrema', 'moradia', 'alimentação', 'desemprego']
+        is_vulnerable = False
+        if last_anamnesis and last_anamnesis.vulnerabilities:
+            is_vulnerable = any(kw in last_anamnesis.vulnerabilities.lower() for kw in vulnerable_keywords)
+        context['is_vulnerable'] = any([
+            is_vulnerable,
+            hasattr(beneficiary, 'number_of_children') and getattr(beneficiary, 'number_of_children', 0) >= 3,
+            # Adapte conforme regras do sistema
+        ])
+        # Idade
+        context['age'] = beneficiary.age if hasattr(beneficiary, 'age') else None
+        # Localização
+        context['address'] = beneficiary.address
+        context['neighbourhood'] = beneficiary.neighbourhood
+        # Número de filhos
+        context['number_of_children'] = getattr(beneficiary, 'number_of_children', None)
+        # Insights extras (exemplo: total de oficinas, projetos, frequência, etc)
+        context['insights'] = {
+            'total_workshops': context['workshop_enrollments'].count(),
+            'total_projects': context['project_enrollments'].count(),
+            'total_anamneses': context['social_anamneses'].count(),
+            'is_active': beneficiary.status == 'ATIVA',
+        }
+        return context
+
+
+class BeneficiaryReportDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = 'members/beneficiary_report_dashboard.html'
+
+    def test_func(self):
+        return is_technician(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        beneficiaries = Beneficiary.objects.all()
+        # Filtros
+        status = self.request.GET.get('status', '')
+        neighbourhood = self.request.GET.get('neighbourhood', '')
+        min_age = self.request.GET.get('min_age', '')
+        max_age = self.request.GET.get('max_age', '')
+        vulnerability = self.request.GET.get('vulnerability', '')
+        num_children = self.request.GET.get('num_children', '')
+
+        # Função auxiliar para extrair número de filhos da última anamnese
+        def get_children_count(beneficiary):
+            anamneses = beneficiary.social_anamnesis.order_by('-date')
+            if anamneses.exists():
+                # Tenta extrair número de filhos do campo family_composition (ex: "Filhos: 2")
+                import re
+                texto = anamneses.first().family_composition or ''
+                match = re.search(r'filh[oa]s?:?\s*(\d+)', texto, re.IGNORECASE)
+                if match:
+                    return int(match.group(1))
+            return 0
+
+        # Adiciona atributo dinâmico para cada beneficiária
+        for b in beneficiaries:
+            b.number_of_children = get_children_count(b)
+
+        # Aplicar filtros
+        if status:
+            beneficiaries = beneficiaries.filter(status=status)
+        if neighbourhood:
+            beneficiaries = beneficiaries.filter(neighbourhood__icontains=neighbourhood)
+        if min_age:
+            beneficiaries = [b for b in beneficiaries if hasattr(b, 'age') and b.age and b.age >= int(min_age)]
+        if max_age:
+            beneficiaries = [b for b in beneficiaries if hasattr(b, 'age') and b.age and b.age <= int(max_age)]
+        if vulnerability == 'sim':
+            beneficiaries = [b for b in beneficiaries if hasattr(b, 'social_anamnesis') and b.social_anamnesis.filter(vulnerability=True).exists()]
+        if num_children:
+            beneficiaries = [b for b in beneficiaries if getattr(b, 'number_of_children', 0) == int(num_children)]
+
+        # Insights
+        total = len(beneficiaries)
+        total_active = Beneficiary.objects.filter(status='ATIVA').count()
+        total_inactive = Beneficiary.objects.filter(status='INATIVA').count()
+        avg_age = int(sum([b.age for b in beneficiaries if hasattr(b, 'age') and b.age]) / total) if total else 0
+        min_age_val = min([b.age for b in beneficiaries if hasattr(b, 'age') and b.age], default=None)
+        max_age_val = max([b.age for b in beneficiaries if hasattr(b, 'age') and b.age], default=None)
+        neighbourhoods = Beneficiary.objects.values('neighbourhood').annotate(count=Count('id')).order_by('-count')
+        # Distribuição de filhos (dinâmico)
+        from collections import Counter
+        children_counter = Counter([getattr(b, 'number_of_children', 0) for b in beneficiaries])
+        children_dist = [
+            {'number_of_children': k, 'count': v} for k, v in sorted(children_counter.items())
+        ]
+        # Para gráficos: distribuição por bairro, idade, filhos, status
+        context.update({
+            'beneficiaries': beneficiaries,
+            'total': total,
+            'total_active': total_active,
+            'total_inactive': total_inactive,
+            'avg_age': avg_age,
+            'min_age': min_age_val,
+            'max_age': max_age_val,
+            'neighbourhoods': neighbourhoods,
+            'children_dist': children_dist,
+            'status_choices': Beneficiary.STATUS_CHOICES,
+        })
+        return context
+
+# Nenhuma alteração de backend é necessária para adicionar um botão de navegação para a página de relatórios.
+# A alteração deve ser feita no template 'members/beneficiary_list.html', adicionando um botão/link para a view 'BeneficiaryReportDashboardView'.
+# Exemplo de código a ser adicionado ao template:
+# <a href="{% url 'members:beneficiary-report-dashboard' %}" class="btn btn-primary mb-3">Relatórios das Beneficiárias</a>

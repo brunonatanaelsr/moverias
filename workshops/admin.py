@@ -27,8 +27,8 @@ class WorkshopAdmin(admin.ModelAdmin):
 
 @admin.register(WorkshopSession)
 class WorkshopSessionAdmin(admin.ModelAdmin):
-    list_display = ['workshop', 'session_number', 'date', 'topic', 'attendance_count']
-    list_filter = ['workshop', 'date']
+    list_display = ['workshop', 'session_date', 'topic', 'start_time', 'end_time']
+    list_filter = ['workshop', 'session_date']
     search_fields = ['workshop__name', 'topic', 'content_covered']
     readonly_fields = ['created_at']
 
@@ -43,14 +43,14 @@ class WorkshopEnrollmentAdmin(admin.ModelAdmin):
 
 @admin.register(SessionAttendance)
 class SessionAttendanceAdmin(admin.ModelAdmin):
-    list_display = ['enrollment', 'session', 'present', 'late', 'participation_quality']
-    list_filter = ['session__workshop', 'present', 'participation_quality', 'session__date']
+    list_display = ['enrollment', 'session', 'attended']
+    list_filter = ['session__workshop', 'attended', 'session__session_date']
     search_fields = ['enrollment__beneficiary__full_name', 'session__workshop__name']
 
 
 @admin.register(WorkshopEvaluation)
 class WorkshopEvaluationAdmin(admin.ModelAdmin):
-    list_display = ['enrollment', 'evaluation_type', 'date', 'overall_score', 'evaluator']
-    list_filter = ['evaluation_type', 'date', 'enrollment__workshop']
-    search_fields = ['enrollment__beneficiary__full_name', 'enrollment__workshop__name', 'evaluator']
+    list_display = ['enrollment', 'evaluation_date', 'rating']
+    list_filter = ['evaluation_date', 'enrollment__workshop', 'rating']
+    search_fields = ['enrollment__beneficiary__full_name', 'enrollment__workshop__name']
     readonly_fields = ['created_at']
