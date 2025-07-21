@@ -1,0 +1,114 @@
+{% extends 'components/form_base.html' %}
+{% load notification_tags %}
+
+{% block page_title %}
+{% if object %}Editar Notificação{% else %}Nova Notificação{% endif %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+<a href="{% url 'notifications:list' %}">Notificações</a>
+<span>/</span>
+<span>{% if object %}Editar{% else %}Nova{% endif %}</span>
+{% endblock %}
+
+{% block form_fields %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Título -->
+    <div class="md:col-span-2">
+        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.title.label }}
+            <span class="text-red-500">*</span>
+        </label>
+        {{ form.title|add_class:"mm-input" }}
+        {% if form.title.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.title.errors.0 }}</p>
+        {% endif %}
+    </div>
+    
+    <!-- Destinatário -->
+    <div>
+        <label for="{{ form.recipient.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.recipient.label }}
+            <span class="text-red-500">*</span>
+        </label>
+        {{ form.recipient|add_class:"mm-input" }}
+        {% if form.recipient.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.recipient.errors.0 }}</p>
+        {% endif %}
+    </div>
+    
+    <!-- Tipo -->
+    <div>
+        <label for="{{ form.type.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.type.label }}
+            <span class="text-red-500">*</span>
+        </label>
+        {{ form.type|add_class:"mm-input" }}
+        {% if form.type.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.type.errors.0 }}</p>
+        {% endif %}
+    </div>
+    
+    <!-- Prioridade -->
+    <div>
+        <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.priority.label }}
+        </label>
+        {{ form.priority|add_class:"mm-input" }}
+        {% if form.priority.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.priority.errors.0 }}</p>
+        {% endif %}
+    </div>
+    
+    <!-- Canal -->
+    <div>
+        <label for="{{ form.channel.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.channel.label }}
+        </label>
+        {{ form.channel|add_class:"mm-input" }}
+        {% if form.channel.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.channel.errors.0 }}</p>
+        {% endif %}
+    </div>
+    
+    <!-- Mensagem -->
+    <div class="md:col-span-2">
+        <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {{ form.message.label }}
+            <span class="text-red-500">*</span>
+        </label>
+        {{ form.message|add_class:"mm-input" }}
+        {% if form.message.errors %}
+        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.message.errors.0 }}</p>
+        {% endif %}
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Escreva uma mensagem clara e objetiva
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block form_js %}
+// Preview da notificação
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const messageInput = document.getElementById('{{ form.message.id_for_label }}');
+    const typeSelect = document.getElementById('{{ form.type.id_for_label }}');
+    const prioritySelect = document.getElementById('{{ form.priority.id_for_label }}');
+    
+    // Atualizar preview em tempo real
+    [titleInput, messageInput, typeSelect, prioritySelect].forEach(input => {
+        input.addEventListener('input', updatePreview);
+    });
+    
+    function updatePreview() {
+        const title = titleInput.value || 'Título da notificação';
+        const message = messageInput.value || 'Mensagem da notificação';
+        const type = typeSelect.options[typeSelect.selectedIndex].text;
+        const priority = prioritySelect.options[prioritySelect.selectedIndex].text;
+        
+        // Aqui você pode adicionar uma prévia da notificação
+        // Por exemplo, mostrando como ficará no toast
+    }
+});
+{% endblock %}

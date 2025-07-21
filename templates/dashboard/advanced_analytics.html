@@ -1,0 +1,39 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Análises Avançadas</h1>
+<form method="get" class="mb-6 flex flex-wrap gap-4">
+    <label>Período:
+        <select name="period" class="border rounded px-2 py-1">
+            <option value="1month" {% if period == '1month' %}selected{% endif %}>Último mês</option>
+            <option value="3months" {% if period == '3months' %}selected{% endif %}>Últimos 3 meses</option>
+            <option value="6months" {% if period == '6months' %}selected{% endif %}>Últimos 6 meses</option>
+            <option value="1year" {% if period == '1year' %}selected{% endif %}>Último ano</option>
+        </select>
+    </label>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filtrar</button>
+</form>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+        <h2 class="font-semibold mb-2">Tendências</h2>
+        <pre class="bg-gray-100 p-2 rounded text-xs">{{ trends|safe }}</pre>
+    </div>
+    <div>
+        <h2 class="font-semibold mb-2">Métricas de Performance</h2>
+        <pre class="bg-gray-100 p-2 rounded text-xs">{{ performance_metrics|safe }}</pre>
+    </div>
+    <div>
+        <h2 class="font-semibold mb-2">Dados Geográficos</h2>
+        <pre class="bg-gray-100 p-2 rounded text-xs">{{ geographic_data|safe }}</pre>
+    </div>
+    <div>
+        <h2 class="font-semibold mb-2">Dados Demográficos</h2>
+        <pre class="bg-gray-100 p-2 rounded text-xs">{{ demographic_data|safe }}</pre>
+    </div>
+    <div class="md:col-span-2">
+        <h2 class="font-semibold mb-2">Predições</h2>
+        <pre class="bg-gray-100 p-2 rounded text-xs">{{ predictions|safe }}</pre>
+    </div>
+</div>
+
+{% endblock %}

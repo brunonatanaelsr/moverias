@@ -6,8 +6,70 @@ from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.conf import settings
 from django.db.models import Q
+from core.unified_permissions import (
+    
+    get_user_permissions,
+    requires_technician,
+    requires_admin,
+    TechnicianRequiredMixin,
+    AdminRequiredMixin
+)
 from .models import EvolutionRecord
 from members.models import Beneficiary
+from django.http import HttpResponse
+import io
+from openpyxl import Workbook
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from django.views import View
+
+class EvolutionExportExcelView(LoginRequiredMixin, TechnicianRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        queryset = EvolutionRecord.objects.select_related('beneficiary', 'author').order_by('-date')
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Registros de Evolução"
+        ws.append(["Beneficiária", "Data", "Descrição", "Autor", "Assinatura Requerida", "Assinado"])
+        for record in queryset:
+            ws.append([
+                str(record.beneficiary),
+                record.date.strftime('%d/%m/%Y'),
+                record.description,
+                str(record.author),
+                "Sim" if record.signature_required else "Não",
+                "Sim" if record.signed_by_beneficiary else "Não"
+            ])
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="evolucao.xlsx"'
+        wb.save(response)
+        return response
+
+class EvolutionExportPDFView(LoginRequiredMixin, TechnicianRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        queryset = EvolutionRecord.objects.select_related('beneficiary', 'author').order_by('-date')
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+        width, height = A4
+        y = height - 50
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(50, y, "Registros de Evolução")
+        y -= 40
+        p.setFont("Helvetica", 10)
+        for record in queryset:
+            if y < 80:
+                p.showPage()
+                y = height - 50
+            p.drawString(50, y, f"Beneficiária: {record.beneficiary} | Data: {record.date.strftime('%d/%m/%Y')} | Autor: {record.author}")
+            y -= 15
+            p.drawString(60, y, f"Descrição: {record.description[:120]}{'...' if len(record.description) > 120 else ''}")
+            y -= 15
+            p.drawString(60, y, f"Assinatura Requerida: {'Sim' if record.signature_required else 'Não'} | Assinado: {'Sim' if record.signed_by_beneficiary else 'Não'}")
+            y -= 25
+        p.save()
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="evolucao.pdf"'
+        return response
 
 
 def is_technician(user):
@@ -15,16 +77,13 @@ def is_technician(user):
     return user.groups.filter(name='Tecnica').exists() or user.is_superuser
 
 
-class EvolutionRecordListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class EvolutionRecordListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView):
     """Lista de registros de evolução"""
     
     model = EvolutionRecord
     template_name = 'evolution/evolution_list.html'
     context_object_name = 'records'
     paginate_by = 20
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_queryset(self):
         """Query otimizada com cache e múltiplos filtros"""
@@ -68,18 +127,27 @@ class EvolutionRecordListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
         context['signature_filter'] = self.request.GET.get('signature_required', '')
+        context['user_permissions'] = get_user_permissions(self.request.user)
+        # Dados para gráficos: evolução por mês e beneficiária
+        from django.db.models.functions import TruncMonth
+        from django.db.models import Count
+        records_by_month = (
+            EvolutionRecord.objects
+            .values('beneficiary__full_name')
+            .annotate(month=TruncMonth('date'))
+            .annotate(total=Count('id'))
+            .order_by('month')
+        )
+        context['records_by_month'] = list(records_by_month)
         return context
 
 
-class EvolutionRecordDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class EvolutionRecordDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailView):
     """Detalhes de um registro de evolução"""
     
     model = EvolutionRecord
     template_name = 'evolution/evolution_detail.html'
     context_object_name = 'record'
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_object(self, queryset=None):
         """Otimizar query do objeto"""
@@ -96,16 +164,28 @@ class EvolutionRecordDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
         return record
 
 
-class EvolutionRecordCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class EvolutionRecordCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        response = super().form_valid(form)
+        # Auditoria: log de criação
+        from core.audit import log_user_action
+        log_user_action(
+            user=self.request.user,
+            action='CREATE',
+            request=self.request,
+            description=f'Criou registro de evolução para {form.instance.beneficiary}',
+            content_object=form.instance,
+            old_values=None,
+            new_values={field: getattr(form.instance, field) for field in form.instance._meta.fields}
+        )
+        # ...existing code...
     """Criar novo registro de evolução"""
     
     model = EvolutionRecord
     template_name = 'evolution/evolution_form.html'
-    fields = ['beneficiary', 'date', 'description', 'signature_required']
+    fields = ['beneficiary', 'date', 'description', 'signature_required', 'workshops', 'projects', 'anamneses', 'evidence']
     success_url = reverse_lazy('evolution:list')
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_form(self, form_class=None):
         """Otimizar queryset das beneficiárias no formulário"""
@@ -153,11 +233,26 @@ class EvolutionRecordCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateV
 
 
 class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    def form_valid(self, form):
+        old_values = {field.name: getattr(self.get_object(), field.name) for field in self.model._meta.fields}
+        response = super().form_valid(form)
+        # Auditoria: log de edição
+        from core.audit import log_user_action
+        log_user_action(
+            user=self.request.user,
+            action='UPDATE',
+            request=self.request,
+            description=f'Editou registro de evolução de {self.object.beneficiary}',
+            content_object=self.object,
+            old_values=old_values,
+            new_values={field.name: getattr(self.object, field.name) for field in self.model._meta.fields}
+        )
+        # ...existing code...
     """Editar registro de evolução"""
     
     model = EvolutionRecord
     template_name = 'evolution/evolution_form.html'
-    fields = ['date', 'description', 'signature_required', 'signed_by_beneficiary']
+    fields = ['date', 'description', 'signature_required', 'signed_by_beneficiary', 'workshops', 'projects', 'anamneses', 'evidence']
     success_url = reverse_lazy('evolution:list')
     
     def test_func(self):
@@ -193,6 +288,21 @@ class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
 
 
 class EvolutionRecordDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        # Auditoria: log de exclusão
+        from core.audit import log_user_action
+        old_values = {field.name: getattr(self.object, field.name) for field in self.model._meta.fields}
+        log_user_action(
+            user=request.user,
+            action='DELETE',
+            request=request,
+            description=f'Excluiu registro de evolução de {self.object.beneficiary}',
+            content_object=self.object,
+            old_values=old_values,
+            new_values=None
+        )
+        # ...existing code...
     """Excluir registro de evolução"""
     
     model = EvolutionRecord

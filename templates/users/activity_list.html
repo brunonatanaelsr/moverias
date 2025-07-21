@@ -1,38 +1,79 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Log de Atividades - Move Marias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h3 mb-0">
-                        <i class="fas fa-history text-primary me-2"></i>
-                        Log de Atividades
-                    </h1>
-                    <p class="text-muted mb-0">Acompanhe as atividades dos usuários no sistema</p>
-                </div>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👤</div>
+            <div class="dashboard-header-text">
+                <h1>Usuários</h1>
+                <p>Gerencie usuários e permissões</p>
             </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
         </div>
     </div>
 
     <!-- Filters -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                 <div class="card-header bg-light">
                     <h6 class="card-title mb-0">
-                        <i class="fas fa-filter me-2"></i>
+                        <i class="fas fa-filter mr-2"></i>
                         Filtros
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <form method="get" class="row g-3">
                         <div class="col-md-4">
-                            <label for="user" class="form-label">Usuário</label>
+                            <label for="user" class="form-label-optimized">Usuário</label>
                             <select name="user" id="user" class="form-select">
                                 <option value="">Todos os usuários</option>
                                 {% for user in users %}
@@ -43,7 +84,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="action" class="form-label">Ação</label>
+                            <label for="action" class="form-label-optimized">Ação</label>
                             <select name="action" id="action" class="form-select">
                                 <option value="">Todas as ações</option>
                                 <option value="create" {% if request.GET.action == "create" %}selected{% endif %}>Criar</option>
@@ -52,13 +93,13 @@
                                 <option value="view" {% if request.GET.action == "view" %}selected{% endif %}>Visualizar</option>
                             </select>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">
-                                <i class="fas fa-search me-1"></i>
+                        <div class="col-md-4 flex items-end">
+                            <button type="submit" class="mm-btn mm-btn-primary mr-2">
+                                <i class="fas fa-search mr-1"></i>
                                 Filtrar
                             </button>
-                            <a href="{% url 'users:activity_list' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-1"></i>
+                            <a href="{% url 'users:activity_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                <i class="fas fa-times mr-1"></i>
                                 Limpar
                             </a>
                         </div>
@@ -69,18 +110,18 @@
     </div>
 
     <!-- Activities -->
-    <div class="row">
-        <div class="col-12">
+    <div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-list me-2"></i>
+                        <i class="fas fa-list mr-2"></i>
                         Atividades Registradas
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     {% if activities %}
-                        <div class="table-responsive">
+                        <div class="table-container-optimized">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
@@ -95,24 +136,24 @@
                                     {% for activity in activities %}
                                     <tr>
                                         <td class="text-nowrap">
-                                            <i class="fas fa-clock text-muted me-1"></i>
+                                            <i class="fas fa-clock text-gray-600 mr-1"></i>
                                             {{ activity.timestamp|date:"d/m/Y H:i:s" }}
                                         </td>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            <div class="flex items-center">
+                                                <div class="bg-primary rounded-full flex items-center justify-center mr-2"
                                                      style="width: 32px; height: 32px;">
                                                     <i class="fas fa-user fa-sm text-white"></i>
                                                 </div>
                                                 <div>
-                                                    <div class="fw-bold">{{ activity.user.full_name }}</div>
-                                                    <small class="text-muted">{{ activity.user.get_role_display }}</small>
+                                                    <div class="font-bold">{{ activity.user.full_name }}</div>
+                                                    <text-sm class="text-gray-600">{{ activity.user.get_role_display }}</text-sm>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{% if activity.action == 'create' %}success{% elif activity.action == 'update' %}warning{% elif activity.action == 'delete' %}danger{% else %}info{% endif %}">
-                                                <i class="fas fa-{% if activity.action == 'create' %}plus{% elif activity.action == 'update' %}edit{% elif activity.action == 'delete' %}trash{% else %}eye{% endif %} me-1"></i>
+                                            <span class="mm-badge mm-badge-{% if activity.action == 'create' %}success{% elif activity.action == 'update' %}warning{% elif activity.action == 'delete' %}danger{% else %}info{% endif %}">
+                                                <i class="fas fa-{% if activity.action == 'create' %}plus{% elif activity.action == 'update' %}edit{% elif activity.action == 'delete' %}trash{% else %}eye{% endif %} mr-1"></i>
                                                 {{ activity.get_action_display }}
                                             </span>
                                         </td>
@@ -121,8 +162,8 @@
                                                 {{ activity.description }}
                                             </div>
                                         </td>
-                                        <td class="text-muted">
-                                            <i class="fas fa-globe me-1"></i>
+                                        <td class="text-gray-600">
+                                            <i class="fas fa-globe mr-1"></i>
                                             {{ activity.ip_address|default:"-" }}
                                         </td>
                                     </tr>
@@ -134,7 +175,7 @@
                         <!-- Pagination -->
                         {% if is_paginated %}
                         <nav aria-label="Navegação das atividades">
-                            <ul class="pagination justify-content-center mt-4">
+                            <ul class="pagination justify-center mt-4">
                                 {% if page_obj.has_previous %}
                                     <li class="page-item">
                                         <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
@@ -178,9 +219,9 @@
 
                     {% else %}
                         <div class="text-center py-5">
-                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">Nenhuma atividade encontrada</h5>
-                            <p class="text-muted">
+                            <i class="fas fa-history fa-3x text-gray-600 mb-3"></i>
+                            <h5 class="text-gray-600">Nenhuma atividade encontrada</h5>
+                            <p class="text-gray-600">
                                 {% if request.GET.user or request.GET.action %}
                                     Nenhuma atividade corresponde aos filtros selecionados.
                                 {% else %}
@@ -188,8 +229,8 @@
                                 {% endif %}
                             </p>
                             {% if request.GET.user or request.GET.action %}
-                            <a href="{% url 'users:activity_list' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-eye me-1"></i>
+                            <a href="{% url 'users:activity_list' %}" class="mm-btn mm-btn-outline-primary">
+                                <i class="fas fa-eye mr-1"></i>
                                 Ver Todas as Atividades
                             </a>
                             {% endif %}
@@ -203,42 +244,42 @@
     <!-- Statistics -->
     {% if activities %}
     <div class="row mt-4">
-        <div class="col-12">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <div class="card bg-light">
-                <div class="card-header">
+                <div class="card-padding-md border-b">
                     <h6 class="card-title mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
+                        <i class="fas fa-chart-bar mr-2"></i>
                         Estatísticas Rápidas
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <div class="row text-center">
                         <div class="col-md-3">
                             <div class="bg-success text-white rounded p-3">
                                 <i class="fas fa-plus fa-2x mb-2"></i>
                                 <div class="h4 mb-0">{{ activities|length }}</div>
-                                <small>Total de Atividades</small>
+                                <text-sm>Total de Atividades</text-sm>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="bg-info text-white rounded p-3">
                                 <i class="fas fa-users fa-2x mb-2"></i>
                                 <div class="h4 mb-0">{{ unique_users_count }}</div>
-                                <small>Usuários Ativos</small>
+                                <text-sm>Usuários Ativos</text-sm>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="bg-warning text-white rounded p-3">
                                 <i class="fas fa-calendar fa-2x mb-2"></i>
                                 <div class="h4 mb-0">Hoje</div>
-                                <small>Período Atual</small>
+                                <text-sm>Período Atual</text-sm>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="bg-primary text-white rounded p-3">
                                 <i class="fas fa-clock fa-2x mb-2"></i>
                                 <div class="h4 mb-0">{{ activities.0.timestamp|date:"H:i" }}</div>
-                                <small>Última Atividade</small>
+                                <text-sm>Última Atividade</text-sm>
                             </div>
                         </div>
                     </div>
@@ -247,5 +288,6 @@
         </div>
     </div>
     {% endif %}
+</div>
 </div>
 {% endblock %}

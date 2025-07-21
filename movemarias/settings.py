@@ -36,7 +36,32 @@ env = environ.Env(
 environ.Env.read_env(BASE_DIR / '.env')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# WARNING FIX: security.W018 - DEBUG setting validation
 DEBUG = env('DEBUG')
+
+# Additional validation for production environment
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+if ENVIRONMENT == 'production' and DEBUG:
+    raise ValueError("DEBUG must be False in production environment (ENVIRONMENT=production)")
+
+# Force DEBUG=False for production environment or if certain conditions are met
+if ENVIRONMENT == 'production':
+    DEBUG = False
+elif 'movemarias' in env.list('ALLOWED_HOSTS', default=[]):
+    DEBUG = False
+
+# Security settings for production
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
@@ -79,6 +104,10 @@ THIRD_PARTY_APPS = [
     'formtools',
     'django_htmx',
     'django_extensions',
+    'drf_yasg',  # Swagger/OpenAPI documentation
+    'rest_framework_simplejwt',  # JWT Authentication
+    'widget_tweaks',  # Para filtros de formulário nos templates
+    # 'django_ratelimit',  # ENHANCED: Rate limiting - TEMPORARILY DISABLED due to cache issues
     # Celery apps (only when Celery is installed)
     # 'django_celery_beat',
     # 'django_celery_results',
@@ -95,7 +124,13 @@ LOCAL_APPS = [
     'coaching',
     'evolution',
     'workshops',
-    # 'hr',  # Módulo de Recursos Humanos - TEMPORARIAMENTE DESABILITADO
+    'certificates',  # Sistema de certificados
+    'notifications',  # Sistema de notificações
+    'hr',  # Módulo de Recursos Humanos
+    'tasks',  # Gestão de Tarefas (Kanban)
+    'chat',  # Chat Interno
+    'communication',  # Comunicação Interna
+    'activities',  # Novo app unificado para atividades dos beneficiários
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -104,6 +139,8 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',  # ENHANCED: Custom security headers
+    'core.middleware.ErrorLoggingMiddleware',  # Custom error logging
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -111,8 +148,11 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
+    'core.middleware.PerformanceMiddleware',  # Performance monitoring
+    'notifications.realtime.NotificationMiddleware',  # Notification context
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.SecurityMiddleware',  # Additional security headers
 ]
 
 # Custom User Model
@@ -127,9 +167,13 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'core.context_processors.global_context',
+                'core.context_processors.permissions_context_processor',  # Sistema de permissões unificado
+                'notifications.realtime.notification_context_processor',  # Notification context
             ],
         },
     },
@@ -200,7 +244,7 @@ elif REDIS_URL:
         }
     }
 else:
-    # Fallback: Local memory cache
+    # Fallback: Local memory cache (compatible with django_ratelimit)
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -291,27 +335,40 @@ SERVER_EMAIL = env('SERVER_EMAIL', default='Move Marias <server@movemarias.org>'
 # Email timeout settings
 EMAIL_TIMEOUT = 30
 
-# Security settings - Enhanced for HTTPS
+# Security settings - Enhanced for both production and development
+# WARNING FIXES: security.W004, W008, W012, W016, W018
+
+# HTTPS settings - apply in production only
 if not DEBUG:
-    # HTTPS settings
+    # WARNING FIX: security.W008 - SECURE_SSL_REDIRECT  
     SECURE_SSL_REDIRECT = True  # Redirect HTTP to HTTPS
+    
+    # WARNING FIX: security.W004 - SECURE_HSTS_SECONDS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year (31536000 seconds)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # WARNING FIX: security.W012 - SESSION_COOKIE_SECURE
+    SESSION_COOKIE_SECURE = True  # Require HTTPS for session cookies
+    
+    # WARNING FIX: security.W016 - CSRF_COOKIE_SECURE  
+    CSRF_COOKIE_SECURE = True     # Require HTTPS for CSRF cookies
+    
+    # Additional security headers
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
     X_FRAME_OPTIONS = 'DENY'
-    
-    # HTTPS session/cookie security
-    SESSION_COOKIE_SECURE = True  # Require HTTPS for cookies
-    CSRF_COOKIE_SECURE = True     # Require HTTPS for CSRF cookies
-    
-    # HSTS settings for enhanced security
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 else:
-    # Development settings
+    # Development settings - disable HTTPS requirements for local development
+    SECURE_SSL_REDIRECT = False
+    SECURE_HSTS_SECONDS = 0
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+    
+    # Basic security headers still enabled in development
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Configurações de sessão mais seguras
 SESSION_COOKIE_AGE = 3600  # 1 hora em produção
@@ -326,6 +383,30 @@ CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[
     'http://127.0.0.1:8000',
     'http://localhost:8000',
 ])
+
+# CSRF Configuration - Explicit settings for development
+if DEBUG:
+    # Ensure CSRF works properly in development
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript access in development for debugging
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_NAME = 'csrftoken'
+    CSRF_COOKIE_AGE = 31449600  # 1 year
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://0.0.0.0:8000',
+    ]
+    CSRF_USE_SESSIONS = False  # Use cookies, not sessions
+    CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'
+    
+    # Session settings for development
+    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_AGE = 86400  # 24 hours
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
 
 # Django Cryptography
 DJANGO_CRYPTOGRAPHY_KEY = env('DJANGO_CRYPTOGRAPHY_KEY', default='test-key-for-development')
@@ -385,25 +466,24 @@ SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 hours
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'  # Changed from Strict to Lax for better compatibility
 
-# Simple logging configuration
+# Logging Configuration
+# from core.logging_config import LOGGING_CONFIG
+# LOGGING = LOGGING_CONFIG
+
+# Temporary basic logging for testing
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
-            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
         },
     },
-    'root': {
-        'handlers': ['console'],
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
     },
 }
 
@@ -500,3 +580,114 @@ if not DEBUG:
             'django.template.loaders.app_directories.Loader',
         ]),
     ]
+
+# Swagger/OpenAPI Configuration
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'SUPPORTED_SUBMIT_METHODS': [
+        'get',
+        'post',
+        'put',
+        'delete',
+        'patch'
+    ],
+    'OPERATIONS_SORTER': 'alpha',
+    'TAGS_SORTER': 'alpha',
+    'DOC_EXPANSION': 'none',
+    'DEEP_LINKING': True,
+    'SHOW_EXTENSIONS': True,
+    'DEFAULT_MODEL_RENDERING': 'example'
+}
+
+REDOC_SETTINGS = {
+    'LAZY_RENDERING': False,
+    'HIDE_HOSTNAME': False,
+    'EXPAND_RESPONSES': 'all',
+    'PATH_IN_MIDDLE': True,
+}
+
+# JWT Authentication Configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JSON_ENCODER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=60),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+# API Documentation Info
+API_INFO = {
+    'title': 'MoveMarias API',
+    'version': 'v1',
+    'description': 'API para gestão de beneficiárias e programas sociais do MoveMarias',
+    'terms_of_service': 'https://www.movemarias.org/terms/',
+    'contact': {
+        'name': 'MoveMarias Tech Team',
+        'email': 'tech@movemarias.org',
+        'url': 'https://www.movemarias.org/contact/'
+    },
+    'license': {
+        'name': 'MIT License',
+        'url': 'https://opensource.org/licenses/MIT'
+    }
+}
+
+# Rate Limiting Configuration
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+
+# Rate limiting settings per user role
+RATELIMIT_SETTINGS = {
+    'anonymous': {
+        'requests_per_minute': 20,
+        'requests_per_hour': 100,
+    },
+    'authenticated': {
+        'requests_per_minute': 60,
+        'requests_per_hour': 500,
+    },
+    'admin': {
+        'requests_per_minute': 120,
+        'requests_per_hour': 1000,
+    },
+    'api': {
+        'requests_per_minute': 100,
+        'requests_per_hour': 2000,
+    }
+}
+
+# Specific endpoints with stricter limits
+RATELIMIT_ENDPOINTS = {
+    'login': '10/m',  # Login attempts
+    'password_reset': '5/m',  # Password reset
+    'upload': '20/m',  # File uploads
+    'export': '10/h',  # Data exports
+    'sensitive_data': '30/h',  # CPF/RG access
+}

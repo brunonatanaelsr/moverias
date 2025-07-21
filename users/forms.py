@@ -32,18 +32,24 @@ class CustomUserForm(UserCreationForm):
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             })
             
-        # Campos específicos
+        # Campos específicos com validação
         self.fields['email'].widget.attrs.update({
             'placeholder': 'email@exemplo.com',
-            'type': 'email'
+            'type': 'email',
+            'data-validate': 'email',
+            'data-required': 'true',
+            'data-check-uniqueness': 'true'
         })
         
         self.fields['phone'].widget.attrs.update({
-            'placeholder': '(11) 99999-9999'
+            'placeholder': '(11) 99999-9999',
+            'data-validate': 'phone'
         })
         
         self.fields['full_name'].widget.attrs.update({
-            'placeholder': 'Nome completo do usuário'
+            'placeholder': 'Nome completo do usuário',
+            'data-validate': 'name',
+            'data-required': 'true'
         })
 
 
@@ -74,6 +80,12 @@ class UserProfileForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs.update({
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
+            })
+            
+        # Adicionar validação para telefone de emergência
+        if 'emergency_phone' in self.fields:
+            self.fields['emergency_phone'].widget.attrs.update({
+                'data-validate': 'phone'
             })
 
 
@@ -157,3 +169,222 @@ class UserPermissionForm(forms.ModelForm):
         self.fields['user_permissions'].queryset = Permission.objects.select_related(
             'content_type'
         ).order_by('content_type__app_label', 'codename')
+
+
+class UserCreateForm(UserCreationForm):
+    """Formulário robusto para criação de usuários"""
+    
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'placeholder': 'usuario@email.com'
+        })
+    )
+    
+    full_name = forms.CharField(
+        label='Nome Completo',
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'placeholder': 'Nome completo do usuário'
+        })
+    )
+    
+    role = forms.ChoiceField(
+        label='Função',
+        choices=CustomUser.ROLE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        })
+    )
+    
+    phone = forms.CharField(
+        label='Telefone',
+        max_length=15,
+        widget=forms.TextInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'placeholder': '(85) 99999-9999'
+        })
+    )
+    
+    department = forms.CharField(
+        label='Departamento',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'placeholder': 'Departamento ou setor'
+        })
+    )
+    
+    groups = forms.ModelMultipleChoiceField(
+        label='Grupos',
+        queryset=Group.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-checkbox h-4 w-4 text-blue-600'
+        })
+    )
+    
+    is_staff = forms.BooleanField(
+        label='Acesso ao Admin',
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-checkbox h-4 w-4 text-blue-600'
+        }),
+        help_text='Permite acesso ao painel administrativo do Django'
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email', 'full_name', 'role', 'phone', 'department', 'groups', 'is_staff')
+        widgets = {
+            'username': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'nome.usuario'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['password1'].widget.attrs.update({
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+        })
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if CustomUser.objects.filter(email=email).exists():
+            raise forms.ValidationError('Este email já está em uso.')
+        return email
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Adicionar aos grupos selecionados
+            if self.cleaned_data.get('groups'):
+                user.groups.set(self.cleaned_data['groups'])
+        return user
+
+class UserUpdateForm(forms.ModelForm):
+    """Formulário robusto para atualização de usuários"""
+    
+    groups = forms.ModelMultipleChoiceField(
+        label='Grupos',
+        queryset=Group.objects.all(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-checkbox h-4 w-4 text-blue-600'
+        })
+    )
+    
+    class Meta:
+        model = CustomUser
+        fields = ('email', 'full_name', 'role', 'phone', 'department', 'is_active', 'is_staff', 'groups')
+        widgets = {
+            'email': forms.EmailInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'full_name': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'role': forms.Select(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'department': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox h-4 w-4 text-blue-600'
+            }),
+            'is_staff': forms.CheckboxInput(attrs={
+                'class': 'form-checkbox h-4 w-4 text-blue-600'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['groups'].initial = self.instance.groups.all()
+    
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Atualizar grupos
+            if 'groups' in self.cleaned_data:
+                user.groups.set(self.cleaned_data['groups'])
+        return user
+
+class PermissionForm(forms.Form):
+    """Formulário para gerenciar permissões de usuário"""
+    
+    def __init__(self, user=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        
+        # Campo para grupos
+        self.fields['groups'] = forms.ModelMultipleChoiceField(
+            queryset=Group.objects.all(),
+            widget=forms.CheckboxSelectMultiple(attrs={
+                'class': 'form-checkbox h-4 w-4 text-blue-600'
+            }),
+            required=False,
+            label='Grupos'
+        )
+        
+        # Campo para permissões individuais
+        self.fields['permissions'] = forms.ModelMultipleChoiceField(
+            queryset=Permission.objects.all().select_related('content_type'),
+            widget=forms.CheckboxSelectMultiple(attrs={
+                'class': 'form-checkbox h-4 w-4 text-blue-600'
+            }),
+            required=False,
+            label='Permissões Individuais'
+        )
+        
+        if user:
+            self.fields['groups'].initial = user.groups.all()
+            self.fields['permissions'].initial = user.user_permissions.all()
+
+class GroupForm(forms.ModelForm):
+    """Formulário para criação/edição de grupos"""
+    
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all().select_related('content_type'),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-checkbox h-4 w-4 text-blue-600'
+        }),
+        required=False,
+        label='Permissões do Grupo'
+    )
+    
+    class Meta:
+        model = Group
+        fields = ('name', 'permissions')
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+                'placeholder': 'Nome do grupo'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['permissions'].initial = self.instance.permissions.all()
+    
+    def save(self, commit=True):
+        group = super().save(commit=False)
+        if commit:
+            group.save()
+            # Atualizar permissões
+            if 'permissions' in self.cleaned_data:
+                group.permissions.set(self.cleaned_data['permissions'])
+        return group

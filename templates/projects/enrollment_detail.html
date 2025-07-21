@@ -1,0 +1,176 @@
+{% extends 'base_optimized.html' %}
+
+{% block title %}Matrícula - {{ enrollment.beneficiary.full_name }} - {{ enrollment.project.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<a href="{% url 'projects:project-list' %}" class="text-gray-500 hover:text-gray-700">Projetos</a>
+<a href="{% url 'projects:enrollment-list' %}" class="text-gray-500 hover:text-gray-700">Matrículas</a>
+<span class="text-gray-900">{{ enrollment.beneficiary.full_name }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <div class="section-spacing-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{{ enrollment.project.name }}</h1>
+                <p class="mt-2 text-sm text-gray-600">
+                    Matrícula de {{ enrollment.beneficiary.full_name }}
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                {% if user_permissions.can_edit_projects %}
+                <a href="{% url 'projects:enrollment-update' enrollment.pk %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                    ✏️ Editar
+                </a>
+                {% endif %}
+                <a href="{% url 'projects:enrollment-list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    ← Voltar
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+            <!-- Informações da Beneficiária -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informações da Beneficiária</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Nome Completo</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.beneficiary.full_name }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Email</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.beneficiary.email|default:"Não informado" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Telefone</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.beneficiary.phone_1|default:"Não informado" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Status</dt>
+                            <dd class="mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if enrollment.beneficiary.status == 'ATIVA' %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ enrollment.beneficiary.get_status_display }}
+                                </span>
+                            </dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Projeto -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informações do Projeto</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Projeto</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.project.name }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Coordenador</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.project.coordinator.full_name|default:enrollment.project.coordinator.username }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Descrição</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.project.description|default:"Não informado" }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Status do Projeto</dt>
+                            <dd class="mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if enrollment.project.status == 'ATIVO' %}bg-green-100 text-green-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ enrollment.project.get_status_display }}
+                                </span>
+                            </dd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações da Matrícula -->
+            <div>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Detalhes da Matrícula</h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Status da Matrícula</dt>
+                            <dd class="mt-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if enrollment.status == 'ATIVO' %}bg-green-100 text-green-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ enrollment.get_status_display }}
+                                </span>
+                            </dd>
+                        </div>
+                        
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Data de Matrícula</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.created_at|date:"d/m/Y H:i" }}</dd>
+                        </div>
+                        
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Matriculado por</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.enrolled_by.full_name|default:enrollment.enrolled_by.username }}</dd>
+                        </div>
+                        
+                        {% if enrollment.notes %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Observações</dt>
+                            <dd class="mt-1 text-sm text-gray-900">{{ enrollment.notes }}</dd>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                {% if user_permissions.can_edit_projects %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações</h3>
+                    
+                    <div class="space-y-3">
+                        <a href="{% url 'projects:enrollment-update' enrollment.pk %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar Matrícula
+                        </a>
+                        
+                        <a href="{% url 'projects:enrollment-delete' enrollment.pk %}" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50">
+                            <i class="fas fa-trash mr-2"></i>
+                            Excluir Matrícula
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

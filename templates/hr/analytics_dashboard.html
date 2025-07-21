@@ -1,0 +1,297 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Analytics RH - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="min-h-screen bg-gray-50 py-8">
+    
+            <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Recursos Humanos</h1>
+                <p>Gerencie equipe e desenvolvimento organizacional</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+            <!-- Training Hours Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Horas de Treinamento</h3>
+                <div class="h-64">
+                    <canvas id="trainingChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Department Satisfaction -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Satisfação por Departamento</h3>
+                <div class="h-64">
+                    <canvas id="satisfactionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Employee Growth -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Crescimento de Funcionários</h3>
+                <div class="h-64">
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analytics -->
+        <div class="mt-8 bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Análise Detalhada por Departamento</h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Satisfação (%)</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Feedback</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tendência</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for dept_stat in department_satisfaction %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ dept_stat.department }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <div class="flex-center">
+                                            <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                                <div class="bg-green-500 h-2 rounded-full" style="width: {{ dept_stat.satisfaction_rate }}%"></div>
+                                            </div>
+                                            <span>{{ dept_stat.satisfaction_rate }}%</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ dept_stat.feedback_count }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {% if dept_stat.satisfaction_rate > 75 %}
+                                            <span class="text-green-600"><i class="fas fa-arrow-up"></i> Positiva</span>
+                                        {% elif dept_stat.satisfaction_rate > 50 %}
+                                            <span class="text-yellow-600"><i class="fas fa-arrow-right"></i> Estável</span>
+                                        {% else %}
+                                            <span class="text-red-600"><i class="fas fa-arrow-down"></i> Negativa</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="mt-8 bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Insights Principais</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="flex-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-lightbulb text-blue-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-medium text-blue-900">Retenção de Talentos</h4>
+                            <p class="text-sm text-blue-700">Departamentos com alta satisfação têm menor turnover</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="flex-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-chart-line text-green-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-medium text-green-900">Crescimento Constante</h4>
+                            <p class="text-sm text-green-700">Investimento em treinamento gera resultados positivos</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <div class="flex-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-purple-500 text-2xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="font-medium text-purple-900">Cultura Colaborativa</h4>
+                            <p class="text-sm text-purple-700">Feedback regular melhora o ambiente de trabalho</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Turnover Chart
+    const turnoverCtx = document.getElementById('turnoverChart').getContext('2d');
+    const turnoverChart = new Chart(turnoverCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for data in turnover_data %}'{{ data.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Taxa de Turnover (%)',
+                data: [{% for data in turnover_data %}{{ data.rate }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Training Hours Chart
+    const trainingCtx = document.getElementById('trainingChart').getContext('2d');
+    const trainingChart = new Chart(trainingCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for metric in training_metrics %}'{{ metric.period_start|date:"M/Y" }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Horas de Treinamento',
+                data: [{% for metric in training_metrics %}{{ metric.value }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: '#10B981',
+                borderColor: '#059669',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Department Satisfaction Chart
+    const satisfactionCtx = document.getElementById('satisfactionChart').getContext('2d');
+    const satisfactionChart = new Chart(satisfactionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for dept in department_satisfaction %}'{{ dept.department }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for dept in department_satisfaction %}{{ dept.satisfaction_rate }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [
+                    '#3B82F6',
+                    '#10B981',
+                    '#F59E0B',
+                    '#EF4444',
+                    '#8B5CF6',
+                    '#06B6D4'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Employee Growth Chart (Sample data)
+    const growthCtx = document.getElementById('growthChart').getContext('2d');
+    const growthChart = new Chart(growthCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Funcionários Ativos',
+                data: [45, 52, 48, 61, 55, 67],
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+</div>
+{% endblock %}

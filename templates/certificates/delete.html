@@ -1,0 +1,72 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Deletar Certificado{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <h1>Deletar Certificado</h1>
+            <p class="text-gray-600">Confirme a exclusão do certificado</p>
+        </div>
+        <div class="dashboard-actions">
+            <a href="{% url 'certificates:detail' certificate.id %}" class="mm-btn mm-btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Cancelar
+            </a>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="max-w-2xl mx-auto">
+            <div class="card">
+                <div class="mm-mm-card-body">
+                    <div class="text-center mb-6">
+                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-2">Confirmar Exclusão</h2>
+                        <p class="text-gray-600">Esta ação não pode ser desfeita. O certificado será removido permanentemente.</p>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h3 class="font-medium text-gray-900 mb-2">Certificado a ser deletado:</h3>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>Título:</strong> {{ certificate.title }}</div>
+                            <div><strong>Beneficiária:</strong> {{ certificate.member.full_name }}</div>
+                            {% if certificate.workshop %}
+                            <div><strong>Workshop:</strong> {{ certificate.workshop.name }}</div>
+                            {% endif %}
+                            <div><strong>Data de Emissão:</strong> {{ certificate.issue_date|date:"d/m/Y" }}</div>
+                            <div><strong>Status:</strong> 
+                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                    {% if certificate.status == 'generated' %}bg-green-100 text-green-800
+                                    {% elif certificate.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif certificate.status == 'delivered' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ certificate.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="flex justify-end space-x-3">
+                            <a href="{% url 'certificates:detail' certificate.id %}" class="mm-btn mm-btn-secondary">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="mm-btn mm-btn-danger">
+                                <i class="fas fa-trash"></i>
+                                Deletar Certificado
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

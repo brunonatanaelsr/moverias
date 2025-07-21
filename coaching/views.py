@@ -3,13 +3,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
+from core.permissions import is_technician
 from .models import ActionPlan, WheelOfLife
 from members.models import Beneficiary
-
-
-def is_technician(user):
-    """Verifica se o usuário pertence ao grupo Técnica"""
-    return user.groups.filter(name='Tecnica').exists() or user.is_superuser
 
 
 class ActionPlanListView(LoginRequiredMixin, UserPassesTestMixin, ListView):

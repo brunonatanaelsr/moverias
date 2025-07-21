@@ -1,0 +1,329 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block page_title %}Certificados - Move Marias{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+.certificate-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 280px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.certificate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.certificate-status {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-draft {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.status-issued {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.status-revoked {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.certificate-type {
+    display: inline-block;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.filters-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <h1 class="dashboard-title">Certificados</h1>
+            <p class="dashboard-subtitle">Gerencie certificados de conclusão e participação</p>
+        </div>
+        
+        {% if user.is_staff %}
+        <div class="dashboard-actions">
+            <a href="{% url 'certificates:create' %}" class="btn-primary">
+                <i class="fas fa-plus mr-2"></i>
+                Novo Certificado
+            </a>
+        </div>
+        {% endif %}
+        
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-panel">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Filtros</h3>
+            <button onclick="toggleFilters()" class="btn-secondary mm-btn-sm">
+                <i class="fas fa-filter mr-1"></i>
+                Filtrar
+            </button>
+        </div>
+        
+        <div id="filtersPanel" class="hidden">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="form-select w-full">
+                        <option value="">Todos</option>
+                        <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Rascunho</option>
+                        <option value="issued" {% if request.GET.status == 'issued' %}selected{% endif %}>Emitido</option>
+                        <option value="revoked" {% if request.GET.status == 'revoked' %}selected{% endif %}>Revogado</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select name="certificate_type" class="form-select w-full">
+                        <option value="">Todos</option>
+                        <option value="completion" {% if request.GET.certificate_type == 'completion' %}selected{% endif %}>Conclusão</option>
+                        <option value="achievement" {% if request.GET.certificate_type == 'achievement' %}selected{% endif %}>Conquista</option>
+                        <option value="participation" {% if request.GET.certificate_type == 'participation' %}selected{% endif %}>Participação</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Beneficiária</label>
+                    <input type="text" name="beneficiary" value="{{ request.GET.beneficiary }}" 
+                           placeholder="Nome da beneficiária" class="form-input w-full">
+                </div>
+                
+                <div class="md:col-span-3 flex gap-3">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-search mr-2"></i>
+                        Filtrar
+                    </button>
+                    <a href="{% url 'certificates:list' %}" class="btn-secondary">
+                        <i class="fas fa-times mr-2"></i>
+                        Limpar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Messages -->
+    {% if messages %}
+    <div class="space-y-4 mb-6">
+        {% for message in messages %}
+        <div class="mm-alert mm-alert-success">
+            <i class="fas fa-check-circle mr-2"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Certificates Grid -->
+    {% if certificates %}
+    <div class="grid-optimized grid-optimized-3">
+        {% for certificate in certificates %}
+        <div class="certificate-card text-white p-6 relative overflow-hidden">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10">
+                <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                    <pattern id="grid-{{ certificate.id }}" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="m 10 0 l 0 10" stroke="white" stroke-width="0.5"/>
+                        <path d="m 0 10 l 10 0" stroke="white" stroke-width="0.5"/>
+                    </pattern>
+                    <rect width="100" height="100" fill="url(#grid-{{ certificate.id }})"/>
+                </svg>
+            </div>
+            
+            <!-- Certificate Status -->
+            <div class="certificate-status status-{{ certificate.status }}">
+                {{ certificate.get_status_display }}
+            </div>
+            
+            <!-- Certificate Type -->
+            <div class="certificate-type">
+                {{ certificate.get_certificate_type_display }}
+            </div>
+            
+            <!-- Content -->
+            <div class="relative z-10">
+                <h3 class="text-xl font-bold mb-2 line-clamp-2">{{ certificate.title }}</h3>
+                
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center text-sm opacity-90">
+                        <i class="fas fa-user mr-2"></i>
+                        <span>{{ certificate.beneficiary.user.first_name }} {{ certificate.beneficiary.user.last_name }}</span>
+                    </div>
+                    
+                    {% if certificate.workshop %}
+                    <div class="flex items-center text-sm opacity-90">
+                        <i class="fas fa-calendar mr-2"></i>
+                        <span>{{ certificate.workshop.title }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex items-center text-sm opacity-90">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>{{ certificate.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    
+                    {% if certificate.expiry_date %}
+                    <div class="flex items-center text-sm opacity-90">
+                        <i class="fas fa-calendar-times mr-2"></i>
+                        <span>Expira em: {{ certificate.expiry_date|date:"d/m/Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex gap-2 mt-4">
+                    {% if certificate.status == 'issued' %}
+                    <a href="{% url 'certificates:detail' certificate.id %}" 
+                       class="bg-white bg-opacity-20 text-white px-3 py-2 rounded-lg hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-eye mr-1"></i>
+                        Visualizar
+                    </a>
+                    <a href="{% url 'certificates:download' certificate.id %}" 
+                       class="bg-white bg-opacity-20 text-white px-3 py-2 rounded-lg hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-download mr-1"></i>
+                        Download
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.is_staff %}
+                    <a href="{% url 'certificates:edit' certificate.id %}" 
+                       class="bg-white bg-opacity-20 text-white px-3 py-2 rounded-lg hover:bg-opacity-30 transition-all">
+                        <i class="fas fa-edit mr-1"></i>
+                        Editar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-certificate"></i>
+        <h3 class="text-xl font-semibold mb-2">Nenhum certificado encontrado</h3>
+        <p class="text-gray-500 mb-4">
+            {% if request.GET.status or request.GET.certificate_type or request.GET.beneficiary %}
+            Não há certificados que correspondam aos filtros aplicados.
+            {% else %}
+            Ainda não há certificados cadastrados no sistema.
+            {% endif %}
+        </p>
+        {% if user.is_staff %}
+        <a href="{% url 'certificates:create' %}" class="btn-primary">
+            <i class="fas fa-plus mr-2"></i>
+            Criar Primeiro Certificado
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if certificates.has_other_pages %}
+    <div class="mt-8 flex justify-center">
+        <nav class="flex items-center space-x-2">
+            {% if certificates.has_previous %}
+            <a href="?page={{ certificates.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            
+            {% for num in certificates.paginator.page_range %}
+            {% if certificates.number == num %}
+            <span class="px-3 py-2 bg-blue-600 text-white rounded-lg">{{ num }}</span>
+            {% elif num > certificates.number|add:'-3' and num < certificates.number|add:'3' %}
+            <a href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                {{ num }}
+            </a>
+            {% endif %}
+            {% endfor %}
+            
+            {% if certificates.has_next %}
+            <a href="?page={{ certificates.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+function toggleFilters() {
+    const panel = document.getElementById('filtersPanel');
+    panel.classList.toggle('hidden');
+}
+
+// Auto-hide success messages
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

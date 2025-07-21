@@ -1,0 +1,35 @@
+{% extends 'base_tailwind.html' %}
+{% block title %}Onboarding | MoveMarias{% endblock %}
+{% block content %}
+<div class="mm-card mt-8 mx-auto max-w-3xl">
+    <div class="mm-mm-mm-card-header flex items-center justify-between">
+        <h2 class="text-xl font-bold text-purple-move">Onboarding de Funcionários</h2>
+    </div>
+    <div class="mm-mm-mm-card-body">
+        <table class="mm-table">
+            <thead class="mm-table-header">
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Etapa Atual</th>
+                    <th>Status</th>
+                    <th>Data de Início</th>
+                    <th>Data de Conclusão</th>
+                </tr>
+            </thead>
+            <tbody class="mm-table-body">
+                {% for onboarding in onboardings %}
+                <tr>
+                    <td>{{ onboarding.funcionario }}</td>
+                    <td>{{ onboarding.etapa_atual }}</td>
+                    <td>{{ onboarding.status }}</td>
+                    <td>{{ onboarding.data_inicio }}</td>
+                    <td>{{ onboarding.data_conclusao }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-gray-400">Nenhum processo de onboarding cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

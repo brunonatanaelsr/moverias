@@ -1,0 +1,156 @@
+{% extends 'base_unified.html' %}
+{% load widget_tweaks %}
+
+{% block page_title %}
+{% if object %}Editar {{ object_name }}{% else %}Nova {{ object_name }}{% endif %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+<span>{{ module_name }}</span>
+<span>/</span>
+<span>{% if object %}Editar{% else %}Novo{% endif %}</span>
+{% endblock %}
+
+{% block header_actions %}
+<a href="{{ list_url }}" class="mm-btn mm-btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mm-animate-fade-in">
+    <!-- Form card -->
+    <div class="mm-card p-6 mb-6">
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                {% if object %}Editar {{ object_name }}{% else %}Nova {{ object_name }}{% endif %}
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">
+                {% if object %}
+                    Atualize as informações de {{ object_name|lower }}
+                {% else %}
+                    Preencha as informações para criar uma nova {{ object_name|lower }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <!-- Form errors -->
+        {% if form.non_field_errors %}
+        <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                <div>
+                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+                        Erro no formulário
+                    </h3>
+                    <div class="mt-1 text-sm text-red-700 dark:text-red-300">
+                        {{ form.non_field_errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="space-y-6" id="main-form">
+            {% csrf_token %}
+            
+            {% block form_fields %}
+            <!-- Campo padrão - sobrescrever em templates filhos -->
+            {% for field in form %}
+            <div class="space-y-2">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="text-red-500">*</span>
+                    {% endif %}
+                </label>
+                
+                <div class="relative">
+                    {{ field|add_class:"mm-input" }}
+                    {% if field.errors %}
+                        <div class="absolute -bottom-5 left-0 text-xs text-red-600 dark:text-red-400">
+                            {{ field.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {% if field.help_text %}
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ field.help_text }}
+                </p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endblock %}
+            
+            <!-- Form actions -->
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <a href="{{ list_url }}" class="mm-btn mm-btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="mm-btn mm-btn-primary" onclick="showLoading()">
+                    {% if object %}
+                        <i class="fas fa-save"></i>
+                        Salvar Alterações
+                    {% else %}
+                        <i class="fas fa-plus"></i>
+                        Criar {{ object_name }}
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.getElementById('main-form');
+    
+    form.addEventListener('submit', function(e) {
+        if (!validateForm('main-form')) {
+            e.preventDefault();
+            showToast('Por favor, preencha todos os campos obrigatórios.', 'error');
+            hideLoading();
+        }
+    });
+    
+    // Auto-save draft (opcional)
+    {% if enable_autosave %}
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+            localStorage.setItem('form_draft_{{ form.prefix|default:"main" }}', JSON.stringify(data));
+        });
+    });
+    
+    // Restore draft
+    const savedDraft = localStorage.getItem('form_draft_{{ form.prefix|default:"main" }}');
+    if (savedDraft) {
+        const data = JSON.parse(savedDraft);
+        Object.keys(data).forEach(key => {
+            const input = form.querySelector(`[name="${key}"]`);
+            if (input) {
+                input.value = data[key];
+            }
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Form-specific JavaScript
+{% block form_js %}{% endblock %}
+</script>
+{% endblock %}

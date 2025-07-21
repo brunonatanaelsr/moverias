@@ -1,4 +1,4 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
 
 {% block title %}Nova Anamnese Social - Move Marias{% endblock %}
@@ -46,9 +46,13 @@
 </style>
 {% endblock %}
 
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8">
+<div class="dashboard-container-optimized">
+<div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Nova Anamnese Social</h1>
@@ -68,7 +72,7 @@
                     </span>
                 </div>
             </div>
-            <a href="{% url 'dashboard:beneficiaries_list' %}" 
+            <a href="{% url 'dashboard:beneficiaries-list' %}" 
                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                 ← Voltar
             </a>
@@ -103,7 +107,7 @@
     </div>
 
     <!-- Step Titles with Visual Cards -->
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         {% if wizard.steps.current == 'step1' %}
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 text-center">
                 <div class="flex items-center justify-center mb-4">
@@ -165,7 +169,7 @@
     </div>
 
     <!-- Form -->
-    <div class="bg-white shadow rounded-lg p-6">
+    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ wizard.management_form }}
@@ -276,7 +280,7 @@
                             {% endif %}
                         </div>
                         
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <input type="checkbox" 
                                    name="step3-signed_by_beneficiary" 
                                    id="id_step3-signed_by_beneficiary"
@@ -338,5 +342,6 @@
             </div>
         </form>
     </div>
+</div>
 </div>
 {% endblock %}

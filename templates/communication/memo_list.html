@@ -1,0 +1,242 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Memorandos - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="mb-4" aria-live="polite"></div>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📢</div>
+            <div class="dashboard-header-text">
+                <h1>Comunicação</h1>
+                <p>Gerencie comunicações e anúncios</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="h3 mb-0">Memorandos Internos</h1>
+                <a href="{% url 'communication:create_memo' %}" class="btn-primary">
+                    <i class="fas fa-plus"></i> Novo Memorando
+                </a>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card-optimized card-padding-md section-spacing-md" dashboard-card-hover dashboard-slide-up>
+                <div class="card-padding-md">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label-optimized">Buscar</label>
+                            <input type="text" class="input-field" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Assunto ou conteúdo...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type" class="form-label-optimized">Tipo</label>
+                            <select class="form-select" id="type" name="type">
+                                <option value="">Todos</option>
+                                <option value="informative" {% if current_type == 'informative' %}selected{% endif %}>Informativo</option>
+                                <option value="directive" {% if current_type == 'directive' %}selected{% endif %}>Diretivo</option>
+                                <option value="request" {% if current_type == 'request' %}selected{% endif %}>Solicitação</option>
+                                <option value="policy" {% if current_type == 'policy' %}selected{% endif %}>Política</option>
+                                <option value="procedure" {% if current_type == 'procedure' %}selected{% endif %}>Procedimento</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="requires_response" class="form-label-optimized">Resposta</label>
+                            <select class="form-select" id="requires_response" name="requires_response">
+                                <option value="">Todos</option>
+                                <option value="true" {% if requires_response == 'true' %}selected{% endif %}>Requer Resposta</option>
+                                <option value="false" {% if requires_response == 'false' %}selected{% endif %}>Apenas Informativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <div class="flex gap-2">
+                                <button type="submit" class="btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'communication:memo_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Memorandos -->
+            {% if memos %}
+                <div class="grid-optimized grid-optimized-2">
+                    {% for memo in memos %}
+                    <div class="col-12 mb-3">
+                        <div class="card memo-card">
+                            <div class="mm-mm-card-header flex justify-between items-center">
+                                <div>
+                                    <h5 class="mb-0">{{ memo.subject }}</h5>
+                                    <text-sm class="text-gray-600">
+                                        <i class="fas fa-user"></i> {{ memo.from_user.get_full_name|default:memo.from_user.username }}
+                                        | <i class="fas fa-calendar-alt"></i> {{ memo.created_at|date:"d/m/Y H:i" }}
+                                    </text-sm>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    {% if memo.requires_response %}
+                                    <span class="mm-badge mm-badge-warning">
+                                        <i class="fas fa-reply"></i> Requer Resposta
+                                    </span>
+                                    {% endif %}
+                                    <span class="mm-badge mm-badge-info">
+                                        {% if memo.memo_type == 'informative' %}Informativo
+                                        {% elif memo.memo_type == 'directive' %}Diretivo
+                                        {% elif memo.memo_type == 'request' %}Solicitação
+                                        {% elif memo.memo_type == 'policy' %}Política
+                                        {% elif memo.memo_type == 'procedure' %}Procedimento
+                                        {% else %}{{ memo.memo_type }}{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-padding-md">
+                                <p class="mm-mm-card-text">{{ memo.content|truncatewords:30 }}</p>
+                                
+                                {% if memo.response_deadline %}
+                                <text-sm class="text-gray-600">
+                                    <i class="fas fa-clock"></i> 
+                                    <strong>Prazo:</strong> {{ memo.response_deadline|date:"d/m/Y" }}
+                                    {% if memo.response_deadline.date < today %}
+                                    <span class="mm-badge mm-badge-danger">Vencido</span>
+                                    {% endif %}
+                                </text-sm>
+                                {% endif %}
+                            </div>
+                            <div class="card-padding-md border-t">
+                                <div class="flex justify-between items-center">
+                                    <text-sm class="text-gray-600">
+                                        <i class="fas fa-users"></i>
+                                        Destinatários: {{ memo.to_users.count }}
+                                        {% if memo.to_departments.exists %}
+                                        | Departamentos: {{ memo.to_departments.count }}
+                                        {% endif %}
+                                    </text-sm>
+                                    <a href="{% url 'communication:memo_detail' memo.pk %}" class="btn mm-mm-btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginação -->
+                {% if memos.has_other_pages %}
+                <nav aria-label="Paginação de memorandos">
+                    <ul class="pagination justify-center">
+                        {% if memos.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ memos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in memos.paginator.page_range %}
+                        {% if memos.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if memos.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ memos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-memo text-gray-600" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3">Nenhum memorando encontrado</h3>
+                    <p class="text-gray-600">Não há memorandos correspondentes aos filtros aplicados.</p>
+                    <a href="{% url 'communication:create_memo' %}" class="btn-primary">
+                        <i class="fas fa-plus"></i> Criar Primeiro Memorando
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.memo-card {
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.memo-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.memo-card .mm-mm-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+</style>
+</div>
+{% endblock %}

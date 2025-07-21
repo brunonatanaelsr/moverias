@@ -1,10 +1,49 @@
-{% extends "dashboard_base.html" %}
+{% extends "base_optimized.html" %}
 
 {% block title %}Plano de Ação - {{ action_plan.beneficiary.full_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow-sm rounded-lg">
+<div class="dashboard-container-optimized">
+<div class="bg-white shadow-sm rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -14,14 +53,14 @@
                     </p>
                 </div>
                 <div class="flex space-x-3">
-                    <a href="{% url 'coaching:action_plan_edit' action_plan.pk %}" 
+                    <a href="{% url 'coaching:action-plan-edit' action_plan.pk %}" 
                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         Editar
                     </a>
-                    <a href="{% url 'coaching:action_plan_list' %}" 
+                    <a href="{% url 'coaching:action-plan-list' %}" 
                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -122,5 +161,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

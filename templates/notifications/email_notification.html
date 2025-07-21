@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ notification.title }} - Move Marias</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .content {
+            background: #fff;
+            padding: 30px 20px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+        }
+        .notification-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        .type-info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .type-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .type-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .type-error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .notification-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 15px;
+        }
+        .notification-message {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+        .footer {
+            background: #f9fafb;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .unsubscribe {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        .unsubscribe a {
+            color: #8B5CF6;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 20px 15px;
+            }
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">💜 Move Marias</div>
+        <div>Sistema de Gestão e Acompanhamento Social</div>
+    </div>
+    
+    <div class="content">
+        <div class="notification-type type-{{ notification.notification_type }}">
+            {{ notification.get_notification_type_display|default:notification.notification_type }}
+        </div>
+        
+        <h1 class="notification-title">{{ notification.title }}</h1>
+        
+        <div class="notification-message">
+            {{ notification.message|linebreaks }}
+        </div>
+        
+        {% if notification.action_url %}
+        <a href="{{ site_url }}{{ notification.action_url }}" class="action-button">
+            Ver Detalhes
+        </a>
+        {% endif %}
+        
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <strong>Olá, {{ user.get_full_name|default:user.username }}!</strong><br>
+            Esta notificação foi enviada para você através do sistema Move Marias.
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+            <strong>Data:</strong> {{ notification.created_at|date:"d/m/Y à\s H:i" }}<br>
+            <strong>Tipo:</strong> {{ notification.get_notification_type_display|default:notification.notification_type }}
+        </div>
+    </div>
+    
+    <div class="footer">
+        <div>
+            Este email foi enviado automaticamente pelo sistema Move Marias.<br>
+            Por favor, não responda a este email.
+        </div>
+        
+        <div class="unsubscribe">
+            Para alterar suas preferências de notificação, 
+            <a href="{{ site_url }}/notifications/preferences/">clique aqui</a>.
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px;">
+            <strong>Move Marias</strong><br>
+            Transformando vidas através da tecnologia<br>
+            <a href="{{ site_url }}" style="color: #8B5CF6;">{{ site_url }}</a>
+        </div>
+    </div>
+</body>
+</html>

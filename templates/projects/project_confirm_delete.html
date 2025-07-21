@@ -1,19 +1,58 @@
-{% extends "base.html" %}
+{% extends "base_optimized.html" %}
 
 {% block title %}Confirmar Exclusão de Matrícula{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
+<div class="dashboard-container-optimized">
+<div class="row justify-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow-lg">
-                <div class="card-header bg-danger text-white">
+                <div class="mm-mm-card-header bg-red-600 text-white">
                     <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Exclusão</h4>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <p class="fs-5">Você tem certeza que deseja excluir a matrícula de <strong>{{ projectenrollment.beneficiary.full_name }}</strong> no projeto <strong>"{{ projectenrollment.project.name }}"</strong>?</p>
                     
-                    <div class="alert alert-info" role="alert">
+                    <div class="alert-info" role="alert">
                         <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Informações da Matrícula</h6>
                         <ul class="mb-0">
                             <li><strong>Beneficiária:</strong> {{ projectenrollment.beneficiary.full_name }}</li>
@@ -25,15 +64,15 @@
                         </ul>
                     </div>
 
-                    <p class="text-muted">Esta ação não poderá ser desfeita.</p>
+                    <p class="text-gray-600">Esta ação não poderá ser desfeita.</p>
 
                     <form method="post">
                         {% csrf_token %}
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'projects:enrollment-list' %}" class="btn btn-outline-secondary me-md-2">
+                        <div class="grid gap-2 flex md:justify-end mt-4">
+                            <a href="{% url 'projects:enrollment-list' %}" class="mm-btn mm-btn-outline-secondary me-md-2">
                                 <i class="fas fa-times"></i> Cancelar
                             </a>
-                            <button type="submit" class="btn btn-danger">
+                            <button type="submit" class="btn-danger">
                                 <i class="fas fa-trash-alt"></i> Sim, Excluir Matrícula
                             </button>
                         </div>
@@ -42,5 +81,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

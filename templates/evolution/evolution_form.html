@@ -1,13 +1,53 @@
-{% extends "dashboard_base.html" %}
+{% extends "base_optimized.html" %}
 {% load crispy_forms_tags %}
 
 {% block title %}
     {% if object %}Editar Registro de Evolução{% else %}Novo Registro de Evolução{% endif %}
 {% endblock %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white shadow-sm rounded-lg">
+<div class="dashboard-container-optimized">
+<div class="bg-white shadow-sm rounded-lg">
         <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
                 <div>
@@ -35,7 +75,30 @@
         </div>
 
         <div class="px-6 py-6">
-            <form method="post" class="space-y-6">
+            <!-- Progress Bar -->
+            <div class="mb-6 bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                    <span>Progresso do Formulário</span>
+                    <span id="progress-text">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="form-progress" 
+                         class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                         style="width: 0%"
+                         role="progressbar"
+                         aria-valuenow="0"
+                         aria-valuemin="0"
+                         aria-valuemax="100"
+                         aria-label="Progresso do preenchimento do formulário">
+                    </div>
+                </div>
+            </div>
+            
+            <form method="post" class="space-y-6" id="evolution-form"
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+                  aria-label="Formulário de Registro de Evolução"
+                  enctype="multipart/form-data"
+                  novalidate>
                 {% csrf_token %}
 
                 <!-- Beneficiária -->
@@ -69,7 +132,7 @@
 
                 <!-- Opções de Assinatura -->
                 <div class="space-y-4">
-                    <div class="flex items-start">
+                    <div class="flex-start">
                         <div class="flex items-center h-5">
                             {{ form.signature_required }}
                         </div>
@@ -82,7 +145,7 @@
                     </div>
 
                     {% if object and object.signature_required %}
-                        <div class="flex items-start">
+                        <div class="flex-start">
                             <div class="flex items-center h-5">
                                 {{ form.signed_by_beneficiary }}
                             </div>
@@ -96,6 +159,99 @@
                     {% endif %}
                 </div>
 
+                <!-- Integração com outros módulos -->
+                <div>
+                    <label for="id_workshops" class="block text-sm font-medium text-gray-700 mb-2">Oficinas Relacionadas
+                        <span class="ml-1" data-tooltip="Selecione oficinas. Digite para buscar rapidamente.">🛈</span>
+                    </label>
+                    {{ form.workshops|as_crispy_field }}
+                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para filtrar oficinas cadastradas.</p>
+                </div>
+                <div>
+                    <label for="id_projects" class="block text-sm font-medium text-gray-700 mb-2">Projetos Relacionados
+                        <span class="ml-1" data-tooltip="Selecione projetos. Digite para buscar rapidamente.">🛈</span>
+                    </label>
+                    {{ form.projects|as_crispy_field }}
+                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para filtrar projetos cadastrados.</p>
+                </div>
+                <div>
+                    <label for="id_anamneses" class="block text-sm font-medium text-gray-700 mb-2">Anamneses Relacionadas
+                        <span class="ml-1" data-tooltip="Selecione anamneses. Digite para buscar rapidamente.">🛈</span>
+                    </label>
+                    {{ form.anamneses|as_crispy_field }}
+                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para buscar anamneses.</p>
+                </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Autocomplete avançado com Select2
+    $('#id_workshops').select2({ placeholder: 'Selecione oficinas', allowClear: true, width: '100%' });
+    $('#id_projects').select2({ placeholder: 'Selecione projetos', allowClear: true, width: '100%' });
+    $('#id_anamneses').select2({ placeholder: 'Selecione anamneses', allowClear: true, width: '100%' });
+
+    // Tooltips
+    document.querySelectorAll('[data-tooltip]').forEach(function(el) {
+        el.addEventListener('mouseenter', function() {
+            let tip = document.createElement('div');
+            tip.className = 'tooltip-box';
+            tip.textContent = el.getAttribute('data-tooltip');
+            tip.style.position = 'absolute';
+            tip.style.background = '#333';
+            tip.style.color = '#fff';
+            tip.style.padding = '4px 8px';
+            tip.style.borderRadius = '4px';
+            tip.style.fontSize = '12px';
+            tip.style.zIndex = '1000';
+            document.body.appendChild(tip);
+            const rect = el.getBoundingClientRect();
+            tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+            tip.style.left = (rect.left + window.scrollX) + 'px';
+            el._tooltip = tip;
+        });
+        el.addEventListener('mouseleave', function() {
+            if (el._tooltip) {
+                document.body.removeChild(el._tooltip);
+                el._tooltip = null;
+            }
+        });
+    });
+
+    // Validação dinâmica
+    const requiredFields = document.querySelectorAll('#evolution-form [required]');
+    requiredFields.forEach(function(field) {
+        field.addEventListener('input', function() {
+            if (field.value.trim() === '') {
+                field.classList.add('border-red-500');
+                field.classList.remove('border-green-500');
+            } else {
+                field.classList.remove('border-red-500');
+                field.classList.add('border-green-500');
+            }
+        });
+    });
+});
+</script>
+                <div>
+                    <label for="id_evidence" class="block text-sm font-medium text-gray-700 mb-2">Documento/Evidência</label>
+                    {{ form.evidence|as_crispy_field }}
+                    <p class="mt-1 text-xs text-gray-500">Formatos aceitos: PDF, imagem, etc. <span id="evidence-feedback" class="text-green-600 font-semibold"></span></p>
+                </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ...existing code...
+    // Feedback visual para anexos
+    const evidenceInput = document.getElementById('id_evidence');
+    const evidenceFeedback = document.getElementById('evidence-feedback');
+    if (evidenceInput && evidenceFeedback) {
+        evidenceInput.addEventListener('change', function() {
+            if (evidenceInput.files.length > 0) {
+                evidenceFeedback.textContent = 'Arquivo selecionado: ' + evidenceInput.files[0].name;
+            } else {
+                evidenceFeedback.textContent = '';
+            }
+        });
+    }
+});
+</script>
                 <!-- Botões de Ação -->
                 <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                     <a href="{% url 'evolution:list' %}" 
@@ -103,12 +259,18 @@
                         Cancelar
                     </a>
                     <button type="submit" 
-                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        {% if object %}
-                            Atualizar Registro
-                        {% else %}
-                            Criar Registro
-                        {% endif %}
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            data-loading="true"
+                            data-loading-text="Salvando..."
+                            aria-describedby="form-progress">
+                        <span class="loading-text">
+                            {% if object %}
+                                Atualizar Registro
+                            {% else %}
+                                Criar Registro
+                            {% endif %}
+                        </span>
+                        <div class="loading-spinner hidden inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></div>
                     </button>
                 </div>
             </form>
@@ -118,6 +280,65 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('evolution-form');
+    const submitButton = form.querySelector('[type="submit"]');
+    const progressBar = document.getElementById('form-progress');
+    const progressText = document.getElementById('progress-text');
+
+    // Progress tracking
+    const fields = form.querySelectorAll('input, select, textarea');
+    const totalFields = fields.length;
+    
+    function updateProgress() {
+        const filledFields = Array.from(fields).filter(field => {
+            if (field.type === 'checkbox') {
+                return field.checked;
+            }
+            if (field.type === 'hidden') {
+                return true; // Skip hidden fields
+            }
+            return field.value && field.value.trim() !== '';
+        });
+        
+        const progress = Math.round((filledFields.length / totalFields) * 100);
+        progressBar.style.width = progress + '%';
+        progressBar.setAttribute('aria-valuenow', progress);
+        progressText.textContent = progress + '%';
+    }
+
+    // Real-time validation
+    fields.forEach(field => {
+        field.addEventListener('input', function() {
+            updateProgress();
+            
+            // Clear previous validation state
+            field.classList.remove('border-red-500', 'border-green-500');
+            
+            // Basic validation
+            if (field.hasAttribute('required') && field.value.trim() === '') {
+                field.classList.add('border-red-500');
+                field.setAttribute('aria-invalid', 'true');
+            } else if (field.value.trim() !== '') {
+                field.classList.add('border-green-500');
+                field.setAttribute('aria-invalid', 'false');
+            }
+        });
+        
+        field.addEventListener('change', updateProgress);
+    });
+
+    // Initial progress
+    updateProgress();
+
+    // Loading state handling
+    form.addEventListener('submit', function(e) {
+        if (!submitButton.disabled) {
+            submitButton.disabled = true;
+            submitButton.querySelector('.loading-text').textContent = 'Salvando...';
+            submitButton.querySelector('.loading-spinner').classList.remove('hidden');
+        }
+    });
+
     // Auto-focus no primeiro campo
     const firstField = document.querySelector('form input:not([type="hidden"]), form select, form textarea');
     if (firstField) {
@@ -151,6 +372,17 @@ document.addEventListener('DOMContentLoaded', function() {
         signatureRequired.addEventListener('change', toggleSignedField);
         toggleSignedField(); // Execute na inicialização
     }
+
+    // Enhanced accessibility
+    form.addEventListener('invalid', function(e) {
+        e.preventDefault();
+        const invalidField = form.querySelector(':invalid');
+        if (invalidField) {
+            invalidField.focus();
+            invalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, true);
 });
 </script>
+</div>
 {% endblock %}

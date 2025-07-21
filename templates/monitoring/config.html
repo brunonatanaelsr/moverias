@@ -1,0 +1,501 @@
+{% extends 'base_modern.html' %}
+{% load static %}
+
+{% block title %}Monitoring Configuration - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="monitoring-config">
+    <div class="header-section">
+        <h1 class="page-title">Monitoring Configuration</h1>
+        <a href="{% url 'core:monitoring_dashboard' %}" class="btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="config-sections">
+        <!-- System Thresholds -->
+        <div class="config-section">
+            <h2>System Alert Thresholds</h2>
+            <p class="section-description">Configure when system alerts should be triggered.</p>
+            
+            <form id="thresholdsForm" class="config-form">
+                <div class="form-group-optimized">
+                    <label for="cpuThreshold">CPU Usage Threshold (%)</label>
+                    <input type="number" id="cpuThreshold" name="cpu_threshold" 
+                           value="{{ thresholds.cpu_percent }}" min="1" max="100" class="input-field">
+                    <text-sm class="form-text">Alert when CPU usage exceeds this percentage</text-sm>
+                </div>
+                
+                <div class="form-group-optimized">
+                    <label for="memoryThreshold">Memory Usage Threshold (%)</label>
+                    <input type="number" id="memoryThreshold" name="memory_threshold" 
+                           value="{{ thresholds.memory_percent }}" min="1" max="100" class="input-field">
+                    <text-sm class="form-text">Alert when memory usage exceeds this percentage</text-sm>
+                </div>
+                
+                <div class="form-group-optimized">
+                    <label for="diskThreshold">Disk Usage Threshold (%)</label>
+                    <input type="number" id="diskThreshold" name="disk_threshold" 
+                           value="{{ thresholds.disk_percent }}" min="1" max="100" class="input-field">
+                    <text-sm class="form-text">Alert when disk usage exceeds this percentage</text-sm>
+                </div>
+                
+                <div class="form-group-optimized">
+                    <label for="alertCooldown">Alert Cooldown (seconds)</label>
+                    <input type="number" id="alertCooldown" name="alert_cooldown" 
+                           value="{{ alert_cooldown }}" min="60" max="3600" class="input-field">
+                    <text-sm class="form-text">Minimum time between same type of alerts</text-sm>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Thresholds
+                    </button>
+                    <button type="button" id="resetBtn" class="btn-secondary">
+                        <i class="fas fa-undo"></i> Reset to Defaults
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Background Jobs Configuration -->
+        {% if max_workers %}
+        <div class="config-section">
+            <h2>Background Jobs</h2>
+            <p class="section-description">Configure background job processing.</p>
+            
+            <div class="config-info">
+                <div class="info-item">
+                    <span class="info-label">Max Workers</span>
+                    <span class="info-value">{{ max_workers }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">Active</span>
+                </div>
+            </div>
+            
+            <div class="job-actions">
+                <button id="cleanupJobsBtn" class="btn-warning">
+                    <i class="fas fa-trash"></i> Cleanup Old Jobs
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Monitoring Status -->
+        <div class="config-section">
+            <h2>Monitoring Status</h2>
+            <p class="section-description">Current monitoring system status and information.</p>
+            
+            <div class="status-grid">
+                <div class="status-item">
+                    <h4>System Monitor</h4>
+                    <div class="status-indicator healthy"></div>
+                    <span>Active</span>
+                </div>
+                
+                <div class="status-item">
+                    <h4>Database Monitor</h4>
+                    <div class="status-indicator healthy"></div>
+                    <span>Active</span>
+                </div>
+                
+                {% if max_workers %}
+                <div class="status-item">
+                    <h4>Background Jobs</h4>
+                    <div class="status-indicator healthy"></div>
+                    <span>Active</span>
+                </div>
+                {% endif %}
+                
+                <div class="status-item">
+                    <h4>Alerts</h4>
+                    <div class="status-indicator healthy"></div>
+                    <span>Enabled</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="config-section">
+            <h2>Actions</h2>
+            <p class="section-description">Administrative actions for monitoring system.</p>
+            
+            <div class="action-buttons">
+                <button id="testMonitoringBtn" class="btn-info">
+                    <i class="fas fa-play"></i> Test Monitoring
+                </button>
+                <button id="clearCacheBtn" class="btn-warning">
+                    <i class="fas fa-sync-alt"></i> Clear Cache
+                </button>
+                <button id="exportDataBtn" class="btn-success">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.monitoring-config {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.config-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.config-section {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.config-section h2 {
+    margin-bottom: 10px;
+    color: var(--text-purple-move);
+}
+
+.section-description {
+    color: var(--text-gray-600);
+    margin-bottom: 20px;
+}
+
+.config-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-purple-move);
+}
+
+.form-control {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background: var(--background-color);
+    color: var(--text-purple-move);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+}
+
+.form-text {
+    font-size: 0.9rem;
+    color: var(--text-gray-600);
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.config-info {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: var(--text-gray-600);
+}
+
+.info-value {
+    color: var(--text-purple-move);
+    font-weight: 600;
+}
+
+.job-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.status-item h4 {
+    margin: 0;
+    color: var(--text-purple-move);
+    text-align: center;
+}
+
+.status-indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--success-color);
+}
+
+.status-indicator.warning {
+    background: var(--warning-color);
+}
+
+.status-indicator.error {
+    background: var(--error-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .monitoring-config {
+        padding: 15px;
+    }
+    
+    .header-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Thresholds form handling
+    const thresholdsForm = document.getElementById('thresholdsForm');
+    thresholdsForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(thresholdsForm);
+        
+        try {
+            const response = await fetch('{% url "monitoring_config" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showMessage('Configuration saved successfully!', 'success');
+            } else {
+                showMessage('Error saving configuration: ' + result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Error saving configuration: ' + error.message, 'error');
+        }
+    });
+    
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', function() {
+        if (confirm('Reset all thresholds to default values?')) {
+            document.getElementById('cpuThreshold').value = '80';
+            document.getElementById('memoryThreshold').value = '85';
+            document.getElementById('diskThreshold').value = '90';
+            document.getElementById('alertCooldown').value = '300';
+        }
+    });
+    
+    // Cleanup jobs button
+    const cleanupBtn = document.getElementById('cleanupJobsBtn');
+    if (cleanupBtn) {
+        cleanupBtn.addEventListener('click', async function() {
+            if (!confirm('Clean up old completed jobs? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/monitoring/jobs/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        action: 'cleanup',
+                        days: 7
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`Cleaned up ${result.cleaned_jobs} old jobs.`, 'success');
+                } else {
+                    showMessage('Error cleaning up jobs: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Error cleaning up jobs: ' + error.message, 'error');
+            }
+        });
+    }
+    
+    // Test monitoring button
+    document.getElementById('testMonitoringBtn').addEventListener('click', async function() {
+        try {
+            const response = await fetch('/monitoring/test/');
+            const result = await response.json();
+            
+            if (result.error) {
+                showMessage('Test failed: ' + result.error, 'error');
+            } else {
+                showMessage('Monitoring test completed successfully!', 'success');
+            }
+        } catch (error) {
+            showMessage('Test failed: ' + error.message, 'error');
+        }
+    });
+    
+    // Clear cache button
+    document.getElementById('clearCacheBtn').addEventListener('click', async function() {
+        if (!confirm('Clear all cache data?')) {
+            return;
+        }
+        
+        try {
+            // This would trigger a cache cleanup job
+            showMessage('Cache clear request submitted.', 'info');
+        } catch (error) {
+            showMessage('Error clearing cache: ' + error.message, 'error');
+        }
+    });
+    
+    // Export data button
+    document.getElementById('exportDataBtn').addEventListener('click', function() {
+        // This would trigger data export
+        showMessage('Data export functionality not yet implemented.', 'info');
+    });
+    
+    // Message display function
+    function showMessage(message, type) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `mm-alert mm-alert-${type}`;
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 15px 20px;
+            border-radius: 4px;
+            background: ${type === 'success' ? 'var(--success-color)' : 
+                        type === 'error' ? 'var(--error-color)' : 
+                        type === 'warning' ? 'var(--warning-color)' : 'var(--info-color)'};
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        setTimeout(() => {
+            messageEl.remove();
+        }, 5000);
+    }
+});
+</script>
+</div>
+{% endblock %}

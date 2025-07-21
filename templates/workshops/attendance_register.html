@@ -1,13 +1,52 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Registro de Presença - {{ session.workshop.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Registro de Presença</h1>
@@ -28,7 +67,7 @@
     <!-- Informações da Sessão -->
     <div class="bg-white shadow rounded-lg p-6 mb-8">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Informações da Sessão</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid-optimized grid-optimized-2">
             <div>
                 <dl class="space-y-2">
                     <div>
@@ -95,7 +134,7 @@
                             <!-- Controles de Presença -->
                             <div class="flex-shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <!-- Presente -->
-                                <div class="flex items-center">
+                                <div class="flex-center">
                                     <input type="checkbox" 
                                            id="present_{{ attendance.id }}" 
                                            name="present_{{ attendance.id }}"
@@ -107,7 +146,7 @@
                                 </div>
                                 
                                 <!-- Atrasado -->
-                                <div class="flex items-center">
+                                <div class="flex-center">
                                     <input type="checkbox" 
                                            id="late_{{ attendance.id }}" 
                                            name="late_{{ attendance.id }}"
@@ -119,7 +158,7 @@
                                 </div>
                                 
                                 <!-- Saiu Cedo -->
-                                <div class="flex items-center">
+                                <div class="flex-center">
                                     <input type="checkbox" 
                                            id="left_early_{{ attendance.id }}" 
                                            name="left_early_{{ attendance.id }}"
@@ -147,7 +186,7 @@
                         </div>
                         
                         <!-- Observações -->
-                        <div class="mt-4">
+                        <div class="section-spacing-sm">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Observações sobre a participação:
                             </label>
@@ -224,4 +263,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+</div>
 {% endblock %}

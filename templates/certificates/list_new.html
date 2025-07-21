@@ -1,0 +1,280 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Certificados - Move Marias{% endblock %}
+
+{% block page_title %}Certificados{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    .dashboard-slide-up:nth-child(1) { animation-delay: 0.1s; }
+    .dashboard-slide-up:nth-child(2) { animation-delay: 0.2s; }
+    .dashboard-slide-up:nth-child(3) { animation-delay: 0.3s; }
+    .dashboard-slide-up:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .certificate-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">🏆</div>
+            <div class="dashboard-header-text">
+                <h1>Certificados</h1>
+                <p>Gerencie certificados e conquistas das beneficiárias</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid-optimized grid-optimized-3 section-spacing-md">
+        <!-- Total Certificates -->
+        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up">
+            <div class="flex-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Total</p>
+                    <p class="text-2xl font-bold text-move-purple-700 dark:text-move-purple-300">{{ total_certificates }}</p>
+                </div>
+                <div class="w-10 h-10 bg-move-purple-100 dark:bg-move-purple-900 rounded-lg flex-center">
+                    <i class="fas fa-certificate text-move-purple-600 dark:text-move-purple-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up">
+            <div class="flex-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Pendentes</p>
+                    <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ pending_count }}</p>
+                </div>
+                <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex-center">
+                    <i class="fas fa-clock text-orange-600 dark:text-orange-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eligible Workshops -->
+        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up">
+            <div class="flex-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Elegíveis</p>
+                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ eligible_count }}</p>
+                </div>
+                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex-center">
+                    <i class="fas fa-calendar text-blue-600 dark:text-blue-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="flex space-x-3 section-spacing-sm">
+        {% if user.is_staff %}
+        <a href="{% url 'certificates:admin_certificates' %}" 
+           class="btn-primary text-white px-6 py-2 rounded-lg font-medium hover:shadow-lg transition-all">
+            <i class="fas fa-plus mr-2"></i>
+            Novo Certificado
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filters -->
+    <div class="card-optimized card-padding-md section-spacing-sm">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="form-select w-full">
+                    <option value="">Todos</option>
+                    <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Rascunho</option>
+                    <option value="issued" {% if request.GET.status == 'issued' %}selected{% endif %}>Emitido</option>
+                    <option value="revoked" {% if request.GET.status == 'revoked' %}selected{% endif %}>Revogado</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <select name="certificate_type" class="form-select w-full">
+                    <option value="">Todos</option>
+                    <option value="completion" {% if request.GET.certificate_type == 'completion' %}selected{% endif %}>Conclusão</option>
+                    <option value="achievement" {% if request.GET.certificate_type == 'achievement' %}selected{% endif %}>Conquista</option>
+                    <option value="participation" {% if request.GET.certificate_type == 'participation' %}selected{% endif %}>Participação</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Beneficiária</label>
+                <input type="text" name="beneficiary" value="{{ request.GET.beneficiary }}" 
+                       placeholder="Nome da beneficiária" class="form-input w-full">
+            </div>
+            
+            <button type="submit" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
+                <i class="fas fa-search mr-2"></i>
+                Filtrar
+            </button>
+        </form>
+    </div>
+
+    <!-- Certificates List -->
+    {% if certificates %}
+    <div class="grid-optimized grid-optimized-3 section-spacing-md">
+        {% for certificate in certificates %}
+        <div class="certificate-card text-white">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold mb-1">{{ certificate.title }}</h3>
+                    <p class="text-blue-100 text-sm">{{ certificate.beneficiary.full_name }}</p>
+                </div>
+                <span class="badge badge-sm bg-blue-100 text-blue-800">
+                    {{ certificate.get_certificate_type_display }}
+                </span>
+            </div>
+
+            <div class="space-y-2 mb-4">
+                {% if certificate.workshop %}
+                <div class="flex items-center text-blue-100">
+                    <i class="fas fa-graduation-cap mr-2"></i>
+                    <span class="text-sm">{{ certificate.workshop.title }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="flex items-center text-blue-100">
+                    <i class="fas fa-calendar mr-2"></i>
+                    <span class="text-sm">{{ certificate.issued_at|date:"d/m/Y" }}</span>
+                </div>
+                
+                {% if certificate.expiry_date %}
+                <div class="flex items-center text-blue-100">
+                    <i class="fas fa-clock mr-2"></i>
+                    <span class="text-sm">Válido até: {{ certificate.expiry_date|date:"d/m/Y" }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex space-x-2">
+                <a href="{% url 'certificates:detail' certificate.id %}" 
+                   class="mm-mm-btn-sm bg-white text-blue-600 hover:bg-blue-50 font-medium">
+                    <i class="fas fa-eye mr-1"></i>
+                    Ver
+                </a>
+                
+                {% if certificate.status == 'issued' %}
+                <a href="{% url 'certificates:download' certificate.id %}" 
+                   class="mm-mm-btn-sm bg-blue-100 text-blue-800 hover:bg-blue-200 font-medium">
+                    <i class="fas fa-download mr-1"></i>
+                    PDF
+                </a>
+                {% endif %}
+                
+                {% if user.is_staff %}
+                <a href="{% url 'certificates:admin_certificates' %}" 
+                   class="mm-mm-btn-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 font-medium">
+                    <i class="fas fa-edit mr-1"></i>
+                    Editar
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if certificates.has_other_pages %}
+    <div class="flex justify-center mt-8">
+        <nav class="flex space-x-1">
+            {% if certificates.has_previous %}
+            <a href="?page={{ certificates.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+                Anterior
+            </a>
+            {% endif %}
+            
+            {% for num in certificates.paginator.page_range %}
+            {% if certificates.number == num %}
+            <span class="px-3 py-2 text-sm bg-blue-500 text-white rounded-lg">{{ num }}</span>
+            {% else %}
+            <a href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">{{ num }}</a>
+            {% endif %}
+            {% endfor %}
+            
+            {% if certificates.has_next %}
+            <a href="?page={{ certificates.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.certificate_type %}&certificate_type={{ request.GET.certificate_type }}{% endif %}{% if request.GET.beneficiary %}&beneficiary={{ request.GET.beneficiary }}{% endif %}" 
+               class="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
+                Próxima
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-16">
+        <div class="max-w-md mx-auto">
+            <div class="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-certificate text-gray-400 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-medium text-gray-900 mb-2">Nenhum certificado encontrado</h3>
+            <p class="text-gray-500 mb-6">
+                {% if request.GET %}
+                Não há certificados que correspondam aos filtros aplicados.
+                {% else %}
+                Ainda não há certificados cadastrados no sistema.
+                {% endif %}
+            </p>
+            {% if user.is_staff %}
+            <a href="{% url 'certificates:admin_certificates' %}" 
+               class="btn-primary text-white px-6 py-3 rounded-lg font-medium inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Criar Primeiro Certificado
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

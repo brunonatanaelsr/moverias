@@ -1,6 +1,41 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Monitoramento do Sistema - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -29,7 +64,12 @@
 </style>
 {% endblock %}
 
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 <div class="space-y-6">
     <!-- Page Header -->
     <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
@@ -46,7 +86,7 @@
     </div>
 
     <!-- System Status Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid-optimized grid-optimized-4">
         <!-- Overall Health -->
         <div class="bg-white rounded-lg shadow-md p-6 metric-card">
             <div class="flex items-center justify-between">
@@ -114,21 +154,21 @@
     <!-- Application Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Database Performance -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-4 flex items-center">
                 <span class="mr-2">🗄️</span>
                 Performance do Banco
             </h3>
             <div class="space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Conexões Ativas</span>
                     <span class="font-semibold">{{ db_metrics.active_connections|default:0 }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Queries Lentas</span>
                     <span class="font-semibold text-yellow-600">{{ db_metrics.slow_queries|default:0 }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Tempo Médio Query</span>
                     <span class="font-semibold">{{ db_metrics.avg_query_time|default:0|floatformat:2 }}ms</span>
                 </div>
@@ -136,21 +176,21 @@
         </div>
 
         <!-- Cache Performance -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-4 flex items-center">
                 <span class="mr-2">⚡</span>
                 Performance do Cache
             </h3>
             <div class="space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Hit Rate</span>
                     <span class="font-semibold text-green-600">{{ cache_metrics.hit_rate|default:0|floatformat:1 }}%</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Chaves Ativas</span>
                     <span class="font-semibold">{{ cache_metrics.active_keys|default:0 }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Memória Usada</span>
                     <span class="font-semibold">{{ cache_metrics.memory_usage|default:'--' }}</span>
                 </div>
@@ -158,21 +198,21 @@
         </div>
 
         <!-- Security Metrics -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-4 flex items-center">
                 <span class="mr-2">🔒</span>
                 Segurança
             </h3>
             <div class="space-y-3">
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Tentativas de Login</span>
                     <span class="font-semibold">{{ security_metrics.login_attempts|default:0 }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">IPs Bloqueados</span>
                     <span class="font-semibold text-red-600">{{ security_metrics.blocked_ips|default:0 }}</span>
                 </div>
-                <div class="flex justify-between items-center">
+                <div class="flex-between">
                     <span class="text-sm text-gray-600">Score de Segurança</span>
                     <span class="font-semibold text-green-600">{{ security_metrics.security_score|default:0 }}/10</span>
                 </div>
@@ -182,7 +222,7 @@
 
     <!-- Recent Alerts -->
     {% if recent_alerts %}
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
         <h3 class="text-lg font-semibold mb-4 flex items-center">
             <span class="mr-2">🚨</span>
             Alertas Recentes
@@ -209,34 +249,34 @@
     {% endif %}
 
     <!-- Actions Panel -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
         <h3 class="text-lg font-semibold mb-4 flex items-center">
             <span class="mr-2">⚙️</span>
             Ações do Sistema
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    hx-post="{% url 'core:refresh_monitoring' %}"
+                    hx-post="{% url 'core:refresh-monitoring' %}"
                     hx-target="#monitoring-content"
                     hx-swap="outerHTML">
                 🔄 Atualizar Dados
             </button>
             
             <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    hx-post="{% url 'core:clear_cache' %}"
+                    hx-post="{% url 'core:clear-cache' %}"
                     hx-confirm="Tem certeza que deseja limpar o cache?">
                 🗑️ Limpar Cache
             </button>
             
             <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    hx-get="{% url 'core:generate_report' %}"
+                    hx-get="{% url 'core:generate-report' %}"
                     hx-target="#modal"
                     hx-swap="innerHTML">
                 📊 Gerar Relatório
             </button>
             
             <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    hx-get="{% url 'core:system_alerts' %}"
+                    hx-get="{% url 'core:system-alerts' %}"
                     hx-target="#modal"
                     hx-swap="innerHTML">
                 🚨 Ver Todos Alertas
@@ -274,4 +314,5 @@ document.body.addEventListener('htmx:afterRequest', function(evt) {
     }
 });
 </script>
+</div>
 {% endblock %}

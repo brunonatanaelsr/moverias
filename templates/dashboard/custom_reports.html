@@ -1,0 +1,53 @@
+{% extends 'dashboard_base.html' %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-4">Relatórios Personalizados</h1>
+<form method="get" class="mb-6 flex flex-wrap gap-4">
+    <label>Tipo:
+        <select name="report_type" class="border rounded px-2 py-1">
+            {% for value, label in available_types %}
+                <option value="{{ value }}" {% if value == report_type %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>Início:
+        <input type="date" name="start_date" value="{{ start_date }}" class="border rounded px-2 py-1">
+    </label>
+    <label>Fim:
+        <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-2 py-1">
+    </label>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filtrar</button>
+    <a href="?report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export_format=csv" class="ml-2 underline text-blue-700">Exportar CSV</a>
+    <a href="?report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export_format=excel" class="ml-2 underline text-blue-700">Exportar Excel</a>
+</form>
+
+{% if report_data %}
+    <h2 class="text-xl font-semibold mb-2">{{ report_data.title }}</h2>
+    <div class="mb-4">
+        <span class="font-bold">Total:</span> {{ report_data.total_count }}
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full border text-sm">
+            <thead>
+                <tr>
+                    {% for key in report_data.items.0|default:{} %}
+                        <th class="border px-2 py-1">{{ key|capfirst }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report_data.items %}
+                    <tr>
+                        {% for key, value in item.items %}
+                            <td class="border px-2 py-1">{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="10" class="text-center">Nenhum registro encontrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="text-gray-500">Nenhum dado para exibir.</div>
+{% endif %}
+{% endblock %}

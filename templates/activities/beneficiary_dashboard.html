@@ -1,0 +1,417 @@
+{% extends "base_tailwind.html" %}
+{% load static %}
+
+{% block title %}Dashboard - {{ beneficiary.full_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header do Dashboard -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="h-12 w-12 bg-gradient-to-br from-purple-move to-pink-move rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-circle text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            {{ beneficiary.full_name }}
+                        </h1>
+                        <p class="text-gray-600">Dashboard de Atividades</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'activities:activity_create' %}?beneficiary={{ beneficiary.id }}" 
+                       class="mm-btn mm-btn-primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Nova Atividade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Métricas Principais -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Atividades Totais -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">
+                            Atividades Totais
+                        </p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">
+                            {{ metrics.total_activities }}
+                        </p>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-500">
+                    <i class="fas fa-chart-line mr-1"></i>
+                    Todas as atividades registradas
+                </div>
+            </div>
+
+            <!-- Atividades Ativas -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">
+                            Atividades Ativas
+                        </p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">
+                            {{ metrics.active_activities }}
+                        </p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <i class="fas fa-play-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-500">
+                    <i class="fas fa-pulse mr-1"></i>
+                    Em andamento atualmente
+                </div>
+            </div>
+
+            <!-- Taxa de Conclusão -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">
+                            Taxa de Conclusão
+                        </p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">
+                            {{ metrics.completion_rate|floatformat:1 }}%
+                        </p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <i class="fas fa-chart-pie text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center justify-between text-sm text-gray-500 mb-1">
+                        <span>Progresso</span>
+                        <span>{{ metrics.completion_rate|floatformat:1 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                             style="width: {{ metrics.completion_rate }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score de Impacto -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">
+                            Score de Impacto
+                        </p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">
+                            {{ metrics.impact_score|floatformat:1 }}
+                        </p>
+                    </div>
+                    <div class="p-3 bg-pink-100 rounded-full">
+                        <i class="fas fa-award text-pink-600 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-gray-500">
+                    <i class="fas fa-star mr-1"></i>
+                    Impacto social mensurado
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline de Atividades -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Atividades Principais -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                <i class="fas fa-timeline mr-2 text-purple-600"></i>
+                                Atividades em Andamento
+                            </h3>
+                            <button class="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                                Ver todas
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        {% if activities %}
+                            <div class="space-y-6">
+                                {% for activity in activities %}
+                                <div class="relative pl-6 border-l-2 border-purple-200 hover:border-purple-300 transition-colors duration-200" 
+                                     data-activity-id="{{ activity.id }}">
+                                    <!-- Timeline dot -->
+                                    <div class="absolute -left-2 top-0">
+                                        <div class="w-4 h-4 bg-purple-600 rounded-full border-2 border-white shadow-sm"></div>
+                                    </div>
+                                    
+                                    <!-- Activity content -->
+                                    <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h4 class="font-semibold text-gray-900 mb-2">
+                                                    <a href="{% url 'activities:activity_detail' activity.id %}" 
+                                                       class="hover:text-purple-600 transition-colors duration-200">
+                                                        {{ activity.title }}
+                                                    </a>
+                                                </h4>
+                                                
+                                                <!-- Badges -->
+                                                <div class="flex flex-wrap gap-2 mb-3">
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                                        {{ activity.get_activity_type_display }}
+                                                    </span>
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                        {% if activity.status == 'active' %}bg-green-100 text-green-800{% elif activity.status == 'completed' %}bg-purple-100 text-purple-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                                        {{ activity.get_status_display }}
+                                                    </span>
+                                                    <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                        {% if activity.priority == 'high' %}bg-red-100 text-red-800{% elif activity.priority == 'medium' %}bg-orange-100 text-orange-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                        {{ activity.get_priority_display }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <!-- Progress bar -->
+                                                <div class="mb-3">
+                                                    <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
+                                                        <span>Progresso</span>
+                                                        <span>{{ activity.completion_percentage }}%</span>
+                                                    </div>
+                                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                                        <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" 
+                                                             style="width: {{ activity.completion_percentage }}%"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-12">
+                                <i class="fas fa-calendar-plus text-gray-300 text-4xl mb-4"></i>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhuma atividade encontrada</h3>
+                                <p class="text-gray-600 mb-4">Comece criando uma nova atividade para esta beneficiária.</p>
+                                <a href="{% url 'activities:activity_create' %}?beneficiary={{ beneficiary.id }}" 
+                                   class="mm-btn mm-btn-primary">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Criar Primeira Atividade
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Próximas Sessões -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-clock mr-2 text-purple-600"></i>
+                            Próximas Sessões
+                        </h3>
+                    </div>
+                    
+                    <div class="p-6">
+                        {% if upcoming_sessions %}
+                            <div class="space-y-4">
+                                {% for session in upcoming_sessions %}
+                                <div class="border-l-4 border-purple-300 pl-4 py-2">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">
+                                                {{ session.activity.title }}
+                                            </h4>
+                                            <p class="text-sm text-gray-600">
+                                                {{ session.title }}
+                                            </p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                {{ session.date|date:"d/m" }}
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ session.date|date:"H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <i class="fas fa-calendar-times text-gray-300 text-3xl mb-3"></i>
+                                <p class="text-gray-500">Nenhuma sessão agendada</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_sessions %}
+                        {% for session in upcoming_sessions %}
+                        <div class="session-item mb-3">
+                            <div class="d-flex">
+                                <div class="session-date me-3">
+                                    <div class="date-box text-center">
+                                        <div class="day">{{ session.session_date|date:"d" }}</div>
+                                        <div class="month">{{ session.session_date|date:"M" }}</div>
+                                    </div>
+                                </div>
+                                <div class="session-info flex-grow-1">
+                                    <h6 class="mb-1">{{ session.title }}</h6>
+                                    <p class="text-muted mb-1">{{ session.activity.title }}</p>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Nenhuma sessão agendada</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Evolução Social -->
+            {% if social_evolution %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                        Evolução Social
+                    </h3>
+                </div>
+                
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-600">Evoluções Registradas</span>
+                            <span class="text-lg font-bold text-gray-900">{{ social_evolution.total_evolutions }}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-600">Atividades Vinculadas</span>
+                            <span class="text-lg font-bold text-gray-900">{{ social_evolution.activities_linked }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if social_evolution.recent_evolutions %}
+                        <div class="mt-6">
+                            <h4 class="font-medium text-gray-900 mb-3">Últimas Evoluções</h4>
+                            <div class="space-y-3">
+                                {% for evolution in social_evolution.recent_evolutions %}
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-xs text-gray-500">
+                                            {{ evolution.evolution_date|date:"d/m/Y" }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-700">
+                                        {{ evolution.description|truncatewords:20 }}
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notas Recentes -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-sticky-note mr-2 text-yellow-600"></i>
+                        Notas Recentes
+                    </h3>
+                </div>
+                
+                <div class="p-6">
+                    {% if recent_notes %}
+                        <div class="space-y-4">
+                            {% for note in recent_notes %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-medium text-gray-900">{{ note.title }}</h4>
+                                    <span class="text-xs text-gray-500">{{ note.created_at|date:"d/m" }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700 mb-3">{{ note.content|truncatewords:15 }}</p>
+                                <div class="flex items-center text-xs text-gray-500">
+                                    <i class="fas fa-tag mr-1"></i>
+                                    {{ note.get_note_type_display }}
+                                    {% if note.is_confidential %}
+                                        <i class="fas fa-lock ml-2 text-yellow-500"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-sticky-note text-gray-300 text-3xl mb-3"></i>
+                            <p class="text-gray-500">Nenhuma nota recente</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dashboard interativo
+document.addEventListener('DOMContentLoaded', function() {
+    // Atualizar métricas em tempo real
+    function updateMetrics() {
+        fetch(`/api/activities/beneficiary/${window.beneficiaryId}/metrics/`)
+            .then(response => response.json())
+            .then(data => {
+                // Atualizar valores das métricas
+                document.querySelector('[data-metric="total"]').textContent = data.total_activities;
+                document.querySelector('[data-metric="active"]').textContent = data.active_activities;
+                document.querySelector('[data-metric="completion"]').textContent = data.completion_rate.toFixed(1) + '%';
+                document.querySelector('[data-metric="impact"]').textContent = data.impact_score.toFixed(1);
+                
+                // Atualizar barra de progresso
+                const progressBar = document.querySelector('[data-progress="completion"]');
+                if (progressBar) {
+                    progressBar.style.width = data.completion_rate + '%';
+                }
+            })
+            .catch(error => console.error('Erro ao atualizar métricas:', error));
+    }
+    
+    // Atualizar a cada 5 minutos
+    setInterval(updateMetrics, 5 * 60 * 1000);
+    
+    // Adicionar tooltips aos badges
+    const badges = document.querySelectorAll('[data-tooltip]');
+    badges.forEach(badge => {
+        badge.addEventListener('mouseenter', function() {
+            // Implementar tooltip se necessário
+        });
+    });
+});
+</script>
+{% endblock %}

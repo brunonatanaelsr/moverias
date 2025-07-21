@@ -1,0 +1,59 @@
+{% extends 'base_tailwind.html' %}
+{% block title %}Avaliações | MoveMarias{% endblock %}
+{% block content %}
+<div class="mm-card mt-8 mx-auto max-w-4xl">
+    <div class="mm-mm-mm-card-header flex items-center justify-between">
+        <h2 class="text-xl font-bold text-purple-move">Avaliações de Desempenho</h2>
+        <button class="mm-btn mm-btn-primary" onclick="showModal('Nova Avaliação', document.getElementById('form-nova-avaliacao').outerHTML)"><i class="fas fa-plus mr-2"></i>Novo</button>
+    </div>
+    <div class="mm-mm-mm-card-body">
+        <table class="mm-table">
+            <thead class="mm-table-header">
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Data</th>
+                    <th>Nota</th>
+                    <th>Observações</th>
+                    <th class="text-right">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="mm-table-body">
+                {% for avaliacao in avaliacoes %}
+                <tr>
+                    <td>{{ avaliacao.funcionario }}</td>
+                    <td>{{ avaliacao.data }}</td>
+                    <td>{{ avaliacao.nota }}</td>
+                    <td>{{ avaliacao.observacoes|truncatechars:40 }}</td>
+                    <td class="text-right">
+                        <button class="mm-btn mm-btn-info mm-mm-mm-btn-sm" onclick="showModal('Editar Avaliação', 'Funcionalidade em desenvolvimento')"><i class="fas fa-edit"></i></button>
+                        <button class="mm-btn mm-btn-danger mm-mm-mm-btn-sm" onclick="showModal('Excluir Avaliação', 'Funcionalidade em desenvolvimento')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-gray-400">Nenhuma avaliação cadastrada.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Nova Avaliação (oculto) -->
+<form id="form-nova-avaliacao" class="hidden mm-form-group" method="post">
+    {% csrf_token %}
+    <label class="mm-form-label">Funcionário</label>
+    <select name="funcionario" class="mm-form-select" required>
+        {% for funcionario in funcionarios %}
+        <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+        {% endfor %}
+    </select>
+    <label class="mm-form-label mt-2">Data</label>
+    <input type="date" name="data" class="mm-form-input" required>
+    <label class="mm-form-label mt-2">Nota</label>
+    <input type="number" name="nota" class="mm-form-input" min="0" max="10" required>
+    <label class="mm-form-label mt-2">Observações</label>
+    <textarea name="observacoes" class="mm-form-textarea"></textarea>
+    <div class="flex justify-end mt-4">
+        <button type="submit" class="mm-btn mm-btn-primary">Salvar</button>
+    </div>
+</form>
+{% endblock %}

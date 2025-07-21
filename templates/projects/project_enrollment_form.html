@@ -1,12 +1,52 @@
-{% extends "dashboard_base.html" %}
+{% extends "base_optimized.html" %}
 {% load crispy_forms_tags %}
 
 {% block title %}
 {% if object %}Editar Matrícula{% else %}Nova Matrícula{% endif %} - Move Marias
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="mb-8">
+<div class="dashboard-container-optimized">
+<div class="section-spacing-lg">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">
@@ -27,7 +67,6 @@
     </div>
 </div>
 
-<div class="max-w-4xl">
     <form method="post" class="bg-white shadow rounded-lg">
         {% csrf_token %}
         
@@ -48,5 +87,6 @@
             </div>
         </div>
     </form>
+</div>
 </div>
 {% endblock %}

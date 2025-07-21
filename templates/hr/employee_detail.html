@@ -1,70 +1,111 @@
 {% extends "hr/base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% load static %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-8">
+<div class="dashboard-container-optimized">
+<div class="row mb-4">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h1 class="h3 mb-0">{{ employee.full_name }}</h1>
-            <p class="text-muted">{{ employee.job_position.title|default:"Cargo não definido" }}</p>
+            <p class="text-gray-600">{{ employee.job_position.title|default:"Cargo não definido" }}</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'hr:employee_edit' employee.pk %}" class="btn btn-primary">
-                <i class="fas fa-edit me-2"></i>Editar
+            <a href="{% url 'hr:employee-edit' employee.pk %}" class="btn-primary">
+                <i class="fas fa-edit mr-2"></i>Editar
             </a>
-            <a href="{% url 'hr:employee_list' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Voltar
+            <a href="{% url 'hr:employee-list' %}" class="btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>Voltar
             </a>
         </div>
     </div>
 
-    <div class="row">
+    <div class="grid-optimized grid-optimized-2">
         <!-- Coluna Principal -->
-        <div class="col-md-8">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <!-- Informações Pessoais -->
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-user me-2"></i>Informações Pessoais
+                <div class="card-padding-md border-b">
+                    <h5 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-user mr-2"></i>Informações Pessoais
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
+                <div class="card-padding-md">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Nome Completo:</strong><br>
                             <span>{{ employee.full_name }}</span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Email:</strong><br>
                             <span>{{ employee.user.email }}</span>
                         </div>
                     </div>
                     <hr>
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>CPF:</strong><br>
                             <span>{{ employee.cpf }}</span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Idade:</strong><br>
                             <span>{{ employee.age }} anos</span>
                         </div>
                     </div>
                     <hr>
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Telefone:</strong><br>
                             <span>{{ employee.phone|default:"-" }}</span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Celular:</strong><br>
                             <span>{{ employee.mobile_phone|default:"-" }}</span>
                         </div>
                     </div>
                     {% if employee.address %}
                         <hr>
-                        <div class="row">
-                            <div class="col-12">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 <strong>Endereço:</strong><br>
                                 <span>{{ employee.address }}</span><br>
                                 <span>{{ employee.city }}, {{ employee.state }} - {{ employee.zip_code }}</span>
@@ -76,54 +117,54 @@
 
             <!-- Informações Profissionais -->
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-briefcase me-2"></i>Informações Profissionais
+                <div class="card-padding-md border-b">
+                    <h5 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-briefcase mr-2"></i>Informações Profissionais
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
+                <div class="card-padding-md">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Departamento:</strong><br>
                             {% if employee.department %}
                                 <span class="badge department-badge text-white">{{ employee.department.name }}</span>
                             {% else %}
-                                <span class="text-muted">Não definido</span>
+                                <span class="text-gray-600">Não definido</span>
                             {% endif %}
                         </div>
-                        <div class="col-md-6">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Cargo:</strong><br>
                             {% if employee.job_position %}
                                 <span class="badge position-badge text-white">{{ employee.job_position.title }}</span>
                             {% else %}
-                                <span class="text-muted">Não definido</span>
+                                <span class="text-gray-600">Não definido</span>
                             {% endif %}
                         </div>
                     </div>
                     <hr>
-                    <div class="row">
-                        <div class="col-md-6">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Data de Contratação:</strong><br>
                             <span>{{ employee.hire_date|date:"d/m/Y" }}</span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                             <strong>Tempo de Serviço:</strong><br>
                             <span>{{ employee.years_of_service }} anos</span>
                         </div>
                     </div>
                     {% if employee.direct_supervisor %}
                         <hr>
-                        <div class="row">
-                            <div class="col-md-6">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 <strong>Supervisor:</strong><br>
                                 <span>{{ employee.direct_supervisor.full_name }}</span>
                             </div>
-                            <div class="col-md-6">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 <strong>Status:</strong><br>
                                 {% if employee.employment_status == 'active' %}
-                                    <span class="badge bg-success">{{ employee.get_employment_status_display }}</span>
+                                    <span class="mm-badge mm-badge-success">{{ employee.get_employment_status_display }}</span>
                                 {% else %}
-                                    <span class="badge bg-danger">{{ employee.get_employment_status_display }}</span>
+                                    <span class="mm-badge mm-badge-danger">{{ employee.get_employment_status_display }}</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -134,13 +175,13 @@
             <!-- Contato de Emergência -->
             {% if employee.emergency_contact_name %}
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-phone me-2"></i>Contato de Emergência
+                <div class="card-padding-md border-b">
+                    <h5 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-phone mr-2"></i>Contato de Emergência
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
+                <div class="card-padding-md">
+                    <div class="grid-optimized grid-optimized-2">
                         <div class="col-md-4">
                             <strong>Nome:</strong><br>
                             <span>{{ employee.emergency_contact_name }}</span>
@@ -160,20 +201,20 @@
 
             <!-- Formação e Competências -->
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-graduation-cap me-2"></i>Formação e Competências
+                <div class="card-padding-md border-b">
+                    <h5 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-graduation-cap mr-2"></i>Formação e Competências
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
+                <div class="card-padding-md">
+                    <div class="grid-optimized grid-optimized-2">
                         <div class="col-12 mb-3">
                             <strong>Nível de Educação:</strong><br>
                             <span>{{ employee.get_education_level_display|default:"-" }}</span>
                         </div>
                     </div>
                     {% if employee.skills %}
-                        <div class="row">
+                        <div class="grid-optimized grid-optimized-2">
                             <div class="col-12 mb-3">
                                 <strong>Habilidades:</strong><br>
                                 <p class="mb-0">{{ employee.skills|linebreaks }}</p>
@@ -181,8 +222,8 @@
                         </div>
                     {% endif %}
                     {% if employee.certifications %}
-                        <div class="row">
-                            <div class="col-12">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 <strong>Certificações:</strong><br>
                                 <p class="mb-0">{{ employee.certifications|linebreaks }}</p>
                             </div>
@@ -196,65 +237,65 @@
         <div class="col-md-4">
             <!-- Foto do Funcionário -->
             <div class="card hr-card mb-4">
-                <div class="card-body text-center">
+                <div class="mm-mm-card-body text-center">
                     {% if employee.photo %}
-                        <img src="{{ employee.photo.url }}" class="img-fluid rounded-circle mb-3" 
+                        <img src="{{ employee.photo.url }}" class="img-fluid rounded-full mb-3" 
                              style="width: 150px; height: 150px; object-fit: cover;" alt="Foto do funcionário">
                     {% else %}
-                        <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center text-white" 
+                        <div class="bg-gray-600 rounded-full mx-auto mb-3 flex items-center justify-center text-white" 
                              style="width: 150px; height: 150px; font-size: 3rem;">
                             <i class="fas fa-user"></i>
                         </div>
                     {% endif %}
                     <h5>{{ employee.full_name }}</h5>
-                    <p class="text-muted">{{ employee.job_position.title|default:"Cargo não definido" }}</p>
+                    <p class="text-gray-600">{{ employee.job_position.title|default:"Cargo não definido" }}</p>
                     {% if employee.employment_status == 'active' %}
-                        <span class="badge bg-success">Funcionário Ativo</span>
+                        <span class="mm-badge mm-badge-success">Funcionário Ativo</span>
                     {% else %}
-                        <span class="badge bg-danger">{{ employee.get_employment_status_display }}</span>
+                        <span class="mm-badge mm-badge-danger">{{ employee.get_employment_status_display }}</span>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Documentos -->
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-file-alt me-2"></i>Documentos ({{ documents.count }})
+                <div class="card-padding-md border-b">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-file-alt mr-2"></i>Documentos ({{ documents.count }})
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     {% if documents %}
                         {% for doc in documents %}
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="flex justify-between items-center mb-2">
                                 <div>
                                     <strong>{{ doc.title }}</strong><br>
-                                    <small class="text-muted">{{ doc.get_document_type_display }}</small>
+                                    <text-sm class="text-gray-600">{{ doc.get_document_type_display }}</text-sm>
                                 </div>
-                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn mm-mm-btn-sm btn-outline-primary">
                                     <i class="fas fa-download"></i>
                                 </a>
                             </div>
                             {% if not forloop.last %}<hr>{% endif %}
                         {% endfor %}
                     {% else %}
-                        <p class="text-muted mb-0">Nenhum documento cadastrado</p>
+                        <p class="text-gray-600 mb-0">Nenhum documento cadastrado</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Avaliações Recentes -->
             <div class="card hr-card mb-4">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-star me-2"></i>Avaliações ({{ reviews.count }})
+                <div class="card-padding-md border-b">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-star mr-2"></i>Avaliações ({{ reviews.count }})
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     {% if reviews %}
                         {% for review in reviews|slice:":3" %}
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between">
+                                <div class="flex justify-between">
                                     <strong>{{ review.review_period_start|date:"m/Y" }} - {{ review.review_period_end|date:"m/Y" }}</strong>
                                     <div class="rating-stars">
                                         {% for i in "12345" %}
@@ -266,48 +307,49 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <small class="text-muted">Por: {{ review.reviewer.full_name }}</small>
+                                <text-sm class="text-gray-600">Por: {{ review.reviewer.full_name }}</text-sm>
                             </div>
                             {% if not forloop.last %}<hr>{% endif %}
                         {% endfor %}
                         {% if reviews.count > 3 %}
-                            <small><a href="{% url 'hr:performance_reviews' %}?employee={{ employee.id }}">Ver todas as avaliações</a></small>
+                            <text-sm><a href="{% url 'hr:performance-reviews' %}?employee={{ employee.id }}">Ver todas as avaliações</a></text-sm>
                         {% endif %}
                     {% else %}
-                        <p class="text-muted mb-0">Nenhuma avaliação cadastrada</p>
+                        <p class="text-gray-600 mb-0">Nenhuma avaliação cadastrada</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Treinamentos -->
             <div class="card hr-card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-graduation-cap me-2"></i>Treinamentos ({{ trainings.count }})
+                <div class="card-padding-md border-b">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-graduation-cap mr-2"></i>Treinamentos ({{ trainings.count }})
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     {% if trainings %}
                         {% for training in trainings|slice:":3" %}
                             <div class="mb-3">
                                 <strong>{{ training.training_name }}</strong><br>
-                                <small class="text-muted">{{ training.get_training_type_display }}</small><br>
-                                <small class="text-muted">{{ training.completion_date|date:"d/m/Y"|default:"Em andamento" }}</small>
-                                <span class="badge bg-{{ training.status|yesno:'success,warning,info' }} ms-2">
+                                <text-sm class="text-gray-600">{{ training.get_training_type_display }}</text-sm><br>
+                                <text-sm class="text-gray-600">{{ training.completion_date|date:"d/m/Y"|default:"Em andamento" }}</text-sm>
+                                <span class="mm-badge mm-badge-{{ training.status|yesno:'success,warning,info' }} ml-2">
                                     {{ training.get_status_display }}
                                 </span>
                             </div>
                             {% if not forloop.last %}<hr>{% endif %}
                         {% endfor %}
                         {% if trainings.count > 3 %}
-                            <small><a href="{% url 'hr:training_records' %}?employee={{ employee.id }}">Ver todos os treinamentos</a></small>
+                            <text-sm><a href="{% url 'hr:training-records' %}?employee={{ employee.id }}">Ver todos os treinamentos</a></text-sm>
                         {% endif %}
                     {% else %}
-                        <p class="text-muted mb-0">Nenhum treinamento cadastrado</p>
+                        <p class="text-gray-600 mb-0">Nenhum treinamento cadastrado</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

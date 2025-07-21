@@ -13,14 +13,15 @@ class EvolutionRecord(models.Model):
     date = models.DateField('Data do Registro')
     description = models.TextField('Descrição da Evolução')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='evolution_records_authored')
-    # responsible_employee = models.ForeignKey('hr.Employee', on_delete=models.SET_NULL, null=True, blank=True,
-    #                                        related_name='evolution_records_responsible', 
-    #                                        verbose_name='Funcionário Responsável',
-    #                                        help_text='Funcionário do RH responsável pelo acompanhamento')  # HR DESABILITADO
     signature_required = models.BooleanField('Requer Assinatura da Beneficiária', default=False)
     signed_by_beneficiary = models.BooleanField('Assinado pela Beneficiária', default=False)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
+    # Integração com outros módulos
+    workshops = models.ManyToManyField('workshops.Workshop', blank=True, related_name='evolution_records', verbose_name='Oficinas Relacionadas')
+    projects = models.ManyToManyField('projects.Project', blank=True, related_name='evolution_records', verbose_name='Projetos Relacionados')
+    anamneses = models.ManyToManyField('social.SocialAnamnesis', blank=True, related_name='evolution_records', verbose_name='Anamneses Relacionadas')
+    evidence = models.FileField('Documento/Evidência', upload_to='evolution_evidence/', blank=True, null=True)
 
     class Meta:
         ordering = ['-date', '-created_at']

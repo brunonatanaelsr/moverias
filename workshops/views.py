@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -9,6 +9,9 @@ from django.conf import settings
 from django.db.models import Q, Count, Avg, Prefetch
 from django.utils import timezone
 from django.http import JsonResponse
+from core.unified_permissions import (
+    is_technician, TechnicianRequiredMixin, requires_technician
+)
 from .models import Workshop, WorkshopSession, WorkshopEnrollment, SessionAttendance, WorkshopEvaluation
 from .forms import (
     WorkshopForm, WorkshopSessionForm, WorkshopEnrollmentForm, 
@@ -17,14 +20,9 @@ from .forms import (
 from members.models import Beneficiary
 
 
-def is_technician(user):
-    """Verifica se o usuário pertence ao grupo Técnica"""
-    return user.groups.filter(name='Tecnica').exists() or user.is_superuser
-
-
 # CRUD Views for Workshop Model
 
-class WorkshopListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class WorkshopListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView):
     model = Workshop
     template_name = 'workshops/workshop_list.html'
     context_object_name = 'workshops'
@@ -34,8 +32,14 @@ class WorkshopListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return is_technician(self.request.user)
 
     def get_queryset(self):
-        queryset = Workshop.objects.annotate(
-            participant_count=Count('enrollments', filter=Q(enrollments__status='ativo'))
+        # OTIMIZAÇÃO: prefetch_related para evitar N+1 queries
+        queryset = Workshop.objects.prefetch_related(
+            'enrollments__beneficiary',
+            'sessions',
+            'enrollments'
+        ).annotate(
+            participant_count=Count('enrollments', filter=Q(enrollments__status='ativo')),
+            session_count=Count('sessions', distinct=True)
         )
         
         search = self.request.GET.get('search', '')
@@ -67,7 +71,7 @@ class WorkshopListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return context
 
 
-class WorkshopDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class WorkshopDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailView):
     model = Workshop
     template_name = 'workshops/workshop_detail.html'
     context_object_name = 'workshop'
@@ -112,7 +116,7 @@ class WorkshopDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return context
 
 
-class WorkshopCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class WorkshopCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
@@ -126,7 +130,7 @@ class WorkshopCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return super().form_valid(form)
 
 
-class WorkshopUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class WorkshopUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
@@ -141,7 +145,7 @@ class WorkshopUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return super().form_valid(form)
 
 
-class WorkshopDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class WorkshopDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
     model = Workshop
     template_name = 'workshops/workshop_confirm_delete.html'
     success_url = reverse_lazy('workshops:workshop-list')
@@ -163,7 +167,7 @@ class WorkshopDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 # CRUD Views for WorkshopEnrollment Model
 
-class WorkshopEnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class WorkshopEnrollmentListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView):
     model = WorkshopEnrollment
     template_name = 'workshops/enrollment_list_general.html'
     context_object_name = 'enrollments'
@@ -203,7 +207,7 @@ class WorkshopEnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListVi
         return context
 
 
-class WorkshopEnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class WorkshopEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopEnrollment
     form_class = WorkshopEnrollmentForm
     template_name = 'workshops/enrollment_form.html'
@@ -255,7 +259,7 @@ class WorkshopEnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, Crea
         return response
 
 
-class WorkshopEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class WorkshopEnrollmentUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     model = WorkshopEnrollment
     form_class = WorkshopEnrollmentForm
     template_name = 'workshops/enrollment_form.html'
@@ -270,7 +274,7 @@ class WorkshopEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, Upda
         return response
 
 
-class WorkshopEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class WorkshopEnrollmentDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
     model = WorkshopEnrollment
     template_name = 'workshops/enrollment_confirm_delete.html'
     success_url = reverse_lazy('workshops:enrollment-list')
@@ -290,7 +294,7 @@ class WorkshopEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, Dele
 
 # CRUD Views for WorkshopSession Model
 
-class WorkshopSessionListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class WorkshopSessionListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView):
     model = WorkshopSession
     template_name = 'workshops/session_list.html'
     context_object_name = 'sessions'
@@ -316,7 +320,7 @@ class WorkshopSessionListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
         return context
 
 
-class WorkshopSessionCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class WorkshopSessionCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopSession
     form_class = WorkshopSessionForm
     template_name = 'workshops/session_form.html'
@@ -331,7 +335,7 @@ class WorkshopSessionCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateV
         return response
 
 
-class WorkshopSessionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class WorkshopSessionUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     model = WorkshopSession
     form_class = WorkshopSessionForm
     template_name = 'workshops/session_form.html'
@@ -346,7 +350,7 @@ class WorkshopSessionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
         return response
 
 
-class WorkshopSessionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class WorkshopSessionDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
     model = WorkshopSession
     template_name = 'workshops/session_confirm_delete.html'
     success_url = reverse_lazy('workshops:session-list')
@@ -366,7 +370,7 @@ class WorkshopSessionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
 # Views for Attendance Management
 
 @login_required
-@user_passes_test(is_technician)
+@requires_technician
 def bulk_attendance(request, session_id):
     """View para registro em massa de presenças"""
     session = get_object_or_404(WorkshopSession, id=session_id)
@@ -408,7 +412,7 @@ def bulk_attendance(request, session_id):
 
 # CRUD Views for WorkshopEvaluation Model
 
-class WorkshopEvaluationListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class WorkshopEvaluationListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView):
     model = WorkshopEvaluation
     template_name = 'workshops/evaluation_list.html'
     context_object_name = 'evaluations'
@@ -434,7 +438,7 @@ class WorkshopEvaluationListView(LoginRequiredMixin, UserPassesTestMixin, ListVi
         return context
 
 
-class WorkshopEvaluationCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class WorkshopEvaluationCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopEvaluation
     form_class = WorkshopEvaluationForm
     template_name = 'workshops/evaluation_form.html'
@@ -452,7 +456,7 @@ class WorkshopEvaluationCreateView(LoginRequiredMixin, UserPassesTestMixin, Crea
 # API Views for AJAX calls
 
 @login_required
-@user_passes_test(is_technician)
+@requires_technician
 def get_workshop_stats(request, workshop_id):
     """API para obter estatísticas de uma oficina"""
     workshop = get_object_or_404(Workshop, id=workshop_id)
@@ -472,7 +476,7 @@ def get_workshop_stats(request, workshop_id):
 # Workshop Report View
 
 @login_required
-@user_passes_test(is_technician)
+@requires_technician
 def workshop_report(request, pk):
     """Gera relatório detalhado da oficina"""
     workshop = get_object_or_404(Workshop, pk=pk)

@@ -1,0 +1,200 @@
+{% load static %}
+{% load monitoring_tags %}
+
+<div class="monitoring-widget background-jobs-widget">
+    {% if error %}
+        <div class="widget-error">
+            <i class="fas fa-exclamation-triangle text-red-500"></i>
+            <span class="text-red-600">{{ error }}</span>
+        </div>
+    {% else %}
+        <div class="widget-header">
+            <h3 class="widget-title">
+                <i class="fas fa-cogs"></i>
+                Background Jobs
+            </h3>
+            <a href="{% url 'core:api_background_jobs' %}" class="widget-link">
+                <i class="fas fa-external-link-alt"></i>
+            </a>
+        </div>
+        
+        <div class="widget-content">
+            <div class="jobs-stats">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks text-blue-500"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ job_stats.total_jobs|default:0 }}</span>
+                        <span class="stat-label">Total Jobs</span>
+                    </div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-play text-green-500"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ job_stats.running_jobs|default:0 }}</span>
+                        <span class="stat-label">Running</span>
+                    </div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock text-yellow-500"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ job_stats.queue_size|default:0 }}</span>
+                        <span class="stat-label">Queued</span>
+                    </div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-users text-purple-500"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value">{{ job_stats.max_workers|default:0 }}</span>
+                        <span class="stat-label">Workers</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if job_stats.status_counts %}
+                <div class="status-breakdown">
+                    <h4 class="breakdown-title">Job Status</h4>
+                    <div class="status-list">
+                        {% for status, count in job_stats.status_counts.items %}
+                            <div class="status-item">
+                                <div class="status-indicator {{ status }}"></div>
+                                <span class="status-name">{{ status|capfirst }}</span>
+                                <span class="status-count">{{ count }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.background-jobs-widget {
+    min-height: 200px;
+}
+
+.jobs-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--background-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    font-size: 1.2rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-purple-move);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-gray-600);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.status-breakdown {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.breakdown-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-purple-move);
+    margin-bottom: 0.75rem;
+}
+
+.status-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted-color);
+}
+
+.status-indicator.completed {
+    background: var(--success-color);
+}
+
+.status-indicator.running {
+    background: var(--primary-color);
+}
+
+.status-indicator.failed {
+    background: var(--error-color);
+}
+
+.status-indicator.pending {
+    background: var(--warning-color);
+}
+
+.status-indicator.cancelled {
+    background: var(--muted-color);
+}
+
+.status-name {
+    font-size: 0.8rem;
+    color: var(--text-purple-move);
+    flex: 1;
+}
+
+.status-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-purple-move);
+    background: var(--background-color);
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    min-width: 24px;
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .jobs-stats {
+        grid-template-columns: 1fr;
+    }
+}
+</style>

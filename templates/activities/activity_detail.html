@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ activity.title }} - Detalhes{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-gray-800">
+                        <i class="fas fa-eye me-2"></i>
+                        {{ activity.title }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Beneficiária: {{ activity.beneficiary.full_name }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'activities:activity_edit' activity.id %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-edit me-1"></i>
+                        Editar
+                    </a>
+                    <a href="{% url 'activities:beneficiary_dashboard' activity.beneficiary.id %}" class="btn btn-outline-info">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Principais -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Informações da Atividade
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="info-label">Tipo:</label>
+                                <span class="badge bg-secondary">{{ activity.get_activity_type_display }}</span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Status:</label>
+                                <span class="badge bg-{% if activity.status == 'ACTIVE' %}success{% elif activity.status == 'COMPLETED' %}primary{% elif activity.status == 'PLANNED' %}warning{% else %}danger{% endif %}">
+                                    {{ activity.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Prioridade:</label>
+                                <span class="badge bg-{% if activity.priority == 'HIGH' %}danger{% elif activity.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                    {{ activity.get_priority_display }}
+                                </span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Facilitador:</label>
+                                <span>{{ activity.facilitator }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <label class="info-label">Período:</label>
+                                <span>{{ activity.start_date|date:"d/m/Y" }}
+                                    {% if activity.end_date %} - {{ activity.end_date|date:"d/m/Y" }}{% endif %}
+                                </span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Frequência:</label>
+                                <span>{{ activity.get_frequency_display }}</span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Local:</label>
+                                <span>{{ activity.location }}</span>
+                            </div>
+                            <div class="info-item mb-3">
+                                <label class="info-label">Criado por:</label>
+                                <span>{{ activity.created_by.username }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if activity.description %}
+                    <div class="info-item mb-3">
+                        <label class="info-label">Descrição:</label>
+                        <p class="text-muted">{{ activity.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="info-item mb-3">
+                        <label class="info-label">Objetivos:</label>
+                        <p class="text-muted">{{ activity.objectives }}</p>
+                    </div>
+                    
+                    {% if activity.expected_outcomes %}
+                    <div class="info-item mb-3">
+                        <label class="info-label">Resultados Esperados:</label>
+                        <p class="text-muted">{{ activity.expected_outcomes }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if activity.materials_needed %}
+                    <div class="info-item mb-3">
+                        <label class="info-label">Materiais Necessários:</label>
+                        <p class="text-muted">{{ activity.materials_needed }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Métricas -->
+            <div class="card shadow mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Métricas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="metric-item mb-3">
+                        <label class="metric-label">Progresso:</label>
+                        <div class="progress mb-1">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ activity.completion_percentage }}%"
+                                 aria-valuenow="{{ activity.completion_percentage }}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ activity.completion_percentage }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item mb-3">
+                        <label class="metric-label">Taxa de Presença:</label>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-{% if activity.attendance_rate >= 80 %}success{% elif activity.attendance_rate >= 60 %}warning{% else %}danger{% endif %}">
+                                {{ activity.attendance_rate|floatformat:1 }}%
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item mb-3">
+                        <label class="metric-label">Sessões:</label>
+                        <div class="d-flex justify-content-between">
+                            <span>{{ sessions_stats.completed }} / {{ sessions_stats.total }}</span>
+                            <small class="text-muted">concluídas</small>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item mb-3">
+                        <label class="metric-label">Impacto Social:</label>
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">{{ activity.impact_score }}</span>
+                            <small class="text-muted">/ 100</small>
+                        </div>
+                    </div>
+                    
+                    {% if activity.days_remaining %}
+                    <div class="metric-item mb-3">
+                        <label class="metric-label">Dias Restantes:</label>
+                        <div class="d-flex justify-content-between">
+                            <span class="{% if activity.days_remaining < 7 %}text-danger{% elif activity.days_remaining < 14 %}text-warning{% else %}text-success{% endif %}">
+                                {{ activity.days_remaining }}
+                            </span>
+                            <small class="text-muted">dias</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Ações Rápidas -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'activities:session_create' activity.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-1"></i>
+                            Nova Sessão
+                        </a>
+                        <a href="{% url 'activities:activity_feedback' activity.id %}" class="btn btn-outline-info">
+                            <i class="fas fa-comment-dots me-1"></i>
+                            Feedback
+                        </a>
+                        <a href="{% url 'activities:note_create' activity.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sticky-note me-1"></i>
+                            Adicionar Nota
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Próximas Sessões -->
+    {% if upcoming_sessions %}
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Próximas Sessões
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Sessão</th>
+                            <th>Data</th>
+                            <th>Horário</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in upcoming_sessions %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ session.title }}</div>
+                                <div class="text-muted small">Sessão {{ session.session_number }}</div>
+                            </td>
+                            <td>{{ session.session_date|date:"d/m/Y" }}</td>
+                            <td>{{ session.start_time|time:"H:i" }} - {{ session.end_time|time:"H:i" }}</td>
+                            <td>
+                                <span class="badge bg-{% if session.status == 'SCHEDULED' %}primary{% elif session.status == 'COMPLETED' %}success{% else %}secondary{% endif %}">
+                                    {{ session.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'activities:attendance_record' session.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-user-check me-1"></i>
+                                    Presença
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Histórico de Presença -->
+    {% if attendance_history %}
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-history me-2"></i>
+                Histórico de Presença
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Sessão</th>
+                            <th>Presença</th>
+                            <th>Horário</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendance in attendance_history %}
+                        <tr>
+                            <td>{{ attendance.session.session_date|date:"d/m/Y" }}</td>
+                            <td>{{ attendance.session.title }}</td>
+                            <td>
+                                {% if attendance.attended %}
+                                    <span class="badge bg-success">Presente</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Ausente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendance.attended %}
+                                    {{ attendance.arrival_time|time:"H:i" }} - {{ attendance.departure_time|time:"H:i" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendance.notes %}
+                                    {{ attendance.notes|truncatewords:10 }}
+                                {% elif attendance.excuse_reason %}
+                                    {{ attendance.excuse_reason|truncatewords:10 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Feedback -->
+    {% if feedback %}
+    <div class="card shadow mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-comment-dots me-2"></i>
+                Feedback da Atividade
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feedback-rating mb-3">
+                        <label class="form-label">Avaliação Geral:</label>
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= feedback.rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                            <span class="ms-2">{{ feedback.rating }}/5</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feedback-rating mb-3">
+                        <label class="form-label">Qualidade do Conteúdo:</label>
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= feedback.content_quality %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                            <span class="ms-2">{{ feedback.content_quality }}/5</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feedback-rating mb-3">
+                        <label class="form-label">Facilitador:</label>
+                        <div class="rating-stars">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= feedback.facilitator_rating %}text-warning{% else %}text-muted{% endif %}"></i>
+                            {% endfor %}
+                            <span class="ms-2">{{ feedback.facilitator_rating }}/5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if feedback.positive_aspects %}
+            <div class="feedback-section mb-3">
+                <label class="form-label">Aspectos Positivos:</label>
+                <p class="text-muted">{{ feedback.positive_aspects }}</p>
+            </div>
+            {% endif %}
+            
+            {% if feedback.improvements_suggested %}
+            <div class="feedback-section mb-3">
+                <label class="form-label">Sugestões de Melhoria:</label>
+                <p class="text-muted">{{ feedback.improvements_suggested }}</p>
+            </div>
+            {% endif %}
+            
+            <div class="feedback-section">
+                <label class="form-label">Recomendaria:</label>
+                <span class="badge bg-{% if feedback.would_recommend %}success{% else %}danger{% endif %}">
+                    {% if feedback.would_recommend %}Sim{% else %}Não{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Notas -->
+    {% if recent_notes %}
+    <div class="card shadow">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-sticky-note me-2"></i>
+                Notas Recentes
+            </h6>
+        </div>
+        <div class="card-body">
+            {% for note in recent_notes %}
+            <div class="note-item mb-3">
+                <div class="d-flex justify-content-between">
+                    <h6 class="mb-1">
+                        {{ note.title }}
+                        {% if note.is_confidential %}
+                            <i class="fas fa-lock text-warning ms-2"></i>
+                        {% endif %}
+                    </h6>
+                    <small class="text-muted">{{ note.created_at|date:"d/m/Y H:i" }}</small>
+                </div>
+                <p class="text-muted mb-1">{{ note.content }}</p>
+                <small class="text-muted">
+                    <i class="fas fa-user me-1"></i>
+                    {{ note.created_by.username }}
+                    <span class="badge bg-secondary ms-2">{{ note.get_note_type_display }}</span>
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.info-item {
+    border-bottom: 1px solid #f8f9fc;
+    padding-bottom: 0.5rem;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-right: 0.5rem;
+}
+
+.metric-item {
+    border-bottom: 1px solid #f8f9fc;
+    padding-bottom: 0.5rem;
+}
+
+.metric-item:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #5a5c69;
+    font-size: 0.85rem;
+}
+
+.rating-stars {
+    display: flex;
+    align-items: center;
+}
+
+.feedback-section {
+    border-bottom: 1px solid #f8f9fc;
+    padding-bottom: 0.5rem;
+}
+
+.feedback-section:last-child {
+    border-bottom: none;
+}
+
+.note-item {
+    border-bottom: 1px solid #f8f9fc;
+    padding-bottom: 0.5rem;
+}
+
+.note-item:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}

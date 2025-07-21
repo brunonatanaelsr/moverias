@@ -1,14 +1,53 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
 
 {% block title %}{{ workshop.name }} - Oficinas{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <div class="flex items-center space-x-4">
@@ -52,7 +91,7 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
@@ -70,7 +109,7 @@
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -88,7 +127,7 @@
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -106,7 +145,7 @@
 
         <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
-                <div class="flex items-center">
+                <div class="flex-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -150,7 +189,7 @@
         <div class="p-6">
             <!-- Informações Tab -->
             <div id="info-tab" class="tab-content hidden">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid-optimized grid-optimized-2">
                     <div>
                         <h3 class="text-lg font-medium text-gray-900 mb-4">Detalhes da Oficina</h3>
                         <dl class="space-y-3">
@@ -218,14 +257,14 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ session.date|date:"d/m/Y" }}<br>
-                                    <small class="text-gray-400">{{ session.start_time }} - {{ session.end_time }}</small>
+                                    <text-sm class="text-gray-400">{{ session.start_time }} - {{ session.end_time }}</text-sm>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-900">
                                     {{ session.topic }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ session.attendance_count }} participantes<br>
-                                    <small class="text-gray-400">{{ session.attendance_percentage|floatformat:1 }}%</small>
+                                    <text-sm class="text-gray-400">{{ session.attendance_percentage|floatformat:1 }}%</text-sm>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{% url 'workshops:bulk-attendance' session.pk %}" 
@@ -268,7 +307,7 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="grid-optimized grid-optimized-3">
                     {% for enrollment in enrollments %}
                     <div class="bg-gray-50 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-2">
@@ -372,4 +411,5 @@ document.addEventListener('DOMContentLoaded', function() {
     showTab('sessions');
 });
 </script>
+</div>
 {% endblock %}

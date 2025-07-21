@@ -1,31 +1,87 @@
 {% extends "hr/base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% load static %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-md-8">
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Recursos Humanos</h1>
+                <p>Gerencie equipe e desenvolvimento organizacional</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="row mb-4">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h1 class="h3 mb-0">Funcionários</h1>
-            <p class="text-muted">Gerenciar funcionários do instituto</p>
+            <p class="text-gray-600">Gerenciar funcionários do instituto</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'hr:employee_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Novo Funcionário
+            <a href="{% url 'hr:employee_create' %}" class="btn-primary">
+                <i class="fas fa-plus mr-2"></i>Novo Funcionário
             </a>
         </div>
     </div>
 
     <!-- Filtros de Busca -->
     <div class="card hr-card mb-4">
-        <div class="card-body">
+        <div class="card-padding-md">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
-                    <label for="search" class="form-label">Buscar</label>
-                    <input type="text" class="form-control" id="search" name="search" 
+                    <label for="search" class="form-label-optimized">Buscar</label>
+                    <input type="text" class="input-field" id="search" name="search" 
                            value="{{ search }}" placeholder="Nome, email ou CPF...">
                 </div>
                 <div class="col-md-3">
-                    <label for="department" class="form-label">Departamento</label>
+                    <label for="department" class="form-label-optimized">Departamento</label>
                     <select class="form-select" id="department" name="department">
                         <option value="">Todos os departamentos</option>
                         {% for dept in departments %}
@@ -36,7 +92,7 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="position" class="form-label">Cargo</label>
+                    <label for="position" class="form-label-optimized">Cargo</label>
                     <select class="form-select" id="position" name="position">
                         <option value="">Todos os cargos</option>
                         {% for pos in positions %}
@@ -47,9 +103,9 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-outline-primary">
+                    <label class="form-label-optimized">&nbsp;</label>
+                    <div class="grid">
+                        <button type="submit" class="btn-outline-primary">
                             <i class="fas fa-search"></i> Buscar
                         </button>
                     </div>
@@ -60,15 +116,15 @@
 
     <!-- Lista de Funcionários -->
     <div class="card hr-card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-users me-2"></i>
+        <div class="card-padding-md border-b">
+            <h5 class="mm-mm-card-title mb-0">
+                <i class="fas fa-users mr-2"></i>
                 Funcionários ({{ page_obj.paginator.count }})
             </h5>
         </div>
-        <div class="card-body p-0">
+        <div class="mm-mm-card-body p-0">
             {% if page_obj %}
-                <div class="table-responsive">
+                <div class="table-container-optimized">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
@@ -84,18 +140,18 @@
                             {% for employee in page_obj %}
                                 <tr>
                                     <td>
-                                        <div class="d-flex align-items-center">
+                                        <div class="flex items-center">
                                             {% if employee.photo %}
-                                                <img src="{{ employee.photo.url }}" class="employee-photo me-3" alt="Foto">
+                                                <img src="{{ employee.photo.url }}" class="employee-photo mr-3" alt="Foto">
                                             {% else %}
-                                                <div class="employee-photo me-3 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                                <div class="employee-photo mr-3 bg-gray-600 flex items-center justify-center text-white">
                                                     <i class="fas fa-user"></i>
                                                 </div>
                                             {% endif %}
                                             <div>
                                                 <h6 class="mb-0">{{ employee.full_name }}</h6>
-                                                <small class="text-muted">{{ employee.user.email }}</small><br>
-                                                <small class="text-muted">{{ employee.cpf }}</small>
+                                                <text-sm class="text-gray-600">{{ employee.user.email }}</text-sm><br>
+                                                <text-sm class="text-gray-600">{{ employee.cpf }}</text-sm>
                                             </div>
                                         </div>
                                     </td>
@@ -105,7 +161,7 @@
                                                 {{ employee.department.name }}
                                             </span>
                                         {% else %}
-                                            <span class="text-muted">-</span>
+                                            <span class="text-gray-600">-</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -114,28 +170,28 @@
                                                 {{ employee.job_position.title }}
                                             </span>
                                         {% else %}
-                                            <span class="text-muted">-</span>
+                                            <span class="text-gray-600">-</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <small>{{ employee.hire_date|date:"d/m/Y" }}</small><br>
-                                        <small class="text-muted">{{ employee.years_of_service }} anos</small>
+                                        <text-sm>{{ employee.hire_date|date:"d/m/Y" }}</text-sm><br>
+                                        <text-sm class="text-gray-600">{{ employee.years_of_service }} anos</text-sm>
                                     </td>
                                     <td>
                                         {% if employee.employment_status == 'active' %}
-                                            <span class="badge bg-success">Ativo</span>
+                                            <span class="mm-badge mm-badge-success">Ativo</span>
                                         {% else %}
-                                            <span class="badge bg-danger">{{ employee.get_employment_status_display }}</span>
+                                            <span class="mm-badge mm-badge-danger">{{ employee.get_employment_status_display }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{% url 'hr:employee_detail' employee.pk %}" 
-                                               class="btn btn-outline-info" title="Ver Detalhes">
+                                               class="mm-btn mm-btn-outline-info" title="Ver Detalhes">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{% url 'hr:employee_edit' employee.pk %}" 
-                                               class="btn btn-outline-primary" title="Editar">
+                                               class="btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                         </div>
@@ -148,9 +204,9 @@
 
                 <!-- Paginação -->
                 {% if page_obj.has_other_pages %}
-                    <div class="card-footer">
+                    <div class="card-padding-md border-t">
                         <nav aria-label="Paginação de funcionários">
-                            <ul class="pagination justify-content-center mb-0">
+                            <ul class="pagination justify-center mb-0">
                                 {% if page_obj.has_previous %}
                                     <li class="page-item">
                                         <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if selected_department %}&department={{ selected_department }}{% endif %}{% if selected_position %}&position={{ selected_position }}{% endif %}">
@@ -194,15 +250,16 @@
                 {% endif %}
             {% else %}
                 <div class="text-center py-5">
-                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Nenhum funcionário encontrado</h5>
-                    <p class="text-muted">Tente ajustar os filtros ou adicione novos funcionários.</p>
-                    <a href="{% url 'hr:employee_create' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Adicionar Primeiro Funcionário
+                    <i class="fas fa-users fa-3x text-gray-600 mb-3"></i>
+                    <h5 class="text-gray-600">Nenhum funcionário encontrado</h5>
+                    <p class="text-gray-600">Tente ajustar os filtros ou adicione novos funcionários.</p>
+                    <a href="{% url 'hr:employee_create' %}" class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>Adicionar Primeiro Funcionário
                     </a>
                 </div>
             {% endif %}
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

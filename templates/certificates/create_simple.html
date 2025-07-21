@@ -1,0 +1,128 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Criar Certificado{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Criar Certificado</h1>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Erro</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {{ form.non_field_errors }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.member.label }}
+                    </label>
+                    {{ form.member }}
+                    {% if form.member.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.member.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.template.label }}
+                    </label>
+                    <div class="flex space-x-2">
+                        <div class="flex-1">
+                            {{ form.template }}
+                        </div>
+                        <a href="{% url 'certificates:template_create' %}" 
+                           class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                           title="Criar novo template">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    </div>
+                    {% if form.template.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.template.errors }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">
+                        Não encontrou o template desejado? 
+                        <a href="{% url 'certificates:template_create' %}" class="text-indigo-600 hover:text-indigo-500">
+                            Criar novo template
+                        </a>
+                    </p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.title.label }}
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.title.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.description.label }}
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.completion_date.label }}
+                    </label>
+                    {{ form.completion_date }}
+                    {% if form.completion_date.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.completion_date.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.workshop.label }}
+                    </label>
+                    {{ form.workshop }}
+                    {% if form.workshop.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.workshop.errors }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ form.status.label }}
+                    </label>
+                    {{ form.status }}
+                    {% if form.status.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.status.errors }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <a href="{% url 'certificates:list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">
+                    Criar Certificado
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

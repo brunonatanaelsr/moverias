@@ -1,9 +1,49 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}{{ enrollment.project.name }} - {{ enrollment.beneficiary.full_name }} - Move Marias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="mb-8">
+<div class="dashboard-container-optimized">
+<div class="section-spacing-lg">
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-3xl font-bold text-gray-900">{{ enrollment.project.name }}</h1>
@@ -27,7 +67,7 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Informações do Projeto -->
     <div class="lg:col-span-2">
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-medium text-gray-900 mb-4">🎯 Informações do Projeto</h3>
             
             <dl class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -86,7 +126,7 @@
 
     <!-- Informações da Beneficiária -->
     <div>
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-medium text-gray-900 mb-4">👤 Beneficiária</h3>
             
             <div class="text-center mb-4">
@@ -130,7 +170,7 @@
                     📈 Novo Registro de Evolução
                 </a>
                 
-                <a href="{% url 'social:anamnesis_create' %}?beneficiary={{ enrollment.beneficiary.pk }}" 
+                <a href="{% url 'social:anamnesis-create' %}?beneficiary={{ enrollment.beneficiary.pk }}" 
                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                     📋 Nova Anamnese Social
                 </a>
@@ -143,6 +183,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 

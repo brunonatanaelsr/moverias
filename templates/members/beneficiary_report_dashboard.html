@@ -1,9 +1,64 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load static %}
 {% block title %}Relatórios de Beneficiárias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <div class="mb-8 flex items-center justify-between">
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Beneficiárias</h1>
+                <p>Gerencie beneficiárias e acompanhe desenvolvimento</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="mb-8 flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900">Relatórios de Beneficiárias</h1>
     </div>
     <form method="get" class="bg-white shadow rounded-lg p-6 mb-8 grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -44,17 +99,17 @@
         </div>
     </form>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-2">Total de Beneficiárias</h3>
             <p class="text-3xl font-bold">{{ total }}</p>
             <p class="text-sm text-gray-500">Ativas: {{ total_active }} | Inativas: {{ total_inactive }}</p>
         </div>
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-2">Idade Média</h3>
             <p class="text-3xl font-bold">{{ avg_age }}</p>
             <p class="text-sm text-gray-500">Mín: {{ min_age|default:'-' }} | Máx: {{ max_age|default:'-' }}</p>
         </div>
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-2">Distribuição por Bairro</h3>
             <ul class="text-sm text-gray-700 space-y-1">
                 {% for n in neighbourhoods %}
@@ -64,7 +119,7 @@
         </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-2">Distribuição por Nº de Filhos</h3>
             <ul class="text-sm text-gray-700 space-y-1">
                 {% for c in children_dist %}
@@ -72,7 +127,7 @@
                 {% endfor %}
             </ul>
         </div>
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-2">Status</h3>
             <ul class="text-sm text-gray-700 space-y-1">
                 <li>Ativas: {{ total_active }}</li>
@@ -119,7 +174,7 @@
     <div class="bg-white shadow rounded-lg p-6 mb-8">
         <h3 class="text-lg font-semibold mb-4">Gráficos</h3>
         <canvas id="chart-age" height="80"></canvas>
-        <canvas id="chart-children" height="80" class="mt-8"></canvas>
+        <canvas id="chart-children" height="80" class="section-spacing-lg"></canvas>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -159,4 +214,5 @@ new Chart(ctxChildren, {
     options: {responsive: true, plugins: {legend: {display: false}}}
 });
 </script>
+</div>
 {% endblock %}

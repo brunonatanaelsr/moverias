@@ -108,7 +108,7 @@ class BeneficiaryExportView(APIView):
                 beneficiary_data = {
                     'beneficiary': BeneficiarySerializer(beneficiary).data,
                     'social_anamnesis': SocialAnamnesisSerializer(
-                        beneficiary.social_anamnesis.all(), many=True
+                        beneficiary.social_anamneses.all(), many=True
                     ).data,
                     'project_enrollments': ProjectEnrollmentSerializer(
                         beneficiary.project_enrollments.all(), many=True

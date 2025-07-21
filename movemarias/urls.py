@@ -18,7 +18,13 @@ urlpatterns = [
     path('evolution/', include('evolution.urls')),  # Evolution records
     path('coaching/', include('coaching.urls')),  # Action plans and wheel of life
     path('workshops/', include('workshops.urls')),  # Workshop management
-    # path('hr/', include('hr.urls')),  # Human Resources module - TEMPORARIAMENTE DESABILITADO
+    path('certificates/', include('certificates.urls')),  # Certificates system
+    path('notifications/', include('notifications.urls')),  # Notifications system
+    path('hr/', include('hr.urls')),  # Human Resources module
+    path('tasks/', include('tasks.urls')),  # Task Management (Kanban)
+    path('chat/', include('chat.urls')),  # Internal Chat
+    path('communication/', include('communication.urls')),  # Internal Communication
+    path('activities/', include('activities.urls')),  # Unified activities system
     path('', include('core.urls')),  # Home page and core views
 ]
 

@@ -1,0 +1,322 @@
+{% extends 'base_optimized.html' %}
+
+{% block title %}Preferências de Notificação - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #10B981;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .preference-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .preference-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<a href="{% url 'notifications:list' %}" class="text-gray-500 hover:text-gray-700">Notificações</a>
+<span class="text-gray-900">Preferências</span>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <div class="section-spacing-lg">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center mb-6">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-cog text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-2xl font-bold text-gray-900">Preferências de Notificação</h1>
+                        <p class="mt-1 text-sm text-gray-600">Configure como você gostaria de receber notificações</p>
+                    </div>
+                </div>
+
+                <form method="post" id="preferences-form">
+                    {% csrf_token %}
+                    
+                    <div class="space-y-6">
+                        <!-- Notificações por Email -->
+                        <div class="preference-card rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">Notificações por Email</h3>
+                                    <p class="text-sm text-gray-600">Receba notificações importantes no seu email</p>
+                                </div>
+                                <div class="ml-4">
+                                    <label class="toggle-switch">
+                                        {{ form.email_notifications }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4" id="email-options">
+                                <!-- Tipos de notificação por email -->
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <span class="text-sm text-gray-700">Workshops e Cursos</span>
+                                    <label class="toggle-switch">
+                                        {{ form.email_workshops }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <span class="text-sm text-gray-700">Certificados</span>
+                                    <label class="toggle-switch">
+                                        {{ form.email_certificates }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <span class="text-sm text-gray-700">Coaching</span>
+                                    <label class="toggle-switch">
+                                        {{ form.email_coaching }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md">
+                                    <span class="text-sm text-gray-700">Sistema</span>
+                                    <label class="toggle-switch">
+                                        {{ form.email_system }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notificações Web -->
+                        <div class="preference-card rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">Notificações Web</h3>
+                                    <p class="text-sm text-gray-600">Receba notificações enquanto navega no sistema</p>
+                                </div>
+                                <div class="ml-4">
+                                    <label class="toggle-switch">
+                                        {{ form.web_notifications }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notificações Push -->
+                        <div class="preference-card rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">Notificações Push</h3>
+                                    <p class="text-sm text-gray-600">Receba notificações mesmo quando não estiver no sistema</p>
+                                </div>
+                                <div class="ml-4">
+                                    <label class="toggle-switch">
+                                        {{ form.push_notifications }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Frequência de Resumos -->
+                        <div class="preference-card rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-3">Resumos por Email</h3>
+                            <p class="text-sm text-gray-600 mb-4">Com que frequência você gostaria de receber um resumo das atividades?</p>
+                            
+                            <div class="space-y-3">
+                                {{ form.digest_frequency }}
+                            </div>
+                        </div>
+
+                        <!-- Horários Permitidos -->
+                        <div class="preference-card rounded-lg p-4">
+                            <h3 class="text-lg font-medium text-gray-900 mb-3">Horários de Notificação</h3>
+                            <p class="text-sm text-gray-600 mb-4">Defina os horários em que você gostaria de receber notificações</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário de Início</label>
+                                    {{ form.start_time }}
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Horário de Fim</label>
+                                    {{ form.end_time }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Não Perturbe -->
+                        <div class="preference-card rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-medium text-gray-900">Modo "Não Perturbe"</h3>
+                                    <p class="text-sm text-gray-600">Desative temporariamente todas as notificações</p>
+                                </div>
+                                <div class="ml-4">
+                                    <label class="toggle-switch">
+                                        {{ form.do_not_disturb }}
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200 mt-8">
+                        <a href="{% url 'notifications:list' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            <i class="fas fa-times mr-2"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-save mr-2"></i>
+                            Salvar Preferências
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Teste de Notificação -->
+            <div class="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 class="text-lg font-medium text-gray-900 mb-4">Testar Notificações</h2>
+                <p class="text-sm text-gray-600 mb-4">Envie uma notificação de teste para verificar suas configurações</p>
+                
+                <button type="button" 
+                        id="test-notification-btn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Enviar Notificação de Teste
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailNotificationsToggle = document.getElementById('id_email_notifications');
+    const emailOptions = document.getElementById('email-options');
+    
+    // Função para mostrar/ocultar opções de email
+    function toggleEmailOptions() {
+        if (emailNotificationsToggle.checked) {
+            emailOptions.style.display = 'grid';
+        } else {
+            emailOptions.style.display = 'none';
+        }
+    }
+    
+    // Inicializar estado
+    toggleEmailOptions();
+    
+    // Event listener
+    emailNotificationsToggle.addEventListener('change', toggleEmailOptions);
+    
+    // Teste de notificação
+    document.getElementById('test-notification-btn').addEventListener('click', function() {
+        fetch('{% url "notifications:test" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Notificação de teste enviada com sucesso!');
+            } else {
+                alert('Erro ao enviar notificação de teste: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao enviar notificação de teste');
+        });
+    });
+    
+    // Auto-save nas mudanças
+    const form = document.getElementById('preferences-form');
+    const inputs = form.querySelectorAll('input, select');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Adicionar indicador visual de salvamento
+            const saveBtn = form.querySelector('[type="submit"]');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+            saveBtn.disabled = true;
+            
+            // Simular delay para mostrar feedback
+            setTimeout(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }, 1000);
+        });
+    });
+});
+</script>
+{% endblock %}

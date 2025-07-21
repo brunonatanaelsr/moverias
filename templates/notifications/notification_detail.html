@@ -1,0 +1,237 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}{{ notification.title }} - Notificações - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<!-- Header -->
+    <div class="section-spacing-lg">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <a href="{% url 'notifications:list' %}" class="hover:text-gray-900 dark:hover:text-white">
+                <i class="fas fa-bell mr-1"></i>
+                Notificações
+            </a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 dark:text-white">{{ notification.title }}</span>
+        </nav>
+        
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                {{ notification.title }}
+            </h1>
+            
+            <div class="flex items-center space-x-3">
+                {% if notification.status == 'pending' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                    <i class="fas fa-circle text-xs mr-2"></i>
+                    Nova
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                    <i class="fas fa-check text-xs mr-2"></i>
+                    Lida
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-8">
+            <!-- Meta Information -->
+            <div class="flex items-center justify-between pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
+                        {% if notification.type == 'welcome' %}
+                            <i class="fas fa-heart text-lg"></i>
+                        {% elif notification.type == 'workshop_enrollment' %}
+                            <i class="fas fa-graduation-cap text-lg"></i>
+                        {% elif notification.type == 'certificate_ready' %}
+                            <i class="fas fa-certificate text-lg"></i>
+                        {% elif notification.type == 'coaching_scheduled' %}
+                            <i class="fas fa-calendar-check text-lg"></i>
+                        {% elif notification.type == 'system_update' %}
+                            <i class="fas fa-sync text-lg"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle text-lg"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ notification.get_type_display }}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ notification.created_at|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                {% if notification.priority == 1 %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
+                                {% elif notification.priority == 2 %}bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
+                                {% elif notification.priority == 3 %}bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200
+                                {% else %}bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200{% endif %}">
+                        {{ notification.get_priority_display }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Message Content -->
+            <div class="py-8">
+                <div class="prose max-w-none dark:prose-invert">
+                    {% if notification.html_message %}
+                        {{ notification.html_message|safe }}
+                    {% else %}
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                            {{ notification.message }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Additional Information -->
+            {% if notification.related_object %}
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    Relacionado a:
+                </h4>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ notification.related_object }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Read Information -->
+            {% if notification.read_at %}
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Lida em {{ notification.read_at|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex items-center justify-between">
+        <a href="{% url 'notifications:list' %}" 
+           class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar às Notificações
+        </a>
+        
+        <div class="flex items-center space-x-3">
+            {% if notification.status == 'pending' %}
+            <button onclick="markAsRead({{ notification.id }})" 
+                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-check mr-2"></i>
+                Marcar como Lida
+            </button>
+            {% endif %}
+            
+            <button onclick="deleteNotification({{ notification.id }})" 
+                    class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                <i class="fas fa-trash mr-2"></i>
+                Excluir
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mark notification as read
+async function markAsRead(notificationId) {
+    try {
+        const response = await fetch(`/notifications/mark-read/${notificationId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            showToast('Erro ao marcar notificação como lida', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao marcar notificação como lida', 'error');
+    }
+}
+
+// Delete notification
+async function deleteNotification(notificationId) {
+    if (!confirm('Tem certeza que deseja excluir esta notificação?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/notifications/${notificationId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+        if (response.ok) {
+            showToast('Notificação excluída com sucesso', 'success');
+            window.location.href = '{% url "notifications:list" %}';
+        } else {
+            showToast('Erro ao excluir notificação', 'error');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showToast('Erro ao excluir notificação', 'error');
+    }
+}
+</script>
+</div>
+{% endblock %}

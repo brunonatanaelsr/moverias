@@ -1,0 +1,17 @@
+{
+  "test_monitoring_job": {
+    "job_id": "test_monitoring_job",
+    "func_name": "core.background_jobs.cleanup_cache",
+    "args": [],
+    "kwargs": {},
+    "priority": 1,
+    "retry_count": 0,
+    "max_retries": 3,
+    "status": "pending",
+    "created_at": "2025-07-12T17:50:46.078242+00:00",
+    "started_at": null,
+    "completed_at": null,
+    "error": null,
+    "result": null
+  }
+}

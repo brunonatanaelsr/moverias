@@ -1,25 +1,27 @@
 from django.urls import path, include
 from . import views
 from . import monitoring_views
+from . import test_views
 
 app_name = 'core'
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('config/email/', views.email_config, name='email_config'),
+    path('search/', views.global_search, name='global-search'),
+    path('config/email/', views.email_config, name='email-config'),
+    path('settings/', views.settings_view, name='settings'),
+    path('audit-logs/', views.audit_logs, name='audit-logs'),
     
-    # Health checks
-    path('health/', monitoring_views.health_check, name='health_check'),
-    path('health/detailed/', monitoring_views.health_detailed, name='health_detailed'),
+    # Test URLs (temporary)
+    path('test-csrf/', test_views.test_csrf, name='test-csrf'),
     
-    # System monitoring
-    path('monitoring/', monitoring_views.system_monitoring_dashboard, name='system_monitoring'),
-    path('monitoring/refresh/', monitoring_views.refresh_monitoring, name='refresh_monitoring'),
-    path('monitoring/clear-cache/', monitoring_views.clear_cache, name='clear_cache'),
-    path('monitoring/alerts/', monitoring_views.system_alerts, name='system_alerts'),
+    # Enhanced monitoring system
+    path('monitoring/', include('core.monitoring_urls')),
     
-    # Reports
-    path('reports/generate/', monitoring_views.generate_report, name='generate_report'),
-    path('reports/export-alerts/', monitoring_views.export_alerts, name='export_alerts'),
-    path('reports/clear-alerts/', monitoring_views.clear_alerts, name='clear_alerts'),
+    # Legacy health checks (for compatibility)
+    path('health/', monitoring_views.health_check, name='health-check'),
+    path('health/detailed/', monitoring_views.health_detailed, name='health-detailed'),
+    
+    # Upload system
+    path('', include('core.upload_urls')),
 ]

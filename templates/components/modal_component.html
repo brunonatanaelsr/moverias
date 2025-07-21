@@ -1,0 +1,50 @@
+<!-- Modal Component -->
+{% comment %}
+Usage: {% include 'components/modal.html' with id='myModal' title='Modal Title' %}
+{% endcomment %}
+
+<div id="{{ id }}" 
+     class="mm-modal" 
+     x-data="{ open: false }" 
+     x-show="open" 
+     x-transition.opacity.duration.300ms
+     style="display: none;">
+    
+    <!-- Backdrop -->
+    <div class="mm-modal-backdrop" x-on:click="open = false"></div>
+    
+    <!-- Modal Content -->
+    <div class="mm-modal-content" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform scale-95"
+         x-transition:enter-end="opacity-100 transform scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform scale-100"
+         x-transition:leave-end="opacity-0 transform scale-95">
+        
+        <!-- Header -->
+        <div class="mm-modal-header">
+            <h3 class="mm-modal-title">{{ title|default:'Modal' }}</h3>
+            <button type="button" 
+                    class="mm-modal-close" 
+                    x-on:click="open = false">
+                <span class="sr-only">Fechar</span>
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="mm-modal-body">
+            {% if content %}
+                {{ content }}
+            {% endif %}
+        </div>
+        
+        <!-- Footer -->
+        {% if footer %}
+            <div class="mm-modal-footer">
+                {{ footer }}
+            </div>
+        {% endif %}
+    </div>
+</div>

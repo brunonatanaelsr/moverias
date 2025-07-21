@@ -1,0 +1,433 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MoveMarias - Empoderamento Feminino{% endblock %}</title>
+    
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F2683',
+                        secondary: '#D92683',
+                        accent: '#A78BFA',
+                        success: '#10B981',
+                        warning: '#F59E0B',
+                        danger: '#EF4444',
+                        info: '#3B82F6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    
+    <style>
+        /* Estilos base limpos */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        /* Componentes personalizados */
+        .move-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        
+        .move-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        
+        .move-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .move-btn-primary {
+            background: #4F2683;
+            color: white;
+        }
+        
+        .move-btn-primary:hover {
+            background: #3d1e66;
+        }
+        
+        .move-btn-secondary {
+            background: #D92683;
+            color: white;
+        }
+        
+        .move-btn-secondary:hover {
+            background: #b8206a;
+        }
+        
+        .move-btn-outline {
+            background: white;
+            color: #4F2683;
+            border: 2px solid #4F2683;
+        }
+        
+        .move-btn-outline:hover {
+            background: #4F2683;
+            color: white;
+        }
+        
+        .move-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .move-input:focus {
+            outline: none;
+            border-color: #4F2683;
+            box-shadow: 0 0 0 3px rgba(79, 38, 131, 0.1);
+        }
+        
+        .move-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+        
+        .move-badge-primary { background: #4F2683; color: white; }
+        .move-badge-success { background: #10B981; color: white; }
+        .move-badge-warning { background: #F59E0B; color: white; }
+        .move-badge-danger { background: #EF4444; color: white; }
+        
+        .move-alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+        
+        .move-alert-success {
+            background: #f0fdf4;
+            border-color: #10B981;
+            color: #166534;
+        }
+        
+        .move-alert-danger {
+            background: #fef2f2;
+            border-color: #EF4444;
+            color: #991b1b;
+        }
+        
+        .move-alert-warning {
+            background: #fffbeb;
+            border-color: #F59E0B;
+            color: #92400e;
+        }
+        
+        .move-alert-info {
+            background: #eff6ff;
+            border-color: #3B82F6;
+            color: #1e40af;
+        }
+        
+        /* Tabelas */
+        .move-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .move-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #4F2683;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .move-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .move-table tr:hover {
+            background: #f8fafc;
+        }
+        
+        /* Modal */
+        .move-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .move-modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* Notificações */
+        .move-notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .move-notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Dropdown */
+        .move-dropdown {
+            position: relative;
+        }
+        
+        .move-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 100;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+        
+        .move-dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .move-dropdown-item {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: #1e293b;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .move-dropdown-item:hover {
+            background: #f8fafc;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .move-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            .move-modal-content {
+                padding: 1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div id="app">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Container de notificações -->
+    <div id="notifications"></div>
+    
+    <!-- JavaScript simplificado -->
+    <script>
+        // Utilitários globais
+        const Move = {
+            // Notificações
+            notify(message, type = 'info', duration = 5000) {
+                const container = document.getElementById('notifications');
+                const notification = document.createElement('div');
+                notification.className = `move-notification move-notification-${type}`;
+                notification.style.borderLeftColor = {
+                    success: '#10B981',
+                    danger: '#EF4444',
+                    warning: '#F59E0B',
+                    info: '#3B82F6'
+                }[type];
+                
+                notification.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-${type === 'success' ? 'check' : type === 'danger' ? 'times' : type === 'warning' ? 'exclamation' : 'info'}-circle"></i>
+                        <span>${message}</span>
+                        <button onclick="Move.removeNotification(this)" class="ml-auto text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(notification);
+                setTimeout(() => notification.classList.add('show'), 100);
+                setTimeout(() => this.removeNotification(notification.querySelector('button')), duration);
+            },
+            
+            removeNotification(button) {
+                const notification = button.closest('.move-notification');
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            },
+            
+            // Modal
+            showModal(title, content, actions = '') {
+                const modal = document.createElement('div');
+                modal.className = 'move-modal';
+                modal.innerHTML = `
+                    <div class="move-modal-content">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold">${title}</h3>
+                            <button onclick="Move.closeModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="mb-4">${content}</div>
+                        <div class="flex gap-2 justify-end">
+                            ${actions}
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                document.body.style.overflow = 'hidden';
+            },
+            
+            closeModal() {
+                const modal = document.querySelector('.move-modal');
+                if (modal) {
+                    modal.remove();
+                    document.body.style.overflow = '';
+                }
+            },
+            
+            // Dropdown
+            toggleDropdown(element) {
+                const dropdown = element.nextElementSibling;
+                const isVisible = dropdown.classList.contains('show');
+                
+                // Fechar todos os dropdowns
+                document.querySelectorAll('.move-dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+                
+                // Abrir o atual se estava fechado
+                if (!isVisible) {
+                    dropdown.classList.add('show');
+                }
+            }
+        };
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fechar dropdown ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.move-dropdown')) {
+                    document.querySelectorAll('.move-dropdown-menu').forEach(menu => {
+                        menu.classList.remove('show');
+                    });
+                }
+            });
+            
+            // Fechar modal com ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    Move.closeModal();
+                }
+            });
+        });
+        
+        // HTMX loading
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            if (evt.target.tagName === 'BUTTON') {
+                evt.target.disabled = true;
+                evt.target.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Carregando...';
+            }
+        });
+        
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.target.tagName === 'BUTTON') {
+                evt.target.disabled = false;
+                // Restaurar texto original do botão
+            }
+        });
+        
+        // Disponibilizar globalmente
+        window.Move = Move;
+    </script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,286 @@
+{% extends 'base_unified.html' %}
+
+{% block page_title %}{{ notification.title }}{% endblock %}
+
+{% block breadcrumb_items %}
+<a href="{% url 'notifications:list' %}">Notificações</a>
+<span>/</span>
+<span>Detalhes</span>
+{% endblock %}
+
+{% block header_actions %}
+<a href="{% url 'notifications:list' %}" class="mm-btn mm-btn-secondary">
+    <i class="fas fa-arrow-left"></i>
+    Voltar
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="mm-animate-fade-in">
+    <!-- Notification card -->
+    <div class="mm-card p-6 mb-6">
+        <div class="flex items-start justify-between mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mr-4">
+                    <div class="w-3 h-3 rounded-full mt-2 
+                        {% if notification.status == 'pending' %}bg-blue-500
+                        {% else %}bg-gray-300{% endif %}">
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                        {{ notification.title }}
+                    </h1>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span>
+                            <i class="fas fa-calendar mr-1"></i>
+                            {{ notification.created_at|date:"d/m/Y H:i" }}
+                        </span>
+                        <span>
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ notification.get_type_display }}
+                        </span>
+                        <span>
+                            <i class="fas fa-flag mr-1"></i>
+                            {% if notification.priority == 1 %}
+                                <span class="mm-badge mm-badge-success">Baixa</span>
+                            {% elif notification.priority == 2 %}
+                                <span class="mm-badge mm-badge-info">Normal</span>
+                            {% elif notification.priority == 3 %}
+                                <span class="mm-badge mm-badge-warning">Alta</span>
+                            {% else %}
+                                <span class="mm-badge mm-badge-error">Urgente</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                {% if notification.status == 'pending' %}
+                <button onclick="markAsRead({{ notification.id }})" 
+                        class="mm-btn mm-btn-secondary">
+                    <i class="fas fa-check"></i>
+                    Marcar como Lida
+                </button>
+                {% else %}
+                <span class="mm-badge mm-badge-success">
+                    <i class="fas fa-check mr-1"></i>
+                    Lida
+                </span>
+                {% endif %}
+                
+                <button onclick="confirmDelete({{ notification.id }}, '{{ notification.title }}')" 
+                        class="mm-btn mm-btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+        
+        <!-- Message content -->
+        <div class="prose prose-gray dark:prose-invert max-w-none">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                {% if notification.html_message %}
+                    {{ notification.html_message|safe }}
+                {% else %}
+                    <p class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{{ notification.message }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Metadata -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Canal:</span>
+                    <span class="text-gray-900 dark:text-white ml-2">
+                        {{ notification.channel.display_name }}
+                    </span>
+                </div>
+                
+                {% if notification.read_at %}
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Lida em:</span>
+                    <span class="text-gray-900 dark:text-white ml-2">
+                        {{ notification.read_at|date:"d/m/Y H:i" }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div>
+                    <span class="font-medium text-gray-500 dark:text-gray-400">Status:</span>
+                    <span class="ml-2">
+                        {% if notification.status == 'pending' %}
+                            <span class="mm-badge mm-badge-warning">Pendente</span>
+                        {% elif notification.status == 'read' %}
+                            <span class="mm-badge mm-badge-success">Lida</span>
+                        {% elif notification.status == 'sent' %}
+                            <span class="mm-badge mm-badge-info">Enviada</span>
+                        {% elif notification.status == 'delivered' %}
+                            <span class="mm-badge mm-badge-success">Entregue</span>
+                        {% else %}
+                            <span class="mm-badge mm-badge-error">{{ notification.get_status_display }}</span>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related notifications -->
+    {% if related_notifications %}
+    <div class="mm-card p-6">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Notificações Relacionadas
+        </h2>
+        
+        <div class="space-y-3">
+            {% for related in related_notifications %}
+            <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div class="flex items-center">
+                    <div class="w-2 h-2 rounded-full mr-3 
+                        {% if related.status == 'pending' %}bg-blue-500
+                        {% else %}bg-gray-300{% endif %}">
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900 dark:text-white">
+                            {{ related.title }}
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            {{ related.created_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                <a href="{% url 'notifications:detail' related.id %}" 
+                   class="text-move-purple-600 hover:text-move-purple-900 dark:text-move-purple-400">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete confirmation modal -->
+<div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+            </div>
+            <div class="ml-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                    Confirmar Exclusão
+                </h3>
+            </div>
+        </div>
+        
+        <p class="text-gray-500 dark:text-gray-400 mb-6">
+            Tem certeza que deseja excluir esta notificação? 
+            Esta ação não pode ser desfeita.
+        </p>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeDeleteModal()" class="mm-btn mm-btn-secondary">
+                Cancelar
+            </button>
+            <button onclick="confirmDeleteAction()" class="mm-btn mm-btn-danger">
+                <i class="fas fa-trash"></i>
+                Excluir
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let deleteItemId = null;
+
+function markAsRead(notificationId) {
+    showLoading();
+    
+    fetch(`{% url 'notifications:mark_read' 0 %}`.replace('0', notificationId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCsrfToken(),
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        if (data.success) {
+            showToast('Notificação marcada como lida', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showToast('Erro ao marcar notificação', 'error');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showToast('Erro ao marcar notificação', 'error');
+    });
+}
+
+function confirmDelete(id, name) {
+    deleteItemId = id;
+    document.getElementById('delete-modal').classList.remove('hidden');
+    document.getElementById('delete-modal').classList.add('flex');
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+    document.getElementById('delete-modal').classList.remove('flex');
+    deleteItemId = null;
+}
+
+function confirmDeleteAction() {
+    if (deleteItemId) {
+        showLoading();
+        
+        fetch(`{% url 'notifications:delete' 0 %}`.replace('0', deleteItemId), {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCsrfToken(),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            if (data.success) {
+                showToast('Notificação excluída com sucesso', 'success');
+                setTimeout(() => {
+                    window.location.href = '{% url "notifications:list" %}';
+                }, 1000);
+            } else {
+                showToast('Erro ao excluir notificação', 'error');
+            }
+        })
+        .catch(error => {
+            hideLoading();
+            showToast('Erro ao excluir notificação', 'error');
+        });
+        
+        closeDeleteModal();
+    }
+}
+
+// Close modal on outside click
+document.getElementById('delete-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+// Close modal on escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+</script>
+{% endblock %}

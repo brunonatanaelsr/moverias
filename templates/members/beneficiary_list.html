@@ -1,10 +1,65 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load static %}
 
 {% block title %}Lista de Beneficiárias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="bg-white shadow-sm rounded-lg p-6">
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Beneficiárias</h1>
+                <p>Gerencie beneficiárias e acompanhe desenvolvimento</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \\d\\e F \\d\\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900">Beneficiárias</h2>
         <div class="flex gap-2">
@@ -44,7 +99,7 @@
                     {% for beneficiary in beneficiaries %}
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
+                            <div class="flex-center">
                                 <div>
                                     <div class="text-sm font-medium text-gray-900">{{ beneficiary.full_name }}</div>
                                     <div class="text-sm text-gray-500">{{ beneficiary.neighbourhood|default:"Bairro não informado" }}</div>
@@ -125,7 +180,7 @@
             </svg>
             <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma beneficiária cadastrada</h3>
             <p class="mt-1 text-sm text-gray-500">Comece criando uma nova beneficiária.</p>
-            <div class="mt-6">
+            <div class="section-spacing-md">
                 <a href="{% url 'members:beneficiary-create' %}" 
                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                     <svg class="-ml-1 mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
@@ -137,5 +192,5 @@
         </div>
     {% endif %}
 </div>
-
+</div>
 {% endblock %}

@@ -1,0 +1,312 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Comunicados - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --move-purple: #6c3eb6;
+        --move-pink: #e83e8c;
+        --move-orange: #ff9800;
+        --move-green: #22c55e;
+        --move-blue: #2563eb;
+    }
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .dashboard-card-hover:hover, .announcement-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .loading-spinner {
+        border: 2px solid #fff;
+        border-top: 2px solid var(--move-purple);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .tooltip-box {
+        position: absolute;
+        background: #333;
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="mb-4" aria-live="polite"></div>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📢</div>
+            <div class="dashboard-header-text">
+                <h1>Comunicação</h1>
+                <p>Gerencie comunicações e anúncios</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \\d\\e F \\d\\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="h3 mb-0">Comunicados</h1>
+                <a href="{% url 'communication:create_announcement' %}"
+                   class="inline-flex items-center px-4 py-2 rounded-md transition-colors"
+                   style="background:var(--move-purple);color:#fff;">
+                    <i class="fas fa-plus mr-2" style="color:#fff"></i>
+                    Novo Comunicado
+                    <div class="loading-spinner hidden ml-2" id="spinner-announcement"></div>
+                </a>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card-optimized card-padding-md section-spacing-md" dashboard-card-hover dashboard-slide-up>
+                <div class="card-padding-md">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label-optimized">Buscar</label>
+                            <input type="text" class="input-field" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Título ou conteúdo...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="priority" class="form-label-optimized">Prioridade</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="">Todas</option>
+                                <option value="low" {% if current_priority == 'low' %}selected{% endif %}>Baixa</option>
+                                <option value="medium" {% if current_priority == 'medium' %}selected{% endif %}>Média</option>
+                                <option value="high" {% if current_priority == 'high' %}selected{% endif %}>Alta</option>
+                                <option value="urgent" {% if current_priority == 'urgent' %}selected{% endif %}>Urgente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label-optimized">Categoria</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Todas</option>
+                                <option value="general" {% if current_category == 'general' %}selected{% endif %}>Geral</option>
+                                <option value="policy" {% if current_category == 'policy' %}selected{% endif %}>Política</option>
+                                <option value="event" {% if current_category == 'event' %}selected{% endif %}>Evento</option>
+                                <option value="training" {% if current_category == 'training' %}selected{% endif %}>Treinamento</option>
+                                <option value="safety" {% if current_category == 'safety' %}selected{% endif %}>Segurança</option>
+                                <option value="hr" {% if current_category == 'hr' %}selected{% endif %}>Recursos Humanos</option>
+                                <option value="technical" {% if current_category == 'technical' %}selected{% endif %}>Técnico</option>
+                                <option value="financial" {% if current_category == 'financial' %}selected{% endif %}>Financeiro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <div class="flex gap-2">
+                                <button type="submit" class="btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'communication:announcement_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Comunicados -->
+            {% if announcements %}
+                <div class="grid-optimized grid-optimized-2" id="announcement-list-grid">
+                    {% for announcement in announcements %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                        <div class="card h-100 announcement-card">
+                            <div class="mm-mm-card-header flex justify-between items-center">
+                                <text-sm class="text-gray-600">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    {{ announcement.created_at|date:"d/m/Y H:i" }}
+                                </text-sm>
+                                <span class="text-xs px-2 py-1 rounded"
+                                    style="background:{% if announcement.priority == 'urgent' %}var(--move-pink){% elif announcement.priority == 'high' %}var(--move-orange){% elif announcement.priority == 'medium' %}var(--move-blue){% else %}#e5e7eb{% endif %};color:#fff;"
+                                    data-tooltip="Prioridade: {% if announcement.priority == 'urgent' %}Urgente{% elif announcement.priority == 'high' %}Alta{% elif announcement.priority == 'medium' %}Média{% else %}Baixa{% endif %}">
+                                    {% if announcement.priority == 'urgent' %}Urgente
+                                    {% elif announcement.priority == 'high' %}Alta
+                                    {% elif announcement.priority == 'medium' %}Média
+                                    {% else %}Baixa{% endif %}
+                                </span>
+                            </div>
+                            <div class="card-padding-md">
+                                <h5 class="mm-mm-card-title">{{ announcement.title }}</h5>
+                                <p class="mm-mm-card-text">
+                                    {{ announcement.content|truncatewords:20 }}
+                                </p>
+                                {% if announcement.category %}
+                                <span class="text-xs px-2 py-1 rounded" style="background:var(--move-purple);color:#fff;" data-tooltip="Categoria: {% if announcement.category == 'general' %}Geral{% elif announcement.category == 'meeting' %}Reunião{% elif announcement.category == 'policy' %}Política{% elif announcement.category == 'event' %}Evento{% elif announcement.category == 'training' %}Treinamento{% else %}{{ announcement.category }}{% endif %}">
+                                    <i class="fas fa-tag"></i>
+                                    {% if announcement.category == 'general' %}Geral
+                                    {% elif announcement.category == 'meeting' %}Reunião
+                                    {% elif announcement.category == 'policy' %}Política
+                                    {% elif announcement.category == 'event' %}Evento
+                                    {% elif announcement.category == 'training' %}Treinamento
+                                    {% else %}{{ announcement.category }}{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <div class="card-padding-md border-t">
+                                <div class="flex justify-between items-center">
+                                    <text-sm class="text-gray-600">
+                                        Por: {{ announcement.author.get_full_name|default:announcement.author.username }}
+                                    </text-sm>
+                                    <a href="{% url 'communication:announcement_detail' announcement.pk %}"
+                                       class="inline-flex items-center px-3 py-1 rounded-md transition-colors"
+                                       style="background:var(--move-blue);color:#fff;">
+                                        <i class="fas fa-eye mr-1" style="color:#fff"></i> Ver Detalhes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginação -->
+                {% if is_paginated %}
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination justify-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if priority %}&priority={{ priority }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                    <div class="mm-mm-card-body text-center py-5">
+                        <i class="fas fa-bullhorn fa-3x text-gray-600 mb-3"></i>
+                        <h4 class="text-gray-600">Nenhum comunicado encontrado</h4>
+                        <p class="text-gray-600">
+                            {% if search or priority or category %}
+                                Tente ajustar os filtros ou 
+                                <a href="{% url 'communication:announcement_list' %}">limpar a busca</a>.
+                            {% else %}
+                                Ainda não há comunicados cadastrados.
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'communication:announcement_create' %}"
+                           class="inline-flex items-center px-4 py-2 rounded-md transition-colors"
+                           style="background:var(--move-purple);color:#fff;">
+                            <i class="fas fa-plus mr-2" style="color:#fff"></i> Criar Primeiro Comunicado
+                            <div class="loading-spinner hidden ml-2" id="spinner-announcement"></div>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Spinner feedback nos botões de ação
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a[href*="announcement_create"]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var spinner = btn.querySelector('.loading-spinner');
+            if (spinner) spinner.classList.remove('hidden');
+        });
+    });
+    // Tooltips explicativos
+    document.querySelectorAll('[data-tooltip]').forEach(function(el) {
+        el.addEventListener('mouseenter', function() {
+            let tip = document.createElement('div');
+            tip.className = 'tooltip-box';
+            tip.textContent = el.getAttribute('data-tooltip');
+            document.body.appendChild(tip);
+            const rect = el.getBoundingClientRect();
+            tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+            tip.style.left = (rect.left + window.scrollX) + 'px';
+            el._tooltip = tip;
+        });
+        el.addEventListener('mouseleave', function() {
+            if (el._tooltip) {
+                document.body.removeChild(el._tooltip);
+                el._tooltip = null;
+            }
+        });
+    });
+});
+
+// Função de alerta visual acessível
+function showAlert(message, type) {
+    var container = document.getElementById('alert-container');
+    if (!container) return;
+    var color = type === 'success' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300';
+    container.innerHTML = `<div class="border ${color} px-4 py-3 rounded relative flex items-center justify-between" role="alert">
+        <span class="block font-semibold">${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-lg font-bold text-gray-500 hover:text-gray-700" aria-label="Fechar alerta">&times;</button>
+    </div>`;
+    setTimeout(function() { container.innerHTML = ''; }, 5000);
+}
+</script>
+{% endblock %}

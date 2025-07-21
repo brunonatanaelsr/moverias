@@ -3,8 +3,80 @@ import logging
 from django.utils.deprecation import MiddlewareMixin
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.http import JsonResponse
 
 logger = logging.getLogger('movemarias')
+
+
+class ErrorLoggingMiddleware(MiddlewareMixin):
+    """
+    Middleware para capturar e logar erros 500+ automaticamente.
+    """
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+        super().__init__(get_response)
+    
+    def __call__(self, request):
+        start_time = time.time()
+        response = self.get_response(request)
+        
+        # Log errors 500+
+        if response.status_code >= 500:
+            duration = time.time() - start_time
+            logger.error(
+                f'Server Error {response.status_code} for {request.method} {request.path} '
+                f'- Duration: {duration:.2f}s - User: {getattr(request, "user", "Anonymous")} '
+                f'- IP: {self._get_client_ip(request)}'
+            )
+        
+        # Log slow requests (>2s)
+        elif time.time() - start_time > 2:
+            duration = time.time() - start_time
+            logger.warning(
+                f'Slow Request: {request.method} {request.path} '
+                f'- Duration: {duration:.2f}s - Status: {response.status_code}'
+            )
+        
+        return response
+    
+    def process_exception(self, request, exception):
+        """
+        Captura exceções não tratadas.
+        """
+        logger.error(
+            f'Unhandled Exception for {request.method} {request.path}: {str(exception)}',
+            exc_info=True,
+            extra={
+                'request_path': request.path,
+                'request_method': request.method,
+                'user': str(getattr(request, 'user', 'Anonymous')),
+                'ip_address': self._get_client_ip(request),
+            }
+        )
+        
+        # Em desenvolvimento, deixa o Django mostrar a página de erro
+        if settings.DEBUG:
+            return None
+        
+        # Em produção, retorna uma resposta JSON amigável para AJAX
+        if request.headers.get('Content-Type') == 'application/json' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'error': 'Ocorreu um erro interno. Nossa equipe foi notificada.',
+                'status': 'error'
+            }, status=500)
+        
+        return None
+    
+    def _get_client_ip(self, request):
+        """Get client IP address"""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
 
 class PerformanceMiddleware(MiddlewareMixin):
     """Monitor performance and log slow requests"""
@@ -78,3 +150,36 @@ class AuditMiddleware(MiddlewareMixin):
         else:
             ip = request.META.get('REMOTE_ADDR')
         return ip
+
+class SecurityHeadersMiddleware:
+    """
+    Middleware customizado para headers de segurança adicionais
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        
+        # Additional security headers
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['X-Frame-Options'] = 'DENY'
+        response['X-XSS-Protection'] = '1; mode=block'
+        response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response['Permissions-Policy'] = (
+            'geolocation=(), microphone=(), camera=(), '
+            'usb=(), payment=(), accelerometer=(), gyroscope=()'
+        )
+        
+        # Remove server identification
+        if 'Server' in response:
+            del response['Server']
+        
+        # Security logging
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            # Log security-relevant actions
+            if request.method in ['POST', 'PUT', 'DELETE', 'PATCH']:
+                logger = logging.getLogger('security')
+                logger.info(f"Security action: {request.method} {request.path} by {request.user.email}")
+        
+        return response

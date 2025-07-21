@@ -1,25 +1,71 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Registros de Evolução - Move Marias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="mb-8">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Registros de Evolução</h1>
-            <p class="mt-2 text-sm text-gray-600">
-                Acompanhe o progresso das beneficiárias
-            </p>
-        </div>
-        <a href="{% url 'evolution:create' %}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
-            + Novo Registro
-        </a>
+<div class="dashboard-container-optimized">
+    <!-- Dashboard de Gráficos -->
+    <div class="dashboard-card-hover bg-white p-6 mb-6 rounded shadow dashboard-slide-up">
+        <h2 class="text-lg font-bold mb-2">Gráfico de Evolução por Beneficiária/Mês</h2>
+        <canvas id="evolutionChart" height="120"></canvas>
     </div>
-</div>
+
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📈</div>
+            <div class="dashboard-header-text">
+                <h1>Evolução</h1>
+                <p>Acompanhe evolução e progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \\d\\e F \\d\\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
 
 <!-- Search Bar -->
-<div class="mb-6">
+<div class="section-spacing-md">
     <form method="get" class="flex items-center space-x-4">
         <div class="flex-1">
             <input type="text" 
@@ -32,19 +78,61 @@
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
             🔍 Buscar
         </button>
+        <a href="{% url 'evolution:export_excel' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-purple-move bg-white hover:bg-gray-100 ml-2" style="text-decoration:none;">
+            📊 Exportar Excel
+        </a>
+        <a href="{% url 'evolution:export_pdf' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-purple-move bg-white hover:bg-gray-100 ml-2" style="text-decoration:none;">
+            📝 Exportar PDF
+        </a>
     </form>
 </div>
 
 <!-- Evolution Records List -->
 <div class="bg-white shadow overflow-hidden sm:rounded-md">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Prepara dados do contexto Django para o Chart.js
+    const recordsByMonth = {{ records_by_month|safe }};
+    // Agrupa por beneficiária
+    const beneficiarias = [...new Set(recordsByMonth.map(r => r.beneficiary__name))];
+    const meses = [...new Set(recordsByMonth.map(r => r.month.substring(0,7)))];
+    // Monta datasets
+    const datasets = beneficiarias.map(nome => {
+        return {
+            label: nome,
+            data: meses.map(mes => {
+                const rec = recordsByMonth.find(r => r.beneficiary__name === nome && r.month.substring(0,7) === mes);
+                return rec ? rec.total : 0;
+            }),
+            fill: false,
+            borderColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+            tension: 0.1
+        };
+    });
+    const ctx = document.getElementById('evolutionChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: meses,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Registros de Evolução por Mês' }
+            }
+        }
+    });
+</script>
     {% if records %}
         <ul class="divide-y divide-gray-200">
             {% for record in records %}
             <li>
-                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
+                <div class="px-4 py-4 sm:px-6 hover:bg-gray-50 {% if record.signature_required and not record.signed_by_beneficiary %}border-l-4 border-yellow-400 bg-yellow-50{% endif %}">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
-                            <div class="flex items-center">
+                            <div class="flex-center">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                                         <span class="text-white font-bold text-sm">📈</span>
@@ -60,6 +148,11 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
+                            {% if record.signature_required and not record.signed_by_beneficiary %}
+                                <span class="inline-flex items-center px-2 py-1 text-xs font-semibold rounded bg-yellow-400 text-white mr-2">
+                                    ⚠️ Assinatura pendente
+                                </span>
+                            {% endif %}
                             <a href="{% url 'evolution:detail' record.pk %}" 
                                class="text-purple-move hover:text-purple-700 text-sm font-medium">
                                 <i class="fas fa-eye mr-1"></i>Ver
@@ -95,5 +188,6 @@
             </a>
         </div>
     {% endif %}
+</div>
 </div>
 {% endblock %}

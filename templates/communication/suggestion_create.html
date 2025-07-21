@@ -1,0 +1,208 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Nova Sugestão - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'communication:dashboard' %}">Comunicação</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'communication:suggestion_list' %}">Sugestões</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Nova Sugestão</li>
+                    </ol>
+                </nav>
+                <a href="{% url 'communication:suggestion_list' %}" class="mm-btn mm-btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="row justify-center">
+                <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                        <div class="card-padding-md border-b">
+                            <h1 class="h4 mb-0">
+                                <i class="fas fa-lightbulb text-yellow-600"></i>
+                                Nova Sugestão
+                            </h1>
+                        </div>
+                        <div class="card-padding-md">
+                            <div class="alert-info">
+                                <h6><i class="fas fa-info-circle"></i> Sobre a Caixa de Sugestões</h6>
+                                <p class="mb-0">
+                                    Sua opinião é muito importante para nós! Use este espaço para enviar sugestões, 
+                                    melhorias, reclamações ou elogios. Todas as sugestões são analisadas pela nossa equipe 
+                                    e você receberá uma resposta em breve.
+                                </p>
+                            </div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label-optimized">
+                                        {{ form.title.label }}
+                                        <span class="text-red-600">*</span>
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.title.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Um título claro e conciso para sua sugestão</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.category.id_for_label }}" class="form-label-optimized">
+                                        {{ form.category.label }}
+                                        <span class="text-red-600">*</span>
+                                    </label>
+                                    {{ form.category }}
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.category.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Selecione a categoria que melhor descreve sua sugestão</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.content.id_for_label }}" class="form-label-optimized">
+                                        {{ form.content.label }}
+                                        <span class="text-red-600">*</span>
+                                    </label>
+                                    {{ form.content }}
+                                    {% if form.content.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.content.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Descreva sua sugestão de forma detalhada</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check-optimized">
+                                        {{ form.is_anonymous }}
+                                        <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">
+                                            {{ form.is_anonymous.label }}
+                                        </label>
+                                        {% if form.is_anonymous.errors %}
+                                            <div class="invalid-feedback block">
+                                                {% for error in form.is_anonymous.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">
+                                            Se marcado, sua identidade não será revelada junto com a sugestão
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="alert-warning">
+                                    <h6><i class="fas fa-shield-alt"></i> Política de Privacidade</h6>
+                                    <ul class="mb-0">
+                                        <li>Suas sugestões são tratadas com confidencialidade</li>
+                                        <li>Sugestões anônimas não revelam sua identidade</li>
+                                        <li>Todas as sugestões são analisadas de forma imparcial</li>
+                                        <li>Você receberá uma resposta dentro de 5 dias úteis</li>
+                                    </ul>
+                                </div>
+
+                                <div class="flex gap-2 md:justify-end">
+                                    <a href="{% url 'communication:suggestion_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="mm-btn mm-btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Enviar Sugestão
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.mm-mm-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.375rem;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+</style>
+</div>
+{% endblock %}

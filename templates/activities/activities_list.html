@@ -1,0 +1,333 @@
+{% extends "base_tailwind.html" %}
+{% load static %}
+
+{% block title %}Lista de Atividades{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-list mr-2 text-purple-600"></i>
+                        Atividades dos Beneficiários
+                    </h1>
+                    <p class="text-gray-600">Todas as atividades cadastradas</p>
+                </div>
+                <div>
+                    <a href="{% url 'activities:activity_create' %}" class="mm-btn mm-btn-primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Nova Atividade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Estatísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Total</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total }}</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Ativas</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.active }}</p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <i class="fas fa-play-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Concluídas</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.completed }}</p>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <i class="fas fa-check-circle text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Pausadas</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.paused }}</p>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-full">
+                        <i class="fas fa-pause-circle text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+                            <div class="text-white-50 small">Ativas</div>
+                            <div class="text-white fw-bold h4">{{ stats.active }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-play-circle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Concluídas</div>
+                            <div class="text-white fw-bold h4">{{ stats.completed }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-check-circle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Planejadas</div>
+                            <div class="text-white fw-bold h4">{{ stats.planned }}</div>
+                        </div>
+                        <div>
+                            <i class="fas fa-calendar-plus fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-filter me-2"></i>
+                Filtros
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        {% for value, display in status_choices %}
+                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="activity_type" class="form-select">
+                        <option value="">Todos</option>
+                        {% for value, display in activity_type_choices %}
+                        <option value="{{ value }}" {% if filters.activity_type == value %}selected{% endif %}>
+                            {{ display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Beneficiária</label>
+                    <input type="text" name="beneficiary" class="form-control" 
+                           value="{{ filters.beneficiary }}" placeholder="Nome da beneficiária">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>
+                            Filtrar
+                        </button>
+                        <a href="{% url 'activities:activities_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>
+                            Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Atividades -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-table me-2"></i>
+                Lista de Atividades
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Beneficiária</th>
+                                <th>Atividade</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Período</th>
+                                <th>Facilitador</th>
+                                <th>Progresso</th>
+                                <th>Presença</th>
+                                <th>Impacto</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in page_obj %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar me-3">
+                                            <div class="avatar-initial rounded-circle bg-primary">
+                                                {{ activity.beneficiary.full_name|slice:":1" }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">{{ activity.beneficiary.full_name }}</div>
+                                            <div class="text-muted small">{{ activity.beneficiary.age }} anos</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="fw-bold">{{ activity.title }}</div>
+                                        <div class="text-muted small">{{ activity.description|truncatewords:10 }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        {{ activity.get_activity_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if activity.status == 'ACTIVE' %}success{% elif activity.status == 'COMPLETED' %}primary{% elif activity.status == 'PLANNED' %}warning{% else %}danger{% endif %}">
+                                        {{ activity.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-nowrap">
+                                        <div>{{ activity.start_date|date:"d/m/Y" }}</div>
+                                        {% if activity.end_date %}
+                                        <div class="text-muted small">{{ activity.end_date|date:"d/m/Y" }}</div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ activity.facilitator }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ activity.completion_percentage }}%"
+                                             aria-valuenow="{{ activity.completion_percentage }}"
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ activity.completion_percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if activity.attendance_rate >= 80 %}success{% elif activity.attendance_rate >= 60 %}warning{% else %}danger{% endif %}">
+                                        {{ activity.attendance_rate|floatformat:1 }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="text-center">
+                                        <div class="fw-bold">{{ activity.impact_score }}</div>
+                                        <div class="text-muted small">/ 100</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'activities:activity_detail' activity.id %}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'activities:activity_edit' activity.id %}" 
+                                           class="btn btn-sm btn-outline-secondary" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'activities:beneficiary_dashboard' activity.beneficiary.id %}" 
+                                           class="btn btn-sm btn-outline-info" title="Dashboard">
+                                            <i class="fas fa-tachometer-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginação -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhuma atividade encontrada</h5>
+                    <p class="text-muted">Ajuste os filtros ou crie uma nova atividade.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

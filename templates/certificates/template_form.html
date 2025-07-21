@@ -1,0 +1,303 @@
+{% extends 'base_optimized.html' %}
+
+{% block title %}
+    {% if object.pk %}Editar Template{% else %}Criar Template{% endif %} - Move Marias
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    {% if object.pk %}
+                        <i class="fas fa-edit text-blue-600 mr-3"></i>
+                        Editar Template
+                    {% else %}
+                        <i class="fas fa-plus text-blue-600 mr-3"></i>
+                        Criar Template
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    {% if object.pk %}
+                        Atualize as informações do template de certificado
+                    {% else %}
+                        Crie um novo template para certificados
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'certificates:template_list' %}" class="mm-btn mm-btn-secondary">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="mb-8">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+            <li><a href="{% url 'dashboard:home' %}" class="hover:text-blue-600">Home</a></li>
+            <li><i class="fas fa-chevron-right text-xs"></i></li>
+            <li><a href="{% url 'certificates:list' %}" class="hover:text-blue-600">Certificados</a></li>
+            <li><i class="fas fa-chevron-right text-xs"></i></li>
+            <li><a href="{% url 'certificates:template_list' %}" class="hover:text-blue-600">Templates</a></li>
+            <li><i class="fas fa-chevron-right text-xs"></i></li>
+            <li class="text-gray-900">{% if object.pk %}Editar{% else %}Criar{% endif %}</li>
+        </ol>
+    </nav>
+
+    <!-- Formulário -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b">
+            <h2 class="text-lg font-semibold text-gray-900">
+                <i class="fas fa-certificate text-blue-600 mr-2"></i>
+                Informações do Template
+            </h2>
+        </div>
+
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Mensagens de erro -->
+                {% if form.non_field_errors %}
+                <div class="mm-alert mm-alert-danger">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Grid de campos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Nome do Template -->
+                    <div class="md:col-span-2">
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Nome do Template
+                            <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.name.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Tipo -->
+                    <div>
+                        <label for="{{ form.type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Tipo de Certificado
+                            <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.type }}
+                        {% if form.type.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.type.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label for="{{ form.is_active.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Status
+                        </label>
+                        <div class="flex items-center">
+                            {{ form.is_active }}
+                            <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                Template ativo
+                            </label>
+                        </div>
+                        {% if form.is_active.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.is_active.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Arquivo do Template -->
+                    <div class="md:col-span-2">
+                        <label for="{{ form.template_file.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Arquivo do Template
+                            <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-file-code text-gray-400 text-3xl"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="{{ form.template_file.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Selecionar arquivo</span>
+                                        {{ form.template_file }}
+                                    </label>
+                                    <p class="pl-1">ou arraste e solte</p>
+                                </div>
+                                <p class="text-xs text-gray-500">HTML, HTM até 5MB</p>
+                            </div>
+                        </div>
+                        {% if form.template_file.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.template_file.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Imagem de Fundo -->
+                    <div>
+                        <label for="{{ form.background_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Imagem de Fundo
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="{{ form.background_image.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Selecionar imagem</span>
+                                        {{ form.background_image }}
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG até 10MB</p>
+                            </div>
+                        </div>
+                        {% if form.background_image.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.background_image.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Logo -->
+                    <div>
+                        <label for="{{ form.logo.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Logo
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-image text-gray-400 text-2xl"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="{{ form.logo.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Selecionar logo</span>
+                                        {{ form.logo }}
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG até 5MB</p>
+                            </div>
+                        </div>
+                        {% if form.logo.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.logo.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Assinatura -->
+                    <div>
+                        <label for="{{ form.signature_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Imagem da Assinatura
+                        </label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                            <div class="space-y-1 text-center">
+                                <i class="fas fa-signature text-gray-400 text-2xl"></i>
+                                <div class="flex text-sm text-gray-600">
+                                    <label for="{{ form.signature_image.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                        <span>Selecionar assinatura</span>
+                                        {{ form.signature_image }}
+                                    </label>
+                                </div>
+                                <p class="text-xs text-gray-500">PNG, JPG até 2MB</p>
+                            </div>
+                        </div>
+                        {% if form.signature_image.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.signature_image.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <!-- Botões de ação -->
+                <div class="flex justify-end space-x-3 pt-6 border-t">
+                    <a href="{% url 'certificates:template_list' %}" class="mm-btn mm-btn-secondary">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="mm-btn mm-btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        {% if object.pk %}Atualizar{% else %}Criar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Drag and drop para arquivos
+    const dropAreas = document.querySelectorAll('.border-dashed');
+    
+    dropAreas.forEach(area => {
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('border-blue-400', 'bg-blue-50');
+        });
+        
+        area.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+        
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('border-blue-400', 'bg-blue-50');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const input = this.querySelector('input[type="file"]');
+                input.files = files;
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                input.dispatchEvent(event);
+            }
+        });
+    });
+
+    // Preview de arquivos selecionados
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const label = this.closest('.border-dashed').querySelector('span');
+                label.textContent = file.name;
+                label.classList.add('text-green-600');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

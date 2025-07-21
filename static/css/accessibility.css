@@ -1,0 +1,371 @@
+/* Configurações de Acessibilidade - CSS */
+
+/* Painel de Acessibilidade */
+.accessibility-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border: 2px solid #374151;
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    z-index: 10000;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: none;
+}
+
+.accessibility-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.accessibility-panel-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.accessibility-panel-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    color: #6B7280;
+    transition: all 0.2s;
+}
+
+.accessibility-panel-close:hover,
+.accessibility-panel-close:focus {
+    background: #F3F4F6;
+    color: #374151;
+}
+
+.accessibility-panel-content {
+    padding: 1rem;
+}
+
+.accessibility-option {
+    margin-bottom: 1rem;
+}
+
+.accessibility-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+}
+
+.accessibility-label input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    color: #4F46E5;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    background: white;
+}
+
+.accessibility-label input[type="checkbox"]:checked {
+    background: #4F46E5;
+    border-color: #4F46E5;
+}
+
+.accessibility-label select {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    background: white;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.accessibility-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+.accessibility-button {
+    background: #4F46E5;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.accessibility-button:hover,
+.accessibility-button:focus {
+    background: #4338CA;
+}
+
+.accessibility-button.fixed {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    border-radius: 50px;
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Configurações de Tamanho de Fonte */
+.font-small {
+    font-size: 0.875rem;
+}
+
+.font-normal {
+    font-size: 1rem;
+}
+
+.font-large {
+    font-size: 1.125rem;
+}
+
+.font-xlarge {
+    font-size: 1.25rem;
+}
+
+.font-small input,
+.font-small select,
+.font-small textarea,
+.font-small button {
+    font-size: 0.875rem;
+}
+
+.font-large input,
+.font-large select,
+.font-large textarea,
+.font-large button {
+    font-size: 1.125rem;
+}
+
+.font-xlarge input,
+.font-xlarge select,
+.font-xlarge textarea,
+.font-xlarge button {
+    font-size: 1.25rem;
+}
+
+/* Configurações de Alto Contraste */
+.high-contrast-mode {
+    filter: contrast(200%) brightness(150%);
+}
+
+.high-contrast-mode * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.high-contrast-mode .accessibility-panel {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #fff !important;
+}
+
+.high-contrast-mode .accessibility-panel-header {
+    border-color: #fff !important;
+}
+
+.high-contrast-mode .accessibility-panel-header h3 {
+    color: #fff !important;
+}
+
+.high-contrast-mode .accessibility-label {
+    color: #fff !important;
+}
+
+.high-contrast-mode .accessibility-label input,
+.high-contrast-mode .accessibility-label select {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #fff !important;
+}
+
+.high-contrast-mode .accessibility-button {
+    background: #fff !important;
+    color: #000 !important;
+    border: 2px solid #fff !important;
+}
+
+.high-contrast-mode .accessibility-button:hover,
+.high-contrast-mode .accessibility-button:focus {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+.high-contrast-mode button,
+.high-contrast-mode .btn {
+    border: 2px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.high-contrast-mode button:hover,
+.high-contrast-mode .btn:hover {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+.high-contrast-mode input,
+.high-contrast-mode select,
+.high-contrast-mode textarea {
+    border: 2px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+}
+
+.high-contrast-mode a {
+    color: #0000EE !important;
+    text-decoration: underline !important;
+}
+
+.high-contrast-mode a:visited {
+    color: #551A8B !important;
+}
+
+.high-contrast-mode a:hover,
+.high-contrast-mode a:focus {
+    color: #FF0000 !important;
+}
+
+/* Configurações de Movimento Reduzido */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+.reduced-motion .loading-spinner {
+    animation: none !important;
+}
+
+.reduced-motion .progress-bar-fill::after {
+    animation: none !important;
+}
+
+/* Configurações de Navegação por Teclado */
+.keyboard-navigation *:focus {
+    outline: 3px solid #4F46E5 !important;
+    outline-offset: 2px !important;
+}
+
+.keyboard-navigation .skip-link:focus {
+    position: static !important;
+    clip: auto !important;
+    height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+}
+
+/* Melhorias para leitores de tela */
+.screen-reader-mode .sr-only {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    overflow: visible !important;
+}
+
+/* Overlay para modal */
+.accessibility-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+    .accessibility-panel {
+        width: 95%;
+        max-height: 85vh;
+    }
+    
+    .accessibility-button.fixed {
+        bottom: 0.5rem;
+        right: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.625rem;
+    }
+}
+
+/* Configurações de impressão */
+@media print {
+    .accessibility-panel,
+    .accessibility-button,
+    .accessibility-panel-overlay {
+        display: none !important;
+    }
+}
+
+/* Configurações para usuários com preferências de sistema */
+@media (prefers-reduced-motion: reduce) {
+    .accessibility-panel {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .accessibility-panel {
+        border-width: 3px;
+    }
+    
+    .accessibility-button {
+        border: 2px solid white;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .accessibility-panel {
+        background: #1F2937;
+        color: #F9FAFB;
+        border-color: #6B7280;
+    }
+    
+    .accessibility-panel-header {
+        border-color: #6B7280;
+    }
+    
+    .accessibility-panel-header h3 {
+        color: #F9FAFB;
+    }
+    
+    .accessibility-label {
+        color: #F9FAFB;
+    }
+    
+    .accessibility-label input,
+    .accessibility-label select {
+        background: #374151;
+        color: #F9FAFB;
+        border-color: #6B7280;
+    }
+    
+    .accessibility-actions {
+        border-color: #6B7280;
+    }
+}

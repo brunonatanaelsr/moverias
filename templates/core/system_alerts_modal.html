@@ -19,7 +19,7 @@
         </button>
     </div>
     
-    <div class="mt-4">
+    <div class="section-spacing-sm">
         {% if error %}
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                 {{ error }}
@@ -84,7 +84,7 @@
         {% if alerts %}
         <button type="button" 
                 class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
-                hx-post="{% url 'core:clear_alerts' %}"
+                hx-post="{% url 'core:clear-alerts' %}"
                 hx-confirm="Tem certeza que deseja limpar todos os alertas?"
                 hx-swap="none">
             Limpar Alertas
@@ -93,7 +93,7 @@
         
         <button type="button" 
                 class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                hx-get="{% url 'core:export_alerts' %}"
+                hx-get="{% url 'core:export-alerts' %}"
                 hx-swap="none">
             Exportar Relatório
         </button>

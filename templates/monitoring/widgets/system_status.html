@@ -1,0 +1,234 @@
+{% load static %}
+{% load monitoring_tags %}
+
+<div class="monitoring-widget system-status-widget {% if size == 'text-sm' %}widget-text-sm{% elif size == 'large' %}widget-large{% endif %}">
+    {% if error %}
+        <div class="widget-error">
+            <i class="fas fa-exclamation-triangle text-red-500"></i>
+            <span class="text-red-600">{{ error }}</span>
+        </div>
+    {% else %}
+        <div class="widget-header">
+            <h3 class="widget-title">System Status</h3>
+            {% if is_staff %}
+                <a href="{% url 'core:monitoring_dashboard' %}" class="widget-link">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            {% endif %}
+        </div>
+        
+        <div class="widget-content">
+            <div class="status-indicators">
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="{{ system_health.status|status_icon }} {{ system_health.status|status_class }}"></i>
+                    </div>
+                    <div class="status-info">
+                        <span class="status-label">System</span>
+                        <span class="status-value {{ system_health.status|status_class }}">
+                            {{ system_health.status|capfirst }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-database {% if database_health.healthy %}text-green-600{% else %}text-red-600{% endif %}"></i>
+                    </div>
+                    <div class="status-info">
+                        <span class="status-label">Database</span>
+                        <span class="status-value {% if database_health.healthy %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if database_health.healthy %}Healthy{% else %}Unhealthy{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if system_health.data %}
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">CPU</div>
+                        <div class="metric-value">{{ system_health.data.cpu_percent|floatformat:0 }}%</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill {{ system_health.data.cpu_percent|percentage_bar_color }}" 
+                                 style="width: {{ system_health.data.cpu_percent }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <div class="metric-label">Memory</div>
+                        <div class="metric-value">{{ system_health.data.memory_percent|floatformat:0 }}%</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill {{ system_health.data.memory_percent|percentage_bar_color }}" 
+                                 style="width: {{ system_health.data.memory_percent }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <div class="metric-label">Disk</div>
+                        <div class="metric-value">{{ system_health.data.disk_percent|floatformat:0 }}%</div>
+                        <div class="metric-bar">
+                            <div class="bar-fill {{ system_health.data.disk_percent|percentage_bar_color }}" 
+                                 style="width: {{ system_health.data.disk_percent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if system_health.alerts %}
+                <div class="alerts-summary">
+                    <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                    <span class="text-yellow-600">{{ system_health.alerts|length }} alert{{ system_health.alerts|length|pluralize }}</span>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.monitoring-widget {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.monitoring-widget:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.widget-text-sm {
+    min-height: 100px;
+}
+
+.widget-large {
+    min-height: 200px;
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.widget-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-purple-move);
+    margin: 0;
+}
+
+.widget-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.widget-link:hover {
+    color: var(--primary-color-hover);
+}
+
+.widget-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--error-color);
+}
+
+.status-indicators {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-icon {
+    font-size: 1.2rem;
+}
+
+.status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.status-label {
+    font-size: 0.75rem;
+    color: var(--text-gray-600);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.status-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.metric-item {
+    text-align: center;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--text-gray-600);
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-purple-move);
+    margin-bottom: 0.5rem;
+}
+
+.metric-bar {
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.alerts-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--warning-bg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--warning-border);
+}
+
+@media (max-width: 768px) {
+    .status-indicators {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+</style>

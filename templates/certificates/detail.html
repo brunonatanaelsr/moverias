@@ -1,0 +1,342 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block page_title %}Detalhes do Certificado - Move Marias{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<style>
+    /* Dashboard specific animations */
+                        <p class="font-medium text-gray-900">{{ certificate.member.full_name }}</p>
+                        {% if certificate.member.email %}
+                        <p class="text-sm text-gray-500">{{ certificate.member.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if certificate.member.phone %}
+                <div class="flex items-center text-sm text-gray-500">
+                    <i class="fas fa-phone mr-2"></i>
+                    {{ certificate.member.phone }}
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'members:beneficiary-detail' certificate.member.pk %}"e-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .certificate-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Content Section -->
+    <div class="section-spacing-sm">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Certificate Preview -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Certificate Header -->
+            <div class="certificate-card text-white p-8 text-center relative overflow-hidden">
+                <!-- Background Pattern -->
+                <div class="absolute inset-0 opacity-10">
+                    <svg class="w-full h-full" viewBox="0 0 100 100" fill="none">
+                        <pattern id="cert-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <circle cx="10" cy="10" r="1" fill="white"/>
+                        </pattern>
+                        <rect width="100" height="100" fill="url(#cert-pattern)"/>
+                    </svg>
+                </div>
+                
+                <div class="relative z-10">
+                    <div class="certificate-badge text-white px-4 py-2 rounded-full text-sm font-medium mb-4 inline-block">
+                        {{ certificate.get_certificate_type_display }}
+                    </div>
+                    
+                    <h1 class="text-3xl font-bold mb-2">{{ certificate.title }}</h1>
+                    <p class="text-blue-100 text-lg">MoveMarias - Empoderamento Feminino</p>
+                </div>
+            </div>
+            
+            <!-- Certificate Body -->
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <p class="text-gray-600 text-lg mb-4">Certificamos que</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">{{ certificate.member.full_name }}</h2>
+                    <p class="text-gray-600 text-lg mb-6">
+                        {% if certificate.certificate_type == 'completion' %}
+                        concluiu com sucesso
+                        {% elif certificate.certificate_type == 'achievement' %}
+                        alcançou conquista em
+                        {% else %}
+                        participou de
+                        {% endif %}
+                    </p>
+                    
+                    {% if certificate.workshop %}
+                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ certificate.workshop.title }}</h3>
+                        <p class="text-gray-600">{{ certificate.workshop.description|truncatewords:30 }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if certificate.description %}
+                    <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                        <p class="text-gray-700">{{ certificate.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Certificate Details -->
+                <div class="border-t pt-8">
+                    <div class="grid-optimized grid-optimized-2">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-2">Data de Emissão</h4>
+                            <p class="text-gray-600">{{ certificate.issue_date|date:"d de F de Y" }}</p>
+                        </div>
+                        
+                        {% if certificate.expiry_date %}
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-2">Validade</h4>
+                            <p class="text-gray-600">{{ certificate.expiry_date|date:"d de F de Y" }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-2">Código de Verificação</h4>
+                            <p class="text-gray-600 font-mono">{{ certificate.verification_code }}</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-2">Status</h4>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                {% if certificate.status == 'issued' %}bg-green-100 text-green-800
+                                {% elif certificate.status == 'draft' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if certificate.status == 'issued' %}
+                                <i class="fas fa-check-circle mr-1"></i> Emitido
+                                {% elif certificate.status == 'draft' %}
+                                <i class="fas fa-clock mr-1"></i> Rascunho
+                                {% else %}
+                                <i class="fas fa-times-circle mr-1"></i> Revogado
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Digital Signature -->
+                <div class="border-t mt-8 pt-8 text-center">
+                    <div class="text-gray-500 text-sm mb-4">
+                        <i class="fas fa-shield-alt mr-2"></i>
+                        Certificado digital verificado e autenticado
+                    </div>
+                    <div class="text-xs text-gray-400">
+                        URL de verificação: {{ request.build_absolute_uri }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <!-- Actions Card -->
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações</h3>
+            <div class="space-y-3">
+                {% if certificate.status == 'issued' %}
+                <a href="{% url 'certificates:download' certificate.pk %}" 
+                   class="w-full btn-primary text-white text-center py-3 rounded-lg font-medium hover:shadow-lg transition-all block">
+                    <i class="fas fa-download mr-2"></i>
+                    Baixar PDF
+                </a>
+                
+                <button onclick="shareCertificate()" 
+                        class="w-full bg-green-600 text-white text-center py-3 rounded-lg font-medium hover:bg-green-700 transition-colors">
+                    <i class="fas fa-share mr-2"></i>
+                    Compartilhar
+                </button>
+                {% endif %}
+                
+                {% if user.is_staff %}
+                <a href="{% url 'certificates:edit' certificate.pk %}" 
+                   class="w-full bg-yellow-600 text-white text-center py-3 rounded-lg font-medium hover:bg-yellow-700 transition-colors block">
+                    <i class="fas fa-edit mr-2"></i>
+                    Editar
+                </a>
+                
+                {% if certificate.status == 'draft' %}
+                <form method="post" action="{% url 'certificates:issue' certificate.pk %}" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white text-center py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                            onclick="return confirm('Tem certeza que deseja emitir este certificado?')">
+                        <i class="fas fa-stamp mr-2"></i>
+                        Emitir Certificado
+                    </button>
+                </form>
+                {% elif certificate.status == 'issued' %}
+                <form method="post" action="{% url 'certificates:revoke' certificate.pk %}" class="w-full">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="w-full bg-red-600 text-white text-center py-3 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                            onclick="return confirm('Tem certeza que deseja revogar este certificado?')">
+                        <i class="fas fa-ban mr-2"></i>
+                        Revogar
+                    </button>
+                </form>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Beneficiary Info -->
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Beneficiário</h3>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">{{ certificate.beneficiary.name }}</p>
+                        {% if certificate.beneficiary.email %}
+                        <p class="text-sm text-gray-500">{{ certificate.beneficiary.email }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if certificate.beneficiary.phone %}
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-phone mr-2"></i>
+                    {{ certificate.beneficiary.phone }}
+                </div>
+                {% endif %}
+                
+                <a href="{% url 'members:detail' certificate.beneficiary.pk %}" 
+                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    Ver perfil completo →
+                </a>
+            </div>
+        </div>
+        
+        <!-- Workshop Info -->
+        {% if certificate.workshop %}
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Workshop</h3>
+            <div class="space-y-3">
+                <h4 class="font-medium text-gray-900">{{ certificate.workshop.title }}</h4>
+                <p class="text-sm text-gray-600">{{ certificate.workshop.description|truncatewords:20 }}</p>
+                
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-calendar mr-2"></i>
+                    {{ certificate.workshop.start_date|date:"d/m/Y" }}
+                </div>
+                
+                <a href="{% url 'workshops:detail' certificate.workshop.pk %}" 
+                   class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    Ver workshop →
+                </a>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Verification Info -->
+        <div class="bg-gray-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Verificação</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" value="{{ certificate.verification_code }}" readonly 
+                               class="text-sm font-mono bg-white border rounded px-3 py-2 flex-1">
+                        <button onclick="copyVerificationCode()" 
+                                class="px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-500">
+                    <p>Use este código para verificar a autenticidade do certificado.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+function shareCertificate() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ certificate.title }}',
+            text: 'Certificado de {{ certificate.member.full_name }}',
+            url: window.location.href
+        });
+    } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(window.location.href);
+        showAlert('Link copiado para a área de transferência!', 'success');
+    }
+}
+
+function copyVerificationCode() {
+    const code = '{{ certificate.verification_code }}';
+    navigator.clipboard.writeText(code);
+    showAlert('Código copiado para a área de transferência!', 'success');
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    }`;
+    alertDiv.textContent = message;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 3000);
+}
+</script>
+    </div>
+</div>
+{% endblock %}

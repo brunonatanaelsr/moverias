@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -31,6 +32,35 @@
     
     <!-- HTMX Extensions -->
     <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/loading-states.js"></script>
+    
+    <!-- HTMX Error Handling -->
+    <script>
+        // Validate HTMX loaded
+        if (typeof htmx === 'undefined') {
+            console.error('HTMX failed to load from CDN');
+        }
+        
+        // HTMX Error Handlers
+        document.addEventListener('htmx:targetError', function(evt) {
+            console.error('HTMX target not found:', evt.detail.target);
+            showToast('Erro: Elemento não encontrado na página.', 'error');
+        });
+        
+        document.addEventListener('htmx:responseError', function(evt) {
+            console.error('HTMX response error:', evt.detail);
+            showToast('Erro na comunicação com o servidor.', 'error');
+        });
+        
+        document.addEventListener('htmx:sendError', function(evt) {
+            console.error('HTMX send error:', evt.detail);
+            showToast('Erro ao enviar dados para o servidor.', 'error');
+        });
+        
+        document.addEventListener('htmx:timeout', function(evt) {
+            console.warn('HTMX request timeout:', evt.detail);
+            showToast('Operação demorou mais que o esperado.', 'warning');
+        });
+    </script>
     
     <!-- Configuração customizada do Tailwind -->
     <script>
@@ -188,7 +218,7 @@
     
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen antialiased flex flex-col">
+<body class="bg-gray-50 min-h-screen antialiased flex flex-col" data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
     <!-- Skip to main content link para acessibilidade -->
     <a href="#main-content" 
        class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-move text-white px-4 py-2 rounded-md z-50">
@@ -199,13 +229,12 @@
     <nav class="bg-gradient-to-r from-purple-move to-pink-move shadow-lg sticky top-0 z-40" 
          role="navigation" 
          aria-label="Navegação principal">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="container-optimized">
             <div class="flex justify-between h-16">
                 <!-- Logo e Navigation Links -->
-                <div class="flex items-center">
+                <div class="flex-center">
                     <div class="flex-shrink-0">
                         <h1 class="text-white text-xl font-bold flex items-center">
-                            <span role="img" aria-label="coração roxo">💜</span>
                             <span class="ml-1">Move Marias</span>
                         </h1>
                     </div>
@@ -234,6 +263,8 @@
                                 <i class="fas fa-chalkboard-teacher mr-2" aria-hidden="true"></i>
                                 Oficinas
                             </a>
+            <!-- Relatórios & Análises -->
+            <!-- Removido bloco Relatórios & Análises por não funcionar -->
                             <!-- Atendimento Dropdown (ícone acima do texto) -->
                             <div class="relative inline-block text-left text-center">
                                 <button type="button" 
@@ -255,19 +286,18 @@
                                            role="menuitem">
                                             <i class="fas fa-clipboard-list text-purple-600 mr-3" aria-hidden="true"></i>
                                             Anamnese Social
-                                        </a>
-                                        <a href="{% url 'coaching:action_plan_list' %}" 
-                                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100"
-                                           role="menuitem">
-                                            <i class="fas fa-target text-blue-600 mr-3" aria-hidden="true"></i>
-                                            Planos de Ação
-                                        </a>
-                                        <a href="{% url 'coaching:wheel_list' %}" 
-                                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100"
-                                           role="menuitem">
-                                            <i class="fas fa-dharmachakra text-green-600 mr-3" aria-hidden="true"></i>
-                                            Roda da Vida
-                                        </a>
+                                        </a>                        <a href="{% url 'coaching:action-plan-list' %}" 
+                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100"
+                           role="menuitem">
+                            <i class="fas fa-target text-blue-600 mr-3" aria-hidden="true"></i>
+                            Planos de Ação
+                        </a>
+                        <a href="{% url 'coaching:wheel-list' %}" 
+                           class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100"
+                           role="menuitem">
+                            <i class="fas fa-dharmachakra text-green-600 mr-3" aria-hidden="true"></i>
+                            Roda da Vida
+                        </a>
                                         <a href="{% url 'evolution:list' %}" 
                                            class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100"
                                            role="menuitem">
@@ -279,7 +309,7 @@
                             </div>
                             
                             {% if user.is_staff or user.role == 'admin' or user.role == 'coordenador' %}
-                            <a href="{% url 'users:user_list' %}" 
+                            <a href="{% url 'users:user-list' %}" 
                                class="navbar-item text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-all focus:outline-none focus:bg-white focus:bg-opacity-20">
                                 <i class="fas fa-user-cog mr-2" aria-hidden="true"></i>
                                 Usuários
@@ -303,13 +333,13 @@
                                      aria-orientation="vertical" 
                                      aria-labelledby="admin-menu-button">
                                     <div class="py-1" role="none">
-                                        <a href="{% url 'core:email_config' %}" 
+                                        <a href="{% url 'core:email-config' %}" 
                                            class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100 focus:outline-none" 
                                            role="menuitem">
                                             <i class="fas fa-envelope text-purple-600 mr-3" aria-hidden="true"></i>
                                             Configurar Email
                                         </a>
-                                        <a href="{% url 'core:system_monitoring' %}" 
+                                        <a href="{% url 'core:monitoring_dashboard' %}" 
                                            class="text-gray-700 hover:bg-gray-100 block px-4 py-2 text-sm transition-colors focus:bg-gray-100 focus:outline-none" 
                                            role="menuitem">
                                             <i class="fas fa-chart-line text-green-600 mr-3" aria-hidden="true"></i>
@@ -431,11 +461,14 @@
                     <span class="text-white text-sm hidden sm:block">
                         Olá, {{ user.get_full_name|default:user.username }}
                     </span>
-                    <a href="{% url 'account_logout' %}" 
-                       class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-30 transition-colors focus:outline-none focus:bg-opacity-30">
-                        <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>
-                        <span class="hidden sm:inline">Sair</span>
-                    </a>
+                    <form method="post" action="{% url 'account_logout' %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-30 transition-colors focus:outline-none focus:bg-opacity-30">
+                            <i class="fas fa-sign-out-alt mr-2" aria-hidden="true"></i>
+                            <span class="hidden sm:inline">Sair</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -463,14 +496,14 @@
                     <i class="fas fa-chalkboard-teacher mr-2" aria-hidden="true"></i>
                     Oficinas
                 </a>
-                <a href="{% url 'coaching:action_plan_list' %}" 
+                <a href="{% url 'coaching:action-plan-list' %}" 
                    class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
                     <i class="fas fa-bullhorn mr-2" aria-hidden="true"></i>
                     Coaching
                 </a>
                 
                 {% if user.is_staff or user.role == 'admin' or user.role == 'coordenador' %}
-                <a href="{% url 'users:user_list' %}" 
+                <a href="{% url 'users:user-list' %}" 
                    class="text-white hover:bg-white hover:bg-opacity-20 block px-3 py-2 rounded-md text-base font-medium transition-colors">
                     <i class="fas fa-user-cog mr-2" aria-hidden="true"></i>
                     Usuários
@@ -490,7 +523,7 @@
         {% if messages %}
             <div class="mb-4 space-y-2">
                 {% for message in messages %}
-                    <div class="alert alert-dismissible fade show animate-slide-down" role="alert">
+                    <div class="mm-alert mm-alert-dismissible fade show animate-slide-down" role="alert">
                         {% if message.tags == 'error' %}
                             <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
                                 <i class="fas fa-exclamation-circle mr-3 text-red-500" aria-hidden="true"></i>
@@ -538,7 +571,7 @@
     <!-- Footer -->
     <footer class="bg-gray-800 text-white mt-auto">
         <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center">
+            <div class="flex-between">
                 <p class="text-sm">© 2025 Move Marias. Todos os direitos reservados.</p>
                 <div class="flex space-x-4">
                     <a href="#" class="text-gray-400 hover:text-white transition-colors">
@@ -724,6 +757,83 @@
                 }
             }
             
+            // Toast notification system
+            window.showToast = function(message, type = 'info', duration = 5000) {
+                const toastContainer = document.getElementById('toast-container') || createToastContainer();
+                
+                const toast = document.createElement('div');
+                toast.className = `toast-notification ${type} opacity-0 transform translate-x-full transition-all duration-300`;
+                
+                const icon = getToastIcon(type);
+                const bgColor = getToastBgColor(type);
+                
+                toast.innerHTML = `
+                    <div class="flex items-center p-4 mb-4 text-sm rounded-lg ${bgColor} shadow-lg">
+                        <div class="flex-shrink-0">
+                            ${icon}
+                        </div>
+                        <div class="ml-3 text-sm font-medium">
+                            ${message}
+                        </div>
+                        <button type="button" class="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8" onclick="removeToast(this.parentElement.parentElement)">
+                            <span class="sr-only">Close</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.classList.remove('opacity-0', 'translate-x-full');
+                }, 100);
+                
+                // Auto remove
+                setTimeout(() => {
+                    removeToast(toast);
+                }, duration);
+            }
+            
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed top-4 right-4 z-50 space-y-2';
+                document.body.appendChild(container);
+                return container;
+            }
+            
+            function getToastIcon(type) {
+                const icons = {
+                    success: '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                    error: '<svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                    warning: '<svg class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                    info: '<svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                };
+                return icons[type] || icons.info;
+            }
+            
+            function getToastBgColor(type) {
+                const colors = {
+                    success: 'bg-green-50 text-green-800 border border-green-200',
+                    error: 'bg-red-50 text-red-800 border border-red-200',
+                    warning: 'bg-yellow-50 text-yellow-800 border border-yellow-200',
+                    info: 'bg-blue-50 text-blue-800 border border-blue-200'
+                };
+                return colors[type] || colors.info;
+            }
+            
+            window.removeToast = function(toast) {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+            
             // Test function for notification bell
             window.testNotification = function() {
                 console.log('Testing notification bell...');
@@ -791,6 +901,11 @@
     <!-- Include reusable components -->
     {% include 'partials/toast_notifications.html' %}
     {% include 'partials/modal.html' %}
+    
+    <!-- Scripts de notificações em tempo real -->
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/notifications-realtime.js' %}"></script>
+    {% endif %}
     
     {% block extra_scripts %}{% endblock %}
 </body>

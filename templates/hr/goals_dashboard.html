@@ -1,0 +1,333 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% load static %}
+
+{% block page_title %}Dashboard de Metas{% endblock %}
+
+{% block breadcrumbs %}
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-4">
+            <li>
+                <div>
+                    <a href="{% url 'dashboard:home' %}" class="text-gray-400 hover:text-gray-500">
+                        <i class="fas fa-home h-5 w-5"></i>
+                    </a>
+                </div>
+            </li>
+            <li>
+                <div class="flex-center">
+                    <i class="fas fa-chevron-right h-5 w-5 text-gray-400"></i>
+                    <a href="{% url 'hr:dashboard' %}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                        Recursos Humanos
+                    </a>
+                </div>
+            </li>
+            <li>
+                <div class="flex-center">
+                    <i class="fas fa-chevron-right h-5 w-5 text-gray-400"></i>
+                    <span class="ml-4 text-sm font-medium text-gray-500">Metas & Objetivos</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="space-y-6">
+            <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Recursos Humanos</h1>
+                <p>Gerencie equipe e desenvolvimento organizacional</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="grid-optimized grid-optimized-4">
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-bullseye text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total de Metas</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total_goals }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-play text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Metas Ativas</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.active_goals }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-check-circle text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Concluídas</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.completed_goals }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-clock text-red-600 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Atrasadas</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.overdue_goals }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Minhas Metas -->
+        <div class="bg-white shadow-sm rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-user text-move-purple-600 mr-2"></i>
+                    Minhas Metas
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if my_goals %}
+                    <div class="space-y-4">
+                        {% for goal in my_goals %}
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3">
+                                            <h3 class="text-lg font-medium text-gray-900">{{ goal.title }}</h3>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                {% if goal.status == 'active' %}bg-green-100 text-green-800
+                                                {% elif goal.status == 'completed' %}bg-blue-100 text-blue-800
+                                                {% elif goal.status == 'overdue' %}bg-red-100 text-red-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ goal.get_status_display }}
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                {% if goal.priority == 'high' %}bg-red-100 text-red-800
+                                                {% elif goal.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                {{ goal.get_priority_display }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">{{ goal.description|truncatewords:20 }}</p>
+                                        <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                                            <span>
+                                                <i class="fas fa-calendar mr-1"></i>
+                                                Prazo: {{ goal.target_date|date:"d/m/Y" }}
+                                            </span>
+                                            {% if goal.target_value %}
+                                                <span>
+                                                    <i class="fas fa-chart-line mr-1"></i>
+                                                    Meta: {{ goal.target_value }} {{ goal.unit_measure }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        {% if goal.progress_percentage %}
+                                            <div class="flex items-center space-x-2 mb-2">
+                                                <div class="w-24 bg-gray-200 rounded-full h-2">
+                                                    <div class="bg-move-purple-600 h-2 rounded-full" 
+                                                         style="width: {{ goal.progress_percentage }}%"></div>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">
+                                                    {{ goal.progress_percentage }}%
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        <div class="flex space-x-2">
+                                            <a href="{% url 'hr:goal_detail' goal.pk %}" 
+                                               class="text-move-purple-600 hover:text-move-purple-700 text-sm font-medium">
+                                                Ver Detalhes
+                                            </a>
+                                            <a href="{% url 'hr:goal_update_progress' goal.pk %}" 
+                                               class="text-move-pink-600 hover:text-move-pink-700 text-sm font-medium">
+                                                Atualizar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-target text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-500">Você ainda não tem metas definidas</p>
+                        <a href="{% url 'hr:goal_create' %}" 
+                           class="mt-4 inline-flex items-center px-4 py-2 bg-move-purple-600 text-white rounded-md hover:bg-move-purple-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Criar Primeira Meta
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Metas Colaborativas -->
+        {% if collaborative_goals %}
+            <div class="bg-white shadow-sm rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-users text-move-purple-600 mr-2"></i>
+                        Metas Colaborativas
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        {% for goal in collaborative_goals %}
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-3">
+                                            <h3 class="text-lg font-medium text-gray-900">{{ goal.title }}</h3>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {{ goal.get_goal_type_display }}
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-1">{{ goal.description|truncatewords:20 }}</p>
+                                        <p class="text-sm text-gray-500 mt-1">
+                                            <i class="fas fa-user mr-1"></i>
+                                            Responsável: {{ goal.owner.full_name }}
+                                        </p>
+                                    </div>
+                                    <div class="text-right">
+                                        <a href="{% url 'hr:goal_detail' goal.pk %}" 
+                                           class="text-move-purple-600 hover:text-move-purple-700 text-sm font-medium">
+                                            Ver Detalhes
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Metas por Departamento -->
+        <div class="bg-white shadow-sm rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-building text-move-purple-600 mr-2"></i>
+                    Metas por Departamento
+                </h2>
+            </div>
+            <div class="p-6">
+                {% if department_goals %}
+                    <div class="grid-optimized grid-optimized-3">
+                        {% for dept in department_goals %}
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ dept.name }}</h3>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Total de Metas</span>
+                                        <span class="font-medium">{{ dept.total_goals }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-sm">
+                                        <span class="text-gray-600">Concluídas</span>
+                                        <span class="font-medium text-green-600">{{ dept.completed_goals }}</span>
+                                    </div>
+                                    {% if dept.total_goals > 0 %}
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-move-purple-600 h-2 rounded-full" 
+                                                 style="width: {{ dept.completed_goals|floatformat:0 }}{{ dept.total_goals|floatformat:0 }}%"></div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-building text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-500">Nenhuma meta departamental encontrada</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Gráfico de progresso das metas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Implementar gráficos interativos com Chart.js
+            console.log('Dashboard de metas carregado');
+        });
+    </script>
+{% endblock %}

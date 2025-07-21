@@ -1,0 +1,242 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Feedback Dashboard - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="min-h-screen bg-gray-50 py-8">
+    
+            <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">👥</div>
+            <div class="dashboard-header-text">
+                <h1>Recursos Humanos</h1>
+                <p>Gerencie equipe e desenvolvimento organizacional</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 truncate">Total Feedback</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.total_feedback }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-thumbs-up text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 truncate">Positivo</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.positive_feedback }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-lightbulb text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 truncate">Construtivo</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.constructive_feedback }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-envelope text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-500 truncate">Não Lidos</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.unread_feedback }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="section-spacing-md">
+            <a href="{% url 'hr:give_feedback' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
+                <i class="fas fa-plus mr-2"></i>
+                Dar Feedback
+            </a>
+        </div>
+
+        <!-- Feedback Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Feedback Recebido -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Feedback Recebido</h3>
+                </div>
+                <div class="p-6">
+                    {% if received_feedback %}
+                        <div class="space-y-4">
+                            {% for feedback in received_feedback %}
+                                <div class="border rounded-lg p-4 {% if not feedback.read_at %}bg-blue-50 border-blue-200{% endif %}">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if feedback.feedback_type == 'positive' %}bg-green-100 text-green-800{% elif feedback.feedback_type == 'constructive' %}bg-yellow-100 text-yellow-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                                                    {{ feedback.get_feedback_type_display }}
+                                                </span>
+                                                <span class="ml-2 text-sm text-gray-500">
+                                                    de {{ feedback.from_user.get_full_name }}
+                                                </span>
+                                            </div>
+                                            <p class="mt-2 text-sm text-gray-600">{{ feedback.content|truncatewords:20 }}</p>
+                                            <p class="mt-1 text-xs text-gray-400">{{ feedback.created_at|date:"d/m/Y H:i" }}</p>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <a href="{% url 'hr:feedback_detail' feedback.id %}" class="text-blue-600 hover:text-blue-800">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not feedback.read_at %}
+                                                <button class="text-gray-400 hover:text-gray-600 mark-as-read" data-feedback-id="{{ feedback.id }}">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-8">Nenhum feedback recebido ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Feedback Enviado -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Feedback Enviado</h3>
+                </div>
+                <div class="p-6">
+                    {% if given_feedback %}
+                        <div class="space-y-4">
+                            {% for feedback in given_feedback %}
+                                <div class="border rounded-lg p-4">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if feedback.feedback_type == 'positive' %}bg-green-100 text-green-800{% elif feedback.feedback_type == 'constructive' %}bg-yellow-100 text-yellow-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                                                    {{ feedback.get_feedback_type_display }}
+                                                </span>
+                                                <span class="ml-2 text-sm text-gray-500">
+                                                    para {{ feedback.to_user.get_full_name }}
+                                                </span>
+                                            </div>
+                                            <p class="mt-2 text-sm text-gray-600">{{ feedback.content|truncatewords:20 }}</p>
+                                            <p class="mt-1 text-xs text-gray-400">{{ feedback.created_at|date:"d/m/Y H:i" }}</p>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <a href="{% url 'hr:feedback_detail' feedback.id %}" class="text-blue-600 hover:text-blue-800">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if feedback.read_at %}
+                                                <i class="fas fa-check-circle text-green-500" title="Lido"></i>
+                                            {% else %}
+                                                <i class="fas fa-clock text-gray-400" title="Não lido"></i>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-gray-500 py-8">Nenhum feedback enviado ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Mark feedback as read
+document.addEventListener('DOMContentLoaded', function() {
+    const markAsReadButtons = document.querySelectorAll('.mark-as-read');
+    
+    markAsReadButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const feedbackId = this.dataset.feedbackId;
+            
+            fetch(`{% url 'hr:mark_feedback_read' 0 %}`.replace('0', feedbackId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove unread styling
+                    const feedbackCard = this.closest('.border');
+                    feedbackCard.classList.remove('bg-blue-50', 'border-blue-200');
+                    this.remove();
+                }
+            });
+        });
+    });
+});
+</script>
+</div>
+{% endblock %}

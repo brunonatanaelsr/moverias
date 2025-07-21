@@ -11,8 +11,21 @@ from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.conf import settings
 from django.db.models import Q, Prefetch
+from django.http import JsonResponse
 from formtools.wizard.views import SessionWizardView
-from .models import SocialAnamnesis
+from core.unified_permissions import (
+    get_user_permissions,
+    is_technician,
+    is_coordinator,
+    is_admin,
+    TechnicianRequiredMixin,
+    CoordinatorRequiredMixin,
+    AdminRequiredMixin,
+    requires_technician,
+    requires_coordinator,
+    requires_admin
+)
+from .models import SocialAnamnesis, FamilyMember, IdentifiedVulnerability, VulnerabilityCategory, SocialAnamnesisEvolution
 from .forms import (
     SocialAnamnesisStep1Form, 
     SocialAnamnesisStep2Form, 
@@ -27,7 +40,7 @@ def is_technician(user):
     return user.groups.filter(name='Tecnica').exists() or user.is_superuser
 
 
-class SocialAnamnesisWizard(LoginRequiredMixin, UserPassesTestMixin, SessionWizardView):
+class SocialAnamnesisWizard(LoginRequiredMixin, TechnicianRequiredMixin, SessionWizardView):
     """Wizard de 3 etapas para criar anamnese social"""
     
     form_list = [
@@ -37,9 +50,6 @@ class SocialAnamnesisWizard(LoginRequiredMixin, UserPassesTestMixin, SessionWiza
     ]
     
     template_name = 'social/anamnesis_wizard.html'
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
@@ -70,30 +80,25 @@ class SocialAnamnesisWizard(LoginRequiredMixin, UserPassesTestMixin, SessionWiza
         # Criar a anamnese
         anamnesis = SocialAnamnesis.objects.create(
             beneficiary=form_data['beneficiary'],
-            family_composition=form_data['family_composition'],
-            income=form_data['income'],
-            vulnerabilities=form_data['vulnerabilities'],
-            substance_use=form_data.get('substance_use', ''),
+            created_by=self.request.user,
+            housing_situation=form_data.get('housing_situation', ''),
+            family_income=form_data.get('family_income', 0),
+            support_network=form_data.get('support_network', ''),
             observations=form_data.get('observations', ''),
-            signed_by_technician=self.request.user,
-            signed_by_beneficiary=form_data.get('signed_by_beneficiary', False),
-            locked=True  # Bloquear após finalização
+            status='completed'
         )
         
         messages.success(self.request, f'Anamnese social de {anamnesis.beneficiary.full_name} criada com sucesso!')
         return redirect('social:detail', pk=anamnesis.pk)
 
 
-class SocialAnamnesisUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class SocialAnamnesisUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     """Editar anamnese social existente"""
     
     model = SocialAnamnesis
     form_class = SocialAnamnesisUpdateForm
     template_name = 'social/anamnesis_form.html'
     success_url = reverse_lazy('social:list')
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_object(self, queryset=None):
         """Otimizar query do objeto"""
@@ -126,15 +131,12 @@ class SocialAnamnesisUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
             return self.form_invalid(form)
 
 
-class SocialAnamnesisDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class SocialAnamnesisDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailView):
     """Visualizar anamnese social"""
     
     model = SocialAnamnesis
     template_name = 'social/anamnesis_detail.html'
     context_object_name = 'anamnesis'
-    
-    def test_func(self):
-        return is_technician(self.request.user)
     
     def get_object(self, queryset=None):
         """Otimizar query do objeto"""
@@ -144,7 +146,11 @@ class SocialAnamnesisDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
         
         if anamnesis is None:
             anamnesis = SocialAnamnesis.objects.select_related(
-                'beneficiary', 'signed_by_technician'
+                'beneficiary', 'created_by'
+            ).prefetch_related(
+                'family_members',
+                'vulnerabilities__category',
+                'evolutions'
             ).get(pk=pk)
             cache.set(cache_key, anamnesis, settings.CACHE_TIMEOUT['MEDIUM'])
         
@@ -165,27 +171,29 @@ class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
     def get_queryset(self):
         """Query otimizada com cache e select_related"""
         search = self.request.GET.get('search', '')
-        locked_filter = self.request.GET.get('locked', '')
+        status_filter = self.request.GET.get('status', '')
         
         # Cache key baseada nos filtros
-        cache_key = f"social_anamnesis_list_{search}_{locked_filter}"
+        cache_key = f"social_anamnesis_list_{search}_{status_filter}"
         queryset = cache.get(cache_key)
         
         if queryset is None:
             queryset = SocialAnamnesis.objects.select_related(
-                'beneficiary', 'signed_by_technician'
+                'beneficiary', 'created_by'
+            ).prefetch_related(
+                'vulnerabilities__category'
             )
             
             if search:
                 queryset = queryset.filter(
                     Q(beneficiary__full_name__icontains=search) |
-                    Q(beneficiary__cpf__icontains=search)
+                    Q(observations__icontains=search)
                 )
             
-            if locked_filter:
-                queryset = queryset.filter(locked=locked_filter == 'true')
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
             
-            queryset = queryset.order_by('-date')
+            queryset = queryset.order_by('-created_at')
             
             # Cache por tempo curto (5 minutos)
             cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['SHORT'])
@@ -195,27 +203,102 @@ class SocialAnamnesisListView(LoginRequiredMixin, UserPassesTestMixin, ListView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
-        context['locked_filter'] = self.request.GET.get('locked', '')
+        context['status_filter'] = self.request.GET.get('status', '')
+        
+        # Adicionar opções para filtros
+        context['status_choices'] = SocialAnamnesis.STATUS_CHOICES
+        
         return context
 
 
 @login_required
 @user_passes_test(is_technician)
-def lock_anamnesis(request, pk):
-    """Bloquear/desbloquear anamnese para edição"""
+def add_evolution(request, pk):
+    """Adicionar evolução à anamnese social"""
     anamnesis = get_object_or_404(
         SocialAnamnesis.objects.select_related('beneficiary'), 
         pk=pk
     )
     
     if request.method == 'POST':
-        if request.user.is_superuser:
-            anamnesis.locked = not anamnesis.locked
+        try:
+            evolution = SocialAnamnesisEvolution.objects.create(
+                anamnesis=anamnesis,
+                professional=request.user.get_full_name() or request.user.username,
+                evolution_type=request.POST.get('evolution_type', 'followup'),
+                description=request.POST.get('description', ''),
+                actions_taken=request.POST.get('actions_taken', ''),
+                next_steps=request.POST.get('next_steps', ''),
+                created_by=request.user
+            )
+            
+            messages.success(request, 'Evolução adicionada com sucesso!')
+            
+            # Invalidar cache
+            cache.delete(f"social_anamnesis_{pk}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Evolução adicionada com sucesso!',
+                'evolution': {
+                    'id': evolution.id,
+                    'date': evolution.date.strftime('%d/%m/%Y'),
+                    'professional': evolution.professional,
+                    'evolution_type': evolution.get_evolution_type_display(),
+                    'description': evolution.description,
+                    'actions_taken': evolution.actions_taken,
+                    'next_steps': evolution.next_steps
+                }
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao adicionar evolução: {str(e)}'
+            })
+    
+    return redirect('social:detail', pk=pk)
+
+
+@login_required
+@user_passes_test(is_technician)
+def vulnerability_categories_api(request):
+    """API para listar categorias de vulnerabilidade"""
+    categories = VulnerabilityCategory.objects.filter(is_active=True).order_by('name')
+    
+    data = [{
+        'id': cat.id,
+        'name': cat.name,
+        'description': cat.description,
+        'color': cat.color,
+        'priority_level': cat.priority_level
+    } for cat in categories]
+    
+    return JsonResponse({'categories': data})
+
+
+@login_required
+@user_passes_test(is_technician)
+def lock_anamnesis(request, pk):
+    """Alterar status da anamnese"""
+    anamnesis = get_object_or_404(
+        SocialAnamnesis.objects.select_related('beneficiary'), 
+        pk=pk
+    )
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        
+        if new_status in ['draft', 'completed', 'review', 'approved']:
+            anamnesis.status = new_status
             anamnesis.save()
-            status = "bloqueada" if anamnesis.locked else "desbloqueada"
-            messages.success(request, f'Anamnese {status} com sucesso!')
+            
+            status_display = dict(SocialAnamnesis.STATUS_CHOICES)[new_status]
+            messages.success(request, f'Status da anamnese alterado para: {status_display}')
+            
+            # Invalidar cache
+            cache.delete(f"social_anamnesis_{pk}")
         else:
-            messages.error(request, 'Apenas administradores podem alterar o status de bloqueio.')
+            messages.error(request, 'Status inválido.')
     
     return redirect('social:detail', pk=pk)
 
@@ -233,8 +316,8 @@ class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
     def get_object(self, queryset=None):
         """Verificar se a anamnese pode ser excluída"""
         obj = super().get_object(queryset)
-        if obj.locked:
-            messages.error(self.request, 'Não é possível excluir uma anamnese bloqueada.')
+        if obj.status == 'approved':
+            messages.error(self.request, 'Não é possível excluir uma anamnese aprovada.')
             return redirect('social:detail', pk=obj.pk)
         return obj
     
@@ -253,8 +336,10 @@ class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
         
         # Invalidar cache
         cache.delete(f"social_anamnesis_{self.object.pk}")
-        cache_keys = [f"social_anamnesis_list_{search}_{locked_filter}" 
-                     for search in ['', 'test'] for locked_filter in ['', 'true', 'false']]
+        cache_keys = [f"social_anamnesis_list_{search}_{status}_{risk}" 
+                     for search in ['', 'test'] 
+                     for status in ['', 'draft', 'completed', 'review', 'approved'] 
+                     for risk in ['', 'baixo', 'medio', 'alto', 'critico']]
         cache.delete_many(cache_keys)
         
         success_url = self.get_success_url()

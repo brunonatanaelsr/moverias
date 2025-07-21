@@ -5,6 +5,15 @@ This module contains all permission checking functions to avoid code duplication
 
 from django.contrib.auth.models import Group
 
+from django.contrib.auth.mixins import UserPassesTestMixin
+
+class TechnicianRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para views que requerem que o usuário seja técnico ou superuser.
+    """
+    def test_func(self):
+        return is_technician(self.request.user)
+
 
 def is_technician(user):
     """

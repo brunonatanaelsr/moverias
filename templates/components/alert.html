@@ -1,0 +1,52 @@
+<!-- Alert Component -->
+{% comment %}
+Usage: {% include 'components/alert.html' with type='success' message='Operation completed successfully' dismissible=True %}
+Types: success, error, warning, info
+{% endcomment %}
+
+<div class="mm-alert mm-alert-{{ type|default:'info' }} {% if dismissible %}mm-alert-dismissible{% endif %}" 
+     role="alert" 
+     {% if dismissible %}x-data="{ show: true }" x-show="show" x-transition{% endif %}>
+    <div class="flex-start">
+        <div class="flex-shrink-0">
+            {% if type == 'success' %}
+                <i class="fas fa-check-circle text-green-500"></i>
+            {% elif type == 'error' %}
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+            {% elif type == 'warning' %}
+                <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+            {% else %}
+                <i class="fas fa-info-circle text-blue-500"></i>
+            {% endif %}
+        </div>
+        
+        <div class="ml-3 flex-1">
+            {% if title %}
+                <h3 class="text-sm font-medium">{{ title }}</h3>
+            {% endif %}
+            
+            {% if message %}
+                <div class="text-sm {% if title %}mt-1{% endif %}">
+                    {{ message }}
+                </div>
+            {% endif %}
+            
+            {% if content %}
+                <div class="{% if title or message %}mt-2{% endif %}">
+                    {{ content }}
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if dismissible %}
+            <div class="ml-auto pl-3">
+                <button type="button" 
+                        class="mm-alert-dismiss" 
+                        x-on:click="show = false">
+                    <span class="sr-only">Fechar</span>
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>

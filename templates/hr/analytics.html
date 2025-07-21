@@ -1,0 +1,33 @@
+{% extends 'base_tailwind.html' %}
+{% block title %}Analytics RH | MoveMarias{% endblock %}
+{% block content %}
+<div class="mm-card mt-8 mx-auto max-w-5xl">
+    <div class="mm-mm-mm-card-header">
+        <h2 class="text-xl font-bold text-purple-move">Analytics e Relatórios de RH</h2>
+    </div>
+    <div class="mm-mm-mm-card-body">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="mm-card">
+                <div class="mm-mm-mm-card-header">Total de Funcionários</div>
+                <div class="mm-mm-mm-card-body text-3xl font-bold text-center">{{ total_funcionarios }}</div>
+            </div>
+            <div class="mm-card">
+                <div class="mm-mm-mm-card-header">Departamentos Ativos</div>
+                <div class="mm-mm-mm-card-body text-3xl font-bold text-center">{{ total_departamentos }}</div>
+            </div>
+            <div class="mm-card">
+                <div class="mm-mm-mm-card-header">Cargos Ativos</div>
+                <div class="mm-mm-mm-card-body text-3xl font-bold text-center">{{ total_cargos }}</div>
+            </div>
+            <div class="mm-card">
+                <div class="mm-mm-mm-card-header">Treinamentos Realizados</div>
+                <div class="mm-mm-mm-card-body text-3xl font-bold text-center">{{ total_treinamentos }}</div>
+            </div>
+        </div>
+        <div class="mt-8">
+            <h3 class="text-lg font-semibold mb-4">Exportar Relatórios</h3>
+            <a href="{% url 'hr:exportar_relatorio' %}" class="mm-btn mm-btn-outline-primary"><i class="fas fa-file-export mr-2"></i>Exportar Dados</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

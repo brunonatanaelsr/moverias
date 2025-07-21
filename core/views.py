@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Count, Q
 from .forms import EmailConfigForm
 import os
 
@@ -134,3 +135,236 @@ def csrf_failure(request, reason=""):
         'title': 'Erro de Segurança CSRF',
     }
     return render(request, 'core/csrf_failure.html', context, status=403)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def settings_view(request):
+    """Página de configurações do sistema"""
+    from django.contrib.auth import get_user_model
+    from users.models import UserActivity
+    
+    User = get_user_model()  # Usa o modelo de usuário customizado
+    
+    # Estatísticas do sistema
+    system_stats = {
+        'total_users': User.objects.count(),
+        'active_users': User.objects.filter(is_active=True).count(),
+        'admin_users': User.objects.filter(is_superuser=True).count(),
+        'staff_users': User.objects.filter(is_staff=True).count(),
+        'last_activity': UserActivity.objects.order_by('-timestamp').first(),
+        'database_size': '0 MB',  # Placeholder
+        'cache_status': 'Ativo' if hasattr(settings, 'CACHES') else 'Inativo',
+        'debug_mode': settings.DEBUG,
+        'allowed_hosts': settings.ALLOWED_HOSTS,
+        'timezone': settings.TIME_ZONE,
+        'language': settings.LANGUAGE_CODE,
+    }
+    
+    # Configurações de segurança
+    security_settings = {
+        'csrf_cookie_secure': getattr(settings, 'CSRF_COOKIE_SECURE', False),
+        'session_cookie_secure': getattr(settings, 'SESSION_COOKIE_SECURE', False),
+        'secure_ssl_redirect': getattr(settings, 'SECURE_SSL_REDIRECT', False),
+        'secure_hsts_seconds': getattr(settings, 'SECURE_HSTS_SECONDS', 0),
+        'secure_content_type_nosniff': getattr(settings, 'SECURE_CONTENT_TYPE_NOSNIFF', False),
+        'secure_browser_xss_filter': getattr(settings, 'SECURE_BROWSER_XSS_FILTER', False),
+    }
+    
+    context = {
+        'system_stats': system_stats,
+        'security_settings': security_settings,
+        'title': 'Configurações do Sistema'
+    }
+    
+    return render(request, 'core/settings.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_or_staff)
+def audit_logs(request):
+    """Página de logs de auditoria"""
+    from users.models import UserActivity
+    from django.core.paginator import Paginator
+    from django.db.models import Q
+    
+    # Filtros
+    user_filter = request.GET.get('user', '')
+    action_filter = request.GET.get('action', '')
+    date_filter = request.GET.get('date', '')
+    
+    # Query base
+    logs = UserActivity.objects.select_related('user').all()
+    
+    # Aplicar filtros
+    if user_filter:
+        logs = logs.filter(
+            Q(user__username__icontains=user_filter) |
+            Q(user__first_name__icontains=user_filter) |
+            Q(user__last_name__icontains=user_filter)
+        )
+    
+    if action_filter:
+        logs = logs.filter(action__icontains=action_filter)
+    
+    if date_filter:
+        logs = logs.filter(timestamp__date=date_filter)
+    
+    # Ordenar por data mais recente
+    logs = logs.order_by('-timestamp')
+    
+    # Paginação
+    paginator = Paginator(logs, 50)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Estatísticas dos logs
+    log_stats = {
+        'total_logs': UserActivity.objects.count(),
+        'today_logs': UserActivity.objects.filter(timestamp__date=timezone.now().date()).count(),
+        'unique_users': UserActivity.objects.values('user').distinct().count(),
+        'most_active_user': UserActivity.objects.values('user__username').annotate(
+            count=Count('id')
+        ).order_by('-count').first(),
+    }
+    
+    context = {
+        'page_obj': page_obj,
+        'log_stats': log_stats,
+        'user_filter': user_filter,
+        'action_filter': action_filter,
+        'date_filter': date_filter,
+        'title': 'Logs de Auditoria'
+    }
+    
+    return render(request, 'core/audit_logs.html', context)
+
+@login_required
+def global_search(request):
+    """
+    Busca global no sistema - pesquisa em múltiplos modelos
+    """
+    query = request.GET.get('search', '').strip()
+    results = {
+        'query': query,
+        'users': [],
+        'members': [],
+        'projects': [],
+        'workshops': [],
+        'certificates': [],
+        'notifications': [],
+        'total_count': 0
+    }
+    
+    if query and len(query) >= 2:  # Mínimo 2 caracteres
+        from django.contrib.auth import get_user_model
+        from django.db.models import Q
+        
+        User = get_user_model()
+        
+        # Buscar usuários
+        try:
+            from users.models import CustomUser
+            users = CustomUser.objects.filter(
+                Q(full_name__icontains=query) | 
+                Q(email__icontains=query) |
+                Q(username__icontains=query)
+            ).select_related('profile')[:5]
+            results['users'] = users
+        except ImportError:
+            pass
+        
+        # Buscar membros/beneficiários
+        try:
+            from members.models import Member
+            members = Member.objects.filter(
+                Q(name__icontains=query) |
+                Q(email__icontains=query) |
+                Q(phone__icontains=query) |
+                Q(cpf__icontains=query)
+            )[:5]
+            results['members'] = members
+        except ImportError:
+            pass
+        
+        # Buscar projetos
+        try:
+            from projects.models import Project
+            projects = Project.objects.filter(
+                Q(name__icontains=query) |
+                Q(description__icontains=query)
+            )[:5]
+            results['projects'] = projects
+        except ImportError:
+            pass
+        
+        # Buscar workshops
+        try:
+            from workshops.models import Workshop
+            workshops = Workshop.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query)
+            )[:5]
+            results['workshops'] = workshops
+        except ImportError:
+            pass
+        
+        # Buscar certificados
+        try:
+            from certificates.models import Certificate
+            certificates = Certificate.objects.filter(
+                Q(title__icontains=query) |
+                Q(verification_code__icontains=query)
+            )[:5]
+            results['certificates'] = certificates
+        except ImportError:
+            pass
+        
+        # Buscar notificações
+        try:
+            from notifications.models import Notification
+            notifications = Notification.objects.filter(
+                Q(title__icontains=query) |
+                Q(message__icontains=query),
+                recipient=request.user
+            )[:5]
+            results['notifications'] = notifications
+        except ImportError:
+            pass
+        
+        # Calcular total
+        results['total_count'] = (
+            len(results['users']) +
+            len(results['members']) + 
+            len(results['projects']) +
+            len(results['workshops']) +
+            len(results['certificates']) +
+            len(results['notifications'])
+        )
+    
+    # Retornar JSON para AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from django.http import JsonResponse
+        
+        # Converter querysets para dicts
+        def serialize_results(queryset, fields):
+            return [
+                {field: str(getattr(obj, field, '')) for field in fields}
+                for obj in queryset
+            ]
+        
+        json_results = {
+            'query': results['query'],
+            'total_count': results['total_count'],
+            'users': serialize_results(results['users'], ['id', 'full_name', 'email']),
+            'members': serialize_results(results['members'], ['id', 'name', 'email']),
+            'projects': serialize_results(results['projects'], ['id', 'name', 'description']),
+            'workshops': serialize_results(results['workshops'], ['id', 'title', 'description']),
+            'certificates': serialize_results(results['certificates'], ['id', 'title', 'verification_code']),
+            'notifications': serialize_results(results['notifications'], ['id', 'title', 'message']),
+        }
+        
+        return JsonResponse(json_results)
+    
+    # Retornar template para navegação normal
+    return render(request, 'core/global_search.html', results)

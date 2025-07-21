@@ -1,0 +1,256 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Gestão de Tarefas - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Gestão de Tarefas</h1>
+                <p>Organize tarefas, projetos e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block">
+            <a href="{% url 'tasks:task_create' %}" 
+               class="btn-primary dashboard-card-hover">
+                <i class="fas fa-plus mr-2"></i> Nova Tarefa
+            </a>
+        </div>
+    </div>
+                <i class="fas fa-tasks text-move-purple-600 mr-3"></i>
+                Dashboard de Tarefas
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">
+                Gerencie suas tarefas e projetos de forma eficiente
+            </p>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <a href="{% url 'tasks:board_create' %}" 
+               class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-move-purple-700 to-move-pink-700 text-white font-semibold rounded-lg hover:from-move-purple-800 hover:to-move-pink-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-move-purple-600">
+                <i class="fas fa-plus mr-2"></i>
+                Novo Quadro
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Tarefas</h1>
+                <p>Organize tarefas e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Tarefas</h1>
+                <p>Organize tarefas e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Tarefas</h1>
+                <p>Organize tarefas e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+                <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Tarefas</h1>
+                <p>Organize tarefas e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Tarefas Urgentes -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-fire text-red-500 mr-2"></i>
+                Tarefas Urgentes
+            </h3>
+            {% if urgent_tasks %}
+                <div class="space-y-3">
+                    {% for task in urgent_tasks %}
+                    <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 dark:text-white">{{ task.title }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {% if task.due_date %}
+                                    Vence em: {{ task.due_date|date:"d/m/Y" }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <a href="{% url 'tasks:task_detail' task.id %}" 
+                           class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 dark:text-gray-400">Nenhuma tarefa urgente no momento.</p>
+            {% endif %}
+        </div>
+
+        <!-- Minhas Tarefas -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-user-check text-blue-500 mr-2"></i>
+                Minhas Tarefas
+            </h3>
+            {% if my_tasks %}
+                <div class="space-y-3">
+                    {% for task in my_tasks %}
+                    <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 dark:text-white">{{ task.title }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ task.column.name }} - {{ task.get_priority_display }}
+                            </p>
+                        </div>
+                        <a href="{% url 'tasks:task_detail' task.id %}" 
+                           class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 dark:text-gray-400">Você não possui tarefas atribuídas.</p>
+            {% endif %}
+        </div>
+
+        <!-- Meus Quadros -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <i class="fas fa-columns text-purple-500 mr-2"></i>
+                Meus Quadros
+            </h3>
+            {% if user_boards %}
+                <div class="space-y-3">
+                    {% for board in user_boards %}
+                    <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 dark:text-white">{{ board.name }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ board.get_total_tasks }} tarefas
+                            </p>
+                        </div>
+                        <a href="{% url 'tasks:board_detail' board.id %}" 
+                           class="text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 dark:text-gray-400">Você não possui quadros criados.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex flex-wrap gap-4">
+        <a href="{% url 'tasks:board_list' %}" 
+           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            <i class="fas fa-columns mr-2"></i>
+            Ver Todos os Quadros
+        </a>
+        
+        <a href="{% url 'tasks:search' %}" 
+           class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+            <i class="fas fa-search mr-2"></i>
+            Buscar Tarefas
+        </a>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,13 +1,52 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Matrículas - Oficinas{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Matrículas</h1>
@@ -78,7 +117,7 @@
             <li>
                 <div class="px-6 py-4 hover:bg-gray-50">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <div class="flex-shrink-0 h-10 w-10">
                                 <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
                                     <span class="text-sm font-medium text-purple-800">
@@ -87,7 +126,7 @@
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <div class="flex items-center">
+                                <div class="flex-center">
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ enrollment.beneficiary.full_name }}
                                     </div>
@@ -134,7 +173,7 @@
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma matrícula encontrada</h3>
                     <p class="mt-1 text-sm text-gray-500">Comece criando uma nova matrícula.</p>
-                    <div class="mt-6">
+                    <div class="section-spacing-md">
                         <a href="{% url 'workshops:enrollment-create' %}" 
                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
                             <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,5 +251,6 @@
             </div>
         </div>
     {% endif %}
+</div>
 </div>
 {% endblock %}

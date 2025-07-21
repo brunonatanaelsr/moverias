@@ -1,30 +1,75 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
 
 {% block title %}Oficinas - Move Marias{% endblock %}
 
-{% block content %}
-{% include 'workshops/workshops_nav.html' %}
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
 
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Gestão de Oficinas</h1>
-                <p class="mt-2 text-sm text-gray-600">
-                    Gerencie oficinas, sessões e participantes
-                </p>
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">🎓</div>
+            <div class="dashboard-header-text">
+                <h1>Gestão de Oficinas</h1>
+                <p>Gerencie oficinas, sessões e participantes</p>
             </div>
+        </div>
+        <div class="hidden lg:block">
             <a href="{% url 'workshops:workshop-create' %}" 
-               class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               class="btn-primary dashboard-card-hover">
+                <i class="fas fa-plus mr-2"></i> Nova Oficina
+            </a>
+        </div>
+    </div>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Nova Oficina
             </a>
         </div>
     </div>
+
+    {% if user.is_staff %}
+    
+    {% endif %}
 
     <!-- Ações Rápidas -->
     <div class="bg-white shadow rounded-lg p-6 mb-8">
@@ -108,12 +153,12 @@
     </div>
 
     <!-- Lista de Oficinas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid-optimized grid-optimized-3">
         {% for workshop in workshops %}
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <div class="flex-shrink-0">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {% if workshop.status == 'ativo' %}bg-green-100 text-green-800
@@ -141,26 +186,26 @@
                     <p class="text-sm text-gray-600 mb-4">{{ workshop.description|truncatewords:15 }}</p>
                     
                     <div class="space-y-2 text-sm text-gray-500">
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
                             {{ workshop.facilitator }}
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                             {{ workshop.location }}
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                             {{ workshop.start_date|date:"d/m/Y" }}
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
                             </svg>
@@ -188,7 +233,7 @@
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma oficina encontrada</h3>
                     <p class="mt-1 text-sm text-gray-500">Comece criando uma nova oficina.</p>
-                    <div class="mt-6">
+                    <div class="section-spacing-md">
                         <a href="{% url 'workshops:workshop-create' %}" 
                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
                             <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,5 +310,6 @@
             </div>
         </div>
     {% endif %}
+</div>
 </div>
 {% endblock %}

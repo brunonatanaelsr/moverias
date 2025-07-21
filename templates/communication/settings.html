@@ -1,0 +1,310 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Configurações de Comunicação - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'communication:dashboard' %}">Comunicação</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Configurações</li>
+                    </ol>
+                </nav>
+                <a href="{% url 'communication:dashboard' %}" class="mm-btn mm-btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="grid-optimized grid-optimized-2">
+                <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                        <div class="card-padding-md border-b">
+                            <h1 class="h4 mb-0">
+                                <i class="fas fa-cog"></i>
+                                Configurações de Comunicação
+                            </h1>
+                        </div>
+                        <div class="card-padding-md">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="grid-optimized grid-optimized-2">
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.email_notifications.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-envelope"></i>
+                                                {{ form.email_notifications.label }}
+                                            </label>
+                                            <div class="form-check-optimized">
+                                                {{ form.email_notifications }}
+                                                <label class="form-check-label" for="{{ form.email_notifications.id_for_label }}">
+                                                    Receber notificações por email
+                                                </label>
+                                            </div>
+                                            {% if form.email_notifications.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.email_notifications.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Receba notificações por email sobre novos comunicados e memorandos
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.push_notifications.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-bell"></i>
+                                                {{ form.push_notifications.label }}
+                                            </label>
+                                            <div class="form-check-optimized">
+                                                {{ form.push_notifications }}
+                                                <label class="form-check-label" for="{{ form.push_notifications.id_for_label }}">
+                                                    Receber notificações push
+                                                </label>
+                                            </div>
+                                            {% if form.push_notifications.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.push_notifications.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Receba notificações push no navegador
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-optimized grid-optimized-2">
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.announcement_notifications.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-bullhorn"></i>
+                                                {{ form.announcement_notifications.label }}
+                                            </label>
+                                            <div class="form-check-optimized">
+                                                {{ form.announcement_notifications }}
+                                                <label class="form-check-label" for="{{ form.announcement_notifications.id_for_label }}">
+                                                    Notificar sobre comunicados
+                                                </label>
+                                            </div>
+                                            {% if form.announcement_notifications.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.announcement_notifications.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Receba notificações sobre novos comunicados
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.memo_notifications.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-memo"></i>
+                                                {{ form.memo_notifications.label }}
+                                            </label>
+                                            <div class="form-check-optimized">
+                                                {{ form.memo_notifications }}
+                                                <label class="form-check-label" for="{{ form.memo_notifications.id_for_label }}">
+                                                    Notificar sobre memorandos
+                                                </label>
+                                            </div>
+                                            {% if form.memo_notifications.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.memo_notifications.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Receba notificações sobre novos memorandos
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid-optimized grid-optimized-2">
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.newsletter_notifications.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-newspaper"></i>
+                                                {{ form.newsletter_notifications.label }}
+                                            </label>
+                                            <div class="form-check-optimized">
+                                                {{ form.newsletter_notifications }}
+                                                <label class="form-check-label" for="{{ form.newsletter_notifications.id_for_label }}">
+                                                    Notificar sobre newsletters
+                                                </label>
+                                            </div>
+                                            {% if form.newsletter_notifications.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.newsletter_notifications.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Receba notificações sobre novas newsletters
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.digest_frequency.id_for_label }}" class="form-label-optimized">
+                                                <i class="fas fa-clock"></i>
+                                                {{ form.digest_frequency.label }}
+                                            </label>
+                                            {{ form.digest_frequency }}
+                                            {% if form.digest_frequency.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.digest_frequency.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">
+                                                Frequência do resumo de comunicações por email
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid gap-2 flex md:justify-end">
+                                    <a href="{% url 'communication:dashboard' %}" class="mm-btn mm-btn-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save"></i> Salvar Configurações
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                        <div class="card-padding-md border-b">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                Informações
+                            </h5>
+                        </div>
+                        <div class="card-padding-md">
+                            <div class="mb-3">
+                                <h6><i class="fas fa-envelope"></i> Notificações por Email</h6>
+                                <p class="text-sm text-gray-600">
+                                    Receba notificações em seu email sobre novos comunicados, memorandos e outras comunicações importantes.
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-bell"></i> Notificações Push</h6>
+                                <p class="text-sm text-gray-600">
+                                    Receba notificações instantâneas no navegador quando estiver usando o sistema.
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <h6><i class="fas fa-clock"></i> Resumo Periódico</h6>
+                                <p class="text-sm text-gray-600">
+                                    Configure a frequência com que deseja receber um resumo das comunicações por email.
+                                </p>
+                            </div>
+                            <div class="alert-info">
+                                <h6><i class="fas fa-shield-alt"></i> Privacidade</h6>
+                                <p class="text-sm mb-0">
+                                    Suas preferências de notificação são privadas e podem ser alteradas a qualquer momento.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.mm-mm-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.375rem;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+</style>
+</div>
+{% endblock %}

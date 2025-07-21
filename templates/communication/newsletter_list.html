@@ -1,0 +1,368 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Newsletters - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --move-purple: #6c3eb6;
+        --move-pink: #e83e8c;
+        --move-orange: #ff9800;
+        --move-green: #22c55e;
+        --move-blue: #2563eb;
+    }
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .dashboard-card-hover:hover, .newsletter-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    .loading-spinner {
+        border: 2px solid #fff;
+        border-top: 2px solid var(--move-purple);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .tooltip-box {
+        position: absolute;
+        background: #333;
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div id="alert-container" class="mb-4" aria-live="polite"></div>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📢</div>
+            <div class="dashboard-header-text">
+                <h1>Comunicação</h1>
+                <p>Gerencie comunicações e anúncios</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="h3 mb-0">Newsletters</h1>
+                {% if user.is_staff %}
+                <a href="{% url 'communication:newsletter_create' %}"
+                   class="inline-flex items-center px-4 py-2 rounded-md transition-colors"
+                   style="background:var(--move-pink);color:#fff;">
+                    <i class="fas fa-plus mr-2" style="color:#fff"></i>
+                    Nova Newsletter
+                    <div class="loading-spinner hidden ml-2" id="spinner-newsletter"></div>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Filtros -->
+            <div class="card-optimized card-padding-md section-spacing-md" dashboard-card-hover dashboard-slide-up>
+                <div class="card-padding-md">
+                    <form method="get" class="row g-3">
+                        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                            <label for="search" class="form-label-optimized">Buscar</label>
+                            <input type="text" class="input-field" id="search" name="search" 
+                                   value="{{ search }}" placeholder="Título ou conteúdo...">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="year" class="form-label-optimized">Ano</label>
+                            <select class="form-select" id="year" name="year">
+                                <option value="">Todos os anos</option>
+                                {% for year in years %}
+                                <option value="{{ year }}" {% if current_year == year %}selected{% endif %}>{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label>&nbsp;</label>
+                            <div class="flex gap-2">
+                                <button type="submit" class="btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'communication:newsletter_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Newsletters -->
+            {% if newsletters %}
+                <div class="grid-optimized grid-optimized-2" id="newsletter-list-grid">
+                    {% for newsletter in newsletters %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+<div class="newsletter-card" tabindex="0" aria-label="Newsletter {{ newsletter.title }}">
+    <div class="mm-mm-card-header flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            <i class="fas fa-calendar-alt" aria-label="Data"></i>
+            {{ newsletter.created_at|date:"d/m/Y" }}
+        </span>
+        {% if newsletter.is_published %}
+        <span class="mm-badge mm-badge-success" data-tooltip="Status: Publicado" aria-label="Publicado">
+            <i class="fas fa-check-circle"></i> Publicado
+        </span>
+        {% else %}
+        <span class="mm-badge mm-badge-warning" data-tooltip="Status: Rascunho" aria-label="Rascunho">
+            <i class="fas fa-clock"></i> Rascunho
+        </span>
+        {% endif %}
+    </div>
+    <div class="card-padding-md">
+        <h5 class="mm-mm-card-title">{{ newsletter.title }}</h5>
+        <p class="mm-mm-card-text">
+            {{ newsletter.content|truncatewords:25 }}
+        </p>
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">
+                <i class="fas fa-user" aria-label="Autor"></i>
+                {{ newsletter.author.get_full_name|default:newsletter.author.username }}
+            </span>
+            {% if newsletter.edition %}
+            <span class="mm-badge mm-badge-info" data-tooltip="Edição da newsletter" aria-label="Edição">
+                Edição {{ newsletter.edition }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-padding-md border-t">
+        <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600">
+                <i class="fas fa-file-pdf" aria-label="PDF"></i>
+                {% if newsletter.pdf_file %}
+                <a href="{{ newsletter.pdf_file.url }}" target="_blank" class="text-decoration-none" aria-label="Ver PDF">
+                    Ver PDF
+                </a>
+                {% else %}
+                PDF não disponível
+                {% endif %}
+            </span>
+            <div class="btn-group" role="group">
+                <button type="button" class="mm-btn btn-outline-primary"
+                        data-bs-toggle="modal" data-bs-target="#newsletter-modal-{{ newsletter.id }}"
+                        aria-label="Visualizar newsletter">
+                    <i class="fas fa-eye mr-1" style="color:var(--move-blue)" aria-label="Ver"></i> Ver
+                </button>
+                {% if newsletter.pdf_file %}
+                <a href="{{ newsletter.pdf_file.url }}" target="_blank" class="mm-btn btn-success" aria-label="Baixar PDF">
+                    <i class="fas fa-download mr-1" style="color:#fff"></i> PDF
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+                    </div>
+
+                    <!-- Modal de Visualização da Newsletter -->
+                    <div class="modal fade" id="newsletter-modal-{{ newsletter.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <div>
+                                        <h5 class="modal-title">{{ newsletter.title }}</h5>
+                                        <text-sm class="text-gray-600">
+                                            {{ newsletter.created_at|date:"d/m/Y" }}
+                                            {% if newsletter.edition %}
+                                            - Edição {{ newsletter.edition }}
+                                            {% endif %}
+                                        </text-sm>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <text-sm class="text-gray-600">
+                                                <i class="fas fa-user"></i>
+                                                <strong>Autor:</strong> {{ newsletter.author.get_full_name|default:newsletter.author.username }}
+                                            </text-sm>
+                                            {% if newsletter.is_published %}
+                                            <span class="mm-badge mm-badge-success">
+                                                <i class="fas fa-check-circle"></i> Publicado
+                                            </span>
+                                            {% else %}
+                                            <span class="mm-badge mm-badge-warning">
+                                                <i class="fas fa-clock"></i> Rascunho
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="newsletter-content">
+                                        {{ newsletter.content|linebreaks }}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    {% if newsletter.pdf_file %}
+                                    <a href="{{ newsletter.pdf_file.url }}" target="_blank" class="btn-success">
+                                        <i class="fas fa-file-pdf"></i> Baixar PDF
+                                    </a>
+                                    {% endif %}
+                                    <button type="button" class="btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginação -->
+                {% if newsletters.has_other_pages %}
+                <nav aria-label="Paginação de newsletters">
+                    <ul class="pagination justify-center">
+                        {% if newsletters.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ newsletters.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in newsletters.paginator.page_range %}
+                        {% if newsletters.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if newsletters.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ newsletters.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_year %}&year={{ current_year }}{% endif %}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper text-gray-600" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3">Nenhuma newsletter encontrada</h3>
+                    <p class="text-gray-600">Não há newsletters correspondentes aos filtros aplicados.</p>
+                    {% if user.is_staff %}
+                    <a href="{% url 'communication:newsletter_create' %}"
+                       class="inline-flex items-center px-4 py-2 rounded-md transition-colors"
+                       style="background:var(--move-pink);color:#fff;">
+                        <i class="fas fa-plus mr-2" style="color:#fff"></i> Criar Primeira Newsletter
+                        <div class="loading-spinner hidden ml-2" id="spinner-newsletter"></div>
+                    </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.newsletter-card {
+    border-left: 4px solid var(--move-blue);
+    transition: all 0.3s ease;
+}
+.newsletter-card:hover {
+    box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+.newsletter-card .mm-mm-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+.newsletter-content {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+.newsletter-content p {
+    margin-bottom: 1rem;
+}
+</style>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Spinner feedback nos botões de ação
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('a[href*="newsletter_create"]').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var spinner = btn.querySelector('.loading-spinner');
+            if (spinner) spinner.classList.remove('hidden');
+        });
+    });
+    // Tooltips explicativos
+    document.querySelectorAll('[data-tooltip]').forEach(function(el) {
+        el.addEventListener('mouseenter', function() {
+            let tip = document.createElement('div');
+            tip.className = 'tooltip-box';
+            tip.textContent = el.getAttribute('data-tooltip');
+            document.body.appendChild(tip);
+            const rect = el.getBoundingClientRect();
+            tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+            tip.style.left = (rect.left + window.scrollX) + 'px';
+            el._tooltip = tip;
+        });
+        el.addEventListener('mouseleave', function() {
+            if (el._tooltip) {
+                document.body.removeChild(el._tooltip);
+                el._tooltip = null;
+            }
+        });
+    });
+});
+
+// Função de alerta visual acessível
+function showAlert(message, type) {
+    var container = document.getElementById('alert-container');
+    if (!container) return;
+    var color = type === 'success' ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300';
+    container.innerHTML = `<div class="border ${color} px-4 py-3 rounded relative flex items-center justify-between" role="alert">
+        <span class="block font-semibold">${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-lg font-bold text-gray-500 hover:text-gray-700" aria-label="Fechar alerta">&times;</button>
+    </div>`;
+    setTimeout(function() { container.innerHTML = ''; }, 5000);
+}
+</script>
+{% endblock %}

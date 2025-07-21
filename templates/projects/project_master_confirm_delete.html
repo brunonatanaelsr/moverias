@@ -1,11 +1,50 @@
 \
-{% extends "dashboard_base.html" %}
+{% extends "base_optimized.html" %}
 
 {% block title %}Confirmar Exclusão de Projeto{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-md mx-auto">
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+<div class="dashboard-container-optimized">
+<div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="bg-red-600 px-6 py-4">
             <h3 class="text-lg font-medium text-white">
                 <i class="fas fa-exclamation-triangle mr-2"></i>
@@ -64,5 +103,6 @@
             </form>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

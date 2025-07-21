@@ -1,0 +1,203 @@
+<!-- Widget de Chat Flutuante -->
+<div id="chat-widget" class="fixed bottom-4 right-4 z-50">
+    <!-- Botão para abrir/fechar chat -->
+    <button id="chat-toggle" class="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 relative">
+        <i class="fas fa-comments text-xl"></i>
+        <span id="chat-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">
+            0
+        </span>
+    </button>
+
+    <!-- Painel do Chat -->
+    <div id="chat-panel" class="hidden absolute bottom-16 right-0 w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+        <!-- Header do Chat -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-semibold">Chat - MoveMarias</h3>
+                <div class="flex items-center space-x-2">
+                    <button id="chat-minimize" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button id="chat-close" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-gray-50 border-b border-gray-200">
+            <div class="flex">
+                <button class="chat-tab active flex-1 py-2 px-4 text-sm font-medium text-center border-b-2 border-purple-600 text-purple-600" data-tab="messages">
+                    Mensagens
+                </button>
+                <button class="chat-tab flex-1 py-2 px-4 text-sm font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="users">
+                    Usuários
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo das Tabs -->
+        <div class="h-96 overflow-hidden">
+            <!-- Tab Mensagens -->
+            <div id="messages-tab" class="chat-content h-full flex flex-col">
+                <!-- Lista de Conversas -->
+                <div id="conversations-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <!-- Carregando -->
+                    <div id="conversations-loading" class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                        <p class="text-gray-500 mt-2">Carregando conversas...</p>
+                    </div>
+                </div>
+
+                <!-- Campo de nova mensagem -->
+                <div class="border-t border-gray-200 p-3">
+                    <div class="flex items-center space-x-2">
+                        <input 
+                            type="text" 
+                            id="new-message-input" 
+                            placeholder="Digite uma mensagem..." 
+                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                            disabled
+                        >
+                        <button 
+                            id="send-message-btn" 
+                            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                            disabled
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Usuários -->
+            <div id="users-tab" class="chat-content h-full hidden">
+                <!-- Lista de Usuários -->
+                <div id="users-list" class="flex-1 overflow-y-auto p-4 space-y-2">
+                    <!-- Carregando -->
+                    <div id="users-loading" class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                        <p class="text-gray-500 mt-2">Carregando usuários...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel de Conversa Individual -->
+    <div id="conversation-panel" class="hidden absolute bottom-16 right-0 w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+        <!-- Header da Conversa -->
+        <div class="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <button id="back-to-chat" class="text-white hover:text-gray-200 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h3 id="conversation-title" class="font-semibold">Conversa</h3>
+                        <p id="conversation-subtitle" class="text-sm text-purple-100">Online</p>
+                    </div>
+                </div>
+                <button id="conversation-close" class="text-white hover:text-gray-200 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mensagens -->
+        <div id="conversation-messages" class="h-80 overflow-y-auto p-4 space-y-3">
+            <!-- Carregando mensagens -->
+            <div id="messages-loading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-gray-400"></i>
+                <p class="text-gray-500 mt-2">Carregando mensagens...</p>
+            </div>
+        </div>
+
+        <!-- Campo de mensagem -->
+        <div class="border-t border-gray-200 p-3">
+            <div class="flex items-center space-x-2">
+                <input 
+                    type="text" 
+                    id="conversation-message-input" 
+                    placeholder="Digite uma mensagem..." 
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                >
+                <button 
+                    id="conversation-send-btn" 
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos personalizados para o chat */
+.chat-tab.active {
+    color: #7C3AED;
+    border-color: #7C3AED;
+}
+
+.chat-message {
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.chat-message.own {
+    margin-left: auto;
+    background-color: #7C3AED;
+    color: white;
+}
+
+.chat-message.other {
+    margin-right: auto;
+    background-color: #F3F4F6;
+    color: #374151;
+}
+
+.user-item:hover {
+    background-color: #F9FAFB;
+}
+
+.conversation-item:hover {
+    background-color: #F9FAFB;
+}
+
+/* Animações */
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#chat-panel, #conversation-panel {
+    animation: slideUp 0.3s ease-out;
+}
+
+/* Scrollbar customizada */
+.chat-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-content::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: 3px;
+}
+
+.chat-content::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 3px;
+}
+
+.chat-content::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+</style>

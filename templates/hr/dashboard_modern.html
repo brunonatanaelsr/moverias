@@ -1,0 +1,382 @@
+{% extends 'base_modern.html' %}
+{% load static %}
+
+{% block title %}Recursos Humanos - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Recursos Humanos{% endblock %}
+
+{% block extra_head %}
+    {% monitoring_js_config %}
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li>
+    <div class="flex-center">
+        <i class="fas fa-chevron-right w-4 h-4 text-gray-400 mx-2"></i>
+        <span class="text-gray-500 dark:text-gray-400">RH</span>
+    </div>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-move-purple-500 to-move-pink-500 rounded-lg flex items-center justify-center">
+                <i class="fas fa-briefcase text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Dashboard de Recursos Humanos
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Gerencie funcionários e processos de RH de forma eficiente
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <button type="button" 
+                    class="mm-btn mm-btn-primary"
+                    onclick="window.location.href='{% url 'hr:employee_create' %}'">
+                <i class="fas fa-user-plus mr-2"></i>
+                Novo Funcionário
+            </button>
+            <button type="button" 
+                    class="mm-btn mm-btn-secondary"
+                    onclick="window.location.href='{% url 'hr:reports_dashboard' %}'">
+                <i class="fas fa-chart-bar mr-2"></i>
+                Relatórios
+            </button>
+        </div>
+    </div>
+
+    <!-- System Monitoring Section (for staff users) -->
+    {% if user.is_staff %}
+    <div class="monitoring-section">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Status</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1">
+                {% system_status_widget size="medium" %}
+            </div>
+            <div class="lg:col-span-1">
+                {% performance_metrics_widget show_details=True %}
+            </div>
+            <div class="lg:col-span-1">
+                {% alerts_widget max_alerts=3 %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Cards -->
+    <div class="grid-optimized grid-optimized-4">
+        <div class="mm-card group hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Funcionários Ativos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_employees|default:0 }}</p>
+                    <p class="text-xs text-green-600 dark:text-green-400 mt-1">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        +2 este mês
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fas fa-users text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="mm-card group hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Departamentos</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_departments|default:0 }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <i class="fas fa-minus mr-1"></i>
+                        Sem alterações
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fas fa-building text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="mm-card group hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Contratações (30 dias)</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ recent_hires|default:0 }}</p>
+                    <p class="text-xs text-move-purple-600 dark:text-move-purple-400 mt-1">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        +{{ recent_hires|default:0 }} novos
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-move-purple-100 dark:bg-move-purple-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fas fa-user-plus text-move-purple-600 dark:text-move-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="mm-card group hover:shadow-lg transition-shadow duration-200">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avaliações Pendentes</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ pending_reviews|default:0 }}</p>
+                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        Requer atenção
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="fas fa-clipboard-check text-amber-600 dark:text-amber-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mm-card">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                <i class="fas fa-bolt text-amber-500 mr-2"></i>
+                Ações Rápidas
+            </h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{% url 'hr:employee_create' %}" 
+               class="mm-action-card">
+                <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-user-plus text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-medium text-blue-700 dark:text-blue-300">Novo Funcionário</span>
+            </a>
+            
+            <a href="{% url 'hr:payroll_process' %}" 
+               class="mm-action-card">
+                <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-calculator text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-medium text-green-700 dark:text-green-300">Processar Folha</span>
+            </a>
+            
+            <a href="{% url 'hr:performance_review' %}" 
+               class="mm-action-card">
+                <div class="w-12 h-12 bg-move-purple-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-star text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-medium text-move-purple-700 dark:text-move-purple-300">Avaliar Performance</span>
+            </a>
+            
+            <a href="{% url 'hr:training_schedule' %}" 
+               class="mm-action-card">
+                <div class="w-12 h-12 bg-amber-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-graduation-cap text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-medium text-amber-700 dark:text-amber-300">Agendar Treinamento</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Employees -->
+        <div class="mm-card">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-user-friends text-blue-500 mr-2"></i>
+                    Funcionários Recentes
+                </h3>
+                <a href="{% url 'hr:employee_list' %}" 
+                   class="text-sm text-move-purple-600 dark:text-move-purple-400 hover:text-move-purple-800 dark:hover:text-move-purple-200 font-medium">
+                    Ver todos
+                </a>
+            </div>
+            
+            {% if recent_employees %}
+                <div class="space-y-4">
+                    {% for employee in recent_employees %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <img class="w-10 h-10 rounded-full object-cover" 
+                                 src="{% if employee.photo %}{{ employee.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ employee.name|urlencode }}&background=a855f7&color=fff{% endif %}" 
+                                 alt="{{ employee.name }}">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ employee.name }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ employee.position }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200">
+                                Ativo
+                            </span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {{ employee.hire_date|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mm-empty-state">
+                    <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Nenhum funcionário encontrado</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-4">Comece adicionando funcionários ao sistema.</p>
+                    <button type="button" 
+                            class="mm-btn mm-btn-primary"
+                            onclick="window.location.href='{% url 'hr:employee_create' %}'">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Adicionar Funcionário
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pending Tasks -->
+        <div class="mm-card">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <i class="fas fa-tasks text-amber-500 mr-2"></i>
+                    Tarefas Pendentes
+                </h3>
+                <a href="{% url 'hr:tasks' %}" 
+                   class="text-sm text-move-purple-600 dark:text-move-purple-400 hover:text-move-purple-800 dark:hover:text-move-purple-200 font-medium">
+                    Ver todas
+                </a>
+            </div>
+            
+            {% if pending_tasks %}
+                <div class="space-y-4">
+                    {% for task in pending_tasks %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-3 h-3 bg-amber-500 rounded-full"></div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ task.title }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ task.description|truncatewords:10 }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                         {% if task.priority == 'high' %}bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200
+                                         {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200
+                                         {% else %}bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                {{ task.due_date|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="mm-empty-state">
+                    <i class="fas fa-check-circle text-green-400 text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Todas as tarefas concluídas!</h3>
+                    <p class="text-gray-500 dark:text-gray-400">Parabéns! Você não possui tarefas pendentes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Calendar and Upcoming Events -->
+    <div class="mm-card">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <i class="fas fa-calendar-alt text-move-purple-500 mr-2"></i>
+                Próximos Eventos
+            </h3>
+            <a href="{% url 'hr:calendar' %}" 
+               class="text-sm text-move-purple-600 dark:text-move-purple-400 hover:text-move-purple-800 dark:hover:text-move-purple-200 font-medium">
+                Ver calendário
+            </a>
+        </div>
+        
+        {% if upcoming_events %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for event in upcoming_events %}
+                <div class="p-4 bg-gradient-to-br from-move-purple-50 to-move-pink-50 dark:from-move-purple-900 dark:to-move-pink-900 rounded-lg border border-move-purple-200 dark:border-move-purple-700">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-move-purple-100 text-move-purple-800 dark:bg-move-purple-800 dark:text-move-purple-200">
+                            {{ event.event_type }}
+                        </span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ event.date|date:"d/m" }}
+                        </span>
+                    </div>
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ event.title }}</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ event.description|truncatewords:15 }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="mm-empty-state">
+                <i class="fas fa-calendar-plus text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Nenhum evento agendado</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">Adicione eventos ao calendário para organizar melhor o RH.</p>
+                <button type="button" 
+                        class="mm-btn mm-btn-primary"
+                        onclick="window.location.href='{% url 'hr:event_create' %}'">
+                    <i class="fas fa-calendar-plus mr-2"></i>
+                    Adicionar Evento
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js_bottom %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize any charts or interactive elements
+    if (typeof Chart !== 'undefined') {
+        // Add chart initialization here if needed
+    }
+    
+    // Add any HR-specific JavaScript functionality
+    console.log('HR Dashboard loaded successfully');
+});
+</script>
+{% endblock %}

@@ -1,13 +1,57 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load static %}
 
 {% block title %}{{ beneficiary.full_name }} - Detalhes{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="bg-white shadow-sm rounded-lg p-6">
+<div class="dashboard-container-optimized">
+<div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
     <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-gray-900">{{ beneficiary.full_name }}</h2>
         <div class="flex space-x-3">
+            <a href="{% url 'members:beneficiary-dashboard' beneficiary.pk %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
+                📊 Dashboard
+            </a>
             <a href="{% url 'members:beneficiary-list' %}" 
                class="text-gray-600 hover:text-gray-900 flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +70,7 @@
     </div>
 
     <!-- Status Badge -->
-    <div class="mb-6">
+    <div class="section-spacing-md">
         <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
             {% if beneficiary.status == 'ATIVA' %}
                 bg-green-100 text-green-800
@@ -94,7 +138,7 @@
 
     <!-- Endereço -->
     {% if beneficiary.address %}
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <h3 class="text-lg font-medium text-gray-900 mb-3">Endereço</h3>
         <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-sm text-gray-900">{{ beneficiary.address }}</p>
@@ -104,7 +148,7 @@
 
     <!-- Ponto de Referência -->
     {% if beneficiary.reference %}
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <h3 class="text-lg font-medium text-gray-900 mb-3">Ponto de Referência</h3>
         <div class="bg-gray-50 rounded-lg p-4">
             <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ beneficiary.reference }}</p>
@@ -113,7 +157,7 @@
     {% endif %}
 
     <!-- Histórico de Projetos -->
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <h3 class="text-lg font-medium text-gray-900 mb-3">Projetos</h3>
         {% if beneficiary.project_enrollments.all %}
             <div class="bg-gray-50 rounded-lg p-4">
@@ -155,7 +199,7 @@
     <!-- Informações de Sistema -->
     <div class="border-t border-gray-200 pt-6">
         <h3 class="text-lg font-medium text-gray-900 mb-3">Informações do Sistema</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid-optimized grid-optimized-2">
             <div>
                 <dt class="text-sm font-medium text-gray-500">Cadastrado em</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.created_at|date:"d/m/Y H:i" }}</dd>
@@ -190,5 +234,5 @@
         </div>
     </div>
 </div>
-
+</div>
 {% endblock %}

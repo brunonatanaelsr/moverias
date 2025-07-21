@@ -1,42 +1,52 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
 
 {% block title %}
     {% if object %}Editar Anamnese Social{% else %}Nova Anamnese Social{% endif %} - Move Marias
 {% endblock %}
 
-{% block breadcrumbs %}
-<nav class="flex mb-6" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a href="{% url 'dashboard:home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move">
-                <i class="fas fa-home mr-2"></i>
-                Dashboard
-            </a>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                <a href="{% url 'social:list' %}" class="text-sm font-medium text-gray-700 hover:text-purple-move">
-                    Anamneses Sociais
-                </a>
-            </div>
-        </li>
-        <li>
-            <div class="flex items-center">
-                <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
-                <span class="text-sm font-medium text-gray-500">
-                    {% if object %}Editar{% else %}Nova{% endif %}
-                </span>
-            </div>
-        </li>
-    </ol>
-</nav>
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8">
+<div class="dashboard-container-optimized">
+<div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">
@@ -88,7 +98,28 @@
             </h2>
         </div>
         
-        <form method="post" class="px-6 py-6">
+        <!-- Progress Bar -->
+        <div class="px-6 py-2 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <span>Progresso do Formulário</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="form-progress" 
+                     class="bg-purple-move h-2 rounded-full transition-all duration-300"
+                     style="width: 0%"
+                     role="progressbar"
+                     aria-valuenow="0"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-label="Progresso do preenchimento do formulário">
+                </div>
+            </div>
+        </div>
+        
+        <form method="post" class="px-6 py-6" id="anamnesis-form"
+              aria-label="Formulário de Anamnese Social"
+              novalidate>
             {% csrf_token %}
             
             <!-- Dados da Beneficiária (apenas para visualização) -->
@@ -109,12 +140,12 @@
             {% endif %}
 
             <!-- Dados Familiares -->
-            <div class="mb-8">
+            <div class="section-spacing-lg">
                 <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
                     <i class="fas fa-users text-purple-move mr-2"></i>
                     Dados Familiares
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid-optimized grid-optimized-2">
                     <div class="md:col-span-2">
                         <label for="{{ form.family_composition.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                             {{ form.family_composition.label }}
@@ -147,7 +178,7 @@
             </div>
 
             <!-- Vulnerabilidades -->
-            <div class="mb-8">
+            <div class="section-spacing-lg">
                 <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
                     <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
                     Vulnerabilidades e Riscos
@@ -185,7 +216,7 @@
             </div>
 
             <!-- Observações e Finalização -->
-            <div class="mb-8">
+            <div class="section-spacing-lg">
                 <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
                     <i class="fas fa-edit text-blue-500 mr-2"></i>
                     Observações e Finalização
@@ -206,7 +237,7 @@
                         {% endif %}
                     </div>
                     <div>
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             {{ form.signed_by_beneficiary }}
                             <label for="{{ form.signed_by_beneficiary.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
                                 {{ form.signed_by_beneficiary.label }}
@@ -228,10 +259,16 @@
             <div class="flex items-center justify-between pt-6 border-t border-gray-200">
                 <div class="flex space-x-3">
                     <button type="submit" 
-                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-move hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-move"
-                            {% if object.locked and not user.is_superuser %}disabled{% endif %}>
-                        <i class="fas fa-save mr-2"></i>
-                        {% if object %}Salvar Alterações{% else %}Criar Anamnese{% endif %}
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-move hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-move disabled:opacity-50 disabled:cursor-not-allowed"
+                            {% if object.locked and not user.is_superuser %}disabled{% endif %}
+                            data-loading="true"
+                            data-loading-text="Salvando..."
+                            aria-describedby="form-progress">
+                        <span class="loading-text">
+                            <i class="fas fa-save mr-2"></i>
+                            {% if object %}Salvar Alterações{% else %}Criar Anamnese{% endif %}
+                        </span>
+                        <div class="loading-spinner hidden inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></div>
                     </button>
                     <a href="{% url 'social:list' %}" 
                        class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-move">
@@ -273,4 +310,75 @@ input[type="checkbox"] {
     @apply bg-gray-100 cursor-not-allowed;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('anamnesis-form');
+    const submitButton = form.querySelector('[type="submit"]');
+    const progressBar = document.getElementById('form-progress');
+    const progressText = document.getElementById('progress-text');
+
+    // Progress tracking
+    const fields = form.querySelectorAll('input, select, textarea');
+    const totalFields = fields.length;
+    
+    function updateProgress() {
+        const filledFields = Array.from(fields).filter(field => {
+            if (field.type === 'checkbox') {
+                return field.checked;
+            }
+            return field.value && field.value.trim() !== '';
+        });
+        
+        const progress = Math.round((filledFields.length / totalFields) * 100);
+        progressBar.style.width = progress + '%';
+        progressBar.setAttribute('aria-valuenow', progress);
+        progressText.textContent = progress + '%';
+    }
+
+    // Real-time validation
+    fields.forEach(field => {
+        field.addEventListener('input', function() {
+            updateProgress();
+            
+            // Clear previous validation state
+            field.classList.remove('border-red-500', 'border-green-500');
+            
+            // Basic validation
+            if (field.hasAttribute('required') && field.value.trim() === '') {
+                field.classList.add('border-red-500');
+                field.setAttribute('aria-invalid', 'true');
+            } else if (field.value.trim() !== '') {
+                field.classList.add('border-green-500');
+                field.setAttribute('aria-invalid', 'false');
+            }
+        });
+        
+        field.addEventListener('change', updateProgress);
+    });
+
+    // Initial progress
+    updateProgress();
+
+    // Loading state handling
+    form.addEventListener('submit', function(e) {
+        if (!submitButton.disabled) {
+            submitButton.disabled = true;
+            submitButton.querySelector('.loading-text').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Salvando...';
+            submitButton.querySelector('.loading-spinner').classList.remove('hidden');
+        }
+    });
+
+    // Enhanced accessibility
+    form.addEventListener('invalid', function(e) {
+        e.preventDefault();
+        const invalidField = form.querySelector(':invalid');
+        if (invalidField) {
+            invalidField.focus();
+            invalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, true);
+});
+</script>
+</div>
 {% endblock %}

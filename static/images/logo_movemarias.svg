@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <!-- Gradiente para o M -->
+  <defs>
+    <linearGradient id="mGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Letra M estilizada -->
+  <path d="M 10 20 
+           L 10 100 
+           L 25 100 
+           L 25 45 
+           L 45 80 
+           L 55 80 
+           L 75 45 
+           L 75 100 
+           L 90 100 
+           L 90 20 
+           L 75 20 
+           L 50 65 
+           L 25 20 
+           Z" 
+           fill="url(#mGradient)" 
+           stroke="none"/>
+  
+  <!-- Texto "Instituto" -->
+  <text x="110" y="35" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6B46C1">Instituto</text>
+  
+  <!-- Texto "MOVE" -->
+  <text x="110" y="60" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#6B46C1">MOVE</text>
+  
+  <!-- Texto "MARIAS" -->
+  <text x="110" y="85" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#6B46C1">MARIAS</text>
+  
+  <!-- Elementos decorativos -->
+  <circle cx="380" cy="30" r="3" fill="#EC4899"/>
+  <circle cx="390" cy="40" r="2" fill="#8B5CF6"/>
+  <circle cx="370" cy="50" r="2" fill="#F472B6"/>
+</svg>

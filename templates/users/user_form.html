@@ -1,603 +1,267 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
+{% load widget_filters %}
 
 {% block title %}
-    {% if object %}Editar Usuário{% else %}Novo Usuário{% endif %} - Move Marias
+    {% if form.instance.pk %}Editar Usuário{% else %}Novo Usuário{% endif %} - Move Marias
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Enhanced Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body text-white p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-4">
-                                <i class="fas fa-{% if object %}user-edit{% else %}user-plus{% endif %} fa-2x text-white"></i>
-                            </div>
-                            <div>
-                                <h1 class="h2 mb-1 fw-bold">
-                                    {% if object %}Editar Usuário{% else %}Novo Usuário{% endif %}
-                                </h1>
-                                <p class="mb-0 opacity-90">
-                                    {% if object %}
-                                        Atualize as informações do usuário {{ object.full_name }}
-                                    {% else %}
-                                        Preencha os dados para criar um novo usuário no sistema
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                        <a href="{% url 'users:user_list' %}" class="btn btn-outline-light btn-lg d-flex align-items-center gap-2 shadow-sm px-4 py-2 rounded-pill border-0" style="background:rgba(255,255,255,0.15); transition: background 0.2s;">
-                            <i class="fas fa-arrow-left"></i>
-                            <span class="fw-semibold" style="font-size:1.1rem;">Voltar para Lista de Usuários</span>
-                        </a>
-                    </div>
+<div class="dashboard-container-optimized">
+<!-- Skip to main content -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50">
+        Pular para o conteúdo principal
+    </a>
+
+    <!-- Header -->
+    <header class="section-spacing-lg">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'users:user-list' %}" 
+                   class="text-purple-600 hover:text-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
+                   aria-label="Voltar para lista de usuários">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900" id="page-title">
+                        {% if form.instance.pk %}
+                            Editar Usuário
+                        {% else %}
+                            Novo Usuário
+                        {% endif %}
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-600" id="page-description">
+                        {% if form.instance.pk %}
+                            Altere as informações do usuário {{ form.instance.full_name }}
+                        {% else %}
+                            Preencha os dados para criar um novo usuário
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>
-    </div>
+    </header>
 
-    <!-- Form Card -->
-    <div class="row">
-        <div class="col-lg-8 col-xl-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 p-4">
-                    <h5 class="card-title mb-0 d-flex align-items-center">
-                        <div class="bg-primary bg-gradient rounded-circle p-2 me-3">
-                            <i class="fas fa-user text-white"></i>
-                        </div>
-                        <span>Dados do Usuário</span>
-                    </h5>
+    <main id="main-content" tabindex="-1">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h2 class="text-lg leading-6 font-medium text-gray-900" id="form-title">
+                    {% if form.instance.pk %}Informações do Usuário{% else %}Dados do Novo Usuário{% endif %}
+                </h2>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                Preencha todos os campos obrigatórios marcados com *.
+            </p>
+        </div>
+        
+        <div class="border-t border-gray-200">
+            <form method="post" class="space-y-6 p-6" 
+                  data-validation-form="true" 
+                  data-loading-form="true"
+                  id="main-content"
+                  role="main"
+                  novalidate>
+                {% csrf_token %}
+                
+                <!-- Error Summary for Accessibility -->
+                <div id="error-summary" class="hidden" role="alert" aria-live="assertive">
+                    <h3 class="text-red-800 font-semibold mb-2">Corrija os seguintes erros:</h3>
+                    <ul class="text-red-700 list-disc list-inside"></ul>
                 </div>
-                <div class="card-body p-4">
-                    <form method="post" novalidate id="userForm">
-                        {% csrf_token %}
+                
+                <!-- Mensagens de erro gerais -->
+                {% if form.non_field_errors %}
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="grid-optimized grid-optimized-2">
+                    <!-- Informações Básicas -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">Informações Básicas</h4>
                         
-                        <!-- Progress Indicator -->
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between text-muted small mb-2">
-                                <span>Progresso do Cadastro</span>
-                                <span id="progressText">0% completo</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-primary" role="progressbar" id="progressBar" style="width: 0%"></div>
-                            </div>
+                        <div>
+                            <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Nome Completo *
+                            </label>
+                            {{ form.full_name|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.full_name.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+                            {% endif %}
                         </div>
+
+                        <div>
+                            <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                E-mail *
+                            </label>
+                            {{ form.email|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.email.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Nome de Usuário *
+                            </label>
+                            {{ form.username|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.username.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-sm text-gray-500">Nome único para login no sistema</p>
+                        </div>
+
+                        {% if not form.instance.pk %}
+                        <div>
+                            <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Senha *
+                            </label>
+                            {{ form.password1|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.password1.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Confirmar Senha *
+                            </label>
+                            {{ form.password2|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.password2.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Configurações de Acesso -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-medium text-gray-900 border-b border-gray-200 pb-2">Configurações de Acesso</h4>
                         
-                        <!-- Personal Information -->
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-id-card me-1"></i>
-                                    Informações Pessoais
-                                </h6>
-                            </div>
+                        <div>
+                            <label for="{{ form.role.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Função *
+                            </label>
+                            {{ form.role|add_class:"mt-1 focus:ring-purple-500 focus:border-purple-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" }}
+                            {% if form.role.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.role.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-sm text-gray-500">Define o nível de acesso do usuário</p>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.full_name|as_crispy_field }}
+                        {% if form.groups %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Grupos</label>
+                            <div class="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded-md p-3">
+                                {% for group in form.groups %}
+                                <div class="flex-center">
+                                    {{ group.tag }}
+                                    <label for="{{ group.id_for_label }}" class="ml-2 text-sm text-gray-700">
+                                        {{ group.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
                             </div>
-                            <div class="col-md-6">
-                                {{ form.email|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.username|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.phone|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        <!-- Access Information -->
-                        <div class="row mb-3 mt-4">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-key me-1"></i>
-                                    Informações de Acesso
-                                </h6>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.role|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.department|as_crispy_field }}
-                            </div>
-                        </div>
-
-                        {% if not object %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                {{ form.password1|as_crispy_field }}
-                            </div>
-                            <div class="col-md-6">
-                                {{ form.password2|as_crispy_field }}
-                            </div>
+                            {% if form.groups.errors %}
+                                <p class="mt-1 text-sm text-red-600">{{ form.groups.errors.0 }}</p>
+                            {% endif %}
                         </div>
                         {% endif %}
 
-                        <!-- Permissions -->
-                        <div class="row mb-3 mt-4">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-shield-alt me-1"></i>
-                                    Permissões
-                                </h6>
+                        <div class="space-y-3">
+                            <div class="flex-center">
+                                {{ form.is_active|add_class:"focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded" }}
+                                <label for="{{ form.is_active.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                    Usuário ativo
+                                </label>
                             </div>
-                        </div>
+                            
+                            <div class="flex-center">
+                                {{ form.is_staff|add_class:"focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded" }}
+                                <label for="{{ form.is_staff.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                    Acesso ao painel administrativo
+                                </label>
+                            </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.is_active }}
-                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
-                                        <i class="fas fa-check-circle text-success me-1"></i>
-                                        Usuário Ativo
-                                    </label>
-                                </div>
+                            {% if form.is_superuser %}
+                            <div class="flex-center">
+                                {{ form.is_superuser|add_class:"focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded" }}
+                                <label for="{{ form.is_superuser.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                    Super usuário (acesso total)
+                                </label>
                             </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.is_staff }}
-                                    <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
-                                        <i class="fas fa-user-cog text-warning me-1"></i>
-                                        Acesso ao Admin
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    {{ form.is_superuser }}
-                                    <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
-                                        <i class="fas fa-crown text-danger me-1"></i>
-                                        Super Usuário
-                                    </label>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
-
-                        <!-- Enhanced Actions Section -->
-                        <div class="row mt-5">
-                            <div class="col-12">
-                                <!-- Action Card with Gradient Background -->
-                                <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
-                                    <div class="card-body p-4">
-                                        <!-- Header Section -->
-                                        <div class="d-flex align-items-center mb-4">
-                                            <div class="bg-primary bg-gradient rounded-circle p-3 me-3">
-                                                <i class="fas fa-{% if object %}save{% else %}rocket{% endif %} fa-lg text-white"></i>
-                                            </div>
-                                            <div>
-                                                <h5 class="mb-1 text-primary fw-bold">
-                                                    {% if object %}
-                                                        Atualizar Usuário
-                                                    {% else %}
-                                                        Finalizar Novo Cadastro
-                                                    {% endif %}
-                                                </h5>
-                                                <p class="mb-0 text-muted">
-                                                    {% if object %}
-                                                        Confirme as alterações realizadas no perfil do usuário
-                                                    {% else %}
-                                                        Revise os dados e confirme a criação do novo usuário
-                                                    {% endif %}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Progress Indicator -->
-                                        <div class="mb-4">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <small class="text-muted fw-semibold">
-                                                    <i class="fas fa-tasks me-1"></i>
-                                                    Progresso do Formulário
-                                                </small>
-                                                <small class="text-primary fw-bold">
-                                                    <span id="progressText">0% completo</span>
-                                                </small>
-                                            </div>
-                                            <div class="progress shadow-sm" style="height: 10px; border-radius: 10px;">
-                                                <div class="progress-bar bg-gradient progress-bar-striped progress-bar-animated" 
-                                                     id="progressBar" 
-                                                     style="width: 0%; border-radius: 10px;"
-                                                     role="progressbar"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Action Buttons -->
-                                        <div class="d-flex flex-column flex-md-row gap-3 align-items-stretch">
-                                            <!-- Cancel Button -->
-                                            <button type="button" 
-                                                    class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center"
-                                                    onclick="if(confirm('Tem certeza que deseja cancelar? {% if not object %}Todos os dados serão perdidos.{% else %}As alterações não serão salvas.{% endif %}')) window.location.href='{% url 'users:user_list' %}'">
-                                                <i class="fas fa-times me-2"></i>
-                                                Cancelar
-                                            </button>
-                                            
-                                            <!-- Primary Submit Button -->
-                                            <button type="submit" 
-                                                    class="btn btn-{% if object %}warning{% else %}success{% endif %} btn-lg shadow-lg flex-fill d-flex align-items-center justify-content-center position-relative"
-                                                    style="min-height: 60px; font-weight: 600; letter-spacing: 0.5px; border-radius: 12px;">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
-                                                        <i class="fas fa-{% if object %}save{% else %}check-circle{% endif %} fa-lg text-white"></i>
-                                                    </div>
-                                                    <div class="text-start">
-                                                        <div class="fs-5 mb-0">
-                                                            {% if object %}
-                                                                Salvar Alterações
-                                                            {% else %}
-                                                                ✨ Finalizar Cadastro
-                                                            {% endif %}
-                                                        </div>
-                                                        <small class="opacity-90 d-block">
-                                                            {% if object %}
-                                                                Confirmar atualizações
-                                                            {% else %}
-                                                                Criar novo usuário
-                                                            {% endif %}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Success Animation Effect -->
-                                                <div class="position-absolute top-0 start-0 w-100 h-100 rounded-3 bg-white opacity-0 pointer-events-none" 
-                                                     id="submitPulse" 
-                                                     style="border-radius: 12px; transition: opacity 0.3s ease;"></div>
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Additional Info -->
-                                        <div class="mt-3 p-3 bg-light bg-opacity-50 rounded-3">
-                                            <div class="d-flex align-items-center text-muted">
-                                                <i class="fas fa-info-circle me-2"></i>
-                                                <small>
-                                                    {% if object %}
-                                                        As alterações entrarão em vigor imediatamente após salvar.
-                                                    {% else %}
-                                                        O usuário receberá um email com as credenciais de acesso.
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Enhanced Help Card -->
-        <div class="col-lg-4 col-xl-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 p-4">
-                    <h6 class="card-title mb-0 d-flex align-items-center">
-                        <div class="bg-info bg-gradient rounded-circle p-2 me-3">
-                            <i class="fas fa-info-circle text-white"></i>
-                        </div>
-                        <span>Guia de Preenchimento</span>
-                    </h6>
+                <!-- Botões de Ação -->
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="flex justify-end space-x-3">
+                        <a href="{% url 'users:user-list' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                            Cancelar
+                        </a>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                            {% if form.instance.pk %}
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.5 12.75l6 6 9-13.5"></path>
+                                </svg>
+                                Atualizar Usuário
+                            {% else %}
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Criar Usuário
+                            {% endif %}
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <div class="mb-4">
-                        <h6 class="text-primary d-flex align-items-center mb-3">
-                            <i class="fas fa-users me-2"></i>
-                            Funções do Sistema
-                        </h6>
-                        <div class="list-group list-group-flush">
-                            <div class="list-group-item border-0 px-0 py-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-danger me-2">Admin</span>
-                                    <small>Acesso total ao sistema</small>
-                                </div>
-                            </div>
-                            <div class="list-group-item border-0 px-0 py-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-warning me-2">Coord.</span>
-                                    <small>Gestão de equipes e relatórios</small>
-                                </div>
-                            </div>
-                            <div class="list-group-item border-0 px-0 py-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-success me-2">Técnico</span>
-                                    <small>Atendimento direto aos beneficiários</small>
-                                </div>
-                            </div>
-                            <div class="list-group-item border-0 px-0 py-2">
-                                <div class="d-flex align-items-center">
-                                    <span class="badge bg-info me-2">Assist.</span>
-                                    <small>Suporte administrativo</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <h6 class="text-primary d-flex align-items-center mb-3">
-                            <i class="fas fa-shield-alt me-2"></i>
-                            Permissões Especiais
-                        </h6>
-                        <div class="bg-light rounded-3 p-3">
-                            <div class="small">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span><strong>Usuário Ativo:</strong> Pode acessar o sistema</span>
-                                </div>
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-cog text-warning me-2"></i>
-                                    <span><strong>Acesso Admin:</strong> Painel administrativo</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-crown text-danger me-2"></i>
-                                    <span><strong>Super Usuário:</strong> Permissões totais</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% if not object %}
-                    <div class="alert alert-primary border-0 shadow-sm">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-lightbulb text-primary me-2 mt-1"></i>
-                            <div>
-                                <h6 class="alert-heading mb-1">Dica Importante</h6>
-                                <small class="mb-0">A senha inicial pode ser alterada pelo usuário no primeiro acesso ao sistema.</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if object %}
-                    <div class="alert alert-warning border-0 shadow-sm">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
-                            <div>
-                                <h6 class="alert-heading mb-1">Atenção</h6>
-                                <small class="mb-0">Alterações nas permissões entrarão em vigor no próximo login do usuário.</small>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('userForm');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const submitPulse = document.getElementById('submitPulse');
-    
-    // Lista de campos obrigatórios
-    const requiredFields = ['id_full_name', 'id_email', 'id_username', 'id_role'];
-    {% if not object %}
-    requiredFields.push('id_password1', 'id_password2');
-    {% endif %}
-    
-    // Função para calcular o progresso
-    function updateProgress() {
-        let filledFields = 0;
-        
-        requiredFields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field && field.value.trim() !== '') {
-                filledFields++;
-            }
-        });
-        
-        const progress = Math.round((filledFields / requiredFields.length) * 100);
-        progressBar.style.width = progress + '%';
-        progressText.textContent = progress + '% completo';
-        
-        // Atualizar cor e animação da barra de progresso
-        progressBar.className = 'progress-bar bg-gradient progress-bar-striped progress-bar-animated';
-        if (progress < 30) {
-            progressBar.classList.add('bg-danger');
-        } else if (progress < 70) {
-            progressBar.classList.add('bg-warning');
-        } else {
-            progressBar.classList.add('bg-success');
-        }
-        
-        // Atualizar estado do botão submit
-        updateSubmitButton(progress);
-    }
-    
-    function updateSubmitButton(progress) {
-        const iconClass = '{% if object %}save{% else %}check-circle{% endif %}';
-        const buttonText = '{% if object %}Salvar Alterações{% else %}✨ Finalizar Cadastro{% endif %}';
-        const subText = '{% if object %}Confirmar atualizações{% else %}Criar novo usuário{% endif %}';
-        
-        if (progress === 100) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('btn-secondary');
-            submitBtn.classList.add('btn-{% if object %}warning{% else %}success{% endif %}');
-            submitBtn.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
-                        <i class="fas fa-${iconClass} fa-lg text-white"></i>
-                    </div>
-                    <div class="text-start">
-                        <div class="fs-5 mb-0">${buttonText}</div>
-                        <small class="opacity-90 d-block">${subText}</small>
-                    </div>
-                </div>
-            `;
-            
-            // Efeito de pulso quando habilitado
-            if (submitPulse) {
-                submitPulse.style.opacity = '0.2';
-                setTimeout(() => {
-                    if (submitPulse) submitPulse.style.opacity = '0';
-                }, 300);
-            }
-        } else {
-            submitBtn.disabled = true;
-            submitBtn.classList.remove('btn-success', 'btn-warning');
-            submitBtn.classList.add('btn-secondary');
-            submitBtn.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
-                        <i class="fas fa-hourglass-half fa-lg text-white"></i>
-                    </div>
-                    <div class="text-start">
-                        <div class="fs-5 mb-0">Complete os Campos</div>
-                        <small class="opacity-90 d-block">${progress}% preenchido</small>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    // Adicionar listeners aos campos
-    requiredFields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-            field.addEventListener('input', updateProgress);
-            field.addEventListener('change', updateProgress);
-            
-            // Efeito visual ao focar no campo
-            field.addEventListener('focus', function() {
-                this.parentNode.style.transform = 'scale(1.02)';
-                this.parentNode.style.transition = 'transform 0.2s ease';
-            });
-            
-            field.addEventListener('blur', function() {
-                this.parentNode.style.transform = 'scale(1)';
-            });
-        }
-    });
-    
-    // Validação em tempo real de email
-    const emailField = document.getElementById('id_email');
-    if (emailField) {
-        emailField.addEventListener('blur', function() {
-            const email = this.value;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
-            if (email && !emailRegex.test(email)) {
-                this.classList.add('is-invalid');
-                
-                if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('invalid-feedback')) {
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback';
-                    feedback.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Por favor, insira um email válido.';
-                    this.parentNode.appendChild(feedback);
-                }
-            } else {
-                this.classList.remove('is-invalid');
-                const feedback = this.parentNode.querySelector('.invalid-feedback');
-                if (feedback) {
-                    feedback.remove();
-                }
-            }
-        });
-    }
-    
-    // Validação de confirmação de senha
-    {% if not object %}
-    const password1 = document.getElementById('id_password1');
-    const password2 = document.getElementById('id_password2');
-    
-    if (password1 && password2) {
-        function validatePasswords() {
-            if (password2.value && password1.value !== password2.value) {
-                password2.classList.add('is-invalid');
-                
-                if (!password2.nextElementSibling || !password2.nextElementSibling.classList.contains('invalid-feedback')) {
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback';
-                    feedback.innerHTML = '<i class="fas fa-times-circle me-1"></i>As senhas não coincidem.';
-                    password2.parentNode.appendChild(feedback);
-                }
-            } else {
-                password2.classList.remove('is-invalid');
-                const feedback = password2.parentNode.querySelector('.invalid-feedback');
-                if (feedback) {
-                    feedback.remove();
-                }
-            }
-        }
-        
-        password2.addEventListener('input', validatePasswords);
-        password1.addEventListener('input', validatePasswords);
-    }
-    {% endif %}
-    
-    // Calcular progresso inicial
-    updateProgress();
-    
-    // Animação de submit melhorada
-    form.addEventListener('submit', function(e) {
-        if (submitBtn.disabled) {
-            e.preventDefault();
-            return;
-        }
-        
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-            <div class="d-flex align-items-center">
-                <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
-                    <i class="fas fa-spinner fa-spin fa-lg text-white"></i>
-                </div>
-                <div class="text-start">
-                    <div class="fs-5 mb-0">Processando...</div>
-                    <small class="opacity-90 d-block">{% if object %}Salvando alterações{% else %}Criando usuário{% endif %}</small>
-                </div>
-            </div>
-        `;
-        
-        // Efeito visual de success
-        if (submitPulse) {
-            submitPulse.style.opacity = '0.3';
-            submitPulse.style.animation = 'pulse 1s infinite';
-        }
-    });
-    
-    // Adicionar CSS personalizado para animações
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.1; transform: scale(1.05); }
-            100% { opacity: 0.3; transform: scale(1); }
-        }
-        
-        .form-control:focus {
-            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
-            border-color: #667eea;
-        }
-        
-        .btn:disabled {
-            opacity: 0.7;
-            transform: none !important;
-        }
-        
-        .progress-bar-animated {
-            animation: progress-bar-stripes 1s linear infinite;
-        }
-        
-        @keyframes progress-bar-stripes {
-            0% { background-position: 1rem 0; }
-            100% { background-position: 0 0; }
-        }
-    `;
-    document.head.appendChild(style);
-});
-</script>
+</div>
 {% endblock %}

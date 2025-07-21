@@ -1,0 +1,343 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Relatórios Gerais - Move Marias{% endblock %}
+
+{% block page_title %}Relatórios Gerais{% endblock %}
+
+{% block page_description %}
+    Visualize relatórios e estatísticas consolidadas do sistema Move Marias
+{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="space-y-8">
+    <!-- Estatísticas Resumidas -->
+    <div class="grid-optimized grid-optimized-4">
+        <!-- Beneficiárias -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-5">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Total de Beneficiárias
+                            </dt>
+                            <dd class="text-2xl font-semibold text-gray-900">
+                                {{ stats.beneficiaries.total }}
+                            </dd>
+                            <dd class="text-sm text-green-600">
+                                +{{ stats.beneficiaries.new_last_30_days }} nos últimos 30 dias
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projetos -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-5">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-project-diagram text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Projetos Ativos
+                            </dt>
+                            <dd class="text-2xl font-semibold text-gray-900">
+                                {{ stats.projects.total }}
+                            </dd>
+                            <dd class="text-sm text-blue-600">
+                                {{ stats.projects.active_enrollments }} matrículas ativas
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workshops -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-5">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Workshops
+                            </dt>
+                            <dd class="text-2xl font-semibold text-gray-900">
+                                {{ stats.workshops.total }}
+                            </dd>
+                            <dd class="text-sm text-indigo-600">
+                                {{ stats.workshops.active }} ativos, {{ stats.workshops.completed }} concluídos
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evoluções -->
+        <div class="bg-white overflow-hidden shadow-sm rounded-lg border border-gray-200">
+            <div class="p-5">
+                <div class="flex-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-chart-line text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">
+                                Registros de Evolução
+                            </dt>
+                            <dd class="text-2xl font-semibold text-gray-900">
+                                {{ stats.evolution.total_records }}
+                            </dd>
+                            <dd class="text-sm text-green-600">
+                                {{ stats.evolution.last_30_days }} nos últimos 30 dias
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos e Relatórios Detalhados -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Gráfico de Beneficiárias por Mês -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Cadastro de Beneficiárias (Últimos 6 Meses)
+                </h3>
+            </div>
+            <div class="p-6">
+                <canvas id="beneficiariesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Gráfico de Status dos Workshops -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Status dos Workshops
+                </h3>
+            </div>
+            <div class="p-6">
+                <canvas id="workshopsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Bairros -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Beneficiárias por Bairro (Top 10)
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for item in stats.beneficiaries.by_neighborhood %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex-center">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium text-gray-900">
+                                {{ item.neighbourhood|default:"Não informado" }}
+                            </span>
+                        </div>
+                        <span class="text-sm text-gray-600">{{ item.count }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-sm text-gray-500 text-center py-4">
+                        Nenhum dado disponível
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Taxa de Conclusão de Anamneses -->
+        <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">
+                    Anamneses Sociais
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-900">Total</span>
+                        <span class="text-2xl font-bold text-gray-900">{{ stats.anamnesis.total }}</span>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Concluídas</span>
+                            <span class="text-sm font-medium text-green-600">{{ stats.anamnesis.completed }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Pendentes</span>
+                            <span class="text-sm font-medium text-orange-600">{{ stats.anamnesis.pending }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-gray-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-900">Taxa de Conclusão</span>
+                            <span class="text-sm font-bold text-blue-600">{{ stats.anamnesis.completion_rate|floatformat:1 }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ stats.anamnesis.completion_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projetos mais Populares -->
+    <div class="bg-white shadow-sm rounded-lg border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">
+                Projetos com Mais Matrículas
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for project in stats.projects.by_project %}
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">{{ project.name }}</h4>
+                    <p class="text-sm text-gray-600 mb-2">{{ project.description|truncatechars:80 }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Matrículas:</span>
+                        <span class="font-bold text-purple-600">{{ project.enrollment_count }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-8">
+                    <p class="text-gray-500">Nenhum projeto encontrado</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Atualização -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-400"></i>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-blue-700">
+                    <strong>Última atualização:</strong> {{ last_updated|date:"d/m/Y H:i" }}
+                </p>
+                <p class="text-xs text-blue-600 mt-1">
+                    Os dados são atualizados em tempo real conforme as atividades do sistema.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurações comuns dos gráficos
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+    
+    // Gráfico de Beneficiárias por Mês
+    const beneficiariesCtx = document.getElementById('beneficiariesChart').getContext('2d');
+    new Chart(beneficiariesCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for item in chart_data.beneficiaries_by_month %}'{{ item.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Novas Beneficiárias',
+                data: [{% for item in chart_data.beneficiaries_by_month %}{{ item.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // Gráfico de Status dos Workshops
+    const workshopsCtx = document.getElementById('workshopsChart').getContext('2d');
+    new Chart(workshopsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ chart_data.workshops_by_status.labels|safe }},
+            datasets: [{
+                data: {{ chart_data.workshops_by_status.data|safe }},
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(59, 130, 246)',
+                    'rgb(239, 68, 68)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

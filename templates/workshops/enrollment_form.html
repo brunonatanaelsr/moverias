@@ -1,14 +1,53 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}
     {% if object %}Editar Matrícula{% else %}Nova Matrícula{% endif %} - Oficinas
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8">
+    <div class="section-spacing-lg">
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Inscrever Participante</h1>
@@ -61,7 +100,7 @@
                 </div>
 
                 <!-- Search beneficiárias -->
-                <div class="mt-4">
+                <div class="section-spacing-sm">
                     <input type="text" 
                            id="search-beneficiary" 
                            placeholder="Digite para buscar por nome ou CPF..."
@@ -106,4 +145,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+</div>
 {% endblock %}

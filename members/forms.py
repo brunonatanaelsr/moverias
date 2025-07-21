@@ -1,7 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from core.validators import validate_cpf, validate_phone, validate_rg, validate_full_name, sanitize_input
-from core.forms import SecureCPFField, SecurePhoneField
 from .models import Beneficiary
 import re
 
@@ -16,7 +15,9 @@ class BeneficiaryForm(forms.ModelForm):
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Nome completo da beneficiária'
+                'placeholder': 'Nome completo da beneficiária',
+                'data-validate': 'name',
+                'data-required': 'true'
             }),
             'dob': forms.DateInput(attrs={
                 'class': 'form-control',
@@ -28,11 +29,14 @@ class BeneficiaryForm(forms.ModelForm):
             }),
             'phone_1': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '(11) 99999-9999'
+                'placeholder': '(11) 99999-9999',
+                'data-validate': 'phone',
+                'data-required': 'true'
             }),
             'phone_2': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '(11) 99999-9999'
+                'placeholder': '(11) 99999-9999',
+                'data-validate': 'phone'
             }),
             'rg': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -40,7 +44,9 @@ class BeneficiaryForm(forms.ModelForm):
             }),
             'cpf': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': '000.000.000-00'
+                'placeholder': '000.000.000-00',
+                'data-validate': 'cpf',
+                'data-check-uniqueness': 'true'
             }),
             'address': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -74,10 +80,15 @@ class BeneficiaryForm(forms.ModelForm):
             if not validate_cpf(cpf_digits):
                 raise ValidationError('CPF inválido. Verifique os dígitos informados.')
             
-            # Verificar se CPF já existe no sistema
-            existing = Beneficiary.objects.filter(cpf=cpf_digits).exclude(pk=self.instance.pk if self.instance else None)
-            if existing.exists():
-                raise ValidationError('Este CPF já está cadastrado no sistema.')
+            # Verificar se CPF já existe no sistema (campos criptografados requerem verificação manual)
+            all_beneficiaries = Beneficiary.objects.exclude(pk=self.instance.pk if self.instance else None)
+            for beneficiary in all_beneficiaries:
+                try:
+                    if beneficiary.cpf == cpf_digits:
+                        raise ValidationError('Este CPF já está cadastrado no sistema.')
+                except:
+                    # Se houver erro na descriptografia, continua
+                    continue
             
             return cpf_digits
         return cpf

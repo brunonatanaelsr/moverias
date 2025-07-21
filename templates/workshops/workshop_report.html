@@ -1,4 +1,4 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Relatório - {{ workshop.name }}{% endblock %}
 
@@ -11,10 +11,14 @@
 </style>
 {% endblock %}
 
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-7xl mx-auto">
     <!-- Header -->
     <div class="mb-8 no-print">
         <div class="flex items-center justify-between">
@@ -95,7 +99,7 @@
         </div>
 
         <!-- Objetivos -->
-        <div class="mb-8">
+        <div class="section-spacing-lg">
             <h3 class="text-lg font-medium text-gray-900 mb-4">Objetivos da Oficina</h3>
             <p class="text-sm text-gray-600 whitespace-pre-line">{{ workshop.objectives }}</p>
         </div>
@@ -212,5 +216,6 @@
             <p>Sistema Move Marias - Gestão de Beneficiárias</p>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

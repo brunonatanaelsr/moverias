@@ -1,63 +1,102 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load crispy_forms_tags %}
 
 {% block title %}Configuração de Email - Move Marias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
+<div class="dashboard-container-optimized">
+<!-- Header -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center">
                 <div>
                     <h1 class="h3 mb-0">
-                        <i class="fas fa-envelope text-primary me-2"></i>
+                        <i class="fas fa-envelope text-purple-move mr-2"></i>
                         Configuração de Email SMTP
                     </h1>
-                    <p class="text-muted mb-0">Configure o servidor SMTP para envio de emails do sistema</p>
+                    <p class="text-gray-600 mb-0">Configure o servidor SMTP para envio de emails do sistema</p>
                 </div>
-                <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i>
+                <a href="{% url 'dashboard:home' %}" class="mm-btn mm-btn-outline-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i>
                     Voltar ao Dashboard
                 </a>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="grid-optimized grid-optimized-2">
         <!-- Formulário de Configuração -->
         <div class="col-lg-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-cog me-2"></i>
+                <div class="mm-mm-card-header bg-purple-move text-white">
+                    <h5 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-cog mr-2"></i>
                         Configurações SMTP
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <form method="post" novalidate>
                         {% csrf_token %}
                         
                         <!-- Configurações Básicas -->
                         <div class="row mb-3">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-server me-1"></i>
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                <h6 class="text-gray-600 border-bottom pb-2 mb-3">
+                                    <i class="fas fa-server mr-1"></i>
                                     Configurações do Servidor
                                 </h6>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.email_backend|as_crispy_field }}
                             </div>
-                            <div class="col-md-6">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.email_host|as_crispy_field }}
                             </div>
                         </div>
 
-                        <div class="row">
+                        <div class="grid-optimized grid-optimized-2">
                             <div class="col-md-4">
                                 {{ form.email_port|as_crispy_field }}
                             </div>
@@ -65,7 +104,7 @@
                                 <div class="form-check mt-4">
                                     {{ form.email_use_tls }}
                                     <label class="form-check-label" for="{{ form.email_use_tls.id_for_label }}">
-                                        <i class="fas fa-shield-alt text-success me-1"></i>
+                                        <i class="fas fa-shield-alt text-green-600 mr-1"></i>
                                         Usar TLS (Recomendado)
                                     </label>
                                 </div>
@@ -74,7 +113,7 @@
                                 <div class="form-check mt-4">
                                     {{ form.email_use_ssl }}
                                     <label class="form-check-label" for="{{ form.email_use_ssl.id_for_label }}">
-                                        <i class="fas fa-lock text-warning me-1"></i>
+                                        <i class="fas fa-lock text-yellow-600 mr-1"></i>
                                         Usar SSL
                                     </label>
                                 </div>
@@ -83,71 +122,71 @@
 
                         <!-- Autenticação -->
                         <div class="row mb-3 mt-4">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-key me-1"></i>
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                <h6 class="text-gray-600 border-bottom pb-2 mb-3">
+                                    <i class="fas fa-key mr-1"></i>
                                     Autenticação
                                 </h6>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.email_host_user|as_crispy_field }}
                             </div>
-                            <div class="col-md-6">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.email_host_password|as_crispy_field }}
                             </div>
                         </div>
 
                         <!-- Emails de Sistema -->
                         <div class="row mb-3 mt-4">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-at me-1"></i>
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                <h6 class="text-gray-600 border-bottom pb-2 mb-3">
+                                    <i class="fas fa-at mr-1"></i>
                                     Emails do Sistema
                                 </h6>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.default_from_email|as_crispy_field }}
                             </div>
-                            <div class="col-md-6">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.server_email|as_crispy_field }}
                             </div>
                         </div>
 
                         <!-- Teste de Email -->
                         <div class="row mb-3 mt-4">
-                            <div class="col-12">
-                                <h6 class="text-muted border-bottom pb-2 mb-3">
-                                    <i class="fas fa-paper-plane me-1"></i>
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                <h6 class="text-gray-600 border-bottom pb-2 mb-3">
+                                    <i class="fas fa-paper-plane mr-1"></i>
                                     Teste de Envio
                                 </h6>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-12">
+                        <div class="grid-optimized grid-optimized-2">
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
                                 {{ form.test_email|as_crispy_field }}
-                                <small class="text-muted">
+                                <text-sm class="text-gray-600">
                                     Se preenchido, um email de teste será enviado após salvar as configurações.
-                                </small>
+                                </text-sm>
                             </div>
                         </div>
 
                         <!-- Botões de Ação -->
                         <div class="row mt-4">
-                            <div class="col-12">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <a href="{% url 'dashboard:home' %}" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i>
+                            <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                <div class="flex justify-end gap-2">
+                                    <a href="{% url 'dashboard:home' %}" class="btn-secondary">
+                                        <i class="fas fa-times mr-1"></i>
                                         Cancelar
                                     </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save mr-1"></i>
                                         Salvar Configurações
                                     </button>
                                 </div>
@@ -162,33 +201,33 @@
         <div class="col-lg-4">
             <!-- Status Atual -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-info text-white">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2"></i>
+                <div class="mm-mm-card-header bg-blue-600 text-white">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-info-circle mr-2"></i>
                         Status Atual
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <div class="mb-3">
-                        <label class="form-label text-muted">Backend Atual:</label>
+                        <label class="form-label text-gray-600">Backend Atual:</label>
                         <p class="mb-0">
                             {% if 'smtp' in current_backend %}
-                                <span class="badge bg-success">
-                                    <i class="fas fa-check-circle me-1"></i>SMTP Configurado
+                                <span class="mm-badge mm-badge-success">
+                                    <i class="fas fa-check-circle mr-1"></i>SMTP Configurado
                                 </span>
                             {% elif 'console' in current_backend %}
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-terminal me-1"></i>Console (Debug)
+                                <span class="mm-badge mm-badge-warning">
+                                    <i class="fas fa-terminal mr-1"></i>Console (Debug)
                                 </span>
                             {% else %}
-                                <span class="badge bg-secondary">
-                                    <i class="fas fa-question-circle me-1"></i>{{ current_backend }}
+                                <span class="mm-badge mm-badge-secondary">
+                                    <i class="fas fa-question-circle mr-1"></i>{{ current_backend }}
                                 </span>
                             {% endif %}
                         </p>
                     </div>
                     <div>
-                        <label class="form-label text-muted">Servidor:</label>
+                        <label class="form-label text-gray-600">Servidor:</label>
                         <p class="mb-0">{{ current_host }}</p>
                     </div>
                 </div>
@@ -196,19 +235,19 @@
 
             <!-- Provedores Comuns -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-envelope-open me-2"></i>
+                <div class="mm-mm-card-header bg-light">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-envelope-open mr-2"></i>
                         Provedores Comuns
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-padding-md">
                     <div class="mb-3">
-                        <h6 class="text-primary">
-                            <i class="fab fa-google me-1"></i>
+                        <h6 class="text-purple-move">
+                            <i class="fab fa-google mr-1"></i>
                             Gmail
                         </h6>
-                        <ul class="list-unstyled small">
+                        <ul class="list-unstyled text-sm">
                             <li><strong>Servidor:</strong> smtp.gmail.com</li>
                             <li><strong>Porta:</strong> 587</li>
                             <li><strong>TLS:</strong> Sim</li>
@@ -217,11 +256,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <h6 class="text-primary">
-                            <i class="fab fa-microsoft me-1"></i>
+                        <h6 class="text-purple-move">
+                            <i class="fab fa-microsoft mr-1"></i>
                             Outlook/Hotmail
                         </h6>
-                        <ul class="list-unstyled small">
+                        <ul class="list-unstyled text-sm">
                             <li><strong>Servidor:</strong> smtp-mail.outlook.com</li>
                             <li><strong>Porta:</strong> 587</li>
                             <li><strong>TLS:</strong> Sim</li>
@@ -229,11 +268,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <h6 class="text-primary">
-                            <i class="fas fa-paper-plane me-1"></i>
+                        <h6 class="text-purple-move">
+                            <i class="fas fa-paper-plane mr-1"></i>
                             SendGrid
                         </h6>
-                        <ul class="list-unstyled small">
+                        <ul class="list-unstyled text-sm">
                             <li><strong>Servidor:</strong> smtp.sendgrid.net</li>
                             <li><strong>Porta:</strong> 587</li>
                             <li><strong>Usuário:</strong> apikey</li>
@@ -245,25 +284,25 @@
 
             <!-- Dicas de Segurança -->
             <div class="card shadow-sm">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>
+                <div class="mm-mm-card-header bg-yellow-500 text-gray-900">
+                    <h6 class="mm-mm-card-title mb-0">
+                        <i class="fas fa-shield-alt mr-2"></i>
                         Dicas de Segurança
                     </h6>
                 </div>
-                <div class="card-body">
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-1"></i>
+                <div class="card-padding-md">
+                    <div class="alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
                         <strong>Gmail:</strong> Use senhas de aplicativo em vez da senha principal.
                     </div>
                     
-                    <div class="alert alert-info">
-                        <i class="fas fa-lightbulb me-1"></i>
+                    <div class="alert-info">
+                        <i class="fas fa-lightbulb mr-1"></i>
                         <strong>Produção:</strong> Considere usar serviços como SendGrid, Mailgun ou Amazon SES.
                     </div>
                     
-                    <div class="alert alert-success">
-                        <i class="fas fa-check me-1"></i>
+                    <div class="alert-success">
+                        <i class="fas fa-check mr-1"></i>
                         <strong>TLS:</strong> Sempre prefira TLS sobre conexões não criptografadas.
                     </div>
                 </div>
@@ -293,4 +332,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+</div>
 {% endblock %}

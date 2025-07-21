@@ -1,29 +1,69 @@
 \
-{% extends "dashboard_base.html" %}
+{% extends "base_optimized.html" %}
 {% load static %}
 {% load crispy_forms_tags %}
 
 {% block title %}Lista de Projetos{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="mb-8">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">Projetos</h1>
-            <p class="mt-2 text-sm text-gray-600">
-                Gerencie os projetos disponíveis para matrículas
-            </p>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📊</div>
+            <div class="dashboard-header-text">
+                <h1>Projetos</h1>
+                <p>Gerencie projetos e matrículas</p>
+            </div>
         </div>
-        <a href="{% url 'projects:project-create' %}" 
-           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-700">
-            <i class="fas fa-plus mr-2"></i> Novo Projeto
-        </a>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
     </div>
-</div>
 
 <!-- Filtros -->
-<div class="mb-6">
-    <form method="get" class="bg-white shadow rounded-lg p-6">
+<div class="section-spacing-md">
+    <form method="get" class="card-optimized card-padding-md">
         <div class="flex items-center space-x-4">
             <div class="flex-1">
                 <input type="text" 
@@ -49,7 +89,7 @@
             <div class="px-4 py-4 sm:px-6 hover:bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
-                        <div class="flex items-center">
+                        <div class="flex-center">
                             <div class="flex-shrink-0">
                                 <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
                                     <span class="text-white font-bold text-sm">📁</span>
@@ -94,4 +134,5 @@
     </p>
 </div>
 {% endif %}
+</div>
 {% endblock %}

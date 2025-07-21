@@ -19,7 +19,7 @@
 <!-- Breadcrumb item template -->
 <template id="breadcrumb-item-template">
     <li>
-        <div class="flex items-center">
+        <div class="flex-center">
             <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
             <a href="#" class="text-sm font-medium text-gray-700 hover:text-purple-move transition-colors focus:outline-none focus:text-purple-move">
                 Item
@@ -31,7 +31,7 @@
 <!-- Current page breadcrumb template -->
 <template id="breadcrumb-current-template">
     <li aria-current="page">
-        <div class="flex items-center">
+        <div class="flex-center">
             <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
             <span class="text-sm font-medium text-gray-500">
                 Current Page
@@ -152,7 +152,7 @@
             margin-bottom: 4px;
         }
         
-        /* Hide intermediate breadcrumbs on small screens */
+        /* Hide intermediate breadcrumbs on text-sm screens */
         nav[aria-label="Breadcrumb"] li:not(:first-child):not(:last-child) {
             display: none;
         }

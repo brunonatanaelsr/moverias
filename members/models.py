@@ -19,6 +19,7 @@ class Beneficiary(models.Model):
     ]
     
     full_name = models.CharField('Nome Completo', max_length=120)
+    email = models.EmailField('Email', blank=True, null=True)
     dob = models.DateField('Data de Nascimento')
     nis = models.CharField('NIS', max_length=15, blank=True, null=True)
     phone_1 = models.CharField('Telefone 1', max_length=20)

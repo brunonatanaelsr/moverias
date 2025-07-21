@@ -1,8 +1,48 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% block title %}Relatório da Beneficiária - {{ beneficiary.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-5xl mx-auto">
-    <div class="mb-8 flex items-center justify-between">
+<div class="dashboard-container-optimized">
+<div class="mb-8 flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900">Relatório da Beneficiária</h1>
         <a href="{% url 'members:beneficiary-list' %}" class="text-gray-600 hover:text-gray-900 flex items-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +70,7 @@
         {% endif %}
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-4">Oficinas</h3>
             {% if workshop_enrollments %}
                 <ul class="space-y-2">
@@ -45,7 +85,7 @@
                 <p class="text-gray-500">Nenhuma oficina encontrada.</p>
             {% endif %}
         </div>
-        <div class="bg-white shadow rounded-lg p-6">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
             <h3 class="text-lg font-semibold mb-4">Projetos</h3>
             {% if project_enrollments %}
                 <ul class="space-y-2">
@@ -85,5 +125,6 @@
             <!-- Adicione mais insights conforme necessário -->
         </ul>
     </div>
+</div>
 </div>
 {% endblock %}

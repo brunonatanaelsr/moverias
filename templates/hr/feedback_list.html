@@ -1,0 +1,57 @@
+{% extends 'base_tailwind.html' %}
+{% block title %}Feedbacks | MoveMarias{% endblock %}
+{% block content %}
+<div class="mm-card mt-8 mx-auto max-w-3xl">
+    <div class="mm-mm-mm-card-header flex items-center justify-between">
+        <h2 class="text-xl font-bold text-purple-move">Feedbacks</h2>
+        <button class="mm-btn mm-btn-primary" onclick="showModal('Novo Feedback', document.getElementById('form-novo-feedback').outerHTML)"><i class="fas fa-plus mr-2"></i>Novo</button>
+    </div>
+    <div class="mm-mm-mm-card-body">
+        <table class="mm-table">
+            <thead class="mm-table-header">
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Data</th>
+                    <th>Tipo</th>
+                    <th>Mensagem</th>
+                    <th class="text-right">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="mm-table-body">
+                {% for feedback in feedbacks %}
+                <tr>
+                    <td>{{ feedback.funcionario }}</td>
+                    <td>{{ feedback.data }}</td>
+                    <td>{{ feedback.tipo }}</td>
+                    <td>{{ feedback.mensagem|truncatechars:40 }}</td>
+                    <td class="text-right">
+                        <button class="mm-btn mm-btn-info mm-mm-mm-btn-sm" onclick="showModal('Editar Feedback', 'Funcionalidade em desenvolvimento')"><i class="fas fa-edit"></i></button>
+                        <button class="mm-btn mm-btn-danger mm-mm-mm-btn-sm" onclick="showModal('Excluir Feedback', 'Funcionalidade em desenvolvimento')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center text-gray-400">Nenhum feedback cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Novo Feedback (oculto) -->
+<form id="form-novo-feedback" class="hidden mm-form-group" method="post">
+    {% csrf_token %}
+    <label class="mm-form-label">Funcionário</label>
+    <select name="funcionario" class="mm-form-select" required>
+        {% for funcionario in funcionarios %}
+        <option value="{{ funcionario.id }}">{{ funcionario.nome }}</option>
+        {% endfor %}
+    </select>
+    <label class="mm-form-label mt-2">Tipo</label>
+    <input type="text" name="tipo" class="mm-form-input" required>
+    <label class="mm-form-label mt-2">Mensagem</label>
+    <textarea name="mensagem" class="mm-form-textarea" required></textarea>
+    <div class="flex justify-end mt-4">
+        <button type="submit" class="mm-btn mm-btn-primary">Salvar</button>
+    </div>
+</form>
+{% endblock %}

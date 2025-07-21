@@ -1,268 +1,280 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required, user_passes_test
+"""
+Views para o módulo de projetos
+"""
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Q, Count, Avg
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from django.core.cache import cache
-from django.conf import settings
-from django.db.models import Q, Count
-from .models import Project, ProjectEnrollment
-from .forms import ProjectForm, ProjectEnrollmentForm
+from django.utils import timezone
+from django.db import transaction
+from django.core.exceptions import ValidationError
+
+from .models import Project, ProjectEnrollment, ProjectSession, ProjectAttendance, ProjectEvaluation, ProjectResource
+from .forms import ProjectForm, ProjectEnrollmentForm, ProjectSessionForm, ProjectEvaluationForm
 from members.models import Beneficiary
+from core.mixins import AuditMixin, AdminRequiredMixin, MessageMixin
+from core.unified_permissions import (
+    
+    get_user_permissions,
+    requires_technician,
+    requires_admin,
+    TechnicianRequiredMixin,
+    AdminRequiredMixin as UnifiedAdminRequiredMixin
+)
 
 
-def is_technician(user):
-    """Verifica se o usuário pertence ao grupo Técnica"""
-    return user.groups.filter(name='Tecnica').exists() or user.is_superuser
+@login_required
+@requires_technician
+def project_list(request):
+    """Lista de projetos com filtros e busca"""
+    query = request.GET.get('q', '')
+    status_filter = request.GET.get('status', '')
+    
+    projects = Project.objects.all().order_by('-created_at')
+    
+    if query:
+        projects = projects.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(coordinator__username__icontains=query)
+        )
+    
+    if status_filter:
+        projects = projects.filter(status=status_filter)
+    
+    # Paginação
+    paginator = Paginator(projects, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'query': query,
+        'status_filter': status_filter,
+        'status_choices': Project.STATUS_CHOICES,
+        'user_permissions': get_user_permissions(request.user),
+    }
+    
+    return render(request, 'projects/project_list.html', context)
 
 
-# CRUD Views for Project Model
+@login_required
+@requires_technician
+def project_detail(request, pk):
+    """Detalhes de um projeto"""
+    project = get_object_or_404(Project, pk=pk)
+    
+    # Estatísticas do projeto
+    stats = {
+        'total_enrollments': project.enrollments.count(),
+        'active_enrollments': project.enrollments.filter(status='active').count(),
+        'total_sessions': project.sessions.count(),
+        'avg_attendance': project.sessions.aggregate(
+            avg_attendance=Avg('attendances__count')
+        )['avg_attendance'] or 0,
+    }
+    
+    context = {
+        'project': project,
+        'stats': stats,
+        'user_permissions': get_user_permissions(request.user),
+    }
+    
+    return render(request, 'projects/project_detail.html', context)
 
-class ProjectListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    model = Project
-    template_name = 'projects/project_master_list.html'
-    context_object_name = 'projects'
-    paginate_by = 15
 
-    def test_func(self):
-        return is_technician(self.request.user)
-
-    def get_queryset(self):
-        queryset = Project.objects.all()
-        search = self.request.GET.get('search', '')
-        if search:
-            queryset = queryset.filter(name__icontains=search)
-        return queryset.order_by('name')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['search_query'] = self.request.GET.get('search', '')
-        return context
-
-
-class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ProjectCreateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
+    """View para criar projeto"""
     model = Project
     form_class = ProjectForm
     template_name = 'projects/project_form.html'
     success_url = reverse_lazy('projects:project-list')
-
-    def test_func(self):
-        return is_technician(self.request.user)
-
+    
     def form_valid(self, form):
-        messages.success(self.request, f'Projeto "{form.instance.name}" criado com sucesso!')
+        form.instance.coordinator = self.request.user
+        messages.success(self.request, 'Projeto criado com sucesso!')
         return super().form_valid(form)
 
 
-class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ProjectUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
+    """View para editar projeto"""
     model = Project
     form_class = ProjectForm
     template_name = 'projects/project_form.html'
-    success_url = reverse_lazy('projects:project-list')
-
-    def test_func(self):
-        return is_technician(self.request.user)
-
+    
+    def get_success_url(self):
+        return reverse_lazy('projects:project-detail', kwargs={'pk': self.object.pk})
+    
     def form_valid(self, form):
-        messages.success(self.request, f'Projeto "{form.instance.name}" atualizado com sucesso!')
+        messages.success(self.request, 'Projeto atualizado com sucesso!')
         return super().form_valid(form)
 
 
-class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Project
-    template_name = 'projects/project_confirm_delete.html'
-    success_url = reverse_lazy('projects:project-list')
+@login_required
+@requires_technician
+def project_enrollment_list(request, project_pk):
+    """Lista de inscrições de um projeto"""
+    project = get_object_or_404(Project, pk=project_pk)
+    enrollments = project.enrollments.all().order_by('-created_at')
+    
+    # Filtros
+    status_filter = request.GET.get('status', '')
+    if status_filter:
+        enrollments = enrollments.filter(status=status_filter)
+    
+    # Paginação
+    paginator = Paginator(enrollments, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'project': project,
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+        'user_permissions': get_user_permissions(request.user),
+    }
+    
+    return render(request, 'projects/enrollment_list.html', context)
 
-    def test_func(self):
-        return is_technician(self.request.user)
 
-    def delete(self, request, *args, **kwargs):
-        project = self.get_object()
-        if project.enrollments.exists():
-            messages.error(request, f'Não é possível excluir o projeto "{project.name}" pois existem matrículas associadas a ele.')
-            return redirect('projects:project-list')
-        
-        project_name = project.name
-        response = super().delete(request, *args, **kwargs)
-        messages.success(self.request, f'Projeto "{project_name}" excluído com sucesso!')
-        return response
-
-
-# CRUD Views for ProjectEnrollment Model
-
-class ProjectEnrollmentListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class ProjectEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
+    """View para criar matrícula em projeto"""
     model = ProjectEnrollment
-    template_name = 'projects/project_list.html'
-    context_object_name = 'enrollments'
-    paginate_by = 20
-    
-    def test_func(self):
-        return is_technician(self.request.user)
-    
-    def get_queryset(self):
-        search = self.request.GET.get('search', '')
-        project_filter = self.request.GET.get('project', '')
-        status = self.request.GET.get('status', '')
-        
-        cache_key = f"project_enrollments_list_{search}_{project_filter}_{status}"
-        queryset = cache.get(cache_key)
-        
-        if queryset is None:
-            queryset = ProjectEnrollment.objects.select_related('beneficiary', 'project')
-            
-            if search:
-                queryset = queryset.filter(
-                    Q(beneficiary__full_name__icontains=search) |
-                    Q(project__name__icontains=search)
-                )
-            
-            if project_filter:
-                queryset = queryset.filter(project_id=project_filter)
-            
-            if status:
-                queryset = queryset.filter(status=status)
-            
-            queryset = queryset.order_by('-created_at', 'project__name')
-            cache.set(cache_key, queryset, settings.CACHE_TIMEOUT['MEDIUM'])
-            
-        return queryset
+    form_class = ProjectEnrollmentForm
+    template_name = 'projects/enrollment_form.html'
+    success_url = reverse_lazy('projects:project-list')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['projects'] = Project.objects.all().order_by('name')
-        context['status_choices'] = ProjectEnrollment.STATUS_CHOICES
-        context['search_query'] = self.request.GET.get('search', '')
-        context['selected_project'] = self.request.GET.get('project', '')
-        context['selected_status'] = self.request.GET.get('status', '')
+        context['projects'] = Project.objects.filter(status='active')
         return context
+    
+    def form_valid(self, form):
+        form.instance.enrolled_by = self.request.user
+        messages.success(self.request, 'Matrícula criada com sucesso!')
+        return super().form_valid(form)
 
 
-class ProjectEnrollmentDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+class ProjectEnrollmentDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailView):
+    """Detalhes de uma matrícula em projeto"""
     model = ProjectEnrollment
-    template_name = 'projects/project_detail.html'
+    template_name = 'projects/enrollment_detail.html'
     context_object_name = 'enrollment'
     
-    def test_func(self):
-        return is_technician(self.request.user)
-    
-    def get_object(self, queryset=None):
-        pk = self.kwargs.get(self.pk_url_kwarg)
-        cache_key = f"project_enrollment_detail_{pk}"
-        enrollment = cache.get(cache_key)
-        
-        if enrollment is None:
-            enrollment = ProjectEnrollment.objects.select_related('beneficiary', 'project').get(pk=pk)
-            cache.set(cache_key, enrollment, settings.CACHE_TIMEOUT['MEDIUM'])
-        
-        return enrollment
-
-
-class ProjectEnrollmentCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    model = ProjectEnrollment
-    form_class = ProjectEnrollmentForm
-    template_name = 'projects/project_enrollment_form.html'
-    success_url = reverse_lazy('projects:enrollment-list')
-
-    def test_func(self):
-        return is_technician(self.request.user)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if not Project.objects.exists():
-            messages.warning(self.request, "Não existem projetos cadastrados. Crie um projeto antes de realizar matrículas.")
+        context['user_permissions'] = get_user_permissions(self.request.user)
         return context
 
-    def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} no projeto "{form.instance.project.name}" criada com sucesso!')
-        # Clear cache using pattern matching - production safe
-        self.clear_project_cache()
-        return response
-    
-    def clear_project_cache(self):
-        """Clear project-related cache entries in a production-safe way"""
-        try:
-            # Clear specific cache patterns
-            cache.delete_many([
-                'project_enrollments_list_',
-                'project_enrollments_list_active',
-                'project_enrollments_list_inactive',
-                'project_enrollments_list_pending'
-            ])
-        except Exception:
-            # Fallback: clear all cache if pattern deletion fails
-            cache.clear()
 
-
-class ProjectEnrollmentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ProjectEnrollmentUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
+    """Editar matrícula em projeto"""
     model = ProjectEnrollment
     form_class = ProjectEnrollmentForm
-    template_name = 'projects/project_enrollment_form.html'
-    success_url = reverse_lazy('projects:enrollment-list')
-
-    def test_func(self):
-        return is_technician(self.request.user)
-
-    def get_object(self, queryset=None):
-        pk = self.kwargs.get(self.pk_url_kwarg)
-        cache_key = f"project_enrollment_detail_{pk}"
-        enrollment = cache.get(cache_key)
-        if enrollment is None:
-            enrollment = ProjectEnrollment.objects.select_related('beneficiary', 'project').get(pk=pk)
-            cache.set(cache_key, enrollment, settings.CACHE_TIMEOUT['MEDIUM'])
-        return enrollment
-
+    template_name = 'projects/enrollment_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('projects:enrollment-detail', kwargs={'pk': self.object.pk})
+    
     def form_valid(self, form):
-        response = super().form_valid(form)
-        messages.success(self.request, f'Matrícula de {form.instance.beneficiary.full_name} no projeto "{form.instance.project.name}" atualizada com sucesso!')
-        cache.delete(f"project_enrollment_detail_{self.object.pk}")
-        self.clear_project_cache()
-        return response
-    
-    def clear_project_cache(self):
-        """Clear project-related cache entries in a production-safe way"""
-        try:
-            # Clear specific cache patterns
-            cache.delete_many([
-                'project_enrollments_list_',
-                'project_enrollments_list_active',
-                'project_enrollments_list_inactive',
-                'project_enrollments_list_pending'
-            ])
-        except Exception:
-            # Fallback: clear all cache if pattern deletion fails
-            cache.clear()
+        messages.success(self.request, 'Matrícula atualizada com sucesso!')
+        return super().form_valid(form)
 
 
-class ProjectEnrollmentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class ProjectEnrollmentDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+    """Excluir matrícula em projeto"""
     model = ProjectEnrollment
-    template_name = 'projects/project_confirm_delete.html'
+    template_name = 'projects/enrollment_confirm_delete.html'
     success_url = reverse_lazy('projects:enrollment-list')
-
-    def test_func(self):
-        return is_technician(self.request.user)
-
-    def delete(self, request, *args, **kwargs):
-        enrollment = self.get_object()
-        beneficiary_name = enrollment.beneficiary.full_name
-        project_name = enrollment.project.name
-
-        response = super().delete(request, *args, **kwargs)
-        messages.success(request, f'Matrícula de {beneficiary_name} no projeto "{project_name}" excluída com sucesso!')
-        self.clear_project_cache()
-        return response
     
-    def clear_project_cache(self):
-        """Clear project-related cache entries in a production-safe way"""
-        try:
-            # Clear specific cache patterns
-            cache.delete_many([
-                'project_enrollments_list_',
-                'project_enrollments_list_active',
-                'project_enrollments_list_inactive',
-                'project_enrollments_list_pending'
-            ])
-        except Exception:
-            # Fallback: clear all cache if pattern deletion fails
-            cache.clear()
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Matrícula excluída com sucesso!')
+        return super().delete(request, *args, **kwargs)
+
+
+# Manter a função original do projeto_enrollment_list com nova lógica
+@login_required
+@requires_technician
+def project_enrollment_list(request):
+    """Lista geral de matrículas em projetos"""
+    enrollments = ProjectEnrollment.objects.select_related(
+        'project', 'beneficiary', 'enrolled_by'
+    ).order_by('-created_at')
+    
+    # Filtros
+    project_filter = request.GET.get('project', '')
+    status_filter = request.GET.get('status', '')
+    search = request.GET.get('search', '')
+    
+    if project_filter:
+        enrollments = enrollments.filter(project_id=project_filter)
+    
+    if status_filter:
+        enrollments = enrollments.filter(status=status_filter)
+    
+    if search:
+        enrollments = enrollments.filter(
+            Q(beneficiary__full_name__icontains=search) |
+            Q(project__name__icontains=search)
+        )
+    
+    # Paginação
+    paginator = Paginator(enrollments, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'page_obj': page_obj,
+        'projects': Project.objects.all(),
+        'project_filter': project_filter,
+        'status_filter': status_filter,
+        'search': search,
+        'user_permissions': get_user_permissions(request.user),
+    }
+    
+    return render(request, 'projects/enrollment_list.html', context)
+
+
+@login_required
+@requires_admin
+def export_project_data(request, pk):
+    """Exporta dados do projeto em CSV"""
+    project = get_object_or_404(Project, pk=pk)
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="projeto_{project.id}_dados.csv"'
+    
+    import csv
+    writer = csv.writer(response)
+    
+    # Cabeçalho
+    writer.writerow([
+        'Beneficiária', 'Email', 'Telefone', 'Status', 
+        'Data Inscrição', 'Total Sessões', 'Total Presenças'
+    ])
+    
+    # Dados das inscrições
+    for enrollment in project.enrollments.all():
+        beneficiary = enrollment.beneficiary
+        total_sessions = project.sessions.count()
+        total_attendances = ProjectAttendance.objects.filter(
+            enrollment=enrollment,
+            present=True
+        ).count()
+        
+        writer.writerow([
+            beneficiary.full_name,
+            beneficiary.email,
+            beneficiary.phone_1,
+            enrollment.get_status_display(),
+            enrollment.created_at.strftime('%d/%m/%Y'),
+            total_sessions,
+            total_attendances,
+        ])
+    
+    return response

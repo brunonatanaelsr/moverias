@@ -4,22 +4,28 @@ from . import views
 app_name = 'users'
 
 urlpatterns = [
-    # Usuários
-    path('', views.UserListView.as_view(), name='user_list'),
-    path('create/', views.UserCreateView.as_view(), name='user_create'),
-    path('<int:pk>/', views.UserDetailView.as_view(), name='user_detail'),
-    path('<int:pk>/edit/', views.UserUpdateView.as_view(), name='user_update'),
-    path('<int:pk>/toggle-status/', views.user_toggle_status, name='user_toggle_status'),
+    # Gestão de usuários
+    path('', views.UserListView.as_view(), name='user-list'),
+    path('create/', views.UserCreateView.as_view(), name='user-create'),
+    path('<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('<int:pk>/edit/', views.UserUpdateView.as_view(), name='user-update'),
+    path('<int:pk>/delete/', views.UserDeleteView.as_view(), name='user-delete'),
+    path('<int:pk>/permissions/', views.PermissionManagementView.as_view(), name='user-permissions'),
+    path('<int:pk>/toggle-status/', views.toggle_user_status, name='toggle-user-status'),
+    path('<int:pk>/activity-log/', views.user_activity_log, name='user-activity-log'),
+    path('<int:pk>/reset-password/', views.user_reset_password, name='user-reset-password'),
     
-    # Perfil próprio
-    path('profile/', views.profile_view, name='profile'),
+    # Ações em lote
+    path('bulk-actions/', views.bulk_user_actions, name='bulk-actions'),
+    path('export/', views.user_export, name='user-export'),
     
-    # Funções do sistema
-    path('roles/', views.SystemRoleListView.as_view(), name='role_list'),
-    path('roles/create/', views.SystemRoleCreateView.as_view(), name='role_create'),
-    path('roles/<int:pk>/edit/', views.SystemRoleUpdateView.as_view(), name='role_update'),
-    path('roles/<int:pk>/delete/', views.SystemRoleDeleteView.as_view(), name='role_delete'),
+    # Gerenciamento de grupos
+    path('groups/', views.group_management, name='group-management'),
+    path('groups/create/', views.create_group, name='create-group'),
+    path('groups/<int:pk>/edit/', views.edit_group, name='edit-group'),
+    path('groups/<int:pk>/delete/', views.delete_group, name='delete-group'),
     
-    # Atividades
-    path('activities/', views.UserActivityListView.as_view(), name='activity_list'),
+    # Perfil do usuário - TODO: implementar views
+    # path('profile/', views.user_profile_edit, name='profile'),
+    # path('change-password/', views.change_password, name='change_password'),
 ]

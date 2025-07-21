@@ -1,0 +1,245 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - MoveMarias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="grid-optimized grid-optimized-2">
+        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+            <div class="flex justify-between items-center mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'chat:home' %}">Chat</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'chat:room_list' %}">Salas</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                    </ol>
+                </nav>
+                <a href="{% url 'chat:room_list' %}" class="mm-btn mm-btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </a>
+            </div>
+
+            <div class="row justify-center">
+                <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                        <div class="card-padding-md border-b">
+                            <h1 class="h4 mb-0">
+                                <i class="fas fa-comments text-purple-move"></i>
+                                {{ title }}
+                            </h1>
+                        </div>
+                        <div class="card-padding-md">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label-optimized">
+                                        {{ form.name.label }}
+                                        <span class="text-red-600">*</span>
+                                    </label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Nome identificador da sala de chat</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label-optimized">
+                                        {{ form.description.label }}
+                                    </label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.description.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Breve descrição sobre o propósito da sala</div>
+                                </div>
+
+                                <div class="grid-optimized grid-optimized-2">
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.room_type.id_for_label }}" class="form-label-optimized">
+                                                {{ form.room_type.label }}
+                                                <span class="text-red-600">*</span>
+                                            </label>
+                                            {{ form.room_type }}
+                                            {% if form.room_type.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.room_type.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">Tipo de acesso à sala</div>
+                                        </div>
+                                    </div>
+                                    <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
+                                        <div class="mb-3">
+                                            <label for="{{ form.max_members.id_for_label }}" class="form-label-optimized">
+                                                {{ form.max_members.label }}
+                                            </label>
+                                            {{ form.max_members }}
+                                            {% if form.max_members.errors %}
+                                                <div class="invalid-feedback block">
+                                                    {% for error in form.max_members.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <div class="form-text">Número máximo de membros (opcional)</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.members.id_for_label }}" class="form-label-optimized">
+                                        {{ form.members.label }}
+                                    </label>
+                                    <div class="grid-optimized grid-optimized-2">
+                                        {% for choice in form.members %}
+                                        <div class="col-md-6 col-lg-4 mb-2">
+                                            <div class="form-check-optimized">
+                                                {{ choice.tag }}
+                                                <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                                    {{ choice.choice_label }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    {% if form.members.errors %}
+                                        <div class="invalid-feedback block">
+                                            {% for error in form.members.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.members.help_text }}</div>
+                                </div>
+
+                                <div class="alert-info">
+                                    <h6><i class="fas fa-info-circle"></i> Informações Importantes</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>Sala Pública:</strong> Qualquer usuário pode encontrar e entrar</li>
+                                        <li><strong>Sala Privada:</strong> Apenas usuários convidados podem entrar</li>
+                                        <li><strong>Grupo:</strong> Sala fechada apenas para membros específicos</li>
+                                        <li>Você será automaticamente adicionado como administrador da sala</li>
+                                        <li>Administradores podem gerenciar membros e configurações</li>
+                                    </ul>
+                                </div>
+
+                                <div class="grid gap-2 flex md:justify-end">
+                                    <a href="{% url 'chat:room_list' %}" class="mm-btn mm-btn-outline-secondary">
+                                        <i class="fas fa-times"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn-primary">
+                                        <i class="fas fa-save"></i> Criar Sala
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control, .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check-input {
+    margin-top: 0.25rem;
+}
+
+.form-check-label {
+    margin-left: 0.5rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.mm-mm-card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.alert {
+    border: none;
+    border-radius: 0.375rem;
+}
+
+.btn {
+    border-radius: 0.375rem;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.breadcrumb-item a:hover {
+    color: #495057;
+    text-decoration: underline;
+}
+</style>
+</div>
+{% endblock %}

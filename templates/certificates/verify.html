@@ -1,0 +1,111 @@
+{% extends 'base_optimized.html' %}
+{% load static %}
+
+{% block title %}Verificar Certificado{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <h1>Verificar Certificado</h1>
+            <p class="text-gray-600">Digite o código de verificação para validar um certificado</p>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="max-w-md mx-auto">
+            <div class="card">
+                <div class="mm-mm-card-body text-center">
+                    <div class="mb-6">
+                        <div class="verification-icon">
+                            <i class="fas fa-shield-alt text-move-purple-600 text-6xl mb-4"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-2">Verificação de Certificado</h2>
+                        <p class="text-gray-600">Insira o código de verificação encontrado no certificado</p>
+                    </div>
+
+                    {% if result %}
+                        {% if result.valid %}
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                <div class="flex items-center justify-center mb-2">
+                                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                                </div>
+                                <h3 class="text-green-800 font-semibold">Certificado Válido</h3>
+                                <div class="text-sm text-green-700 mt-2">
+                                    <p><strong>Título:</strong> {{ result.certificate.title }}</p>
+                                    <p><strong>Beneficiário:</strong> {{ result.certificate.member.name }}</p>
+                                    <p><strong>Data de Emissão:</strong> {{ result.certificate.issue_date|date:"d/m/Y" }}</p>
+                                    {% if result.certificate.expiry_date %}
+                                    <p><strong>Válido até:</strong> {{ result.certificate.expiry_date|date:"d/m/Y" }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                <div class="flex items-center justify-center mb-2">
+                                    <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                                </div>
+                                <h3 class="text-red-800 font-semibold">Certificado Inválido</h3>
+                                <p class="text-sm text-red-700 mt-2">
+                                    Código de verificação não encontrado ou certificado expirado.
+                                </p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="{{ form.code.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Código de Verificação
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="mt-1 text-sm text-red-600">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="mm-btn mm-btn-primary w-full">
+                            <i class="fas fa-search mr-2"></i>
+                            Verificar Certificado
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-xs text-gray-500">
+                        <p>O código de verificação é encontrado no certificado original e permite validar sua autenticidade.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.verification-icon {
+    position: relative;
+}
+
+.verification-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(45deg, #f3f4f6, #e5e7eb);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.form-group input[type="text"] {
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

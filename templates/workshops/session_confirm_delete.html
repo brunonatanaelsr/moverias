@@ -1,12 +1,51 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 {% load static %}
 
 {% block title %}Confirmar Exclusão - Sessão: {{ session.topic }} - MoveMarias{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-container-optimized">
 {% include 'workshops/workshops_nav.html' %}
 
-<div class="max-w-2xl mx-auto">
         <!-- Header -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <div class="flex items-center justify-between">
@@ -29,7 +68,7 @@
             <h2 class="text-lg font-medium text-gray-900 mb-4">Sessão a ser excluída:</h2>
             
             <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div class="flex items-start">
+                <div class="flex-start">
                     <div class="flex-shrink-0">
                         <svg class="h-8 w-8 text-red-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4v10a2 2 0 002 2h4a2 2 0 002-2V11m-6 0h12"/>
@@ -58,7 +97,7 @@
             <div class="space-y-3">
                 <!-- Registros de Presença -->
                 <div class="flex items-center justify-between py-2 border-b border-gray-200">
-                    <div class="flex items-center">
+                    <div class="flex-center">
                         <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                         </svg>
@@ -69,7 +108,7 @@
 
                 <!-- Participantes Afetados -->
                 <div class="flex items-center justify-between py-2">
-                    <div class="flex items-center">
+                    <div class="flex-center">
                         <svg class="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM9 9a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>
@@ -126,7 +165,7 @@
                 <div class="space-y-2">
                     {% for attendance in session.attendances.all %}
                         <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                            <div class="flex items-center">
+                            <div class="flex-center">
                                 <div class="flex-shrink-0">
                                     <div class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                                         <span class="text-blue-600 font-medium text-xs">
@@ -225,5 +264,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

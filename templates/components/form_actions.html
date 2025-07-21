@@ -1,0 +1,22 @@
+<!-- Form Actions Component -->
+{% comment %}
+Usage: {% include 'components/form_actions.html' with cancel_url='url_name' submit_text='Save' %}
+{% endcomment %}
+
+<div class="mm-form-actions">
+    <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+        {% if cancel_url %}
+            <a href="{{ cancel_url }}" 
+               class="mm-btn mm-btn-secondary order-2 sm:order-1">
+                <i class="fas fa-times mr-2"></i>
+                {{ cancel_text|default:'Cancelar' }}
+            </a>
+        {% endif %}
+        
+        <button type="submit" 
+                class="mm-btn mm-btn-primary order-1 sm:order-2">
+            <i class="fas fa-save mr-2"></i>
+            {{ submit_text|default:'Salvar' }}
+        </button>
+    </div>
+</div>

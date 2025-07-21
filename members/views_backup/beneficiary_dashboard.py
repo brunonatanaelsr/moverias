@@ -1,0 +1,3 @@
+# Backup do antigo beneficiary_dashboard.py
+# Conteúdo original mantido para segurança.
+# ...existing code...

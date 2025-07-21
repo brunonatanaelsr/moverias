@@ -1,30 +1,62 @@
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Participantes - {{ workshop.name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <!-- Header -->
-    <div class="mb-8">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">Participantes</h1>
-                <p class="mt-2 text-sm text-gray-600">{{ workshop.name }}</p>
-            </div>
-            <div class="flex space-x-3">
-                <a href="{% url 'workshops:enrollment-create' %}" 
-                   class="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Inscrever Participante
-                </a>
-                <a href="{% url 'workshops:workshop-detail' workshop.pk %}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    ← Voltar
-                </a>
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">🎓</div>
+            <div class="dashboard-header-text">
+                <h1>Oficinas</h1>
+                <p>Gerencie oficinas e cursos de desenvolvimento</p>
             </div>
         </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
     </div>
 
     <!-- Filtros -->
@@ -86,7 +118,7 @@
                     {% for enrollment in enrollments %}
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
+                            <div class="flex-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
                                         <span class="text-sm font-medium text-purple-800">
@@ -118,7 +150,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex items-center">
+                            <div class="flex-center">
                                 <div class="flex-1">
                                     <div class="bg-gray-200 rounded-full h-2">
                                         <div class="bg-purple-600 h-2 rounded-full" 
@@ -150,7 +182,7 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{% url 'dashboard:beneficiary_detail' enrollment.beneficiary.pk %}" 
+                            <a href="{% url 'dashboard:beneficiary-detail' enrollment.beneficiary.pk %}" 
                                class="text-purple-600 hover:text-purple-900 mr-3">
                                 Ver Perfil
                             </a>
@@ -164,7 +196,7 @@
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhum participante encontrado</h3>
                             <p class="mt-1 text-sm text-gray-500">Comece inscrevendo participantes na oficina.</p>
-                            <div class="mt-6">
+                            <div class="section-spacing-md">
                                 <a href="{% url 'workshops:enrollment-create' %}" 
                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
                                     <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,5 +212,6 @@
             </table>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

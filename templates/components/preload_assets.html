@@ -1,0 +1,4 @@
+<!-- Asset preload links -->
+{% for asset in assets %}
+    <link rel="preload" href="{{ asset.url }}" as="{{ asset.type }}">
+{% endfor %}

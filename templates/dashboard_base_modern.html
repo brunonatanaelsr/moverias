@@ -1,0 +1,890 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" data-theme="light" class="h-full">
+<head>
+    <script>
+        // Prevent flash of unstyled content
+        (function() {
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block description %}Move Marias - Sistema de Gestão e Acompanhamento Social
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+{% endblock %}">
+    <meta name="keywords" content="gestão social, beneficiárias, projetos sociais, assistência social">
+    <meta name="author" content="{% block author %}Move Marias{% endblock %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}{{ page_title|default:'Move Marias' }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Sistema de gestão e acompanhamento social{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% endblock %}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="{% block twitter_title %}{{ page_title|default:'Move Marias' }}{% endblock %}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+    
+    <!-- Preconnect para otimização de performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <title>{% block title %}Move Marias - Transformando Vidas{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
+    
+    <!-- Google Fonts - Inter (moderna e legível) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Move Marias - Melhorias de Contraste -->
+    <link rel="stylesheet" href="{% static 'css/move-marias-contrast.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer">
+    
+    <!-- Tailwind CSS com configuração customizada -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'move-purple': {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7c3aed',
+                            800: '#6b21a8',
+                            900: '#581c87',
+                            950: '#3b0764'
+                        },
+                        'move-pink': {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#db2777',
+                            700: '#be185d',
+                            800: '#9d174d',
+                            900: '#831843'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'ui-sans-serif', 'system-ui'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-soft': 'pulseSoft 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        pulseSoft: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.8' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" 
+            integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Alpine.js para interatividade -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Chart.js para dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Sistema de Validação JavaScript Real-time -->
+    <script src="{% static 'js/form-validation-system.js' %}"></script>
+    
+    <!-- Sistema de Progress Bars para Upload -->
+    <script src="{% static 'js/upload-progress-system.js' %}"></script>
+    
+    <!-- Sistema de Loading States -->
+    <script src="{% static 'js/loading-states-system.js' %}"></script>
+    
+    <!-- Sistema de Acessibilidade -->
+    <script src="{% static 'js/accessibility-system.js' %}"></script>
+    
+    <!-- Configuração de Acessibilidade -->
+    <script src="{% static 'js/accessibility-config.js' %}"></script>
+    
+    <!-- CSS de Acessibilidade -->
+    <link rel="stylesheet" href="{% static 'css/accessibility.css' %}"
+    
+    <!-- CSS customizado para animações e componentes -->
+    <style>
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Dark mode scrollbar */
+        .dark ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        
+        /* Loading states */
+        .htmx-request {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Glass effect */
+        .glass {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark .glass {
+            background-color: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(75, 85, 99, 0.2);
+        }
+        
+        /* Gradient backgrounds */
+        .gradient-move {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+        
+        .gradient-move-light {
+            background: linear-gradient(135deg, #faf5ff 0%, #fdf2f8 100%);
+        }
+        
+        .dark .gradient-move-light {
+            background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%);
+        }
+        
+        /* Footer positioning fix */
+        @media (min-width: 1024px) {
+            .footer-container {
+                position: relative;
+                z-index: 20;
+                margin-left: 0;
+                width: 100%;
+                clear: both;
+            }
+            
+            /* Garantir que o main tenha espaço adequado para o footer */
+            main {
+                margin-bottom: 1rem;
+            }
+            
+            /* Força o footer a ficar visível sempre */
+            .lg\:pl-72 .footer-container {
+                position: relative;
+                z-index: 25;
+                overflow: visible;
+            }
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full font-sans antialiased" x-data="{ sidebarOpen: false, darkMode: $store.darkMode.on }" x-bind:class="{ 'dark': darkMode }" x-init="$watch('darkMode', value => $store.darkMode.on = value)">
+    <!-- Skip to main content (acessibilidade) -->
+    <a class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-move-purple-600 text-white px-4 py-2 rounded-md z-50 focus:z-50" href="#main-content">
+        Pular para o conteúdo principal
+    </a>
+
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-move-purple-600 mx-auto mb-4"></div>
+            <p class="text-gray-600 font-medium">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- Toast notifications container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <div class="min-h-full">
+        <!-- Mobile sidebar overlay -->
+        <div x-show="sidebarOpen" 
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="relative z-50 lg:hidden">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-75"></div>
+            
+            <div class="fixed inset-0 flex">
+                <div x-show="sidebarOpen"
+                     x-transition:enter="transition ease-in-out duration-300 transform"
+                     x-transition:enter-start="-translate-x-full"
+                     x-transition:enter-end="translate-x-0"
+                     x-transition:leave="transition ease-in-out duration-300 transform"
+                     x-transition:leave-start="translate-x-0"
+                     x-transition:leave-end="-translate-x-full"
+                     class="relative mr-16 flex w-full max-w-xs flex-1">
+                    
+                    <!-- Close button -->
+                    <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
+                        <button type="button" 
+                                class="-m-2.5 p-2.5 text-white hover:text-gray-300"
+                                @click="sidebarOpen = false">
+                            <span class="sr-only">Fechar sidebar</span>
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+
+                    <!-- Sidebar component mobile -->
+                    {% include 'components/sidebar.html' %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Static sidebar desktop -->
+        <div class="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-72 lg:flex-col">
+            {% include 'components/sidebar.html' %}
+        </div>
+
+        <div class="lg:pl-72">
+            <!-- Sticky search header -->
+            <div class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+                <!-- Mobile menu button -->
+                <button type="button" 
+                        class="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+                        @click="sidebarOpen = true">
+                    <span class="sr-only">Abrir sidebar</span>
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+
+                <!-- Separator -->
+                <div class="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true"></div>
+
+                <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                    <!-- Search -->
+                    <form class="relative flex flex-1" action="{% url 'core:global-search' %}" method="GET">
+                        <label for="search-field" class="sr-only">Buscar</label>
+                        <i class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 fas fa-search text-gray-400"></i>
+                        <input id="search-field"
+                               class="block h-full w-full border-0 py-0 pl-10 pr-0 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-0 sm:text-sm bg-transparent"
+                               placeholder="Buscar beneficiárias, projetos..."
+                               type="search"
+                               name="search"
+                               value="{{ request.GET.search|default:'' }}"
+                               autocomplete="off">
+                    </form>
+                    
+                    <div class="flex items-center gap-x-4 lg:gap-x-6">
+                        <!-- Notifications -->
+                        <div class="relative" x-data="{ 
+                            open: false, 
+                            notifications: [], 
+                            count: 0,
+                            async loadNotifications() {
+                                try {
+                                    const response = await fetch('/notifications/popup/');
+                                    const data = await response.json();
+                                    this.notifications = data.notifications;
+                                } catch (error) {
+                                    console.error('Erro ao carregar notificações:', error);
+                                }
+                            },
+                            async loadCount() {
+                                try {
+                                    const response = await fetch('/notifications/count/');
+                                    const data = await response.json();
+                                    this.count = data.count;
+                                } catch (error) {
+                                    console.error('Erro ao carregar contagem:', error);
+                                }
+                            },
+                            async markAllRead() {
+                                try {
+                                    await fetch('/notifications/mark-all-read/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': csrftoken,
+                                            'Content-Type': 'application/json',
+                                        },
+                                    });
+                                    this.count = 0;
+                                    this.notifications = [];
+                                    showToast('Todas as notificações foram marcadas como lidas', 'success');
+                                } catch (error) {
+                                    console.error('Erro ao marcar como lidas:', error);
+                                    showToast('Erro ao marcar notificações como lidas', 'error');
+                                }
+                            }
+                        }" x-init="loadCount(); loadNotifications(); setInterval(() => { loadCount(); loadNotifications(); }, 30000)">
+                            <button type="button" 
+                                    class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 relative"
+                                    @click="open = !open; if(open) loadNotifications()">
+                                <span class="sr-only">Ver notificações</span>
+                                <i class="fas fa-bell text-xl"></i>
+                                <span x-show="count > 0" 
+                                      x-text="count > 99 ? '99+' : count"
+                                      class="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center min-w-4"></span>
+                            </button>
+
+                            <!-- Dropdown de notificações -->
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 @click.outside="open = false"
+                                 class="absolute right-0 z-10 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                
+                                <div class="py-1">
+                                    <!-- Header -->
+                                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Notificações</h3>
+                                        <button @click="markAllRead()" 
+                                                x-show="count > 0"
+                                                class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Marcar todas como lidas
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Lista de notificações -->
+                                    <div class="max-h-96 overflow-y-auto">
+                                        <template x-for="notification in notifications" :key="notification.id">
+                                            <div class="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                                                <div class="flex items-start space-x-3">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 dark:text-white" x-text="notification.title"></p>
+                                                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1" x-text="notification.message"></p>
+                                                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1" x-text="notification.created_at"></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        
+                                        <!-- Vazio -->
+                                        <div x-show="notifications.length === 0" class="px-4 py-6 text-center">
+                                            <i class="fas fa-bell-slash text-gray-400 text-3xl mb-2"></i>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma notificação nova</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Footer -->
+                                    <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                                        <a href="{% url 'notifications:list' %}" 
+                                           class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Ver todas as notificações
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dark mode toggle -->
+                        <button type="button" 
+                                class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200"
+                                @click="darkMode = !darkMode; $store.darkMode.toggle()">
+                            <span class="sr-only">Alternar modo escuro</span>
+                            <i class="fas fa-moon text-xl" x-show="!darkMode"></i>
+                            <i class="fas fa-sun text-xl" x-show="darkMode"></i>
+                        </button>
+
+                        <!-- Separator -->
+                        <div class="hidden lg:block lg:h-6 lg:w-px lg:bg-gray-900/10" aria-hidden="true"></div>
+
+                        <!-- Profile dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" 
+                                    class="-m-1.5 flex items-center p-1.5 hover:bg-gray-50 rounded-full"
+                                    @click="open = !open">
+                                <span class="sr-only">Abrir menu do usuário</span>
+                                <div class="h-8 w-8 rounded-full bg-gradient-to-r from-move-purple-500 to-move-pink-500 flex items-center justify-center">
+                                    <span class="text-white font-semibold text-sm">
+                                        {{ user.full_name|first|upper }}{{ user.full_name|wordcount|add:"-1"|slice:"1:2" }}
+                                    </span>
+                                </div>
+                                <span class="hidden lg:flex lg:items-center ml-3">
+                                    <span class="text-sm font-semibold leading-6 text-gray-900">{{ user.full_name }}</span>
+                                    <i class="ml-2 fas fa-chevron-down text-gray-400 text-xs"></i>
+                                </span>
+                            </button>
+
+                            <!-- Dropdown menu -->
+                            <div x-show="open"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                                 @click.outside="open = false"
+                                 class="absolute right-0 z-10 mt-2.5 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-2 shadow-lg ring-1 ring-gray-900/5 dark:ring-gray-700">
+                                
+                                <a href="{% url 'users:user-detail' user.pk %}" class="flex items-center px-3 py-2 text-sm leading-6 text-gray-900 hover:bg-gray-50">
+                                    <i class="fas fa-user mr-2 text-gray-400"></i>
+                                    Meu Perfil
+                                </a>
+                                <a href="{% url 'admin:password_change' %}" class="flex items-center px-3 py-2 text-sm leading-6 text-gray-900 hover:bg-gray-50">
+                                    <i class="fas fa-key mr-2 text-gray-400"></i>
+                                    Alterar Senha
+                                </a>
+                                <div class="border-t border-gray-100 my-1"></div>
+                                <form method="post" action="{% url 'account_logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="flex items-center w-full px-3 py-2 text-sm leading-6 text-gray-900 hover:bg-gray-50 text-left">
+                                        <i class="fas fa-sign-out-alt mr-2 text-gray-400"></i>
+                                        Sair
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main id="main-content" class="py-8 mb-8 bg-gray-50 dark:bg-gray-900 min-h-screen" role="main">
+                <div class="px-4 sm:px-6 lg:px-8">
+                    <!-- Messages -->
+                    {% if messages %}
+                        <div class="mb-6 space-y-3">
+                            {% for message in messages %}
+                                <div class="rounded-md p-4 animate-slide-up {{ message.tags|default:'info' }}
+                                    {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800
+                                    {% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-800
+                                    {% elif message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800
+                                    {% elif message.tags == 'info' %}bg-blue-50 border border-blue-200 text-blue-800
+                                    {% else %}bg-gray-50 border border-gray-200 text-gray-800{% endif %}">
+                                    <div class="flex-center">
+                                        <div class="flex-shrink-0">
+                                            {% if message.tags == 'error' %}
+                                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                                            {% elif message.tags == 'warning' %}
+                                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                                            {% elif message.tags == 'success' %}
+                                                <i class="fas fa-check-circle text-green-400"></i>
+                                            {% else %}
+                                                <i class="fas fa-info-circle text-blue-400"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-sm font-medium">{{ message }}</p>
+                                        </div>
+                                        <div class="ml-auto pl-3">
+                                            <div class="-mx-1.5 -my-1.5">
+                                                <button type="button" 
+                                                        class="inline-flex rounded-md p-1.5 hover:bg-opacity-20"
+                                                        onclick="this.parentElement.parentElement.parentElement.parentElement.remove()">
+                                                    <span class="sr-only">Fechar</span>
+                                                    <i class="fas fa-times text-sm"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Page content -->
+                    <div class="animate-fade-in">
+                        {% block content %}
+<div class="dashboard-container-optimized">{% endblock %}
+                    </div>
+                </div>
+            </main>
+            
+            <!-- Footer -->
+            {% block footer %}
+            <div class="footer-container relative">
+                {% include 'components/footer.html' %}
+            </div>
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- JavaScript utilities -->
+    <script>
+        // CSRF Token para requisições AJAX
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
+                         '{{ csrf_token }}';
+        
+        // HTMX Configuration
+        htmx.config.requestClass = 'htmx-request';
+        htmx.config.indicatorClass = 'htmx-indicator';
+
+        // Error handlers
+        document.addEventListener('htmx:responseError', function(evt) {
+            showToast('Erro na comunicação com o servidor', 'error');
+        });
+
+        document.addEventListener('htmx:targetError', function(evt) {
+            showToast('Elemento não encontrado na página', 'error');
+        });
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 5000) {
+            const toast = document.createElement('div');
+            const iconClass = {
+                'success': 'fa-check-circle text-green-500',
+                'error': 'fa-exclamation-circle text-red-500',
+                'warning': 'fa-exclamation-triangle text-yellow-500',
+                'info': 'fa-info-circle text-blue-500'
+            }[type] || 'fa-info-circle text-blue-500';
+
+            const bgClass = {
+                'success': 'bg-green-50 border-green-200',
+                'error': 'bg-red-50 border-red-200',
+                'warning': 'bg-yellow-50 border-yellow-200',
+                'info': 'bg-blue-50 border-blue-200'
+            }[type] || 'bg-blue-50 border-blue-200';
+
+            toast.className = `${bgClass} border rounded-lg p-4 shadow-lg max-w-sm animate-slide-up`;
+            toast.innerHTML = `
+                <div class="flex-center">
+                    <i class="fas ${iconClass} mr-3"></i>
+                    <span class="text-sm font-medium text-gray-800">${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('toast-container').appendChild(toast);
+
+            // Auto remove
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, duration);
+        }
+
+        // Loading states
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Auto-save functionality
+        function autoSave(formId) {
+            const form = document.getElementById(formId);
+            if (!form) return;
+
+            const inputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const formData = new FormData(form);
+                    fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-Auto-Save': 'true'
+                        }
+                    }).then(response => {
+                        if (response.ok) {
+                            showToast('Alterações salvas automaticamente', 'success', 2000);
+                        }
+                    }).catch(() => {
+                        showToast('Erro ao salvar automaticamente', 'error');
+                    });
+                });
+            });
+        }
+
+        // Dark mode persistence
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('darkMode', {
+                on: localStorage.getItem('darkMode') === 'true',
+                toggle() {
+                    this.on = !this.on;
+                    localStorage.setItem('darkMode', this.on);
+                    // Force update of the HTML element
+                    document.documentElement.classList.toggle('dark', this.on);
+                }
+            });
+            
+            // Initialize dark mode on page load
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K for search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('search-field').focus();
+            }
+            
+            // Escape to close modals/dropdowns
+            if (e.key === 'Escape') {
+                // Close any open Alpine dropdowns
+                document.dispatchEvent(new CustomEvent('close-dropdowns'));
+            }
+        });
+
+        // Search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchField = document.getElementById('search-field');
+            const searchForm = searchField.closest('form');
+            let searchTimeout;
+            let searchResults = null;
+            
+            // Create search results dropdown
+            function createSearchDropdown() {
+                if (searchResults) return searchResults;
+                
+                searchResults = document.createElement('div');
+                searchResults.className = 'absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-200 dark:border-gray-700 mt-1 z-50 hidden max-h-96 overflow-y-auto';
+                searchField.parentElement.appendChild(searchResults);
+                return searchResults;
+            }
+            
+            // Perform search
+            async function performSearch(query) {
+                if (!query || query.length < 2) {
+                    hideSearchResults();
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/search/?search=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        showSearchResults(data);
+                    }
+                } catch (error) {
+                    console.error('Erro na busca:', error);
+                }
+            }
+            
+            // Show search results
+            function showSearchResults(data) {
+                const dropdown = createSearchDropdown();
+                
+                if (data.total_count === 0) {
+                    dropdown.innerHTML = `
+                        <div class="p-4 text-center text-gray-500 dark:text-gray-400">
+                            <i class="fas fa-search-minus text-2xl mb-2"></i>
+                            <p>Nenhum resultado encontrado</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    
+                    // Users
+                    if (data.users.length > 0) {
+                        html += '<div class="p-2 border-b border-gray-200 dark:border-gray-700"><h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Usuários</h4></div>';
+                        data.users.forEach(user => {
+                            html += `
+                                <a href="/users/${user.id}/" class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-xs font-bold">${user.full_name.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">${user.full_name}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">${user.email}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                    }
+                    
+                    // Members
+                    if (data.members.length > 0) {
+                        html += '<div class="p-2 border-b border-gray-200 dark:border-gray-700"><h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Beneficiários</h4></div>';
+                        data.members.forEach(member => {
+                            html += `
+                                <a href="/members/${member.id}/" class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center">
+                                            <span class="text-white text-xs font-bold">${member.name.charAt(0).toUpperCase()}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">${member.name}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">${member.email || 'Sem email'}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                    }
+                    
+                    // Projects
+                    if (data.projects.length > 0) {
+                        html += '<div class="p-2 border-b border-gray-200 dark:border-gray-700"><h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Projetos</h4></div>';
+                        data.projects.forEach(project => {
+                            html += `
+                                <a href="/projects/${project.id}/" class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-project-diagram text-white text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900 dark:text-white">${project.name}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">${project.description ? project.description.substring(0, 50) + '...' : ''}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                    }
+                    
+                    // Link para ver todos os resultados
+                    if (data.total_count > 0) {
+                        html += `
+                            <div class="p-2 border-t border-gray-200 dark:border-gray-700">
+                                <a href="/search/?search=${encodeURIComponent(data.query)}" class="block text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                                    Ver todos os ${data.total_count} resultados
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+                
+                dropdown.innerHTML = html;
+                dropdown.classList.remove('hidden');
+            }
+            
+            // Hide search results
+            function hideSearchResults() {
+                if (searchResults) {
+                    searchResults.classList.add('hidden');
+                }
+            }
+            
+            // Search input event
+            searchField.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 300);
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchField.contains(e.target) && !searchResults?.contains(e.target)) {
+                    hideSearchResults();
+                }
+            });
+            
+            // Show results when focusing on search field
+            searchField.addEventListener('focus', function() {
+                if (this.value.length >= 2 && searchResults && !searchResults.classList.contains('hidden')) {
+                    searchResults.classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

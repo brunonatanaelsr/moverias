@@ -2,30 +2,51 @@
      - Tabela responsiva HTMX search (?q=).
      - Cada linha botão Ver hx-get="…/detail" hx-target="#modal".
 -->
-{% extends 'dashboard_base.html' %}
+{% extends 'base_optimized.html' %}
 
 {% block title %}Beneficiárias - Move Marias{% endblock %}
 
-{% block breadcrumbs %}
-<nav class="flex mb-6" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-3">
-        <li class="inline-flex items-center">
-            <a href="{% url 'dashboard:home' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-purple-move">
-                <i class="fas fa-home mr-2" aria-hidden="true"></i>
-                Dashboard
-            </a>
-        </li>
-        <li aria-current="page">
-            <div class="flex items-center">
-                <i class="fas fa-chevron-right text-gray-400 mx-2" aria-hidden="true"></i>
-                <span class="text-sm font-medium text-gray-500">Beneficiárias</span>
-            </div>
-        </li>
-    </ol>
-</nav>
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
 {% endblock %}
 
 {% block content %}
+<div class="dashboard-container-optimized">
 <div class="space-y-6">
     <!-- Header Section -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200">
@@ -47,7 +68,7 @@
                     <!-- Export Button -->
                     <button type="button"
                             class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            hx-get="{% url 'dashboard:beneficiaries_export' %}"
+                            hx-get="{% url 'dashboard:beneficiaries-export' %}"
                             hx-trigger="click"
                             aria-label="Exportar lista de beneficiárias">
                         <i class="fas fa-download mr-2" aria-hidden="true"></i>
@@ -55,8 +76,8 @@
                     </button>
                     
                     <!-- New Beneficiary Button -->
-                    <a href="{% url 'dashboard:beneficiary_create' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-move hover:bg-purple-move-dark transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <a href="{% url 'dashboard:beneficiary-create' %}" 
+                       class="btn-move-primary inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-move-enhanced">
                         <i class="fas fa-plus mr-2" aria-hidden="true"></i>
                         Nova Beneficiária
                     </a>
@@ -81,7 +102,7 @@
                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                            placeholder="Buscar por nome, telefone ou bairro..."
                            value="{{ search_query|default:'' }}"
-                           hx-get="{% url 'dashboard:beneficiaries_list' %}"
+                           hx-get="{% url 'dashboard:beneficiaries-list' %}"
                            hx-trigger="keyup changed delay:300ms, search"
                            hx-target="#beneficiaries-table"
                            autocomplete="off"
@@ -95,5 +116,6 @@
             {% include 'dashboard/partials/beneficiaries_table.html' %}
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

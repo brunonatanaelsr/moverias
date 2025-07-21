@@ -1,0 +1,678 @@
+{% extends 'base_optimized.html' %}
+
+{% load static %}
+
+{% block title %}Dashboard de Sistema - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .admin-card {
+        transition: all 0.3s ease;
+    }
+    .admin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    .metric-chart {
+        height: 200px;
+    }
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .status-healthy { background-color: #10b981; }
+    .status-warning { background-color: #f59e0b; }
+    .status-critical { background-color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+<div class="space-y-8">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg overflow-hidden">
+        <div class="px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">Dashboard de Sistema</h1>
+                    <p class="mt-2 text-indigo-100">
+                        Monitoramento e administração completa do sistema MoveMarias
+                    </p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="refreshDashboard()" 
+                            class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-sync-alt mr-2"></i> Atualizar
+                    </button>
+                    <a href="{% url 'core:monitoring_dashboard' %}" 
+                       class="bg-white text-indigo-600 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-chart-line mr-2"></i> Monitoramento Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status Overview -->
+    <div class="grid-optimized grid-optimized-4">
+        {% system_status_widget %}
+        {% performance_metrics_widget %}
+        {% background_jobs_widget %}
+        {% alerts_widget %}
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left Column - System Metrics -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Performance Metrics Chart -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Métricas de Performance</h2>
+                    <div class="flex items-center space-x-2">
+                        <span class="status-dot status-healthy"></span>
+                        <span class="text-sm text-gray-600">Tempo Real</span>
+                    </div>
+                </div>
+                <div class="metric-chart" id="performance-chart">
+                    <canvas id="performanceCanvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Cache Optimization Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-rocket text-blue-500 mr-2"></i>
+                        Otimização de Cache
+                    </h2>
+                    <button onclick="runCacheOptimization()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-play mr-2"></i> Executar
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-blue-600">{{ cache_hit_rate|default:"--" }}%</div>
+                        <div class="text-sm text-gray-600">Hit Rate</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-green-600">{{ cache_recommendations|default:"0" }}</div>
+                        <div class="text-sm text-gray-600">Recomendações</div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-purple-600">{{ cache_memory_usage|default:"--" }}%</div>
+                        <div class="text-sm text-gray-600">Uso de Memória</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Background Jobs Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        <i class="fas fa-cogs text-purple-500 mr-2"></i>
+                        Jobs de Negócio
+                    </h2>
+                    <button onclick="scheduleBusinessJobs()" 
+                            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
+                        <i class="fas fa-calendar-plus mr-2"></i> Agendar
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-center">
+                            <div class="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium">Acompanhamento Beneficiárias</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Diário 09:00</span>
+                            <button onclick="runJob('beneficiary_follow_up')" 
+                                    class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-center">
+                            <div class="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium">Notificações de Workshops</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Diário 10:00</span>
+                            <button onclick="runJob('workshop_notifications')" 
+                                    class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-center">
+                            <div class="w-2 h-2 bg-yellow-400 rounded-full mr-3"></div>
+                            <span class="text-sm font-medium">Processamento de Certificados</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs text-gray-500">Diário 14:00</span>
+                            <button onclick="runJob('certificate_processing')" 
+                                    class="text-yellow-600 hover:text-yellow-800">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - System Administration -->
+        <div class="space-y-6">
+            
+            <!-- Threshold Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-sliders-h text-orange-500 mr-2"></i>
+                        Thresholds
+                    </h2>
+                    <button onclick="adjustThresholds()" 
+                            class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-sm">
+                        <i class="fas fa-adjust mr-1"></i> Ajustar
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">CPU Usage</span>
+                        <span class="text-sm font-medium">70% / 85%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Memory Usage</span>
+                        <span class="text-sm font-medium">70% / 85%</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Response Time</span>
+                        <span class="text-sm font-medium">500ms / 1000ms</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Cache Hit Rate</span>
+                        <span class="text-sm font-medium">80% / 60%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Configuration -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-envelope text-green-500 mr-2"></i>
+                        Alertas por Email
+                    </h2>
+                    <button onclick="configureAlerts()" 
+                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                        <i class="fas fa-cog mr-1"></i> Configurar
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Status</span>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="status-dot status-healthy"></span>
+                            Habilitado
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Administradores</span>
+                        <span class="text-sm font-medium">{{ admin_emails_count|default:"0" }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Cooldown</span>
+                        <span class="text-sm font-medium">30 min</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-tools text-gray-500 mr-2"></i>
+                    Ações do Sistema
+                </h2>
+                <div class="space-y-3">
+                    <button onclick="collectMetrics()" 
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg text-sm">
+                        <i class="fas fa-chart-bar mr-2"></i> Coletar Métricas
+                    </button>
+                    <button onclick="generateReports()" 
+                            class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg text-sm">
+                        <i class="fas fa-file-alt mr-2"></i> Gerar Relatórios
+                    </button>
+                    <button onclick="clearCache()" 
+                            class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-lg text-sm">
+                        <i class="fas fa-trash mr-2"></i> Limpar Cache
+                    </button>
+                    <button onclick="testEmail()" 
+                            class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg text-sm">
+                        <i class="fas fa-envelope mr-2"></i> Testar Email
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-lg p-6 admin-card">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-history text-gray-500 mr-2"></i>
+                    Atividade Recente
+                </h2>
+                <div class="space-y-4" id="recent-activity">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-sync text-blue-600 text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Sistema atualizado</p>
+                            <p class="text-sm text-gray-500">Há 5 minutos</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-green-600 text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Cache otimizado</p>
+                            <p class="text-sm text-gray-500">Há 15 minutos</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-cog text-purple-600 text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-gray-900">Jobs executados</p>
+                            <p class="text-sm text-gray-500">Há 30 minutos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para resultados -->
+<div id="resultModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <i class="fas fa-check text-green-600 text-xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mt-2" id="modalTitle">Operação Concluída</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="modalMessage">Operação executada com sucesso.</p>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button onclick="closeModal()" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let performanceChart;
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    startAutoRefresh();
+});
+
+// Initialize charts
+function initializeCharts() {
+    const ctx = document.getElementById('performanceCanvas').getContext('2d');
+    performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CPU Usage (%)',
+                data: [],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Memory Usage (%)',
+                data: [],
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+// Auto refresh every 30 seconds
+function startAutoRefresh() {
+    setInterval(function() {
+        if (!document.hidden) {
+            refreshDashboard();
+        }
+    }, 30000);
+}
+
+// Refresh dashboard data
+function refreshDashboard() {
+    showLoading();
+    
+    fetch('/api/system/dashboard-data/')
+        .then(response => response.json())
+        .then(data => {
+            updateCharts(data);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Error refreshing dashboard:', error);
+            hideLoading();
+        });
+}
+
+// Update charts with new data
+function updateCharts(data) {
+    if (data.performance && performanceChart) {
+        performanceChart.data.labels.push(new Date().toLocaleTimeString());
+        performanceChart.data.datasets[0].data.push(data.performance.cpu);
+        performanceChart.data.datasets[1].data.push(data.performance.memory);
+        
+        // Keep only last 10 data points
+        if (performanceChart.data.labels.length > 10) {
+            performanceChart.data.labels.shift();
+            performanceChart.data.datasets[0].data.shift();
+            performanceChart.data.datasets[1].data.shift();
+        }
+        
+        performanceChart.update();
+    }
+}
+
+// System actions
+function runCacheOptimization() {
+    showModal('Otimizando Cache', 'Executando otimização de cache...');
+    
+    fetch('/api/system/optimize-cache/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Cache Otimizado', `${data.applied} otimizações aplicadas`);
+        } else {
+            showModal('Erro', data.message || 'Erro na otimização');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao executar otimização');
+    });
+}
+
+function scheduleBusinessJobs() {
+    showModal('Agendando Jobs', 'Configurando jobs de negócio...');
+    
+    fetch('/api/system/schedule-jobs/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Jobs Agendados', 'Jobs de negócio configurados com sucesso');
+        } else {
+            showModal('Erro', data.message || 'Erro no agendamento');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao agendar jobs');
+    });
+}
+
+function runJob(jobName) {
+    showModal('Executando Job', `Executando ${jobName}...`);
+    
+    fetch(`/api/system/run-job/${jobName}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Job Executado', `Job ${jobName} executado com sucesso`);
+        } else {
+            showModal('Erro', data.message || 'Erro na execução');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao executar job');
+    });
+}
+
+function adjustThresholds() {
+    showModal('Ajustando Thresholds', 'Analisando padrões e ajustando thresholds...');
+    
+    fetch('/api/system/adjust-thresholds/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Thresholds Ajustados', `${data.applied} ajustes aplicados`);
+        } else {
+            showModal('Erro', data.message || 'Erro no ajuste');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao ajustar thresholds');
+    });
+}
+
+function configureAlerts() {
+    window.location.href = '/admin/email-config/';
+}
+
+function collectMetrics() {
+    showModal('Coletando Métricas', 'Coletando métricas do sistema...');
+    
+    fetch('/api/system/collect-metrics/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Métricas Coletadas', 'Métricas coletadas com sucesso');
+        } else {
+            showModal('Erro', data.message || 'Erro na coleta');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao coletar métricas');
+    });
+}
+
+function generateReports() {
+    showModal('Gerando Relatórios', 'Gerando relatórios do sistema...');
+    
+    fetch('/api/system/generate-reports/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showModal('Relatórios Gerados', 'Relatórios gerados com sucesso');
+        } else {
+            showModal('Erro', data.message || 'Erro na geração');
+        }
+    })
+    .catch(error => {
+        showModal('Erro', 'Erro ao gerar relatórios');
+    });
+}
+
+function clearCache() {
+    if (confirm('Tem certeza que deseja limpar o cache?')) {
+        showModal('Limpando Cache', 'Limpando cache do sistema...');
+        
+        fetch('/api/system/clear-cache/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showModal('Cache Limpo', 'Cache limpo com sucesso');
+            } else {
+                showModal('Erro', data.message || 'Erro na limpeza');
+            }
+        })
+        .catch(error => {
+            showModal('Erro', 'Erro ao limpar cache');
+        });
+    }
+}
+
+function testEmail() {
+    const email = prompt('Digite o email para teste:');
+    if (email) {
+        showModal('Enviando Email', 'Enviando email de teste...');
+        
+        fetch('/api/system/test-email/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showModal('Email Enviado', 'Email de teste enviado com sucesso');
+            } else {
+                showModal('Erro', data.message || 'Erro no envio');
+            }
+        })
+        .catch(error => {
+            showModal('Erro', 'Erro ao enviar email');
+        });
+    }
+}
+
+// Modal functions
+function showModal(title, message) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('resultModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('resultModal').classList.add('hidden');
+}
+
+function showLoading() {
+    // Add loading indicators
+}
+
+function hideLoading() {
+    // Remove loading indicators
+}
+
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+</div>
+{% endblock %}

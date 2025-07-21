@@ -1,0 +1,315 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+
+{% block title %}Lista de Tarefas - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dashboard specific animations */
+    .dashboard-fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+    
+    .dashboard-slide-up {
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    .dashboard-slide-up:nth-child(1) { animation-delay: 0.1s; }
+    .dashboard-slide-up:nth-child(2) { animation-delay: 0.2s; }
+    .dashboard-slide-up:nth-child(3) { animation-delay: 0.3s; }
+    .dashboard-slide-up:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Hover effects */
+    .dashboard-card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+
+{% block extra_css %}
+<style>
+    .task-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .priority-indicator {
+        width: 4px;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        border-radius: 0 4px 4px 0;
+    }
+    .priority-low { background-color: #10B981; }
+    .priority-medium { background-color: #F59E0B; }
+    .priority-high { background-color: #EF4444; }
+    .priority-urgent { background-color: #7C2D12; }
+    .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        background-color: #F3F4F6;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        border: 1px solid #D1D5DB;
+    }
+    .filter-chip.active {
+        background-color: #EDE9FE;
+        border-color: #8B5CF6;
+        color: #6B46C1;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb_items %}
+<!-- Add breadcrumb items here if needed -->
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container-optimized">
+    <!-- Welcome Header -->
+    <div class="dashboard-header-optimized dashboard-fade-in">
+        <div class="dashboard-header-content-optimized">
+            <div class="dashboard-header-icon">📋</div>
+            <div class="dashboard-header-text">
+                <h1>Tarefas</h1>
+                <p>Organize tarefas e acompanhe progresso</p>
+            </div>
+        </div>
+        <div class="hidden lg:block text-right">
+            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
+            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <form method="GET" class="flex flex-wrap gap-4 items-end">
+            <!-- Filtro por Quadro -->
+            <div class="flex-1 min-w-48">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Quadro</label>
+                <select name="board" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-move-purple-500 focus:border-move-purple-500">
+                    <option value="">Todos os quadros</option>
+                    {% for board in boards %}
+                    <option value="{{ board.id }}" {% if board_filter == board.id|stringformat:"s" %}selected{% endif %}>
+                        {{ board.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Status -->
+            <div class="flex-1 min-w-48">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-move-purple-500 focus:border-move-purple-500">
+                    <option value="">Todos os status</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Prioridade -->
+            <div class="flex-1 min-w-48">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
+                <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-move-purple-500 focus:border-move-purple-500">
+                    <option value="">Todas as prioridades</option>
+                    {% for value, label in priority_choices %}
+                    <option value="{{ value }}" {% if priority_filter == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botão Filtrar -->
+            <div>
+                <button type="submit" class="bg-move-purple-600 text-white px-4 py-2 rounded-md hover:bg-move-purple-700 transition-colors">
+                    <i class="fas fa-filter mr-2"></i>
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Tarefas -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        {% if page_obj %}
+        <div class="divide-y divide-gray-200">
+            {% for task in page_obj %}
+            <div class="p-6 task-card relative">
+                <div class="priority-indicator priority-{{ task.priority }}"></div>
+                <div class="pl-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-lg font-semibold text-gray-900">
+                                <a href="{% url 'tasks:task_detail' task.id %}" 
+                                   class="hover:text-move-purple-600 transition-colors">
+                                    {{ task.title }}
+                                </a>
+                            </h3>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                       {% if task.status == 'completed' %}bg-green-100 text-green-800
+                                       {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                       {% elif task.status == 'review' %}bg-yellow-100 text-yellow-800
+                                       {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ task.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {% if task.assignee %}
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-user mr-1"></i>
+                                {{ task.assignee.get_full_name }}
+                            </div>
+                            {% endif %}
+                            {% if task.due_date %}
+                            <div class="flex items-center text-sm {% if task.is_overdue %}text-red-600{% else %}text-gray-600{% endif %}">
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ task.due_date|date:"d/m/Y" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if task.description %}
+                    <p class="text-gray-600 mb-3">{{ task.description|truncatewords:20 }}</p>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-columns mr-1"></i>
+                                {{ task.board.name }}
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-list mr-1"></i>
+                                {{ task.column.name }}
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                       {% if task.priority == 'low' %}bg-green-100 text-green-800
+                                       {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                       {% elif task.priority == 'high' %}bg-red-100 text-red-800
+                                       {% else %}bg-red-200 text-red-900{% endif %}">
+                                {{ task.get_priority_display }}
+                            </span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="{% url 'tasks:task_detail' task.id %}" 
+                               class="text-move-purple-600 hover:text-move-purple-700 text-sm font-medium">
+                                Ver detalhes
+                            </a>
+                            <a href="{% url 'tasks:task_edit' task.id %}" 
+                               class="text-gray-600 hover:text-gray-700 text-sm">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Paginação -->
+        {% if page_obj.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200">
+            <nav class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Anterior
+                    </a>
+                    {% endif %}
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Próxima
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700">
+                            Mostrando
+                            <span class="font-medium">{{ page_obj.start_index }}</span>
+                            a
+                            <span class="font-medium">{{ page_obj.end_index }}</span>
+                            de
+                            <span class="font-medium">{{ page_obj.paginator.count }}</span>
+                            resultados
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                            {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Anterior</span>
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-move-purple-50 text-sm font-medium text-move-purple-600">
+                                {{ num }}
+                            </span>
+                            {% else %}
+                            <a href="?page={{ num }}" 
+                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ num }}
+                            </a>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">Próxima</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="p-12 text-center">
+            <i class="fas fa-tasks text-4xl text-gray-400 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhuma tarefa encontrada</h3>
+            <p class="text-gray-600">Crie uma nova tarefa ou ajuste os filtros para ver resultados.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+{% endblock %}

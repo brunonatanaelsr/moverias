@@ -1,0 +1,241 @@
+<!-- Footer Moderno -->
+<footer class="bg-gray-50 border-t border-gray-200 relative z-50" role="contentinfo">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8">
+        <div class="xl:grid xl:grid-cols-3 xl:gap-8">
+            <!-- Logo e Descrição -->
+            <div class="space-y-8 xl:col-span-1">
+                <div class="flex items-center space-x-3">
+                    <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-move-purple-500 to-move-pink-500 flex items-center justify-center">
+                        <i class="fas fa-heart text-white text-lg"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-xl font-bold bg-gradient-to-r from-move-purple-600 to-move-pink-600 bg-clip-text text-transparent">
+                            Move Marias
+                        </span>
+                        <span class="text-xs text-gray-500 font-medium">Transformando Vidas</span>
+                    </div>
+                </div>
+                
+                <p class="text-gray-500 text-base max-w-md">
+                    Sistema de gestão e acompanhamento social dedicado ao empoderamento feminino e transformação de vidas através de projetos sociais inovadores.
+                </p>
+                
+                <!-- Redes Sociais -->
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-move-purple-500 transition-colors">
+                        <span class="sr-only">Instagram</span>
+                        <i class="fab fa-instagram text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-move-purple-500 transition-colors">
+                        <span class="sr-only">Facebook</span>
+                        <i class="fab fa-facebook text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-move-purple-500 transition-colors">
+                        <span class="sr-only">LinkedIn</span>
+                        <i class="fab fa-linkedin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-move-purple-500 transition-colors">
+                        <span class="sr-only">YouTube</span>
+                        <i class="fab fa-youtube text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Links Principais -->
+            <div class="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
+                <div class="md:grid md:grid-cols-2 md:gap-8">
+                    <!-- Sistema -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                            Sistema
+                        </h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li>
+                                <a href="{% url 'dashboard:home' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'members:beneficiary-list' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Beneficiárias
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'projects:project-list' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Projetos
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'workshops:workshop-list' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Oficinas
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Gestão -->
+                    <div class="mt-12 md:mt-0">
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                            Gestão
+                        </h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li>
+                                <a href="{% url 'users:user-list' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Usuários
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'core:monitoring_dashboard' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Monitoramento
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'members:beneficiary-report-dashboard' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Relatórios
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'admin:index' %}" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Administração
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="md:grid md:grid-cols-2 md:gap-8">
+                    <!-- Suporte -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                            Suporte
+                        </h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Central de Ajuda
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Documentação
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Tutoriais
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Contato
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Legal -->
+                    <div class="mt-12 md:mt-0">
+                        <h3 class="text-sm font-semibold text-gray-400 tracking-wider uppercase">
+                            Legal
+                        </h3>
+                        <ul role="list" class="mt-4 space-y-4">
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Política de Privacidade
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Termos de Uso
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    LGPD
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="text-base text-gray-500 hover:text-gray-900 transition-colors">
+                                    Acessibilidade
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Estatísticas e Informações Adicionais -->
+        <div class="mt-12 border-t border-gray-200 pt-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Estatísticas -->
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-move-purple-600">{{ total_beneficiaries|default:"500+" }}</div>
+                    <div class="text-sm text-gray-500">Beneficiárias Atendidas</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-move-pink-600">{{ total_projects|default:"50+" }}</div>
+                    <div class="text-sm text-gray-500">Projetos Ativos</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-700">{{ years_active|default:"5+" }}</div>
+                    <div class="text-sm text-gray-500">Anos de Impacto</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Copyright e Informações do Sistema -->
+        <div class="mt-12 border-t border-gray-200 pt-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex space-x-6 md:order-2">
+                    <!-- Status do Sistema -->
+                    <div class="flex items-center text-sm text-gray-500">
+                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                        Sistema Online
+                    </div>
+                    
+                    <!-- Versão -->
+                    <div class="text-sm text-gray-500">
+                        v{{ system_version|default:"2.0.0" }}
+                    </div>
+                    
+                    <!-- Última Atualização -->
+                    <div class="text-sm text-gray-500">
+                        Atualizado em {{ last_update|default:"01/07/2025" }}
+                    </div>
+                </div>
+                
+                <p class="mt-8 text-base text-gray-400 md:mt-0 md:order-1">
+                    &copy; {{ current_year|default:"2025" }} Move Marias. Todos os direitos reservados.
+                    <span class="block mt-1 text-xs">
+                        Desenvolvido com 💜 para transformar vidas.
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript para footer dinâmico -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Atualizar ano atual automaticamente
+    const currentYear = new Date().getFullYear();
+    const yearElements = document.querySelectorAll('[data-current-year]');
+    yearElements.forEach(el => el.textContent = currentYear);
+    
+    // Smooth scroll para links internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+</script>

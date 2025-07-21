@@ -1,9 +1,9 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, Row, Column, Field, HTML, Div
-from crispy_forms.bootstrap import FormActions
-
+from core.validation import (
+    MoveMariasModelForm, CPFField, PhoneField, CEPField, 
+    PasswordField, ImageField
+)
 from .models import (
     Employee, Department, JobPosition, 
     EmployeeDocument, PerformanceReview, TrainingRecord
@@ -12,323 +12,356 @@ from .models import (
 User = get_user_model()
 
 
-class EmployeeForm(forms.ModelForm):
-    """Formulário para criação/edição de funcionários."""
+class DepartmentForm(MoveMariasModelForm):
+    """Formulário para criar/editar departamentos"""
+    
+    class Meta:
+        model = Department
+        fields = ['name', 'description', 'manager', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'placeholder': 'Nome do departamento',
+                'maxlength': 100
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Descrição do departamento'
+            }),
+            'manager': forms.Select(attrs={
+                'class': 'mm-form-select-enhanced'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['manager'].queryset = User.objects.filter(is_active=True)
+        self.fields['manager'].empty_label = "Selecione um gerente"
+
+
+class JobPositionForm(MoveMariasModelForm):
+    """Formulário para criar/editar cargos"""
+    
+    class Meta:
+        model = JobPosition
+        fields = [
+            'title', 'description', 'requirements', 'responsibilities',
+            'department', 'salary_range_min', 'salary_range_max', 'is_active'
+        ]
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'placeholder': 'Título do cargo',
+                'maxlength': 100
+            }),
+            'description': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Descrição do cargo'
+            }),
+            'requirements': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Requisitos para o cargo'
+            }),
+            'responsibilities': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Responsabilidades do cargo'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'mm-form-select-enhanced'
+            }),
+            'salary_range_min': forms.NumberInput(attrs={
+                'step': '0.01',
+                'placeholder': 'Salário mínimo',
+                'min': '0'
+            }),
+            'salary_range_max': forms.NumberInput(attrs={
+                'step': '0.01',
+                'placeholder': 'Salário máximo',
+                'min': '0'
+            }),
+        }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        salary_min = cleaned_data.get('salary_range_min')
+        salary_max = cleaned_data.get('salary_range_max')
+        
+        if salary_min and salary_max and salary_min > salary_max:
+            raise forms.ValidationError('Salário mínimo não pode ser maior que o salário máximo')
+        
+        return cleaned_data
+
+
+class EmployeeForm(MoveMariasModelForm):
+    """Formulário para criar/editar funcionários"""
+    
+    # Campos customizados com validação
+    cpf = CPFField(label='CPF')
+    phone = PhoneField(label='Telefone')
+    zip_code = CEPField(label='CEP')
+    emergency_contact_phone = PhoneField(label='Telefone do contato de emergência')
     
     class Meta:
         model = Employee
         fields = [
-            'user', 'cpf', 'phone', 'mobile_phone', 'address', 'city', 'state', 'zip_code',
-            'department', 'job_position', 'supervisor', 'hire_date', 'salary', 'benefits',
-            'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
-            'education_level', 'skills', 'certifications', 'photo', 'notes', 'is_active'
+            'user', 'employee_number', 'full_name', 'cpf', 'rg', 'birth_date',
+            'gender', 'marital_status', 'phone', 'personal_email', 'address',
+            'city', 'state', 'zip_code', 'emergency_contact_name',
+            'emergency_contact_relationship', 'emergency_contact_phone',
+            'job_position', 'department', 'direct_supervisor', 'employment_type',
+            'employment_status', 'hire_date', 'salary', 'education_level',
+            'skills', 'notes'
         ]
         widgets = {
-            'hire_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'salary': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'benefits': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'skills': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'certifications': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'cpf': forms.TextInput(attrs={'placeholder': '000.000.000-00', 'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'placeholder': '(11) 0000-0000', 'class': 'form-control'}),
-            'mobile_phone': forms.TextInput(attrs={'placeholder': '(11) 90000-0000', 'class': 'form-control'}),
-            'emergency_contact_phone': forms.TextInput(attrs={'placeholder': '(11) 90000-0000', 'class': 'form-control'}),
+            'user': forms.Select(attrs={
+                'class': 'mm-form-select-enhanced'
+            }),
+            'employee_number': forms.TextInput(attrs={
+                'placeholder': 'Número de matrícula',
+                'maxlength': 20
+            }),
+            'full_name': forms.TextInput(attrs={
+                'placeholder': 'Nome completo',
+                'maxlength': 200
+            }),
+            'rg': forms.TextInput(attrs={
+                'placeholder': 'RG',
+                'maxlength': 20
+            }),
+            'birth_date': forms.DateInput(attrs={
+                'type': 'date',
+                'data-validation': 'birth-date'
+            }),
+            'gender': forms.Select(attrs={
+                'class': 'mm-form-select-enhanced'
+            }),
+            'marital_status': forms.Select(attrs={
+                'class': 'mm-form-select-enhanced'
+            }),
+            'personal_email': forms.EmailInput(attrs={
+                'placeholder': 'email@exemplo.com'
+            }),
+            'address': forms.Textarea(attrs={
+                'rows': 2,
+                'placeholder': 'Endereço completo'
+            }),
+            'city': forms.TextInput(attrs={
+                'placeholder': 'Cidade',
+                'maxlength': 100
+            }),
+            'state': forms.TextInput(attrs={
+                'placeholder': 'UF',
+                'maxlength': 2,
+                'data-validation': 'state'
+            }),
+            'emergency_contact_name': forms.TextInput(attrs={
+                'placeholder': 'Nome do contato de emergência',
+                'maxlength': 200
+            }),
+            'emergency_contact_relationship': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Parentesco'
+            }),
+            'emergency_contact_phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '(00) 00000-0000'
+            }),
+            'job_position': forms.Select(attrs={'class': 'form-control'}),
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'direct_supervisor': forms.Select(attrs={'class': 'form-control'}),
+            'employment_type': forms.Select(attrs={'class': 'form-control'}),
+            'employment_status': forms.Select(attrs={'class': 'form-control'}),
+            'hire_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'salary': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'placeholder': 'Salário'
+            }),
+            'education_level': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nível de escolaridade'
+            }),
+            'skills': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Habilidades e competências'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Observações'
+            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_class = 'form-horizontal'
-        self.helper.label_class = 'col-lg-3'
-        self.helper.field_class = 'col-lg-9'
-        
-        # Filtrar supervisores para não incluir o próprio funcionário
-        if self.instance.pk:
-            self.fields['supervisor'].queryset = Employee.objects.filter(
-                is_active=True
-            ).exclude(pk=self.instance.pk)
-        
-        self.helper.layout = Layout(
-            HTML('<div class="card"><div class="card-header"><h4>Informações Pessoais</h4></div><div class="card-body">'),
-            Row(
-                Column('user', css_class='form-group col-md-6'),
-                Column('cpf', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('phone', css_class='form-group col-md-6'),
-                Column('mobile_phone', css_class='form-group col-md-6'),
-            ),
-            'address',
-            Row(
-                Column('city', css_class='form-group col-md-4'),
-                Column('state', css_class='form-group col-md-4'),
-                Column('zip_code', css_class='form-group col-md-4'),
-            ),
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Informações Profissionais</h4></div><div class="card-body">'),
-            Row(
-                Column('department', css_class='form-group col-md-6'),
-                Column('job_position', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('supervisor', css_class='form-group col-md-4'),
-                Column('hire_date', css_class='form-group col-md-4'),
-                Column('salary', css_class='form-group col-md-4'),
-            ),
-            'benefits',
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Contato de Emergência</h4></div><div class="card-body">'),
-            Row(
-                Column('emergency_contact_name', css_class='form-group col-md-4'),
-                Column('emergency_contact_phone', css_class='form-group col-md-4'),
-                Column('emergency_contact_relationship', css_class='form-group col-md-4'),
-            ),
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Formação e Competências</h4></div><div class="card-body">'),
-            'education_level',
-            'skills',
-            'certifications',
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Outros</h4></div><div class="card-body">'),
-            'photo',
-            'notes',
-            'is_active',
-            HTML('</div></div>'),
-            
-            FormActions(
-                Submit('submit', 'Salvar', css_class='btn btn-primary'),
-                HTML('<a href="{% url "hr:employee_list" %}" class="btn btn-secondary">Cancelar</a>'),
-            )
-        )
-
-
-class DepartmentForm(forms.ModelForm):
-    """Formulário para criação/edição de departamentos."""
-    
-    class Meta:
-        model = Department
-        fields = ['name', 'description', 'manager']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.add_input(Submit('submit', 'Salvar', css_class='btn btn-primary'))
-
-
-class JobPositionForm(forms.ModelForm):
-    """Formulário para criação/edição de cargos."""
-    
-    class Meta:
-        model = JobPosition
-        fields = ['title', 'description', 'requirements', 'min_salary', 'max_salary', 'is_active']
-        widgets = {
-            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'requirements': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'min_salary': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
-            'max_salary': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.layout = Layout(
-            'title',
-            'description',
-            'requirements',
-            Row(
-                Column('min_salary', css_class='form-group col-md-6'),
-                Column('max_salary', css_class='form-group col-md-6'),
-            ),
-            'is_active',
-            FormActions(
-                Submit('submit', 'Salvar', css_class='btn btn-primary'),
-            )
-        )
 
 
 class EmployeeDocumentForm(forms.ModelForm):
-    """Formulário para upload de documentos de funcionários."""
+    """Formulário para upload de documentos de funcionários"""
     
     class Meta:
         model = EmployeeDocument
-        fields = ['title', 'document_type', 'file', 'notes']
+        fields = ['document_type', 'title', 'description', 'file', 'is_confidential']
         widgets = {
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'document_type': forms.Select(attrs={'class': 'form-control'}),
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título do documento'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descrição do documento'
+            }),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_enctype = 'multipart/form-data'
-        self.helper.add_input(Submit('submit', 'Salvar', css_class='btn btn-primary'))
 
 
 class PerformanceReviewForm(forms.ModelForm):
-    """Formulário para avaliações de desempenho."""
+    """Formulário para avaliações de desempenho"""
     
     class Meta:
         model = PerformanceReview
         fields = [
-            'employee', 'reviewer', 'review_period_start', 'review_period_end',
-            'goals_achievement', 'quality_of_work', 'teamwork', 'communication',
-            'punctuality', 'initiative', 'leadership', 'overall_rating',
-            'strengths', 'areas_for_improvement', 'development_plan', 'status'
+            'employee', 'review_type', 'review_period_start', 'review_period_end',
+            'technical_skills', 'communication', 'teamwork', 'leadership',
+            'punctuality', 'productivity', 'strengths', 'areas_for_improvement',
+            'goals_for_next_period', 'employee_comments', 'review_date', 'is_final'
         ]
         widgets = {
-            'review_period_start': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'review_period_end': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'goals_achievement': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'quality_of_work': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'teamwork': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'communication': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'punctuality': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'initiative': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'leadership': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'overall_rating': forms.NumberInput(attrs={'min': 1, 'max': 5, 'class': 'form-control'}),
-            'strengths': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'areas_for_improvement': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
-            'development_plan': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'review_type': forms.Select(attrs={'class': 'form-control'}),
+            'review_period_start': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'review_period_end': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'technical_skills': forms.Select(attrs={'class': 'form-control'}),
+            'communication': forms.Select(attrs={'class': 'form-control'}),
+            'teamwork': forms.Select(attrs={'class': 'form-control'}),
+            'leadership': forms.Select(attrs={'class': 'form-control'}),
+            'punctuality': forms.Select(attrs={'class': 'form-control'}),
+            'productivity': forms.Select(attrs={'class': 'form-control'}),
+            'strengths': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Pontos fortes do funcionário'
+            }),
+            'areas_for_improvement': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Áreas que precisam de melhoria'
+            }),
+            'goals_for_next_period': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Metas para o próximo período'
+            }),
+            'employee_comments': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Comentários do funcionário'
+            }),
+            'review_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.layout = Layout(
-            HTML('<div class="card"><div class="card-header"><h4>Informações da Avaliação</h4></div><div class="card-body">'),
-            Row(
-                Column('employee', css_class='form-group col-md-6'),
-                Column('reviewer', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('review_period_start', css_class='form-group col-md-6'),
-                Column('review_period_end', css_class='form-group col-md-6'),
-            ),
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Critérios de Avaliação (1-5)</h4></div><div class="card-body">'),
-            Row(
-                Column('goals_achievement', css_class='form-group col-md-6'),
-                Column('quality_of_work', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('teamwork', css_class='form-group col-md-6'),
-                Column('communication', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('punctuality', css_class='form-group col-md-4'),
-                Column('initiative', css_class='form-group col-md-4'),
-                Column('leadership', css_class='form-group col-md-4'),
-            ),
-            'overall_rating',
-            HTML('</div></div>'),
-            
-            HTML('<div class="card mt-3"><div class="card-header"><h4>Comentários e Plano de Desenvolvimento</h4></div><div class="card-body">'),
-            'strengths',
-            'areas_for_improvement',
-            'development_plan',
-            'status',
-            HTML('</div></div>'),
-            
-            FormActions(
-                Submit('submit', 'Salvar', css_class='btn btn-primary'),
-            )
-        )
 
 
 class TrainingRecordForm(forms.ModelForm):
-    """Formulário para registros de treinamento."""
+    """Formulário para registros de treinamento"""
     
     class Meta:
         model = TrainingRecord
         fields = [
-            'employee', 'training_name', 'training_type', 'description',
-            'start_date', 'completion_date', 'duration_hours', 'status',
-            'certificate_number', 'cost', 'notes'
+            'employee', 'training_name', 'training_type', 'provider',
+            'start_date', 'end_date', 'hours', 'cost', 'status',
+            'certificate_obtained', 'notes'
         ]
         widgets = {
-            'start_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'completion_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'duration_hours': forms.NumberInput(attrs={'min': 0, 'step': '0.5', 'class': 'form-control'}),
-            'cost': forms.NumberInput(attrs={'step': '0.01', 'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'employee': forms.Select(attrs={'class': 'form-control'}),
+            'training_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome do treinamento'
+            }),
+            'training_type': forms.Select(attrs={'class': 'form-control'}),
+            'provider': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Provedor/Instituição'
+            }),
+            'start_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'end_date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'hours': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Carga horária'
+            }),
+            'cost': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'placeholder': 'Custo do treinamento'
+            }),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Observações'
+            }),
         }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.layout = Layout(
-            Row(
-                Column('employee', css_class='form-group col-md-6'),
-                Column('training_type', css_class='form-group col-md-6'),
-            ),
-            'training_name',
-            'description',
-            Row(
-                Column('start_date', css_class='form-group col-md-6'),
-                Column('completion_date', css_class='form-group col-md-6'),
-            ),
-            Row(
-                Column('duration_hours', css_class='form-group col-md-4'),
-                Column('status', css_class='form-group col-md-4'),
-                Column('cost', css_class='form-group col-md-4'),
-            ),
-            'certificate_number',
-            'notes',
-            FormActions(
-                Submit('submit', 'Salvar', css_class='btn btn-primary'),
-            )
-        )
 
 
 class EmployeeSearchForm(forms.Form):
-    """Formulário de busca de funcionários."""
+    """Formulário de busca para funcionários"""
     search = forms.CharField(
-        max_length=100,
         required=False,
         widget=forms.TextInput(attrs={
-            'placeholder': 'Buscar por nome, email ou CPF...',
-            'class': 'form-control'
+            'class': 'form-control',
+            'placeholder': 'Buscar por nome, email ou CPF...'
         })
     )
     department = forms.ModelChoiceField(
-        queryset=Department.objects.all(),
+        queryset=Department.objects.filter(is_active=True),
         required=False,
-        empty_label="Todos os departamentos",
+        empty_label='Todos os departamentos',
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    position = forms.ModelChoiceField(
-        queryset=JobPosition.objects.filter(is_active=True),
+    employment_status = forms.ChoiceField(
+        choices=[('', 'Todos os status')] + Employee.EMPLOYMENT_STATUS_CHOICES,
         required=False,
-        empty_label="Todos os cargos",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'get'
-        self.helper.form_class = 'form-inline'
-        self.helper.layout = Layout(
-            Row(
-                Column('search', css_class='form-group col-md-4'),
-                Column('department', css_class='form-group col-md-3'),
-                Column('position', css_class='form-group col-md-3'),
-                Column(Submit('submit', 'Buscar', css_class='btn btn-primary'), css_class='form-group col-md-2'),
-            )
-        )
+
+
+class TrainingSearchForm(forms.Form):
+    """Formulário de busca para treinamentos"""
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Buscar treinamentos...'
+        })
+    )
+    training_type = forms.ChoiceField(
+        choices=[('', 'Todos os tipos')] + TrainingRecord.TRAINING_TYPE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    status = forms.ChoiceField(
+        choices=[('', 'Todos os status')] + TrainingRecord.STATUS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    employee = forms.ModelChoiceField(
+        queryset=Employee.objects.filter(employment_status='active'),
+        required=False,
+        empty_label='Todos os funcionários',
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
