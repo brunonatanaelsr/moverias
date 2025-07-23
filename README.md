@@ -40,3 +40,4 @@ python manage.py runserver
 - SQLite
 - TailwindCSS
 - HTMX
+# move
