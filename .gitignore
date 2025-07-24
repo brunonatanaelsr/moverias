@@ -109,3 +109,24 @@ requirements_dev.txt
 # Templates antigos
 templates/dashboard_base_new.html
 templates/dashboard_base_old.html
+
+# Arquivos de análise e scripts temporários
+ANALISE_*.md
+analise_*.sh
+corrigir_*.sh
+finalizar_*.sh
+migrate_*.sh
+test_*.sh
+test_*.py
+fix_permissions.sh
+start_django.sh
+activities_models_example.py
+backup_*.json
+contexto.rtf
+
+# Logs e estatísticas
+logs/
+staticfiles/
+
+# Bancos de dados adicionais
+"db *.sqlite3"
