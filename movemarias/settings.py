@@ -75,8 +75,22 @@ ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     '127.0.0.1', 
     'move.squadsolucoes.com.br', 
     'www.move.squadsolucoes.com.br',
-    '145.79.6.36'  # VPS IP
+    '145.79.6.36',  # VPS IP
+    '.github.dev',  # GitHub Codespaces domain
+    '.app.github.dev'  # GitHub Codespaces domain
 ])
+
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.github.dev',
+    'https://*.app.github.dev',
+    'http://localhost:8000',
+    'https://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://127.0.0.1:8000',
+    'https://move.squadsolucoes.com.br',
+    'https://www.move.squadsolucoes.com.br'
+]
 
 
 # Application definition
@@ -394,8 +408,13 @@ if DEBUG:
     CSRF_COOKIE_AGE = 31449600  # 1 year
     CSRF_TRUSTED_ORIGINS = [
         'http://localhost:8000',
+        'https://localhost:8000',
         'http://127.0.0.1:8000',
+        'https://127.0.0.1:8000',
         'http://0.0.0.0:8000',
+        'https://0.0.0.0:8000',
+        'https://*.github.dev',
+        'https://*.app.github.dev',
     ]
     CSRF_USE_SESSIONS = False  # Use cookies, not sessions
     CSRF_FAILURE_VIEW = 'django.views.csrf.csrf_failure'

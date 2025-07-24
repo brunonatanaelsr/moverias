@@ -1,300 +1,104 @@
-{% extends 'tasks/base.html' %}
+{% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %}Quadros Kanban - Move Marias{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    .dashboard-slide-up:nth-child(1) { animation-delay: 0.1s; }
-    .dashboard-slide-up:nth-child(2) { animation-delay: 0.2s; }
-    .dashboard-slide-up:nth-child(3) { animation-delay: 0.3s; }
-    .dashboard-slide-up:nth-child(4) { animation-delay: 0.4s; }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-
-{% block extra_css %}
-<style>
-    .board-card {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .board-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    }
-    .progress-bar {
-        transition: width 0.3s ease;
-    }
-    .member-avatar {
-        border: 2px solid white;
-        margin-left: -8px;
-    }
-    .member-avatar:first-child {
-        margin-left: 0;
-    }
-    .create-board-card {
-        border: 2px dashed #D1D5DB;
-        transition: all 0.2s ease;
-    }
-    .create-board-card:hover {
-        border-color: #8B5CF6;
-        background-color: #F9FAFB;
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}Quadros de Tarefas - Move Marias{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-    <!-- Welcome Header -->
-    <div class="dashboard-header-optimized dashboard-fade-in">
-        <div class="dashboard-header-content-optimized">
-            <div class="dashboard-header-icon">📋</div>
-            <div class="dashboard-header-text">
-                <h1>Tarefas</h1>
-                <p>Organize tarefas e acompanhe progresso</p>
-            </div>
-        </div>
-        <div class="hidden lg:block text-right">
-            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
-            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
-        </div>
-    </div>
-
-    <!-- Estatísticas Rápidas -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-th-large text-blue-600"></i>
-                    </div>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total de Quadros</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ total_boards }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-tasks text-green-600"></i>
-                    </div>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Quadros Ativos</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ boards|length }}</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div class="flex-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-users text-purple-600"></i>
-                    </div>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Colaborando</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ boards|length }}</p>
-                </div>
-            </div>
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Meus Quadros</h1>
+        <div class="flex gap-4">
+            <a href="{% url 'tasks:dashboard' %}" 
+               class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
+                Ver Dashboard
+            </a>
+            <a href="{% url 'tasks:board_create' %}" 
+               class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                Novo Quadro
+            </a>
         </div>
     </div>
 
     <!-- Lista de Quadros -->
-    {% if boards %}
-    <div class="grid-optimized grid-optimized-3">
-        <!-- Card para criar novo quadro -->
-        <div class="create-board-card bg-white rounded-lg p-6 flex flex-col items-center justify-center min-h-80 cursor-pointer"
-             onclick="window.location.href='{% url 'tasks:board_create' %}'">
-            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="fas fa-plus text-2xl text-gray-400"></i>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">Criar Novo Quadro</h3>
-            <p class="text-sm text-gray-500 text-center">Organize suas tarefas em um novo quadro Kanban</p>
-        </div>
-
-        <!-- Quadros existentes -->
-        {% for board in boards %}
-        <div class="board-card bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer"
-             onclick="window.location.href='{% url 'tasks:board_detail' board.id %}'">
-            <!-- Header do quadro -->
-            <div class="p-6 pb-4">
-                <div class="flex items-start justify-between mb-3">
-                    <h3 class="text-lg font-semibold text-gray-900 line-clamp-2">{{ board.name }}</h3>
-                    <div class="flex items-center space-x-2">
-                        {% if board.owner == user %}
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            <i class="fas fa-crown mr-1"></i>
-                            Proprietário
-                        </span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <i class="fas fa-user-friends mr-1"></i>
-                            Membro
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                {% if board.description %}
-                <p class="text-sm text-gray-600 line-clamp-2 mb-4">{{ board.description|truncatewords:15 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Estatísticas do quadro -->
-            <div class="px-6 pb-4">
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900">{{ board.get_total_tasks }}</p>
-                        <p class="text-xs text-gray-600">Tarefas</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-green-600">{{ board.get_completed_tasks }}</p>
-                        <p class="text-xs text-gray-600">Concluídas</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Barra de progresso -->
-            <div class="px-6 pb-4">
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-1">
-                    <span>Progresso</span>
-                    <span>{{ board.get_progress_percentage|floatformat:0 }}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="progress-bar bg-move-purple-600 h-2 rounded-full" 
-                         style="width: {{ board.get_progress_percentage }}%"></div>
-                </div>
-            </div>
-
-            <!-- Membros e data -->
-            <div class="px-6 pb-6">
-                <div class="flex items-center justify-between">
-                    <!-- Avatares dos membros -->
-                    <div class="flex-center">
-                        {% if board.members.all %}
-                        <div class="flex -space-x-2">
-                            {% for member in board.members.all|slice:":4" %}
-                            <div class="member-avatar w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                {{ member.get_full_name|first|upper }}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if boards %}
+            {% for board in boards %}
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 class="text-xl font-semibold text-gray-800">
+                                    <a href="{% url 'tasks:board_detail' board.id %}" 
+                                       class="hover:text-primary">
+                                        {{ board.name }}
+                                    </a>
+                                </h2>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    {{ board.description|truncatechars:100 }}
+                                </p>
                             </div>
-                            {% endfor %}
-                            {% if board.members.count > 4 %}
-                            <div class="member-avatar w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-xs font-medium text-white">
-                                +{{ board.members.count|add:"-4" }}
-                            </div>
-                            {% endif %}
+                            <a href="{% url 'tasks:board_edit' board.id %}" 
+                               class="text-gray-400 hover:text-primary">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                    </path>
+                                </svg>
+                            </a>
                         </div>
-                        {% else %}
-                        <div class="text-sm text-gray-500">
-                            <i class="fas fa-user mr-1"></i>
-                            Apenas você
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Data de atualização -->
-                    <div class="text-xs text-gray-500">
-                        Atualizado {{ board.updated_at|timesince }} atrás
-                    </div>
-                </div>
-            </div>
 
-            <!-- Footer com ações rápidas -->
-            <div class="bg-gray-50 px-6 py-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3 text-xs text-gray-600">
-                        {% if board.department %}
-                        <span class="flex-center">
-                            <i class="fas fa-building mr-1"></i>
-                            {{ board.department.name }}
-                        </span>
+                        <div class="flex items-center justify-between text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                    </path>
+                                </svg>
+                                {{ board.tasks.count }} tarefas
+                            </div>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                    </path>
+                                </svg>
+                                Atualizado {{ board.updated_at|timesince }}
+                            </div>
+                        </div>
+
+                        {% if board.members.exists %}
+                            <div class="mt-4 pt-4 border-t border-gray-100">
+                                <p class="text-sm text-gray-600 mb-2">Membros:</p>
+                                <div class="flex flex-wrap gap-2">
+                                    {% for member in board.members.all %}
+                                        <span class="px-2 py-1 text-sm bg-gray-100 text-gray-700 rounded-full">
+                                            {{ member.get_full_name|default:member.email }}
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         {% endif %}
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="event.stopPropagation();" 
-                                class="text-gray-400 hover:text-gray-600 p-1 rounded">
-                            <i class="fas fa-star"></i>
-                        </button>
-                        <button onclick="event.stopPropagation();" 
-                                class="text-gray-400 hover:text-gray-600 p-1 rounded">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-span-full">
+                <div class="bg-white rounded-lg shadow p-6 text-center">
+                    <p class="text-gray-600 mb-4">Você ainda não tem nenhum quadro de tarefas.</p>
+                    <a href="{% url 'tasks:board_create' %}" 
+                       class="inline-block bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                        Criar Primeiro Quadro
+                    </a>
                 </div>
             </div>
-        </div>
-        {% endfor %}
+        {% endif %}
     </div>
-    {% else %}
-    <!-- Estado vazio -->
-    <div class="text-center py-12">
-        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <i class="fas fa-th-large text-3xl text-gray-400"></i>
+
+    {% if total_boards > 0 %}
+        <div class="mt-8 text-center text-gray-600">
+            Total de {{ total_boards }} quadro{{ total_boards|pluralize }} de tarefas
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum quadro encontrado</h3>
-        <p class="text-gray-600 mb-6 max-w-md mx-auto">
-            Crie seu primeiro quadro Kanban para começar a organizar suas tarefas e projetos de forma visual e eficiente.
-        </p>
-        <a href="{% url 'tasks:board_create' %}" 
-           class="bg-move-purple-600 text-white px-6 py-3 rounded-lg hover:bg-move-purple-700 transition-colors inline-flex items-center">
-            <i class="fas fa-plus mr-2"></i>
-            Criar Primeiro Quadro
-        </a>
-    </div>
     {% endif %}
-</div>
-
-<script>
-// Prevent card click when clicking on action buttons
-document.addEventListener('DOMContentLoaded', function() {
-    const actionButtons = document.querySelectorAll('[onclick*="stopPropagation"]');
-    actionButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    });
-});
-</script>
 </div>
 {% endblock %}

@@ -17,6 +17,9 @@ urlpatterns = [
     path('enrollment/<int:pk>/edit/', views.ProjectEnrollmentUpdateView.as_view(), name='enrollment-update'),
     path('enrollment/<int:pk>/delete/', views.ProjectEnrollmentDeleteView.as_view(), name='enrollment-delete'),
     
+    # Deletar projeto
+    path('<int:pk>/delete/', views.project_delete, name='project-delete'),
+    
     # Exportação
     path('<int:pk>/export/', views.export_project_data, name='project-export'),
 ]

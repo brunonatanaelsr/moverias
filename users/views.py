@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib import messages
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Count
 from django.http import JsonResponse
@@ -35,6 +35,21 @@ import json
 def is_admin_or_staff(user):
     """Verifica se o usuário é admin ou staff"""
     return user.is_staff or user.is_superuser or user.role in ['admin', 'coordenador']
+
+
+@method_decorator(login_required, name='dispatch')
+class ProfileView(UpdateView):
+    model = CustomUser
+    form_class = UserProfileForm
+    template_name = 'users/profile.html'
+    success_url = reverse_lazy('users:profile')
+
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Perfil atualizado com sucesso!')
+        return super().form_valid(form)
 
 
 class UserManagementMixin(CoordinatorRequiredMixin):

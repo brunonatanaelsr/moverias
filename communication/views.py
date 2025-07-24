@@ -57,12 +57,35 @@ def communication_dashboard(request):
         ).distinct().count(),
     }
     
+    # Combina anúncios e memorandos em uma única lista ordenada por data
+    recent_messages = []
+    for announcement in recent_announcements:
+        recent_messages.append({
+            'id': announcement.id,
+            'type': 'announcement',
+            'subject': announcement.title,
+            'recipient': 'Todos',
+            'status': 'sent',
+            'created_at': announcement.created_at
+        })
+    for memo in recent_memos:
+        recent_messages.append({
+            'id': memo.id,
+            'type': 'memo',
+            'subject': memo.subject,
+            'recipient': memo.to_departments.first().name if memo.to_departments.exists() else 'Privado',
+            'status': 'pending' if memo.requires_response else 'sent',
+            'created_at': memo.created_at
+        })
+    
+    # Ordena por data de criação, mais recentes primeiro
+    recent_messages.sort(key=lambda x: x['created_at'], reverse=True)
+    
     context = {
-        'recent_announcements': recent_announcements,
-        'recent_memos': recent_memos,
-        'recent_suggestions': recent_suggestions,
-        'pending_suggestions': pending_suggestions,
-        'stats': stats,
+        'recent_messages': recent_messages,
+        'total_messages': stats['total_announcements'] + stats['total_memos'],
+        'messages_sent': stats['total_announcements'] + (stats['total_memos'] - stats['pending_responses']),
+        'pending_messages': stats['pending_responses'],
     }
     
     return render(request, 'communication/dashboard.html', context)

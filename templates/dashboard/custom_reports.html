@@ -1,53 +1,253 @@
-{% extends 'dashboard_base.html' %}
-{% block content %}
-<h1 class="text-2xl font-bold mb-4">Relatórios Personalizados</h1>
-<form method="get" class="mb-6 flex flex-wrap gap-4">
-    <label>Tipo:
-        <select name="report_type" class="border rounded px-2 py-1">
-            {% for value, label in available_types %}
-                <option value="{{ value }}" {% if value == report_type %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </label>
-    <label>Início:
-        <input type="date" name="start_date" value="{{ start_date }}" class="border rounded px-2 py-1">
-    </label>
-    <label>Fim:
-        <input type="date" name="end_date" value="{{ end_date }}" class="border rounded px-2 py-1">
-    </label>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filtrar</button>
-    <a href="?report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export_format=csv" class="ml-2 underline text-blue-700">Exportar CSV</a>
-    <a href="?report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}&export_format=excel" class="ml-2 underline text-blue-700">Exportar Excel</a>
-</form>
+{% extends "layouts/base.html" %}
+{% load static %}
 
-{% if report_data %}
-    <h2 class="text-xl font-semibold mb-2">{{ report_data.title }}</h2>
-    <div class="mb-4">
-        <span class="font-bold">Total:</span> {{ report_data.total_count }}
+{% block title %}Relatórios Personalizados - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Relatórios Personalizados</h1>
+        <a href="{% url 'dashboard:reports' %}" 
+           class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+            Relatórios Gerais
+        </a>
     </div>
-    <div class="overflow-x-auto">
-        <table class="min-w-full border text-sm">
-            <thead>
-                <tr>
-                    {% for key in report_data.items.0|default:{} %}
-                        <th class="border px-2 py-1">{{ key|capfirst }}</th>
+
+    <!-- Criador de Relatórios -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Criar Novo Relatório</h3>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Nome do Relatório -->
+            <div>
+                <label for="report_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Nome do Relatório
+                </label>
+                <input type="text" name="report_name" id="report_name" 
+                       class="w-full rounded-md border-gray-300" 
+                       placeholder="Ex: Relatório Mensal de Atividades">
+            </div>
+
+            <!-- Fonte de Dados -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fonte de Dados</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="data_sources" value="beneficiaries" class="text-primary">
+                            <span class="ml-2 text-sm">Beneficiárias</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="data_sources" value="projects" class="text-primary">
+                            <span class="ml-2 text-sm">Projetos</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="data_sources" value="tasks" class="text-primary">
+                            <span class="ml-2 text-sm">Tarefas</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="data_sources" value="workshops" class="text-primary">
+                            <span class="ml-2 text-sm">Workshops</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="data_sources" value="certificates" class="text-primary">
+                            <span class="ml-2 text-sm">Certificados</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Métricas -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Métricas</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="metrics" value="count" class="text-primary">
+                            <span class="ml-2 text-sm">Contagem</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="metrics" value="growth" class="text-primary">
+                            <span class="ml-2 text-sm">Crescimento</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="metrics" value="completion_rate" class="text-primary">
+                            <span class="ml-2 text-sm">Taxa de Conclusão</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="metrics" value="average_duration" class="text-primary">
+                            <span class="ml-2 text-sm">Duração Média</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Período -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="period_type" class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                    <select name="period_type" id="period_type" class="w-full rounded-md border-gray-300">
+                        <option value="daily">Diário</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensal</option>
+                        <option value="quarterly">Trimestral</option>
+                        <option value="yearly">Anual</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="date_from" class="block text-sm font-medium text-gray-700 mb-2">Data Inicial</label>
+                    <input type="date" name="date_from" id="date_from" class="w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label for="date_to" class="block text-sm font-medium text-gray-700 mb-2">Data Final</label>
+                    <input type="date" name="date_to" id="date_to" class="w-full rounded-md border-gray-300">
+                </div>
+            </div>
+
+            <!-- Tipo de Visualização -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Visualização</label>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" name="chart_type" value="table" class="text-primary" checked>
+                        <span class="ml-2 text-sm">Tabela</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="chart_type" value="line" class="text-primary">
+                        <span class="ml-2 text-sm">Gráfico de Linha</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="chart_type" value="bar" class="text-primary">
+                        <span class="ml-2 text-sm">Gráfico de Barras</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="chart_type" value="pie" class="text-primary">
+                        <span class="ml-2 text-sm">Gráfico de Pizza</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="previewReport()" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                    Preview
+                </button>
+                <button type="submit" 
+                        class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                    Gerar Relatório
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Relatórios Salvos -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Relatórios Salvos</h3>
+        </div>
+        <div class="p-6">
+            {% if saved_reports %}
+                <div class="space-y-4">
+                    {% for report in saved_reports %}
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-medium text-gray-900">{{ report.name }}</h4>
+                                    <p class="text-sm text-gray-600">{{ report.description }}</p>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        Criado em: {{ report.created_at|date:"d/m/Y H:i" }} | 
+                                        Última execução: {{ report.last_run|date:"d/m/Y H:i"|default:"Nunca" }}
+                                    </p>
+                                </div>
+                                <div class="ml-4 space-x-2">
+                                    <button onclick="runReport({{ report.id }})" 
+                                            class="text-primary hover:text-primary-dark text-sm">
+                                        Executar
+                                    </button>
+                                    <button onclick="editReport({{ report.id }})" 
+                                            class="text-gray-600 hover:text-gray-800 text-sm">
+                                        Editar
+                                    </button>
+                                    <button onclick="deleteReport({{ report.id }})" 
+                                            class="text-red-600 hover:text-red-800 text-sm">
+                                        Excluir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in report_data.items %}
-                    <tr>
-                        {% for key, value in item.items %}
-                            <td class="border px-2 py-1">{{ value }}</td>
-                        {% endfor %}
-                    </tr>
-                {% empty %}
-                    <tr><td colspan="10" class="text-center">Nenhum registro encontrado.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-8">Nenhum relatório salvo encontrado.</p>
+            {% endif %}
+        </div>
     </div>
-{% else %}
-    <div class="text-gray-500">Nenhum dado para exibir.</div>
-{% endif %}
+
+    <!-- Área de Preview -->
+    <div id="reportPreview" class="bg-white rounded-lg shadow mt-8" style="display: none;">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Preview do Relatório</h3>
+        </div>
+        <div class="p-6">
+            <div id="previewContent">
+                <!-- Conteúdo do preview será carregado aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewReport() {
+    // Simular preview do relatório
+    const previewDiv = document.getElementById('reportPreview');
+    const contentDiv = document.getElementById('previewContent');
+    
+    contentDiv.innerHTML = `
+        <div class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p class="mt-2 text-gray-600">Gerando preview...</p>
+        </div>
+    `;
+    
+    previewDiv.style.display = 'block';
+    
+    // Simular carregamento
+    setTimeout(() => {
+        contentDiv.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-50 p-4 rounded">
+                    <h4 class="font-medium">Total de Registros</h4>
+                    <p class="text-2xl font-bold text-primary">150</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                    <h4 class="font-medium">Crescimento</h4>
+                    <p class="text-2xl font-bold text-green-600">+12%</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                    <h4 class="font-medium">Taxa de Conclusão</h4>
+                    <p class="text-2xl font-bold text-blue-600">85%</p>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Este é um preview dos dados que serão incluídos no relatório.</p>
+        `;
+    }, 2000);
+}
+
+function runReport(reportId) {
+    window.open(`/dashboard/custom-reports/run/${reportId}/`);
+}
+
+function editReport(reportId) {
+    // Implementar edição do relatório
+    console.log('Editar relatório:', reportId);
+}
+
+function deleteReport(reportId) {
+    if (confirm('Tem certeza que deseja excluir este relatório?')) {
+        // Implementar exclusão
+        console.log('Excluir relatório:', reportId);
+    }
+}
+</script>
 {% endblock %}

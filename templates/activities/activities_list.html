@@ -1,333 +1,199 @@
-{% extends "base_tailwind.html" %}
+{% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %}Lista de Atividades{% endblock %}
+{% block title %}Lista de Atividades - Move Marias{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50">
-    <!-- Header -->
-    <div class="bg-white shadow-sm border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
-                        <i class="fas fa-list mr-2 text-purple-600"></i>
-                        Atividades dos Beneficiários
-                    </h1>
-                    <p class="text-gray-600">Todas as atividades cadastradas</p>
-                </div>
-                <div>
-                    <a href="{% url 'activities:activity_create' %}" class="mm-btn mm-btn-primary">
-                        <i class="fas fa-plus mr-2"></i>
-                        Nova Atividade
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Conteúdo Principal -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Estatísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Total</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.total }}</p>
-                    </div>
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Ativas</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.active }}</p>
-                    </div>
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <i class="fas fa-play-circle text-green-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Concluídas</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.completed }}</p>
-                    </div>
-                    <div class="p-3 bg-purple-100 rounded-full">
-                        <i class="fas fa-check-circle text-purple-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-600 uppercase tracking-wider">Pausadas</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ stats.paused }}</p>
-                    </div>
-                    <div class="p-3 bg-yellow-100 rounded-full">
-                        <i class="fas fa-pause-circle text-yellow-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-                            <div class="text-white-50 small">Ativas</div>
-                            <div class="text-white fw-bold h4">{{ stats.active }}</div>
-                        </div>
-                        <div>
-                            <i class="fas fa-play-circle fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Concluídas</div>
-                            <div class="text-white fw-bold h4">{{ stats.completed }}</div>
-                        </div>
-                        <div>
-                            <i class="fas fa-check-circle fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Planejadas</div>
-                            <div class="text-white fw-bold h4">{{ stats.planned }}</div>
-                        </div>
-                        <div>
-                            <i class="fas fa-calendar-plus fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Lista de Atividades</h1>
+        <div class="space-x-2">
+            <a href="{% url 'activities:dashboard' %}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                Dashboard
+            </a>
+            <a href="{% url 'activities:create' %}" 
+               class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                Nova Atividade
+            </a>
         </div>
     </div>
 
     <!-- Filtros -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-filter me-2"></i>
-                Filtros
-            </h6>
-        </div>
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Status</label>
-                    <select name="status" class="form-select">
-                        <option value="">Todos</option>
-                        {% for value, display in status_choices %}
-                        <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>
-                            {{ display }}
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <!-- Busca -->
+            <div>
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                <input type="text" 
+                       name="search"
+                       id="search"
+                       placeholder="Buscar por nome ou descrição..."
+                       value="{{ request.GET.search }}"
+                       class="w-full rounded-md border-gray-300">
+            </div>
+
+            <!-- Filtro por Beneficiária -->
+            <div>
+                <label for="beneficiary" class="block text-sm font-medium text-gray-700 mb-2">Beneficiária</label>
+                <select name="beneficiary" id="beneficiary" class="w-full rounded-md border-gray-300">
+                    <option value="">Todas</option>
+                    {% for beneficiary in beneficiaries %}
+                        <option value="{{ beneficiary.id }}" {% if request.GET.beneficiary == beneficiary.id|stringformat:"s" %}selected{% endif %}>
+                            {{ beneficiary.full_name }}
                         </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Tipo</label>
-                    <select name="activity_type" class="form-select">
-                        <option value="">Todos</option>
-                        {% for value, display in activity_type_choices %}
-                        <option value="{{ value }}" {% if filters.activity_type == value %}selected{% endif %}>
-                            {{ display }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Beneficiária</label>
-                    <input type="text" name="beneficiary" class="form-control" 
-                           value="{{ filters.beneficiary }}" placeholder="Nome da beneficiária">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search me-1"></i>
-                            Filtrar
-                        </button>
-                        <a href="{% url 'activities:activities_list' %}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i>
-                            Limpar
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Filtro por Status -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" id="status" class="w-full rounded-md border-gray-300">
+                    <option value="">Todos</option>
+                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendente</option>
+                    <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>Em Andamento</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Concluída</option>
+                    <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelada</option>
+                </select>
+            </div>
+
+            <!-- Botão de Filtrar -->
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                    Filtrar
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Lista de Atividades -->
-    <div class="card">
-        <div class="card-header">
-            <h6 class="m-0 font-weight-bold text-primary">
-                <i class="fas fa-table me-2"></i>
-                Lista de Atividades
-            </h6>
-        </div>
-        <div class="card-body">
-            {% if page_obj %}
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
+    <div class="bg-white rounded-lg shadow">
+        {% if object_list %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Atividade
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Beneficiária
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Data Programada
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Responsável
+                            </th>
+                            <th scope="col" class="relative px-6 py-3">
+                                <span class="sr-only">Ações</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for activity in object_list %}
                             <tr>
-                                <th>Beneficiária</th>
-                                <th>Atividade</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Período</th>
-                                <th>Facilitador</th>
-                                <th>Progresso</th>
-                                <th>Presença</th>
-                                <th>Impacto</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in page_obj %}
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar me-3">
-                                            <div class="avatar-initial rounded-circle bg-primary">
-                                                {{ activity.beneficiary.full_name|slice:":1" }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold">{{ activity.beneficiary.full_name }}</div>
-                                            <div class="text-muted small">{{ activity.beneficiary.age }} anos</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
-                                        <div class="fw-bold">{{ activity.title }}</div>
-                                        <div class="text-muted small">{{ activity.description|truncatewords:10 }}</div>
+                                        <h3 class="text-sm font-medium text-gray-900">{{ activity.title }}</h3>
+                                        <p class="text-sm text-gray-500">{{ activity.description|truncatewords:10 }}</p>
                                     </div>
                                 </td>
-                                <td>
-                                    <span class="badge bg-secondary">
-                                        {{ activity.get_activity_type_display }}
-                                    </span>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="{% url 'members:detail' activity.beneficiary.pk %}" 
+                                       class="text-primary hover:text-primary-dark">
+                                        {{ activity.beneficiary.full_name }}
+                                    </a>
                                 </td>
-                                <td>
-                                    <span class="badge bg-{% if activity.status == 'ACTIVE' %}success{% elif activity.status == 'COMPLETED' %}primary{% elif activity.status == 'PLANNED' %}warning{% else %}danger{% endif %}">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ activity.scheduled_date|date:"d/m/Y H:i" }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-sm rounded-full 
+                                        {% if activity.status == 'completed' %}bg-green-100 text-green-800
+                                        {% elif activity.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                        {% elif activity.status == 'pending' %}bg-blue-100 text-blue-800
+                                        {% elif activity.status == 'cancelled' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
                                         {{ activity.get_status_display }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="text-nowrap">
-                                        <div>{{ activity.start_date|date:"d/m/Y" }}</div>
-                                        {% if activity.end_date %}
-                                        <div class="text-muted small">{{ activity.end_date|date:"d/m/Y" }}</div>
-                                        {% endif %}
-                                    </div>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ activity.responsible_user.get_full_name|default:activity.responsible_user.email }}
                                 </td>
-                                <td>{{ activity.facilitator }}</td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: {{ activity.completion_percentage }}%"
-                                             aria-valuenow="{{ activity.completion_percentage }}"
-                                             aria-valuemin="0" aria-valuemax="100">
-                                            {{ activity.completion_percentage }}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge bg-{% if activity.attendance_rate >= 80 %}success{% elif activity.attendance_rate >= 60 %}warning{% else %}danger{% endif %}">
-                                        {{ activity.attendance_rate|floatformat:1 }}%
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="text-center">
-                                        <div class="fw-bold">{{ activity.impact_score }}</div>
-                                        <div class="text-muted small">/ 100</div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{% url 'activities:activity_detail' activity.id %}" 
-                                           class="btn btn-sm btn-outline-primary" title="Ver detalhes">
-                                            <i class="fas fa-eye"></i>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{% url 'activities:detail' activity.pk %}" 
+                                       class="text-primary hover:text-primary-dark mr-3">
+                                        Ver
+                                    </a>
+                                    {% if activity.status != 'completed' and activity.status != 'cancelled' %}
+                                        <a href="{% url 'activities:edit' activity.pk %}" 
+                                           class="text-gray-600 hover:text-gray-800">
+                                            Editar
                                         </a>
-                                        <a href="{% url 'activities:activity_edit' activity.id %}" 
-                                           class="btn btn-sm btn-outline-secondary" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="{% url 'activities:beneficiary_dashboard' activity.beneficiary.id %}" 
-                                           class="btn btn-sm btn-outline-info" title="Dashboard">
-                                            <i class="fas fa-tachometer-alt"></i>
-                                        </a>
-                                    </div>
+                                    {% endif %}
                                 </td>
                             </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Paginação -->
-                {% if page_obj.has_other_pages %}
-                <nav aria-label="Page navigation" class="mt-4">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-
-                        {% for num in page_obj.paginator.page_range %}
-                        {% if page_obj.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
-                                {{ num }}
-                            </a>
-                        </li>
-                        {% endif %}
                         {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.activity_type %}&activity_type={{ filters.activity_type }}{% endif %}{% if filters.beneficiary %}&beneficiary={{ filters.beneficiary }}{% endif %}">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">Nenhuma atividade encontrada</h5>
-                    <p class="text-muted">Ajuste os filtros ou crie uma nova atividade.</p>
+            <!-- Paginação -->
+            {% if is_paginated %}
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <nav class="flex justify-between items-center">
+                        <div class="text-sm text-gray-700">
+                            Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ paginator.count }} atividades
+                        </div>
+                        <div class="flex space-x-2">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="text-primary hover:text-primary-dark">Primeira</a>
+                                <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="text-primary hover:text-primary-dark">Anterior</a>
+                            {% endif %}
+                            
+                            <span class="text-gray-700">
+                                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="text-primary hover:text-primary-dark">Próxima</a>
+                                <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+                                   class="text-primary hover:text-primary-dark">Última</a>
+                            {% endif %}
+                        </div>
+                    </nav>
                 </div>
             {% endif %}
-        </div>
+        {% else %}
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma atividade encontrada</h3>
+                <p class="mt-1 text-sm text-gray-500">
+                    {% if request.GET.search or request.GET.beneficiary or request.GET.status %}
+                        Tente ajustar os filtros de busca.
+                    {% else %}
+                        Comece criando uma nova atividade.
+                    {% endif %}
+                </p>
+                <div class="mt-6">
+                    <a href="{% url 'activities:create' %}" 
+                       class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                        Nova Atividade
+                    </a>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,39 +1,292 @@
-{% extends 'dashboard_base.html' %}
-{% block content %}
-<h1 class="text-2xl font-bold mb-4">Análises Avançadas</h1>
-<form method="get" class="mb-6 flex flex-wrap gap-4">
-    <label>Período:
-        <select name="period" class="border rounded px-2 py-1">
-            <option value="1month" {% if period == '1month' %}selected{% endif %}>Último mês</option>
-            <option value="3months" {% if period == '3months' %}selected{% endif %}>Últimos 3 meses</option>
-            <option value="6months" {% if period == '6months' %}selected{% endif %}>Últimos 6 meses</option>
-            <option value="1year" {% if period == '1year' %}selected{% endif %}>Último ano</option>
-        </select>
-    </label>
-    <button type="submit" class="bg-blue-600 text-white px-4 py-1 rounded">Filtrar</button>
-</form>
+{% extends "layouts/base.html" %}
+{% load static %}
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-        <h2 class="font-semibold mb-2">Tendências</h2>
-        <pre class="bg-gray-100 p-2 rounded text-xs">{{ trends|safe }}</pre>
+{% block title %}Análises Avançadas - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Análises Avançadas</h1>
+        <div class="space-x-2">
+            <a href="{% url 'dashboard:reports' %}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
+                Relatórios Gerais
+            </a>
+            <button onclick="refreshData()" 
+                    class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                Atualizar Dados
+            </button>
+        </div>
     </div>
-    <div>
-        <h2 class="font-semibold mb-2">Métricas de Performance</h2>
-        <pre class="bg-gray-100 p-2 rounded text-xs">{{ performance_metrics|safe }}</pre>
+
+    <!-- Métricas de Performance -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Taxa de Retenção</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ metrics.retention_rate|default:0 }}%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Taxa de Sucesso</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ metrics.success_rate|default:0 }}%</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Tempo Médio</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ metrics.average_time|default:0 }}d</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm text-gray-500">Engagement Score</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ metrics.engagement_score|default:0 }}</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div>
-        <h2 class="font-semibold mb-2">Dados Geográficos</h2>
-        <pre class="bg-gray-100 p-2 rounded text-xs">{{ geographic_data|safe }}</pre>
+
+    <!-- Análises Comparativas -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Tendências -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Tendências de Crescimento</h3>
+            <div class="h-64">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Distribuição por Categoria -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Distribuição por Categoria</h3>
+            <div class="h-64">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
     </div>
-    <div>
-        <h2 class="font-semibold mb-2">Dados Demográficos</h2>
-        <pre class="bg-gray-100 p-2 rounded text-xs">{{ demographic_data|safe }}</pre>
+
+    <!-- Análise de Cohort -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Análise de Cohort</h3>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Período</th>
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Mês 0</th>
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Mês 1</th>
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Mês 2</th>
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Mês 3</th>
+                            <th class="text-left py-2 px-4 text-sm font-medium text-gray-900">Mês 6</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cohort in cohort_data %}
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 px-4 text-sm text-gray-900">{{ cohort.period }}</td>
+                                <td class="py-2 px-4 text-sm text-gray-600">{{ cohort.month_0 }}%</td>
+                                <td class="py-2 px-4 text-sm text-gray-600">{{ cohort.month_1 }}%</td>
+                                <td class="py-2 px-4 text-sm text-gray-600">{{ cohort.month_2 }}%</td>
+                                <td class="py-2 px-4 text-sm text-gray-600">{{ cohort.month_3 }}%</td>
+                                <td class="py-2 px-4 text-sm text-gray-600">{{ cohort.month_6 }}%</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-500">Dados de cohort não disponíveis</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    <div class="md:col-span-2">
-        <h2 class="font-semibold mb-2">Predições</h2>
-        <pre class="bg-gray-100 p-2 rounded text-xs">{{ predictions|safe }}</pre>
+
+    <!-- Predições e Forecasting -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Previsões -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Previsões para os Próximos 3 Meses</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-blue-50 rounded">
+                    <span class="text-sm font-medium text-gray-900">Novas Beneficiárias</span>
+                    <span class="text-lg font-semibold text-blue-600">{{ predictions.new_beneficiaries|default:0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-green-50 rounded">
+                    <span class="text-sm font-medium text-gray-900">Projetos Concluídos</span>
+                    <span class="text-lg font-semibold text-green-600">{{ predictions.completed_projects|default:0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-yellow-50 rounded">
+                    <span class="text-sm font-medium text-gray-900">Certificados Emitidos</span>
+                    <span class="text-lg font-semibold text-yellow-600">{{ predictions.certificates|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicadores de Risco -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Indicadores de Risco</h3>
+            <div class="space-y-4">
+                {% for risk in risk_indicators %}
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full mr-3 
+                                {% if risk.level == 'high' %}bg-red-500
+                                {% elif risk.level == 'medium' %}bg-yellow-500
+                                {% else %}bg-green-500{% endif %}">
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">{{ risk.name }}</span>
+                        </div>
+                        <span class="text-sm text-gray-600">{{ risk.value }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-gray-500 text-center py-4">Nenhum indicador de risco identificado</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights e Recomendações -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Insights e Recomendações</h3>
+        </div>
+        <div class="p-6">
+            {% if insights %}
+                <div class="space-y-4">
+                    {% for insight in insights %}
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h4 class="font-medium text-gray-900">{{ insight.title }}</h4>
+                            <p class="text-sm text-gray-600 mt-1">{{ insight.description }}</p>
+                            {% if insight.action %}
+                                <p class="text-sm text-blue-600 mt-2">
+                                    <strong>Ação recomendada:</strong> {{ insight.action }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-8">Nenhum insight disponível no momento.</p>
+            {% endif %}
+        </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Tendências
+    const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+    new Chart(trendsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trends_labels|safe }},
+            datasets: [{
+                label: 'Beneficiárias',
+                data: {{ trends_beneficiaries|safe }},
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1
+            }, {
+                label: 'Projetos',
+                data: {{ trends_projects|safe }},
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Gráfico de Categoria
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                data: {{ category_data|safe }},
+                backgroundColor: [
+                    '#3B82F6',
+                    '#10B981',
+                    '#F59E0B',
+                    '#EF4444',
+                    '#8B5CF6'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+});
+
+function refreshData() {
+    // Simular atualização de dados
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    button.textContent = 'Atualizando...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+        location.reload();
+    }, 2000);
+}
+</script>
 {% endblock %}

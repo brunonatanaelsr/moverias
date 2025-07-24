@@ -31,6 +31,16 @@ class WheelOfLife(models.Model):
     
     # 12 áreas da Roda da Vida (0-10)
     family = models.FloatField('Família', help_text="Avaliação de 0 a 10")
+
+    def get_average_score(self):
+        """Calcula a média das pontuações de todas as áreas"""
+        scores = [
+            self.family, self.finance, self.health, self.career,
+            self.relationships, self.personal_growth, self.leisure,
+            self.spirituality, self.education, self.environment,
+            self.contribution, self.emotions
+        ]
+        return sum(scores) / len(scores)
     finance = models.FloatField('Finanças', help_text="Avaliação de 0 a 10")
     health = models.FloatField('Saúde', help_text="Avaliação de 0 a 10")
     career = models.FloatField('Carreira', help_text="Avaliação de 0 a 10")

@@ -1,364 +1,69 @@
-{% extends 'base_optimized.html' %}
-{% load static %}
+{% extends "layouts/base.html" %}
 
 {% block title %}Dashboard - Move Marias{% endblock %}
 
-{% block page_title %}Dashboard{% endblock %}
-
-{% block extra_css %}
-<!-- Dashboard specific optimizations -->
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    .dashboard-slide-up:nth-child(1) { animation-delay: 0.1s; }
-    .dashboard-slide-up:nth-child(2) { animation-delay: 0.2s; }
-    .dashboard-slide-up:nth-child(3) { animation-delay: 0.3s; }
-    .dashboard-slide-up:nth-child(4) { animation-delay: 0.4s; }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Loading states */
-    .dashboard-loading {
-        opacity: 0.6;
-        pointer-events: none;
-        position: relative;
-    }
-    
-    .dashboard-loading::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #e5e7eb;
-        border-top: 2px solid #7c3aed;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        transform: translate(-50%, -50%);
-    }
-    
-    @keyframes spin {
-        0% { transform: translate(-50%, -50%) rotate(0deg); }
-        100% { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Stats number animation */
-    .stats-number {
-        font-variant-numeric: tabular-nums;
-        transition: all 0.3s ease;
-    }
-    
-    .stats-card:hover .stats-number {
-        transform: scale(1.05);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Dashboard doesn't need additional breadcrumb items -->
-{% endblock %}
-
 {% block content %}
-<div class="dashboard-container-optimized">
-    <!-- Welcome Header -->
-    <div class="dashboard-header-optimized dashboard-fade-in">
-        <div class="dashboard-header-content-optimized">
-            <div class="dashboard-header-icon">💜</div>
-            <div class="dashboard-header-text">
-                <h1>Bem-vinda, {{ user.get_full_name|default:user.username }}!</h1>
-                <p>Transformando vidas através do cuidado e empoderamento feminino</p>
-            </div>
-        </div>
-        <div class="hidden lg:block text-right">
-            <div class="text-sm opacity-90">{{ "now"|date:"l, d \d\e F \d\e Y" }}</div>
-            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid-optimized grid-optimized-4 section-spacing-md">
-        <!-- Beneficiárias -->
-        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up stats-card" dashboard-card-hover dashboard-slide-up>
-            <div class="flex-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Beneficiárias</p>
-                    <p class="text-2xl font-bold text-move-purple-700 dark:text-move-purple-300 stats-number">{{ stats.total_beneficiarias|default:0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-move-purple-100 dark:bg-move-purple-900 rounded-lg flex-center">
-                    <i class="fas fa-users text-move-purple-600 dark:text-move-purple-400"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Projetos Ativos -->
-        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up stats-card" dashboard-card-hover dashboard-slide-up>
-            <div class="flex-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Projetos Ativos</p>
-                    <p class="text-2xl font-bold text-green-600 dark:text-green-400 stats-number">{{ stats.projetos_ativos|default:0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex-center">
-                    <i class="fas fa-project-diagram text-green-600 dark:text-green-400"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Workshops -->
-        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up stats-card" dashboard-card-hover dashboard-slide-up>
-            <div class="flex-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Workshops</p>
-                    <p class="text-2xl font-bold text-blue-600 dark:text-blue-400 stats-number">{{ stats.workshops|default:0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex-center">
-                    <i class="fas fa-chalkboard-teacher text-blue-600 dark:text-blue-400"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Certificados -->
-        <div class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up stats-card" dashboard-card-hover dashboard-slide-up>
-            <div class="flex-between">
-                <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Certificados</p>
-                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400 stats-number">{{ stats.certificados|default:0 }}</p>
-                </div>
-                <div class="w-10 h-10 bg-amber-100 dark:bg-amber-900 rounded-lg flex-center">
-                    <i class="fas fa-certificate text-amber-600 dark:text-amber-400"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="section-spacing-md">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ações Rápidas</h2>
-        <div class="grid-optimized grid-optimized-3">
-            <!-- Nova Beneficiária -->
-            <a href="{% url 'members:beneficiary-create' %}" 
-               class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up group">
-                <div class="flex-start">
-                    <div class="w-10 h-10 bg-move-purple-100 dark:bg-move-purple-900 rounded-lg flex-center mr-3 group-hover:bg-move-purple-200 dark:group-hover:bg-move-purple-800 transition-colors">
-                        <i class="fas fa-user-plus text-move-purple-600 dark:text-move-purple-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Nova Beneficiária</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cadastrar nova beneficiária</p>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Novo Projeto -->
-            <a href="{% url 'projects:project-create' %}" 
-               class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up group">
-                <div class="flex-start">
-                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex-center mr-3 group-hover:bg-green-200 dark:group-hover:bg-green-800 transition-colors">
-                        <i class="fas fa-plus text-green-600 dark:text-green-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Novo Projeto</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Criar novo projeto</p>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Novo Workshop -->
-            <a href="{% url 'workshops:workshop-create' %}" 
-               class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up group">
-                <div class="flex-start">
-                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex-center mr-3 group-hover:bg-blue-200 dark:group-hover:bg-blue-800 transition-colors">
-                        <i class="fas fa-calendar-plus text-blue-600 dark:text-blue-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Novo Workshop</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Agendar workshop</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="section-spacing-md">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Atividade Recente</h2>
-        <div class="card-optimized card-padding-lg card-height-lg dashboard-card-hover dashboard-slide-up" dashboard-card-hover dashboard-slide-up>
-            <div class="space-y-3">
-                {% for activity in recent_activities %}
-                <div class="flex-start">
-                    <div class="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex-center mr-3">
-                        <i class="fas fa-{{ activity.icon }} text-gray-500 dark:text-gray-400 text-xs"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm text-gray-900 dark:text-gray-100">{{ activity.description }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ activity.created_at|timesince }} atrás</p>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-center py-8">
-                    <i class="fas fa-clock text-gray-400 dark:text-gray-500 text-2xl mb-2"></i>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma atividade recente</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Tools - Only for staff -->
-    {% if user.is_staff %}
-    <div class="section-spacing-md">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ferramentas Administrativas</h2>
-        <div class="grid-optimized grid-optimized-2">
-            <!-- System Monitoring -->
-            <a href="{% url 'core:monitoring_dashboard' %}" 
-               class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up group">
-                <div class="flex-start">
-                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900 rounded-lg flex-center mr-3 group-hover:bg-red-200 dark:group-hover:bg-red-800 transition-colors">
-                        <i class="fas fa-chart-area text-red-600 dark:text-red-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Monitoramento</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Acessar dashboard de monitoramento</p>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Configuration -->
-            <a href="{% url 'core:settings' %}" 
-               class="card-optimized card-padding-md card-height-sm dashboard-card-hover dashboard-slide-up group">
-                <div class="flex-start">
-                    <div class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex-center mr-3 group-hover:bg-gray-200 dark:group-hover:bg-gray-600 transition-colors">
-                        <i class="fas fa-cogs text-gray-600 dark:text-gray-400"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Configurações</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Configurar sistema</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-    {% endif %}
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900">Dashboard</h1>
 </div>
 
-<!-- Dashboard JavaScript -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize dashboard animations
-        const cards = document.querySelectorAll('.dashboard-card-hover');
-        
-        // Add stagger effect to cards
-        cards.forEach((card, index) => {
-            card.style.animationDelay = `${index * 0.1}s`;
-        });
-        
-        // Smooth scroll for internal links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
-        
-        // Loading state handler
-        function showLoading(element) {
-            element.classList.add('dashboard-loading');
-        }
-        
-        function hideLoading(element) {
-            element.classList.remove('dashboard-loading');
-        }
-        
-        // Add loading states to action cards
-        document.querySelectorAll('.card-optimized a, .dashboard-card-hover a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                if (this.href && !this.href.startsWith('#')) {
-                    showLoading(this.closest('.card-optimized'));
-                }
-            });
-        });
-        
-        // Auto-refresh stats (every 5 minutes)
-        setInterval(function() {
-            // Only refresh if user is active
-            if (document.visibilityState === 'visible') {
-                fetch(window.location.href + '?refresh=stats', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.stats) {
-                        updateStats(data.stats);
-                    }
-                })
-                .catch(error => console.log('Stats refresh failed:', error));
-            }
-        }, 300000); // 5 minutes
-        
-        function updateStats(stats) {
-            const statElements = document.querySelectorAll('.stats-number');
-            statElements.forEach(element => {
-                const key = element.parentElement.parentElement.querySelector('p').textContent.toLowerCase();
-                if (stats[key] !== undefined) {
-                    element.textContent = stats[key];
-                }
-            });
-        }
-        
-        // Animate stats numbers on page load
-        const statsNumbers = document.querySelectorAll('.stats-number');
-        statsNumbers.forEach(stat => {
-            const finalNumber = parseInt(stat.textContent) || 0;
-            if (finalNumber > 0) {
-                let currentNumber = 0;
-                const increment = finalNumber / 30; // Animate over 30 steps
-                
-                const animation = setInterval(() => {
-                    currentNumber += increment;
-                    if (currentNumber >= finalNumber) {
-                        stat.textContent = finalNumber;
-                        clearInterval(animation);
-                    } else {
-                        stat.textContent = Math.floor(currentNumber);
-                    }
-                }, 50);
-            }
-        });
-    });
-</script>
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Card 1: Total de Beneficiárias -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Total de Beneficiárias</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.beneficiary_stats.total }}</p>
+                <p class="text-sm text-gray-500">Ativas: {{ stats.beneficiary_stats.active }}</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
+                <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Projetos Ativos -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Projetos Ativos</h3>
+                <p class="text-2xl font-semibold text-gray-900">0</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
+                <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 3: Workshops do Mês -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Workshops do Mês</h3>
+                <p class="text-2xl font-semibold text-gray-900">0</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
+                <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seção de Atividades Recentes -->
+<div class="mt-8">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Atividades Recentes</h2>
+    <div class="bg-white shadow rounded-lg">
+        <div class="p-6">
+            <div class="text-center text-gray-500">
+                Nenhuma atividade recente encontrada.
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,388 +1,54 @@
-{% extends "base_optimized.html" %}
+{% extends "layouts/base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
 
-{% block title %}
-    {% if object %}Editar Registro de Evolução{% else %}Novo Registro de Evolução{% endif %}
-{% endblock %}
-
-{% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Novo{% endif %} Registro de Evolução - Move Marias{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-<div class="bg-white shadow-sm rounded-lg">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">
-                        {% if object %}
-                            Editar Registro de Evolução
-                        {% else %}
-                            Novo Registro de Evolução
-                        {% endif %}
-                    </h1>
-                    {% if object %}
-                        <p class="mt-1 text-sm text-gray-500">
-                            Beneficiária: {{ object.beneficiary.full_name }}
-                        </p>
-                    {% endif %}
-                </div>
-                <a href="{% url 'evolution:list' %}" 
-                   class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
-                </a>
-            </div>
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Cabeçalho da página -->
+    <div class="md:flex md:items-center md:justify-between mb-6">
+        <div class="flex-1 min-w-0">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                {% if form.instance.pk %}
+                    Editar Registro de Evolução
+                {% else %}
+                    Novo Registro de Evolução
+                {% endif %}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">
+                {% if form.instance.pk %}
+                    Atualize as informações do registro de evolução
+                {% else %}
+                    Registre a evolução de uma participante do programa
+                {% endif %}
+            </p>
         </div>
+    </div>
 
-        <div class="px-6 py-6">
-            <!-- Progress Bar -->
-            <div class="mb-6 bg-gray-50 rounded-lg p-4">
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
-                    <span>Progresso do Formulário</span>
-                    <span id="progress-text">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="form-progress" 
-                         class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                         style="width: 0%"
-                         role="progressbar"
-                         aria-valuenow="0"
-                         aria-valuemin="0"
-                         aria-valuemax="100"
-                         aria-label="Progresso do preenchimento do formulário">
-                    </div>
-                </div>
-            </div>
-            
-            <form method="post" class="space-y-6" id="evolution-form"
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-                  aria-label="Formulário de Registro de Evolução"
-                  enctype="multipart/form-data"
-                  novalidate>
+    <!-- Formulário -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="post" class="space-y-6">
                 {% csrf_token %}
-
-                <!-- Beneficiária -->
-                <div>
-                    <label for="{{ form.beneficiary.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
-                        Beneficiária *
-                    </label>
-                    {% if object %}
-                        <!-- Em edição, mostrar apenas o nome (não permitir mudança) -->
-                        <p class="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-                            {{ object.beneficiary.full_name }}
-                        </p>
-                    {% else %}
-                        {{ form.beneficiary|as_crispy_field }}
-                    {% endif %}
-                </div>
-
-                <!-- Data -->
-                <div>
-                    {{ form.date|as_crispy_field }}
-                    <p class="mt-1 text-sm text-gray-500">Formato: DD/MM/AAAA</p>
-                </div>
-
-                <!-- Descrição -->
-                <div>
-                    {{ form.description|as_crispy_field }}
-                    <p class="mt-1 text-sm text-gray-500">
-                        Descreva detalhadamente a evolução, progressos, dificuldades e observações relevantes.
-                    </p>
-                </div>
-
-                <!-- Opções de Assinatura -->
-                <div class="space-y-4">
-                    <div class="flex-start">
-                        <div class="flex items-center h-5">
-                            {{ form.signature_required }}
-                        </div>
-                        <div class="ml-3 text-sm">
-                            <label for="{{ form.signature_required.id_for_label }}" class="font-medium text-gray-700">
-                                Requer Assinatura da Beneficiária
-                            </label>
-                            <p class="text-gray-500">Marque se este registro precisa ser assinado pela beneficiária</p>
-                        </div>
-                    </div>
-
-                    {% if object and object.signature_required %}
-                        <div class="flex-start">
-                            <div class="flex items-center h-5">
-                                {{ form.signed_by_beneficiary }}
-                            </div>
-                            <div class="ml-3 text-sm">
-                                <label for="{{ form.signed_by_beneficiary.id_for_label }}" class="font-medium text-gray-700">
-                                    Assinado pela Beneficiária
-                                </label>
-                                <p class="text-gray-500">Marque quando a beneficiária assinar este registro</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Integração com outros módulos -->
-                <div>
-                    <label for="id_workshops" class="block text-sm font-medium text-gray-700 mb-2">Oficinas Relacionadas
-                        <span class="ml-1" data-tooltip="Selecione oficinas. Digite para buscar rapidamente.">🛈</span>
-                    </label>
-                    {{ form.workshops|as_crispy_field }}
-                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para filtrar oficinas cadastradas.</p>
-                </div>
-                <div>
-                    <label for="id_projects" class="block text-sm font-medium text-gray-700 mb-2">Projetos Relacionados
-                        <span class="ml-1" data-tooltip="Selecione projetos. Digite para buscar rapidamente.">🛈</span>
-                    </label>
-                    {{ form.projects|as_crispy_field }}
-                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para filtrar projetos cadastrados.</p>
-                </div>
-                <div>
-                    <label for="id_anamneses" class="block text-sm font-medium text-gray-700 mb-2">Anamneses Relacionadas
-                        <span class="ml-1" data-tooltip="Selecione anamneses. Digite para buscar rapidamente.">🛈</span>
-                    </label>
-                    {{ form.anamneses|as_crispy_field }}
-                    <p class="mt-1 text-xs text-gray-500">Sugestão: digite para buscar anamneses.</p>
-                </div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Autocomplete avançado com Select2
-    $('#id_workshops').select2({ placeholder: 'Selecione oficinas', allowClear: true, width: '100%' });
-    $('#id_projects').select2({ placeholder: 'Selecione projetos', allowClear: true, width: '100%' });
-    $('#id_anamneses').select2({ placeholder: 'Selecione anamneses', allowClear: true, width: '100%' });
-
-    // Tooltips
-    document.querySelectorAll('[data-tooltip]').forEach(function(el) {
-        el.addEventListener('mouseenter', function() {
-            let tip = document.createElement('div');
-            tip.className = 'tooltip-box';
-            tip.textContent = el.getAttribute('data-tooltip');
-            tip.style.position = 'absolute';
-            tip.style.background = '#333';
-            tip.style.color = '#fff';
-            tip.style.padding = '4px 8px';
-            tip.style.borderRadius = '4px';
-            tip.style.fontSize = '12px';
-            tip.style.zIndex = '1000';
-            document.body.appendChild(tip);
-            const rect = el.getBoundingClientRect();
-            tip.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-            tip.style.left = (rect.left + window.scrollX) + 'px';
-            el._tooltip = tip;
-        });
-        el.addEventListener('mouseleave', function() {
-            if (el._tooltip) {
-                document.body.removeChild(el._tooltip);
-                el._tooltip = null;
-            }
-        });
-    });
-
-    // Validação dinâmica
-    const requiredFields = document.querySelectorAll('#evolution-form [required]');
-    requiredFields.forEach(function(field) {
-        field.addEventListener('input', function() {
-            if (field.value.trim() === '') {
-                field.classList.add('border-red-500');
-                field.classList.remove('border-green-500');
-            } else {
-                field.classList.remove('border-red-500');
-                field.classList.add('border-green-500');
-            }
-        });
-    });
-});
-</script>
-                <div>
-                    <label for="id_evidence" class="block text-sm font-medium text-gray-700 mb-2">Documento/Evidência</label>
-                    {{ form.evidence|as_crispy_field }}
-                    <p class="mt-1 text-xs text-gray-500">Formatos aceitos: PDF, imagem, etc. <span id="evidence-feedback" class="text-green-600 font-semibold"></span></p>
-                </div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // ...existing code...
-    // Feedback visual para anexos
-    const evidenceInput = document.getElementById('id_evidence');
-    const evidenceFeedback = document.getElementById('evidence-feedback');
-    if (evidenceInput && evidenceFeedback) {
-        evidenceInput.addEventListener('change', function() {
-            if (evidenceInput.files.length > 0) {
-                evidenceFeedback.textContent = 'Arquivo selecionado: ' + evidenceInput.files[0].name;
-            } else {
-                evidenceFeedback.textContent = '';
-            }
-        });
-    }
-});
-</script>
-                <!-- Botões de Ação -->
-                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                {{ form|crispy }}
+                
+                <div class="flex justify-end space-x-3">
                     <a href="{% url 'evolution:list' %}" 
-                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
                         Cancelar
                     </a>
                     <button type="submit" 
-                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            data-loading="true"
-                            data-loading-text="Salvando..."
-                            aria-describedby="form-progress">
-                        <span class="loading-text">
-                            {% if object %}
-                                Atualizar Registro
-                            {% else %}
-                                Criar Registro
-                            {% endif %}
-                        </span>
-                        <div class="loading-spinner hidden inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></div>
+                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                        {% if form.instance.pk %}
+                            Atualizar
+                        {% else %}
+                            Salvar
+                        {% endif %}
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('evolution-form');
-    const submitButton = form.querySelector('[type="submit"]');
-    const progressBar = document.getElementById('form-progress');
-    const progressText = document.getElementById('progress-text');
-
-    // Progress tracking
-    const fields = form.querySelectorAll('input, select, textarea');
-    const totalFields = fields.length;
-    
-    function updateProgress() {
-        const filledFields = Array.from(fields).filter(field => {
-            if (field.type === 'checkbox') {
-                return field.checked;
-            }
-            if (field.type === 'hidden') {
-                return true; // Skip hidden fields
-            }
-            return field.value && field.value.trim() !== '';
-        });
-        
-        const progress = Math.round((filledFields.length / totalFields) * 100);
-        progressBar.style.width = progress + '%';
-        progressBar.setAttribute('aria-valuenow', progress);
-        progressText.textContent = progress + '%';
-    }
-
-    // Real-time validation
-    fields.forEach(field => {
-        field.addEventListener('input', function() {
-            updateProgress();
-            
-            // Clear previous validation state
-            field.classList.remove('border-red-500', 'border-green-500');
-            
-            // Basic validation
-            if (field.hasAttribute('required') && field.value.trim() === '') {
-                field.classList.add('border-red-500');
-                field.setAttribute('aria-invalid', 'true');
-            } else if (field.value.trim() !== '') {
-                field.classList.add('border-green-500');
-                field.setAttribute('aria-invalid', 'false');
-            }
-        });
-        
-        field.addEventListener('change', updateProgress);
-    });
-
-    // Initial progress
-    updateProgress();
-
-    // Loading state handling
-    form.addEventListener('submit', function(e) {
-        if (!submitButton.disabled) {
-            submitButton.disabled = true;
-            submitButton.querySelector('.loading-text').textContent = 'Salvando...';
-            submitButton.querySelector('.loading-spinner').classList.remove('hidden');
-        }
-    });
-
-    // Auto-focus no primeiro campo
-    const firstField = document.querySelector('form input:not([type="hidden"]), form select, form textarea');
-    if (firstField) {
-        firstField.focus();
-    }
-
-    // Configurar campo de data
-    const dateField = document.querySelector('input[type="date"]');
-    if (dateField && !dateField.value) {
-        // Definir data atual como padrão
-        const today = new Date().toISOString().split('T')[0];
-        dateField.value = today;
-    }
-
-    // Mostrar/ocultar campo de assinatura baseado na checkbox
-    const signatureRequired = document.querySelector('input[name="signature_required"]');
-    const signedByBeneficiary = document.querySelector('input[name="signed_by_beneficiary"]');
-    
-    if (signatureRequired && signedByBeneficiary) {
-        const signedContainer = signedByBeneficiary.closest('.flex');
-        
-        function toggleSignedField() {
-            if (signatureRequired.checked) {
-                signedContainer.style.display = 'flex';
-            } else {
-                signedContainer.style.display = 'none';
-                signedByBeneficiary.checked = false;
-            }
-        }
-        
-        signatureRequired.addEventListener('change', toggleSignedField);
-        toggleSignedField(); // Execute na inicialização
-    }
-
-    // Enhanced accessibility
-    form.addEventListener('invalid', function(e) {
-        e.preventDefault();
-        const invalidField = form.querySelector(':invalid');
-        if (invalidField) {
-            invalidField.focus();
-            invalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, true);
-});
-</script>
 </div>
 {% endblock %}

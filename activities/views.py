@@ -18,6 +18,17 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from datetime import date, timedelta, datetime
+
+@login_required
+def activities_dashboard(request):
+    """
+    Dashboard principal com visão geral das atividades do programa.
+    """
+    context = {
+        'title': 'Dashboard de Atividades',
+    }
+    return render(request, 'activities/dashboard.html', context)
+
 import json
 
 from members.models import Beneficiary

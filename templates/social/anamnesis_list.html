@@ -1,304 +1,162 @@
-{% extends 'base_optimized.html' %}
+{% extends "layouts/base.html" %}
 {% load static %}
 
 {% block title %}Anamneses Sociais - Move Marias{% endblock %}
 
-{% block page_title %}Anamneses Sociais{% endblock %}
-
-{% block extra_css %}
-<style>
-    .anamnesis-card {
-        transition: all 0.3s ease;
-    }
-    
-    .anamnesis-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-    
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.25rem 0.5rem;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .stats-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 1.5rem;
-        color: white;
-        text-align: center;
-        transition: transform 0.3s ease;
-    }
-    
-    .stats-card:hover {
-        transform: translateY(-4px);
-    }
-    
-    .filter-chip {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 20px;
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .filter-chip:hover {
-        background: #f3f4f6;
-        border-color: #9333ea;
-    }
-    
-    .filter-chip.active {
-        background: #9333ea;
-        border-color: #9333ea;
-        color: white;
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<li class="flex items-center">
-    <i class="fas fa-chevron-right text-gray-400 mr-2"></i>
-    <span class="text-gray-700 dark:text-gray-300">Beneficiárias</span>
-</li>
-<li class="flex items-center">
-    <i class="fas fa-chevron-right text-gray-400 mr-2"></i>
-    <span class="text-move-purple-600 dark:text-move-purple-400">Anamneses Sociais</span>
-</li>
-{% endblock %}
-
 {% block content %}
-<div class="space-y-6">
-    
-    <!-- Header com estatísticas -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex justify-between items-start mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                    <i class="fas fa-clipboard-list text-move-purple-600 mr-3"></i>
-                    Anamneses Sociais
-                </h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    Gerencie e acompanhe as avaliações sociais das beneficiárias
-                </p>
-            </div>
-            <div class="flex space-x-3">
-                <a href="{% url 'social:anamnesis-create' %}" 
-                   class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-move-purple-600 to-move-pink-600 text-white font-medium rounded-lg hover:from-move-purple-700 hover:to-move-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
-                    <i class="fas fa-plus mr-2"></i>
-                    Nova Anamnese
-                </a>
-                <button onclick="exportData()" 
-                        class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <i class="fas fa-download mr-2"></i>
-                    Exportar
-                </button>
-            </div>
-        </div>
-        
-        <!-- Estatísticas rápidas -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-blue-100 text-sm">Total de Anamneses</p>
-                        <p class="text-2xl font-bold">{{ anamnesis_list.count }}</p>
-                    </div>
-                    <i class="fas fa-clipboard-list text-3xl text-blue-200"></i>
-                </div>
-            </div>
-            
-            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-green-100 text-sm">Assinadas</p>
-                        <p class="text-2xl font-bold">{{ anamnesis_list|length }}</p>
-                    </div>
-                    <i class="fas fa-check-circle text-3xl text-green-200"></i>
-                </div>
-            </div>
-            
-            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-4 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-yellow-100 text-sm">Pendentes</p>
-                        <p class="text-2xl font-bold">0</p>
-                    </div>
-                    <i class="fas fa-clock text-3xl text-yellow-200"></i>
-                </div>
-            </div>
-            
-            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-4 text-white">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-purple-100 text-sm">Este Mês</p>
-                        <p class="text-2xl font-bold">{{ anamnesis_list|length }}</p>
-                    </div>
-                    <i class="fas fa-calendar text-3xl text-purple-200"></i>
-                </div>
-            </div>
-        </div>
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Anamneses Sociais</h1>
+        <a href="{% url 'social:anamnesis-create' %}" 
+           class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+            Nova Anamnese
+        </a>
     </div>
 
-    <!-- Search Bar -->
-    <div class="section-spacing-md">
-        <form method="get" class="flex items-center space-x-4">
-            <div class="flex-1">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" 
-                           name="search" 
-                           value="{{ request.GET.search }}"
-                           placeholder="Buscar por nome da beneficiária..."
-                           class="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-move-purple-500 focus:border-transparent shadow-sm">
-                </div>
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Busca -->
+            <div class="col-span-2">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                <input type="text" 
+                       name="search" 
+                       id="search"
+                       placeholder="Buscar por nome da beneficiária..."
+                       value="{{ search_query }}"
+                       class="w-full rounded-md border-gray-300">
             </div>
-            <button type="submit" 
-                    class="inline-flex items-center px-6 py-3 bg-move-purple-700 text-white font-medium rounded-lg hover:bg-move-purple-800 transition-colors shadow-lg border border-move-purple-600">
-                <i class="fas fa-search mr-2"></i>
-                Buscar
-            </button>
+
+            <!-- Filtro por Status -->
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" id="status" class="w-full rounded-md border-gray-300">
+                    <option value="">Todos</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Botão de Filtrar -->
+            <div class="md:col-span-3 flex justify-end">
+                <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+                    Filtrar
+                </button>
+            </div>
         </form>
     </div>
 
-    <!-- Anamnesis List -->
-    <div class="bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden sm:rounded-lg">
-        {% if anamnesis_list %}
-            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
-                {% for anamnesis in anamnesis_list %}
-                <li>
-                    <div class="px-6 py-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <div class="flex-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 bg-gradient-to-r from-move-purple-500 to-move-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                                            <i class="fas fa-clipboard-list text-white text-lg"></i>
-                                        </div>
-                                    </div>
-                                    <div class="ml-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ anamnesis.beneficiary.full_name }}</h3>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                                            <i class="fas fa-user-md mr-1"></i>
-                                            {% if anamnesis.signed_by_technician %}
-                                                {{ anamnesis.signed_by_technician.get_full_name|default:anamnesis.signed_by_technician.username }}
-                                            {% else %}
-                                                {{ anamnesis.created_by.get_full_name|default:anamnesis.created_by.username }}
-                                            {% endif %}
-                                        </p>
-                                        <div class="mt-2 flex flex-wrap items-center gap-3 text-xs">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                                <i class="fas fa-calendar mr-1"></i>
-                                                {{ anamnesis.created_at|date:"d/m/Y" }}
-                                            </span>
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                                                <i class="fas fa-clock mr-1"></i>
-                                                {{ anamnesis.created_at|date:"H:i" }}
-                                            </span>
-                                            {% if anamnesis.income %}
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                                                    <i class="fas fa-dollar-sign mr-1"></i>
-                                                    R$ {{ anamnesis.income|floatformat:2 }}
-                                                </span>
-                                            {% endif %}
-                                            {% if anamnesis.locked %}
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                                                    <i class="fas fa-lock mr-1"></i>
-                                                    Bloqueada
-                                                </span>
-                                            {% else %}
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200">
-                                                    <i class="fas fa-edit mr-1"></i>
-                                                    Editável
-                                                </span>
-                                            {% endif %}
-                                            {% if anamnesis.signed_by_beneficiary %}
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                                                    <i class="fas fa-check mr-1"></i>
-                                                    Assinada
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <a href="{% url 'social:detail' anamnesis.pk %}" 
-                                   class="inline-flex items-center px-3 py-2 text-sm font-medium text-move-purple-600 hover:text-move-purple-800 dark:text-move-purple-400 dark:hover:text-move-purple-300 transition-colors">
-                                    <i class="fas fa-eye mr-1"></i>
-                                    Ver
-                                </a>
-                                {% if not anamnesis.locked %}
-                                    <a href="{% url 'social:edit' anamnesis.pk %}" 
-                                       class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
-                                        <i class="fas fa-edit mr-1"></i>
+    <!-- Lista de Anamneses -->
+    <div class="bg-white rounded-lg shadow">
+        {% if object_list %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Beneficiária
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Data de Criação
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Técnica Responsável
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Última Evolução
+                            </th>
+                            <th scope="col" class="relative px-6 py-3">
+                                <span class="sr-only">Ações</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for anamnesis in object_list %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="{% url 'social:detail' anamnesis.pk %}" 
+                                       class="text-gray-900 hover:text-primary font-medium">
+                                        {{ anamnesis.beneficiary.full_name }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ anamnesis.created_at|date:"d/m/Y" }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-sm rounded-full 
+                                        {% if anamnesis.status == 'completed' %}bg-green-100 text-green-800
+                                        {% elif anamnesis.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                        {% elif anamnesis.status == 'pending' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ anamnesis.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ anamnesis.created_by.get_full_name|default:anamnesis.created_by.email }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {% if anamnesis.last_evolution %}
+                                        {{ anamnesis.last_evolution.date|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{% url 'social:edit' anamnesis.pk %}" class="text-primary hover:text-primary-dark mr-3">
                                         Editar
                                     </a>
-                                {% endif %}
-                                {% if user.is_superuser and not anamnesis.locked %}
-                                    <a href="{% url 'social:delete' anamnesis.pk %}" 
-                                       class="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                                       onclick="return confirm('Tem certeza que deseja excluir esta anamnese?')">
-                                        <i class="fas fa-trash mr-1"></i>
-                                        Excluir
+                                    <a href="{% url 'social:detail' anamnesis.pk %}" class="text-gray-600 hover:text-gray-800">
+                                        Ver Detalhes
                                     </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <!-- Additional Info -->
-                        <div class="mt-3 ml-16">
-                            {% if anamnesis.family_composition %}
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    <i class="fas fa-users mr-1"></i>
-                                    {{ anamnesis.family_composition|truncatechars:150 }}
-                                </p>
-                            {% endif %}
-                            {% if anamnesis.vulnerabilities %}
-                                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                    <p class="text-sm text-red-800 dark:text-red-200">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                                        <span class="font-medium">Vulnerabilidades:</span>
-                                        {{ anamnesis.vulnerabilities|truncatechars:200 }}
-                                    </p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if is_paginated %}
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <nav class="flex justify-between">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                               class="text-primary hover:text-primary-dark">
+                                Anterior
+                            </a>
+                        {% else %}
+                            <span class="text-gray-400">Anterior</span>
+                        {% endif %}
+
+                        <span class="text-gray-700">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                               class="text-primary hover:text-primary-dark">
+                                Próxima
+                            </a>
+                        {% else %}
+                            <span class="text-gray-400">Próxima</span>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
         {% else %}
-            <div class="text-center py-16">
-                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-move-purple-100 to-move-pink-100 dark:from-move-purple-900 dark:to-move-pink-900 rounded-full flex items-center justify-center">
-                    <i class="fas fa-clipboard-list text-4xl text-move-purple-600 dark:text-move-purple-400"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Nenhuma anamnese encontrada</h3>
-                <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    {% if request.GET.search %}
-                        Não foram encontradas anamneses com o termo "{{ request.GET.search }}". Tente buscar por outro termo ou crie uma nova anamnese.
-                    {% else %}
-                        Comece criando a primeira anamnese social para gerenciar as informações sociais das beneficiárias.
-                    {% endif %}
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{% url 'social:anamnesis-create' %}" 
-                       class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-move-purple-700 to-move-pink-700 text-white font-semibold rounded-lg hover:from-move-purple-800 hover:to-move-pink-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-move-purple-600">
-                        <i class="fas fa-plus mr-2"></i>
-                        {% if request.GET.search %}Nova Anamnese{% else %}Criar Primeira Anamnese{% endif %}
-                    </a>
-                    {% if request.GET.search %}
-                    <a href="{% url 'social:list' %}" 
-                       class="inline-flex items-center px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <i class="fas fa-times mr-2"></i>
-                        Limpar Busca
-                    </a>
-                    {% endif %}
-                </div>
+            <div class="p-6 text-center text-gray-500">
+                {% if search_query or status_filter %}
+                    Nenhuma anamnese encontrada com os filtros selecionados.
+                {% else %}
+                    Nenhuma anamnese social cadastrada.
+                {% endif %}
             </div>
         {% endif %}
     </div>

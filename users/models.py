@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import RegexValidator
+import os
+
+
+def user_profile_image_path(instance, filename):
+    """Gera o caminho para upload da foto de perfil"""
+    ext = filename.split('.')[-1]
+    filename = f"profile_{instance.user.id}.{ext}"
+    return os.path.join('profiles', filename)
 
 
 class CustomUser(AbstractUser):
@@ -50,6 +58,13 @@ class CustomUser(AbstractUser):
 class UserProfile(models.Model):
     """Perfil adicional do usuário"""
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
+    profile_image = models.ImageField(
+        'Foto de Perfil', 
+        upload_to=user_profile_image_path, 
+        null=True, 
+        blank=True,
+        help_text="Tamanho recomendado: 300x300px"
+    )
     bio = models.TextField('Biografia', blank=True, max_length=500)
     birth_date = models.DateField('Data de Nascimento', null=True, blank=True)
     address = models.TextField('Endereço', blank=True)
@@ -65,6 +80,13 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.user.full_name}"
+    
+    @property
+    def profile_image_url(self):
+        """Retorna a URL da foto de perfil ou uma imagem padrão"""
+        if self.profile_image and hasattr(self.profile_image, 'url'):
+            return self.profile_image.url
+        return '/static/img/default-profile.jpg'
 
 
 class UserActivity(models.Model):

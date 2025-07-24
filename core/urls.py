@@ -22,6 +22,4 @@ urlpatterns = [
     path('health/', monitoring_views.health_check, name='health-check'),
     path('health/detailed/', monitoring_views.health_detailed, name='health-detailed'),
     
-    # Upload system
-    path('', include('core.upload_urls')),
 ]

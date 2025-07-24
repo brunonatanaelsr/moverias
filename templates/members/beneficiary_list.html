@@ -1,196 +1,59 @@
-{% extends 'base_optimized.html' %}
-{% load static %}
+{% extends "layouts/list.html" %}
 
-{% block title %}Lista de Beneficiárias{% endblock %}
+{% block title %}Beneficiárias - {{ block.super }}{% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
+{% block list_title %}Beneficiárias{% endblock %}
+
+{% block list_description %}Lista de todas as beneficiárias cadastradas no sistema.{% endblock %}
+
+{% block list_actions %}
+<a href="{% url 'members:create' %}" class="block rounded-md bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+    Nova Beneficiária
+</a>
 {% endblock %}
 
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
+{% block table_headers %}
+<th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Nome</th>
+<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">CPF</th>
+<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Telefone</th>
+<th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
+<th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+    <span class="sr-only">Ações</span>
+</th>
 {% endblock %}
 
-{% block content %}
-<div class="dashboard-container-optimized">
-    <!-- Welcome Header -->
-    <div class="dashboard-header-optimized dashboard-fade-in">
-        <div class="dashboard-header-content-optimized">
-            <div class="dashboard-header-icon">👥</div>
-            <div class="dashboard-header-text">
-                <h1>Beneficiárias</h1>
-                <p>Gerencie beneficiárias e acompanhe desenvolvimento</p>
-            </div>
-        </div>
-        <div class="hidden lg:block text-right">
-            <div class="text-sm opacity-90">{{ "now"|date:"l, j \\d\\e F \\d\\e Y" }}</div>
-            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
-        </div>
-    </div>
-
-<div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">Beneficiárias</h2>
-        <div class="flex gap-2">
-            <a href="{% url 'members:beneficiary-report-dashboard' %}"
-               class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg inline-flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 014-4h4m0 0V7m0 4l-4-4m4 4l4-4" />
-                </svg>
-                Relatórios das Beneficiárias
+{% block table_body %}
+{% for beneficiary in beneficiaries %}
+<tr>
+    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+        {{ beneficiary.full_name }}
+    </td>
+    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ beneficiary.cpf }}</td>
+    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ beneficiary.phone }}</td>
+    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+        <span class="inline-flex items-center rounded-md {% if beneficiary.is_active %}bg-green-50{% else %}bg-red-50{% endif %} px-2 py-1 text-xs font-medium {% if beneficiary.is_active %}text-green-700 ring-green-600/20{% else %}text-red-700 ring-red-600/20{% endif %} ring-1 ring-inset">
+            {{ beneficiary.get_status_display }}
+        </span>
+    </td>
+    <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+        <div class="flex justify-end gap-2">
+            <a href="{% url 'members:detail' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+                Ver<span class="sr-only">, {{ beneficiary.full_name }}</span>
             </a>
-            <a href="{% url 'members:beneficiary-create' %}" 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Nova Beneficiária
+            <a href="{% url 'members:update' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+                Editar<span class="sr-only">, {{ beneficiary.full_name }}</span>
+            </a>
+            <a href="{% url 'members:delete' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+                Excluir<span class="sr-only">, {{ beneficiary.full_name }}</span>
             </a>
         </div>
-    </div>
-
-    {% if beneficiaries %}
-        <div class="overflow-x-auto">
-            <table class="min-w-full table-auto">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Idade</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bairro</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº de Filhos</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vulnerabilidade</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Relatório</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for beneficiary in beneficiaries %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex-center">
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">{{ beneficiary.full_name }}</div>
-                                    <div class="text-sm text-gray-500">{{ beneficiary.neighbourhood|default:"Bairro não informado" }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ beneficiary.age|default:"-" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ beneficiary.neighbourhood|default:"-" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ beneficiary.number_of_children|default:"-" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ beneficiary.get_status_display|default:"-" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {% if beneficiary.is_vulnerable %}
-                                <span class="text-red-600 font-semibold">Sim</span>
-                            {% else %}
-                                <span class="text-gray-500">Não</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{% url 'members:beneficiary-report' beneficiary.pk %}" class="text-purple-600 hover:underline">Ver Relatório</a>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <a href="{% url 'members:beneficiary-detail' beneficiary.pk %}" 
-                                   class="text-blue-600 hover:text-blue-900">Ver</a>
-                                <a href="{% url 'members:beneficiary-update' beneficiary.pk %}" 
-                                   class="text-indigo-600 hover:text-indigo-900">Editar</a>
-                                <form method="post" action="{% url 'members:beneficiary-toggle-status' beneficiary.pk %}" 
-                                      style="display: inline;" 
-                                      onsubmit="return confirm('Tem certeza que deseja {% if beneficiary.status == 'ATIVA' %}inativar{% else %}ativar{% endif %} esta beneficiária?')">
-                                    {% csrf_token %}
-                                    <button type="submit" 
-                                            class="{% if beneficiary.status == 'ATIVA' %}text-red-600 hover:text-red-900{% else %}text-green-600 hover:text-green-900{% endif %} bg-transparent border-0 p-0 cursor-pointer">
-                                        {% if beneficiary.status == 'ATIVA' %}Inativar{% else %}Ativar{% endif %}
-                                    </button>
-                                </form>
-                                <a href="{% url 'members:beneficiary-delete' beneficiary.pk %}" 
-                                   class="text-red-600 hover:text-red-900"
-                                   onclick="return confirm('Tem certeza que deseja excluir esta beneficiária?')">Excluir</a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Paginação -->
-        {% if is_paginated %}
-        <div class="flex justify-between items-center mt-6">
-            <div class="text-sm text-gray-700">
-                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} resultados
-            </div>
-            <nav class="flex space-x-2">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">Primeira</a>
-                    <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">Anterior</a>
-                {% endif %}
-                <span class="px-3 py-2 text-sm bg-blue-600 text-white border border-blue-600 rounded-md">{{ page_obj.number }}</span>
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">Próxima</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50">Última</a>
-                {% endif %}
-            </nav>
-        </div>
-        {% endif %}
-    {% else %}
-        <div class="text-center py-12">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma beneficiária cadastrada</h3>
-            <p class="mt-1 text-sm text-gray-500">Comece criando uma nova beneficiária.</p>
-            <div class="section-spacing-md">
-                <a href="{% url 'members:beneficiary-create' %}" 
-                   class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg class="-ml-1 mr-2 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    Nova Beneficiária
-                </a>
-            </div>
-        </div>
-    {% endif %}
-</div>
-</div>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="5" class="py-4 pl-4 pr-3 text-sm text-gray-500 text-center">
+        Nenhuma beneficiária cadastrada.
+    </td>
+</tr>
+{% endfor %}
 {% endblock %}

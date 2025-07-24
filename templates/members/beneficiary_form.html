@@ -1,380 +1,139 @@
-{% extends 'base_optimized.html' %}
-{% load static %}
+{% extends "layouts/form.html" %}
 
-{% block title %}
-{% if object %}Editar Beneficiária{% else %}Nova Beneficiária{% endif %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Beneficiária - {{ block.super }}{% endblock %}
+
+{% block form_title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Beneficiária{% endblock %}
+
+{% block form_description %}
+{% if form.instance.pk %}
+Edite os dados da beneficiária {{ form.instance.full_name }}.
+{% else %}
+Preencha os dados para cadastrar uma nova beneficiária.
+{% endif %}
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
-
-{% block content %}
-<div class="dashboard-container-optimized">
-<div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
-    <!-- Skip to main content -->
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50">
-        Pular para o conteúdo principal
-    </a>
-
-    <header class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900" id="page-title">
-            {% if object %}Editar Beneficiária{% else %}Nova Beneficiária{% endif %}
-        </h1>
-        <a href="{% url 'members:beneficiary-list' %}" 
-           class="text-gray-600 hover:text-gray-900 flex items-center focus:outline-none focus:ring-2 focus:ring-purple-500 rounded"
-           aria-label="Voltar à lista de beneficiárias">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-            </svg>
-            Voltar à Lista
-        </a>
-    </header>
-
-    <main id="main-content" tabindex="-1">
-        <!-- Progress Bar -->
-        <div class="section-spacing-md" role="region" aria-labelledby="progress-label">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-gray-700" id="progress-label">Progresso do Formulário</span>
-                <span class="text-sm text-gray-500" id="progress-text" aria-live="polite">0% completo</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-                <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" 
-                     id="progress-bar" 
-                     style="width: 0%"
-                     role="progressbar"
-                     aria-valuenow="0"
-                     aria-valuemin="0"
-                     aria-valuemax="100"
-                     aria-labelledby="progress-label"
-                     aria-describedby="progress-text">
-                </div>
-            </div>
-        </div>
-
-        <form method="post" id="beneficiary-form" class="space-y-6" 
-              data-validation-form="true"
-              data-loading-form="true"
-              aria-labelledby="page-title"
-              aria-describedby="form-instructions"
-              novalidate>
-            {% csrf_token %}
-            
-            <div class="sr-only" id="form-instructions">
-                Preencha os campos obrigatórios marcados com asterisco (*) para 
-                {% if object %}atualizar{% else %}criar{% endif %} o registro da beneficiária.
-            </div>
-        
-        <div class="grid-optimized grid-optimized-2">
-            <!-- Nome -->
-            <div>
-                <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    Nome Completo *
-                </label>
-                {{ form.full_name }}
-                <div class="validation-feedback hidden mt-1 text-sm text-red-600"></div>
-                {% if form.full_name.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.full_name.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Data de Nascimento -->
-            <div>
-                <label for="{{ form.dob.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    Data de Nascimento *
-                </label>
-                {{ form.dob }}
-                {% if form.dob.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.dob.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- CPF -->
-            <div>
-                <label for="{{ form.cpf.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    CPF
-                </label>
-                {{ form.cpf }}
-                <div class="validation-feedback hidden mt-1 text-sm text-red-600"></div>
-                <div class="validation-loading hidden mt-1 text-sm text-blue-600">
-                    <i class="fas fa-spinner fa-spin mr-1"></i>Verificando CPF...
-                </div>
-                {% if form.cpf.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.cpf.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- RG -->
-            <div>
-                <label for="{{ form.rg.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    RG
-                </label>
-                {{ form.rg }}
-                {% if form.rg.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.rg.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Telefone Principal -->
-            <div>
-                <label for="{{ form.phone_1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    Telefone Principal *
-                </label>
-                {{ form.phone_1 }}
-                <div class="validation-feedback hidden mt-1 text-sm text-red-600"></div>
-                {% if form.phone_1.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.phone_1.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Telefone Secundário -->
-            <div>
-                <label for="{{ form.phone_2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    Telefone Secundário
-                </label>
-                {{ form.phone_2 }}
-                {% if form.phone_2.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.phone_2.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- NIS -->
-            <div>
-                <label for="{{ form.nis.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    NIS
-                </label>
-                {{ form.nis }}
-                {% if form.nis.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.nis.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Status -->
-            <div>
-                <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    Status *
-                </label>
-                {{ form.status }}
-                {% if form.status.errors %}
-                    <div class="mt-1 text-sm text-red-600">
-                        {% for error in form.status.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Endereço -->
-        <div>
-            <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                Endereço *
-            </label>
-            {{ form.address }}
-            {% if form.address.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.address.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Bairro -->
-        <div>
-            <label for="{{ form.neighbourhood.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                Bairro *
-            </label>
-            {{ form.neighbourhood }}
-            {% if form.neighbourhood.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.neighbourhood.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Ponto de Referência -->
-        <div>
-            <label for="{{ form.reference.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                Ponto de Referência
-            </label>
-            {{ form.reference }}
-            {% if form.reference.errors %}
-                <div class="mt-1 text-sm text-red-600">
-                    {% for error in form.reference.errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        </div>
-
-        <!-- Botões -->
-        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <a href="{% url 'members:beneficiary-list' %}" 
-               class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                Cancelar
-            </a>
-            <button type="submit" 
-                    class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    data-loading="true"
-                    data-loading-text="Salvando..."
-                    aria-describedby="form-progress">
-                <span class="loading-text">Criar Beneficiária</span>
-                <div class="loading-spinner hidden inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></div>
-            </button>
-        </div>
-    </form>
+{% block form_fields %}
+<!-- Nome Completo -->
+<div class="sm:col-span-4">
+    <label for="{{ form.full_name.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Nome Completo
+    </label>
+    <div class="mt-2">
+        <input type="text" 
+               name="{{ form.full_name.name }}" 
+               id="{{ form.full_name.id_for_label }}"
+               value="{{ form.full_name.value|default:'' }}"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6"
+               placeholder="Nome completo da beneficiária">
+        {% if form.full_name.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.full_name.errors.0 }}</p>
+        {% endif %}
+    </div>
 </div>
 
-<style>
-/* Estilização para os campos do formulário */
-.form-control {
-    @apply mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm;
-}
+<!-- CPF -->
+<div class="sm:col-span-2">
+    <label for="{{ form.cpf.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        CPF
+    </label>
+    <div class="mt-2">
+        <input type="text" 
+               name="{{ form.cpf.name }}"
+               id="{{ form.cpf.id_for_label }}"
+               value="{{ form.cpf.value|default:'' }}"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6"
+               placeholder="000.000.000-00">
+        {% if form.cpf.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.cpf.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
 
-select.form-control {
-    @apply bg-white;
-}
+<!-- Data de Nascimento -->
+<div class="sm:col-span-2">
+    <label for="{{ form.birth_date.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Data de Nascimento
+    </label>
+    <div class="mt-2">
+        <input type="date"
+               name="{{ form.birth_date.name }}"
+               id="{{ form.birth_date.id_for_label }}"
+               value="{{ form.birth_date.value|date:'Y-m-d'|default:'' }}"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6">
+        {% if form.birth_date.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.birth_date.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
 
-textarea.form-control {
-    @apply resize-vertical;
-}
-</style>
+<!-- Telefone -->
+<div class="sm:col-span-2">
+    <label for="{{ form.phone.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Telefone
+    </label>
+    <div class="mt-2">
+        <input type="tel"
+               name="{{ form.phone.name }}"
+               id="{{ form.phone.id_for_label }}"
+               value="{{ form.phone.value|default:'' }}"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6"
+               placeholder="(00) 00000-0000">
+        {% if form.phone.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.phone.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('beneficiary-form');
-    const submitButton = form.querySelector('[type="submit"]');
-    const progressBar = document.getElementById('form-progress');
+<!-- Email -->
+<div class="sm:col-span-4">
+    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Email
+    </label>
+    <div class="mt-2">
+        <input type="email"
+               name="{{ form.email.name }}"
+               id="{{ form.email.id_for_label }}"
+               value="{{ form.email.value|default:'' }}"
+               class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6"
+               placeholder="email@exemplo.com">
+        {% if form.email.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
 
-    // Progress tracking
-    const fields = form.querySelectorAll('input, select, textarea');
-    const totalFields = fields.length;
-    
-    function updateProgress() {
-        const filledFields = Array.from(fields).filter(field => {
-            return field.value && field.value.trim() !== '';
-        });
-        
-        const progress = Math.round((filledFields.length / totalFields) * 100);
-        progressBar.style.width = progress + '%';
-        progressBar.setAttribute('aria-valuenow', progress);
-        progressBar.textContent = progress + '%';
-    }
+<!-- Endereço -->
+<div class="col-span-full">
+    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Endereço
+    </label>
+    <div class="mt-2">
+        <textarea name="{{ form.address.name }}"
+                  id="{{ form.address.id_for_label }}"
+                  rows="3"
+                  class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6"
+                  placeholder="Endereço completo">{{ form.address.value|default:'' }}</textarea>
+        {% if form.address.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
 
-    // Real-time validation
-    fields.forEach(field => {
-        field.addEventListener('input', function() {
-            updateProgress();
-            
-            // Clear previous validation state
-            field.classList.remove('border-red-500', 'border-green-500');
-            
-            // Basic validation
-            if (field.hasAttribute('required') && field.value.trim() === '') {
-                field.classList.add('border-red-500');
-                field.setAttribute('aria-invalid', 'true');
-            } else if (field.value.trim() !== '') {
-                field.classList.add('border-green-500');
-                field.setAttribute('aria-invalid', 'false');
-            }
-        });
-    });
-
-    // Initial progress
-    updateProgress();
-
-    // Loading state handling
-    form.addEventListener('submit', function(e) {
-        submitButton.disabled = true;
-        submitButton.querySelector('.loading-text').textContent = 'Salvando...';
-        submitButton.querySelector('.loading-spinner').classList.remove('hidden');
-        
-        // Simulate form processing time
-        setTimeout(() => {
-            if (!form.checkValidity()) {
-                submitButton.disabled = false;
-                submitButton.querySelector('.loading-text').textContent = 'Criar Beneficiária';
-                submitButton.querySelector('.loading-spinner').classList.add('hidden');
-            }
-        }, 100);
-    });
-
-    // Enhanced accessibility
-    form.addEventListener('invalid', function(e) {
-        e.preventDefault();
-        const invalidField = form.querySelector(':invalid');
-        if (invalidField) {
-            invalidField.focus();
-            invalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, true);
-});
-</script>
+<!-- Status -->
+<div class="sm:col-span-2">
+    <label for="{{ form.is_active.id_for_label }}" class="block text-sm font-medium leading-6 text-gray-900">
+        Status
+    </label>
+    <div class="mt-2">
+        <select name="{{ form.is_active.name }}"
+                id="{{ form.is_active.id_for_label }}"
+                class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-pink-600 sm:text-sm sm:leading-6">
+            <option value="True" {% if form.is_active.value %}selected{% endif %}>Ativa</option>
+            <option value="False" {% if not form.is_active.value %}selected{% endif %}>Inativa</option>
+        </select>
+        {% if form.is_active.errors %}
+        <p class="mt-2 text-sm text-red-600">{{ form.is_active.errors.0 }}</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

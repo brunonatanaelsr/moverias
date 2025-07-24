@@ -1,238 +1,71 @@
-{% extends 'base_optimized.html' %}
-{% load static %}
+{% extends "layouts/base.html" %}
 
-{% block title %}{{ beneficiary.full_name }} - Detalhes{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}{{ beneficiary.full_name }} - {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-<div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-gray-900">{{ beneficiary.full_name }}</h2>
-        <div class="flex space-x-3">
-            <a href="{% url 'members:beneficiary-dashboard' beneficiary.pk %}" 
-               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700">
-                📊 Dashboard
-            </a>
-            <a href="{% url 'members:beneficiary-list' %}" 
-               class="text-gray-600 hover:text-gray-900 flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Voltar à Lista
-            </a>
-            <a href="{% url 'members:beneficiary-update' beneficiary.pk %}" 
-               class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg inline-flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Editar
-            </a>
-        </div>
-    </div>
-
-    <!-- Status Badge -->
-    <div class="section-spacing-md">
-        <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full
-            {% if beneficiary.status == 'ATIVA' %}
-                bg-green-100 text-green-800
-            {% else %}
-                bg-red-100 text-red-800
-            {% endif %}">
-            {{ beneficiary.get_status_display }}
-        </span>
-    </div>
-
-    <!-- Informações Básicas -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div>
-            <dt class="text-sm font-medium text-gray-500">Data de Nascimento</dt>
-            <dd class="mt-1 text-sm text-gray-900">
-                {% if beneficiary.dob %}
-                    {{ beneficiary.dob|date:"d/m/Y" }}
-                {% else %}
-                    Não informado
-                {% endif %}
-            </dd>
-        </div>
-        
-        <div>
-            <dt class="text-sm font-medium text-gray-500">Idade</dt>
-            <dd class="mt-1 text-sm text-gray-900">
-                {% if beneficiary.dob %}
-                    {{ beneficiary.age }} anos
-                {% else %}
-                    Não calculável
-                {% endif %}
-            </dd>
-        </div>
-        
-        <div>
-            <dt class="text-sm font-medium text-gray-500">CPF</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.cpf|default:"Não informado" }}</dd>
-        </div>
-        
-        <div>
-            <dt class="text-sm font-medium text-gray-500">RG</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.rg|default:"Não informado" }}</dd>
-        </div>
-        
-        <div>
-            <dt class="text-sm font-medium text-gray-500">Telefone Principal</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.phone_1|default:"Não informado" }}</dd>
-        </div>
-        
-        <div>
-            <dt class="text-sm font-medium text-gray-500">Telefone Secundário</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.phone_2|default:"Não informado" }}</dd>
-        </div>
-
-        <div>
-            <dt class="text-sm font-medium text-gray-500">NIS</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.nis|default:"Não informado" }}</dd>
-        </div>
-
-        <div>
-            <dt class="text-sm font-medium text-gray-500">Bairro</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.neighbourhood|default:"Não informado" }}</dd>
-        </div>
-    </div>
-
-    <!-- Endereço -->
-    {% if beneficiary.address %}
-    <div class="section-spacing-lg">
-        <h3 class="text-lg font-medium text-gray-900 mb-3">Endereço</h3>
-        <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-900">{{ beneficiary.address }}</p>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Ponto de Referência -->
-    {% if beneficiary.reference %}
-    <div class="section-spacing-lg">
-        <h3 class="text-lg font-medium text-gray-900 mb-3">Ponto de Referência</h3>
-        <div class="bg-gray-50 rounded-lg p-4">
-            <p class="text-sm text-gray-900 whitespace-pre-wrap">{{ beneficiary.reference }}</p>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Histórico de Projetos -->
-    <div class="section-spacing-lg">
-        <h3 class="text-lg font-medium text-gray-900 mb-3">Projetos</h3>
-        {% if beneficiary.project_enrollments.all %}
-            <div class="bg-gray-50 rounded-lg p-4">
-                <div class="space-y-3">
-                    {% for enrollment in beneficiary.project_enrollments.all %}
-                    <div class="flex justify-between items-center p-3 bg-white rounded border">
-                        <div>
-                            <h4 class="font-medium text-gray-900">{{ enrollment.project.name }}</h4>
-                            <p class="text-sm text-gray-600">{{ enrollment.project.description|truncatechars:100 }}</p>
-                            <p class="text-xs text-gray-500 mt-1">
-                                Matrícula em: {{ enrollment.enrollment_date|date:"d/m/Y" }}
-                            </p>
-                        </div>
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
-                            {% if enrollment.status == 'ATIVA' %}
-                                bg-green-100 text-green-800
-                            {% elif enrollment.status == 'CONCLUIDA' %}
-                                bg-blue-100 text-blue-800
-                            {% else %}
-                                bg-red-100 text-red-800
-                            {% endif %}">
-                            {{ enrollment.get_status_display }}
-                        </span>
-                    </div>
-                    {% endfor %}
+<div class="space-y-10">
+    <!-- Cabeçalho -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">{{ beneficiary.full_name }}</h2>
+            <div class="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd" />
+                    </svg>
+                    {{ beneficiary.address }}
+                </div>
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 16.25a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5a.75.75 0 01-.75-.75z" />
+                        <path fill-rule="evenodd" d="M4 4a3 3 0 013-3h6a3 3 0 013 3v12a3 3 0 01-3 3H7a3 3 0 01-3-3V4zm4-1.5v.75c0 .414.336.75.75.75h2.5a.75.75 0 00.75-.75V2.5h1A1.5 1.5 0 0114.5 4v12a1.5 1.5 0 01-1.5 1.5H7A1.5 1.5 0 015.5 16V4A1.5 1.5 0 017 2.5h1z" clip-rule="evenodd" />
+                    </svg>
+                    {{ beneficiary.phone }}
+                </div>
+                <div class="mt-2 flex items-center text-sm text-gray-500">
+                    <svg class="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M5.404 14.596A6.5 6.5 0 1116.5 10a1.25 1.25 0 01-2.5 0 4 4 0 10-.571 2.06A2.75 2.75 0 0018 10a8 8 0 10-2.343 5.657.75.75 0 00-1.06-1.06 6.5 6.5 0 01-9.193 0zM10 7.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z" clip-rule="evenodd" />
+                    </svg>
+                    {{ beneficiary.email }}
+                </div>
+                <div class="mt-2 flex items-center text-sm">
+                    <span class="inline-flex items-center rounded-md {% if beneficiary.is_active %}bg-green-50{% else %}bg-red-50{% endif %} px-2 py-1 text-xs font-medium {% if beneficiary.is_active %}text-green-700 ring-green-600/20{% else %}text-red-700 ring-red-600/20{% endif %} ring-1 ring-inset">
+                        {{ beneficiary.get_status_display }}
+                    </span>
                 </div>
             </div>
-        {% else %}
-            <div class="text-center py-8 bg-gray-50 rounded-lg">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <h4 class="mt-2 text-sm font-medium text-gray-900">Nenhum projeto encontrado</h4>
-                <p class="mt-1 text-sm text-gray-500">Esta beneficiária ainda não foi matriculada em nenhum projeto.</p>
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Informações de Sistema -->
-    <div class="border-t border-gray-200 pt-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-3">Informações do Sistema</h3>
-        <div class="grid-optimized grid-optimized-2">
-            <div>
-                <dt class="text-sm font-medium text-gray-500">Cadastrado em</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ beneficiary.created_at|date:"d/m/Y H:i" }}</dd>
-            </div>
         </div>
-    </div>
-
-    <!-- Ações -->
-    <div class="mt-8 pt-6 border-t border-gray-200">
-        <div class="flex justify-between">
-            <form method="post" action="{% url 'members:beneficiary-toggle-status' beneficiary.pk %}" 
-                  style="display: inline;"
-                  onsubmit="return confirm('Tem certeza que deseja {% if beneficiary.status == 'ATIVA' %}inativar{% else %}ativar{% endif %} esta beneficiária?')">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit"
-                        class="px-4 py-2 rounded-lg text-sm font-medium
-                        {% if beneficiary.status == 'ATIVA' %}
-                            bg-red-100 text-red-700 hover:bg-red-200
-                        {% else %}
-                            bg-green-100 text-green-700 hover:bg-green-200
-                        {% endif %}">
-                    {% if beneficiary.status == 'ATIVA' %}Inativar Beneficiária{% else %}Ativar Beneficiária{% endif %}
-                </button>
-            </form>
-            
-            <a href="{% url 'members:beneficiary-delete' beneficiary.pk %}" 
-               class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg"
-               onclick="return confirm('Tem certeza que deseja excluir esta beneficiária? Esta ação não pode ser desfeita.')">
-                Excluir Beneficiária
+        <div class="mt-4 flex flex-shrink-0 md:ml-4 md:mt-0">
+            <a href="{% url 'members:update' beneficiary.pk %}" class="ml-3 inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+                Editar Beneficiária
             </a>
         </div>
     </div>
-</div>
+
+    <!-- Conteúdo -->
+    <div class="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
+        <!-- Informações Básicas -->
+        <div class="px-4 sm:px-0">
+            <h2 class="text-base font-semibold leading-7 text-gray-900">Informações Básicas</h2>
+            <p class="mt-1 text-sm leading-6 text-gray-600">Dados pessoais da beneficiária.</p>
+        </div>
+
+        <div class="bg-white shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+            <dl class="divide-y divide-gray-100">
+                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-900">Nome Completo</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ beneficiary.full_name }}</dd>
+                </div>
+                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-900">CPF</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ beneficiary.cpf }}</dd>
+                </div>
+                <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-900">Data de Nascimento</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ beneficiary.birth_date|date:"d/m/Y" }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
 </div>
 {% endblock %}

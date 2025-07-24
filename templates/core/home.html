@@ -1,67 +1,96 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Move Marias - Transformando Vidas</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'purple-move': '#8B5CF6',
-                        'pink-move': '#EC4899',
-                    }
-                }
-            }
-        }
-    </script>
-</head>
-<body class="bg-gradient-to-br from-purple-move to-pink-move min-h-screen">
-    <div class="container-optimized">
-        <div class="text-center text-white">
-            <h1 class="text-6xl font-bold mb-4">Move Marias 💜</h1>
-            <p class="text-xl mb-8 opacity-90">Sistema de Gestão e Acompanhamento Social</p>
-            <p class="text-lg mb-12 opacity-75 max-w-2xl mx-auto">
-                Plataforma dedicada ao atendimento, acompanhamento e desenvolvimento de beneficiárias 
-                em situação de vulnerabilidade social, promovendo autonomia e transformação de vidas.
-            </p>
-            
-            <div class="space-x-4">
-                <a href="{% url 'account_login' %}" 
-                   class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-purple-move bg-white hover:bg-gray-100 transition-colors">
-                    Fazer Login
-                </a>
-            </div>
-        </div>
+{% extends "layouts/base.html" %}
 
-        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
-                <div class="text-4xl mb-4">👥</div>
-                <h3 class="text-xl font-bold mb-2">Gestão de Beneficiárias</h3>
-                <p class="opacity-90">Cadastro completo e acompanhamento personalizado de cada beneficiária.</p>
-            </div>
-            
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
-                <div class="text-4xl mb-4">📋</div>
-                <h3 class="text-xl font-bold mb-2">Anamnese Social</h3>
-                <p class="opacity-90">Avaliação social detalhada para identificar necessidades e vulnerabilidades.</p>
-            </div>
-            
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
-                <div class="text-4xl mb-4">🎯</div>
-                <h3 class="text-xl font-bold mb-2">Projetos e Evoluções</h3>
-                <p class="opacity-90">Acompanhamento de projetos e registro da evolução de cada beneficiária.</p>
-            </div>
-        </div>
+{% block title %}Início - {{ block.super }}{% endblock %}
 
-        <div class="mt-16 text-center text-white">
-            <p class="opacity-75">
-                © 2025 Move Marias. Todos os direitos reservados. 
-                Desenvolvido com 💜 para a transformação social.
-            </p>
+{% block content %}
+<div class="relative isolate pt-14">
+    <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+        <div class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-pink-600 to-pink-400 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+    </div>
+
+    <!-- Hero section -->
+    <div class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl text-center">
+                <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">Move Marias</h1>
+                <p class="mt-6 text-lg leading-8 text-gray-600">
+                    Sistema de Gestão Social para acompanhamento e desenvolvimento de beneficiárias.
+                </p>
+                {% if not request.user.is_authenticated %}
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    <a href="{% url 'account_login' %}" class="rounded-md bg-pink-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+                        Acessar Sistema
+                    </a>
+                    <a href="#sobre" class="text-sm font-semibold leading-6 text-gray-900">
+                        Saiba mais <span aria-hidden="true">→</span>
+                    </a>
+                </div>
+                {% else %}
+                <div class="mt-10 flex items-center justify-center gap-x-6">
+                    <a href="{% url 'dashboard:index' %}" class="rounded-md bg-pink-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+                        Ir para Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</body>
-</html>
+
+    <!-- Sobre section -->
+    <div id="sobre" class="py-24 sm:py-32">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="mx-auto max-w-2xl lg:text-center">
+                <h2 class="text-base font-semibold leading-7 text-pink-600">Gestão Social</h2>
+                <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    Tudo que você precisa para gerenciar seu projeto social
+                </p>
+                <p class="mt-6 text-lg leading-8 text-gray-600">
+                    Uma plataforma completa para acompanhamento de beneficiárias, gestão de projetos, workshops e muito mais.
+                </p>
+            </div>
+            <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+                <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
+                    <!-- Beneficiárias -->
+                    <div class="flex flex-col">
+                        <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                            <svg class="h-5 w-5 flex-none text-pink-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 9a3 3 0 100-6 3 3 0 000 6zM6 8a2 2 0 11-4 0 2 2 0 014 0zM1.49 15.326a.78.78 0 01-.358-.442 3 3 0 014.308-3.516 6.484 6.484 0 00-1.905 3.959c-.023.222-.014.442.025.654a4.97 4.97 0 01-2.07-.655zM16.44 15.98a4.97 4.97 0 002.07-.654.78.78 0 00.357-.442 3 3 0 00-4.308-3.517 6.484 6.484 0 011.907 3.96 2.32 2.32 0 01-.026.654zM18 8a2 2 0 11-4 0 2 2 0 014 0zM5.304 16.19a.844.844 0 01-.277-.71 5 5 0 019.947 0 .843.843 0 01-.277.71A6.975 6.975 0 0110 18a6.974 6.974 0 01-4.696-1.81z" />
+                            </svg>
+                            Gestão de Beneficiárias
+                        </dt>
+                        <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                            <p class="flex-auto">Cadastro completo, acompanhamento social e evolução das beneficiárias do projeto.</p>
+                        </dd>
+                    </div>
+
+                    <!-- Projetos -->
+                    <div class="flex flex-col">
+                        <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                            <svg class="h-5 w-5 flex-none text-pink-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.362 1.093a.75.75 0 00-.724 0L2.523 5.018 10 9.143l7.477-4.125-7.115-3.925zM18 6.443l-7.25 4v8.25l6.862-3.786A.75.75 0 0018 14.25V6.443zm-8.75 12.25v-8.25l-7.25-4v7.807a.75.75 0 00.388.657l6.862 3.786z" />
+                            </svg>
+                            Projetos e Workshops
+                        </dt>
+                        <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                            <p class="flex-auto">Organize e gerencie projetos, workshops e atividades com facilidade.</p>
+                        </dd>
+                    </div>
+
+                    <!-- Relatórios -->
+                    <div class="flex flex-col">
+                        <dt class="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                            <svg class="h-5 w-5 flex-none text-pink-600" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M15.5 2A1.5 1.5 0 0014 3.5v13a1.5 1.5 0 001.5 1.5h1a1.5 1.5 0 001.5-1.5v-13A1.5 1.5 0 0016.5 2h-1zM9.5 6A1.5 1.5 0 008 7.5v9A1.5 1.5 0 009.5 18h1a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0010.5 6h-1zM3.5 10A1.5 1.5 0 002 11.5v5A1.5 1.5 0 003.5 18h1A1.5 1.5 0 006 16.5v-5A1.5 1.5 0 004.5 10h-1z" />
+                            </svg>
+                            Relatórios e Análises
+                        </dt>
+                        <dd class="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                            <p class="flex-auto">Acompanhe o progresso através de relatórios detalhados e análises em tempo real.</p>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

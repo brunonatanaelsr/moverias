@@ -1,286 +1,85 @@
-{% extends 'base_optimized.html' %}
+{% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %}Treinamentos - MoveMarias{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}Dashboard de Treinamentos - Move Marias{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-<div class="min-h-screen bg-gray-50 py-8">
-    
-            <!-- Welcome Header -->
-    <div class="dashboard-header-optimized dashboard-fade-in">
-        <div class="dashboard-header-content-optimized">
-            <div class="dashboard-header-icon">👥</div>
-            <div class="dashboard-header-text">
-                <h1>Recursos Humanos</h1>
-                <p>Gerencie equipe e desenvolvimento organizacional</p>
-            </div>
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Dashboard de Treinamentos</h1>
+        <a href="{% url 'hr:training_record_list' %}" 
+           class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+            Ver Todos os Treinamentos
+        </a>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Treinamentos Ativos</h3>
+            <p class="text-3xl font-bold text-primary">{{ active_trainings|default:0 }}</p>
         </div>
-        <div class="hidden lg:block text-right">
-            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
-            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Funcionários em Treinamento</h3>
+            <p class="text-3xl font-bold text-green-600">{{ employees_in_training|default:0 }}</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Conclusões Este Mês</h3>
+            <p class="text-3xl font-bold text-blue-600">{{ monthly_completions|default:0 }}</p>
         </div>
     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500 truncate">Treinamentos Disponíveis</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ stats.available_trainings }}</p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user-graduate text-white"></i>
-                        </div>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500 truncate">Minhas Inscrições</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ stats.my_registrations }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-trophy text-white"></i>
-                        </div>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500 truncate">Concluídos</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ stats.completed_trainings }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
-                            <i class="fas fa-clock text-white"></i>
-                        </div>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-500 truncate">Horas Totais</p>
-                        <p class="text-2xl font-semibold text-gray-900">{{ stats.total_training_hours }}</p>
-                    </div>
-                </div>
-            </div>
+    <!-- Treinamentos em Andamento -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Treinamentos em Andamento</h3>
         </div>
-
-        <!-- Actions -->
-        <div class="section-spacing-md">
-            <a href="{% url 'hr:advanced_training_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition ease-in-out duration-150">
-                <i class="fas fa-plus mr-2"></i>
-                Criar Treinamento
-            </a>
-        </div>
-
-        <!-- Training Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Treinamentos Disponíveis -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Treinamentos Disponíveis</h3>
-                </div>
-                <div class="p-6">
-                    {% if available_trainings %}
-                        <div class="space-y-4">
-                            {% for training in available_trainings %}
-                                <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <h4 class="font-medium text-gray-900">{{ training.title }}</h4>
-                                            <p class="text-sm text-gray-600 mt-1">{{ training.description|truncatewords:15 }}</p>
-                                            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                                                <span><i class="fas fa-calendar mr-1"></i>{{ training.start_date|date:"d/m/Y" }}</span>
-                                                <span><i class="fas fa-clock mr-1"></i>{{ training.duration_hours }}h</span>
-                                                <span><i class="fas fa-users mr-1"></i>{{ training.registrations.count }}/{{ training.max_participants }}</span>
-                                            </div>
-                                            {% if training.category %}
-                                                <div class="mt-2">
-                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                        {{ training.category }}
-                                                    </span>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                        <div class="flex items-center space-x-2">
-                                            <a href="{% url 'hr:advanced_training_detail' training.id %}" class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            {% if training.registrations.count < training.max_participants %}
-                                                <button class="text-green-600 hover:text-green-800 register-training" data-training-id="{{ training.id }}">
-                                                    <i class="fas fa-user-plus"></i>
-                                                </button>
-                                            {% else %}
-                                                <span class="text-gray-400" title="Lotado">
-                                                    <i class="fas fa-user-times"></i>
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
+        <div class="p-6">
+            {% if ongoing_trainings %}
+                <div class="space-y-4">
+                    {% for training in ongoing_trainings %}
+                        <div class="border-l-4 border-yellow-500 pl-4">
+                            <h4 class="font-medium text-gray-900">{{ training.title }}</h4>
+                            <p class="text-sm text-gray-600">{{ training.description }}</p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Participantes: {{ training.participants.count }} | 
+                                Início: {{ training.start_date|date:"d/m/Y" }}
+                            </p>
                         </div>
-                    {% else %}
-                        <p class="text-center text-gray-500 py-8">Nenhum treinamento disponível no momento.</p>
-                    {% endif %}
+                    {% endfor %}
                 </div>
-            </div>
-
-            <!-- Minhas Inscrições -->
-            <div class="bg-white rounded-lg shadow">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Minhas Inscrições</h3>
-                </div>
-                <div class="p-6">
-                    {% if my_registrations %}
-                        <div class="space-y-4">
-                            {% for registration in my_registrations %}
-                                <div class="border rounded-lg p-4">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <h4 class="font-medium text-gray-900">{{ registration.training.title }}</h4>
-                                            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500">
-                                                <span><i class="fas fa-calendar mr-1"></i>{{ registration.training.start_date|date:"d/m/Y" }}</span>
-                                                <span><i class="fas fa-clock mr-1"></i>{{ registration.training.duration_hours }}h</span>
-                                            </div>
-                                            <div class="mt-2">
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if registration.status == 'completed' %}bg-green-100 text-green-800{% elif registration.status == 'in_progress' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                                    {{ registration.get_status_display }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center space-x-2">
-                                            <a href="{% url 'hr:advanced_training_detail' registration.training.id %}" class="text-blue-600 hover:text-blue-800">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            {% if registration.status == 'completed' %}
-                                                <i class="fas fa-certificate text-green-500" title="Certificado disponível"></i>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-center text-gray-500 py-8">Você não está inscrito em nenhum treinamento.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Progress Chart -->
-        <div class="mt-8 bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Progresso de Desenvolvimento</h3>
-            <div class="h-64">
-                <canvas id="progressChart"></canvas>
-            </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-8">Nenhum treinamento em andamento.</p>
+            {% endif %}
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// Training registration
-document.addEventListener('DOMContentLoaded', function() {
-    const registerButtons = document.querySelectorAll('.register-training');
-    
-    registerButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const trainingId = this.dataset.trainingId;
-            
-            if (confirm('Deseja se inscrever neste treinamento?')) {
-                fetch(`{% url 'hr:training_register' 0 %}`.replace('0', trainingId), {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Inscrição realizada com sucesso!');
-                        location.reload();
-                    } else {
-                        alert('Erro ao realizar inscrição. Tente novamente.');
-                    }
-                });
-            }
-        });
-    });
-
-    // Progress Chart
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    const progressChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Concluídos', 'Em Andamento', 'Pendentes'],
-            datasets: [{
-                data: [{{ stats.completed_trainings }}, {{ stats.my_registrations|add:stats.completed_trainings|add:"-"|add:stats.completed_trainings }}, {{ stats.available_trainings }}],
-                backgroundColor: [
-                    '#10B981',
-                    '#3B82F6',
-                    '#6B7280'
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            }
-        }
-    });
-});
-</script>
+    <!-- Próximos Treinamentos -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Próximos Treinamentos</h3>
+        </div>
+        <div class="p-6">
+            {% if upcoming_trainings %}
+                <div class="space-y-4">
+                    {% for training in upcoming_trainings %}
+                        <div class="border-l-4 border-blue-500 pl-4">
+                            <h4 class="font-medium text-gray-900">{{ training.title }}</h4>
+                            <p class="text-sm text-gray-600">{{ training.description }}</p>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Início: {{ training.start_date|date:"d/m/Y" }} | 
+                                Duração: {{ training.duration_hours }}h
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-center py-8">Nenhum treinamento agendado.</p>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

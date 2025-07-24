@@ -6,7 +6,7 @@
 # Meta ordering por full_name.
 
 from django.db import models
-from django_cryptography.fields import encrypt
+# from django_cryptography.fields import encrypt  # Temporariamente desabilitado
 import hashlib
 import os
 from datetime import date
@@ -24,8 +24,8 @@ class Beneficiary(models.Model):
     nis = models.CharField('NIS', max_length=15, blank=True, null=True)
     phone_1 = models.CharField('Telefone 1', max_length=20)
     phone_2 = models.CharField('Telefone 2', max_length=20, blank=True, null=True)
-    rg = encrypt(models.CharField('RG', max_length=20, blank=True, null=True))
-    cpf = encrypt(models.CharField('CPF', max_length=14, blank=True, null=True))
+    rg = models.CharField('RG', max_length=20, blank=True, null=True)  # Temporariamente sem criptografia
+    cpf = models.CharField('CPF', max_length=14, blank=True, null=True)  # Temporariamente sem criptografia
     address = models.TextField('Endereço')
     neighbourhood = models.CharField('Bairro', max_length=100)
     reference = models.TextField('Ponto de Referência', blank=True)

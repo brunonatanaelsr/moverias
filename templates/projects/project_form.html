@@ -1,332 +1,56 @@
-{% extends "base_optimized.html" %}
+{% extends "layouts/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}
-{% if object %}Editar Projeto{% else %}Novo Projeto{% endif %} - Move Marias
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar Projeto{% else %}Novo Projeto{% endif %} - Move Marias{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-<div class="section-spacing-lg">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-900">
-                {% if object %}Editar Projeto{% else %}Novo Projeto{% endif %}
-            </h1>
-            <p class="mt-2 text-sm text-gray-600">
-                {% if object %}
-                    Atualize as informações do projeto
-                {% else %}
-                    Preencha os dados para criar um novo projeto
-                {% endif %}
-            </p>
-        </div>
-        <a href="{% url 'projects:project-list' %}" 
-           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            ← Voltar
-        </a>
-    </div>
-</div>
-
-    <form method="post" id="project-form" class="bg-white shadow rounded-lg" 
-          data-loading-form="true" 
-          data-validation="true"
-          novalidate>
-        {% csrf_token %}
-        
-        <div class="px-6 py-8">
-            <!-- Progress Bar -->
-            <div class="section-spacing-md">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700">Progresso do Formulário</span>
-                    <span class="text-sm text-gray-500" id="progress-text">0% completo</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" 
-                         id="progress-bar" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <!-- Form Fields with Validation -->
-            <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="id_name" class="block text-sm font-medium text-gray-700 mb-2">
-                            Nome do Projeto *
-                        </label>
-                        {{ form.name }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="name-error"></div>
-                    </div>
-                    <div>
-                        <label for="id_category" class="block text-sm font-medium text-gray-700 mb-2">
-                            Categoria *
-                        </label>
-                        {{ form.category }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="category-error"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="id_description" class="block text-sm font-medium text-gray-700 mb-2">
-                        Descrição *
-                    </label>
-                    {{ form.description }}
-                    <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                         id="description-error"></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="id_start_date" class="block text-sm font-medium text-gray-700 mb-2">
-                            Data de Início *
-                        </label>
-                        {{ form.start_date }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="start_date-error"></div>
-                    </div>
-                    <div>
-                        <label for="id_end_date" class="block text-sm font-medium text-gray-700 mb-2">
-                            Data de Término *
-                        </label>
-                        {{ form.end_date }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="end_date-error"></div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="id_coordinator" class="block text-sm font-medium text-gray-700 mb-2">
-                            Coordenador *
-                        </label>
-                        {{ form.coordinator }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="coordinator-error"></div>
-                    </div>
-                    <div>
-                        <label for="id_max_participants" class="block text-sm font-medium text-gray-700 mb-2">
-                            Máximo de Participantes
-                        </label>
-                        {{ form.max_participants }}
-                        <div class="validation-feedback text-red-500 text-sm mt-1 hidden" 
-                             id="max_participants-error"></div>
-                    </div>
-                </div>
-
-                {% if object %}
-                <div>
-                    <label for="id_status" class="block text-sm font-medium text-gray-700 mb-2">
-                        Status
-                    </label>
-                    {{ form.status }}
-                </div>
-                {% endif %}
-
-                <div>
-                    <label for="id_objectives" class="block text-sm font-medium text-gray-700 mb-2">
-                        Objetivos
-                    </label>
-                    {{ form.objectives }}
-                </div>
-
-                <div>
-                    <label for="id_target_audience" class="block text-sm font-medium text-gray-700 mb-2">
-                        Público Alvo
-                    </label>
-                    {{ form.target_audience }}
-                </div>
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">
+                    {% if form.instance.pk %}
+                        Editar Projeto
+                    {% else %}
+                        Novo Projeto
+                    {% endif %}
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    {% if form.instance.pk %}
+                        Atualize as informações do projeto.
+                    {% else %}
+                        Preencha as informações para criar um novo projeto.
+                    {% endif %}
+                </p>
             </div>
         </div>
-
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-            <div class="flex justify-end space-x-3">
-                <a href="{% url 'projects:project-list' %}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                    Cancelar
-                </a>
-                <button type="submit" 
-                        id="submit-btn"
-                        class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-move hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
-                        data-loading-text="{% if object %}Salvando...{% else %}Criando...{% endif %}"
-                        data-action="{% if object %}update-project{% else %}create-project{% endif %}"
-                        disabled>
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    {% if object %}Atualizar{% else %}Criar{% endif %} Projeto
-                </button>
-            </div>
-        </div>
-    </form>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('project-form');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const submitBtn = document.getElementById('submit-btn');
-    
-    // Campos obrigatórios
-    const requiredFields = ['name', 'category', 'description', 'start_date', 'end_date', 'coordinator'];
-    
-    // Atualizar progresso
-    function updateProgress() {
-        let filledFields = 0;
         
-        requiredFields.forEach(fieldName => {
-            const field = form.querySelector(`[name="${fieldName}"]`);
-            if (field && field.value.trim() !== '') {
-                filledFields++;
-            }
-        });
-        
-        const progress = Math.round((filledFields / requiredFields.length) * 100);
-        progressBar.style.width = progress + '%';
-        progressText.textContent = progress + '% completo';
-        
-        // Habilitar/desabilitar botão submit
-        submitBtn.disabled = progress < 100;
-        
-        // Cor da barra de progresso
-        if (progress < 30) {
-            progressBar.className = 'bg-red-500 h-2 rounded-full transition-all duration-300';
-        } else if (progress < 70) {
-            progressBar.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-300';
-        } else {
-            progressBar.className = 'bg-purple-600 h-2 rounded-full transition-all duration-300';
-        }
-    }
-    
-    // Eventos de atualização
-    requiredFields.forEach(fieldName => {
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.addEventListener('input', updateProgress);
-            field.addEventListener('change', updateProgress);
-        }
-    });
-    
-    // Validação de datas
-    const startDate = form.querySelector('[name="start_date"]');
-    const endDate = form.querySelector('[name="end_date"]');
-    
-    if (startDate && endDate) {
-        function validateDates() {
-            if (startDate.value && endDate.value) {
-                const start = new Date(startDate.value);
-                const end = new Date(endDate.value);
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
                 
-                if (start >= end) {
-                    showFieldError('end_date', 'Data de término deve ser posterior à data de início');
-                } else {
-                    hideFieldError('end_date');
-                }
-            }
-        }
-        
-        startDate.addEventListener('change', validateDates);
-        endDate.addEventListener('change', validateDates);
-    }
-    
-    // Validação de participantes
-    const maxParticipants = form.querySelector('[name="max_participants"]');
-    if (maxParticipants) {
-        maxParticipants.addEventListener('input', function() {
-            const value = parseInt(this.value);
-            if (value < 1 || value > 1000) {
-                showFieldError('max_participants', 'Número deve estar entre 1 e 1000');
-            } else {
-                hideFieldError('max_participants');
-            }
-        });
-    }
-    
-    // Funções de erro
-    function showFieldError(fieldName, message) {
-        const errorElement = document.getElementById(fieldName + '-error');
-        if (errorElement) {
-            errorElement.textContent = message;
-            errorElement.classList.remove('hidden');
-        }
-        
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.classList.add('border-red-500');
-        }
-    }
-    
-    function hideFieldError(fieldName) {
-        const errorElement = document.getElementById(fieldName + '-error');
-        if (errorElement) {
-            errorElement.classList.add('hidden');
-        }
-        
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.classList.remove('border-red-500');
-        }
-    }
-    
-    // Progresso inicial
-    updateProgress();
-    
-    // Submissão com loading
-    form.addEventListener('submit', function(e) {
-        if (submitBtn.disabled) {
-            e.preventDefault();
-            return;
-        }
-        
-        submitBtn.disabled = true;
-        const loadingText = submitBtn.dataset.loadingText || 'Processando...';
-        submitBtn.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>${loadingText}`;
-    });
-});
-</script>
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        {{ form|crispy }}
+                    </div>
+                    
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                        <a href="{% url 'projects:project-list' %}" 
+                           class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 mr-3">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                            {% if form.instance.pk %}
+                                Atualizar Projeto
+                            {% else %}
+                                Criar Projeto
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

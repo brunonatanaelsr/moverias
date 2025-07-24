@@ -165,6 +165,8 @@ class EvolutionRecordDetailView(LoginRequiredMixin, TechnicianRequiredMixin, Det
 
 
 class EvolutionRecordCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+    """Criar novo registro de evolução"""
+    
     def form_valid(self, form):
         form.instance.author = self.request.user
         response = super().form_valid(form)
@@ -179,8 +181,8 @@ class EvolutionRecordCreateView(LoginRequiredMixin, TechnicianRequiredMixin, Cre
             old_values=None,
             new_values={field: getattr(form.instance, field) for field in form.instance._meta.fields}
         )
-        # ...existing code...
-    """Criar novo registro de evolução"""
+        messages.success(self.request, f'Registro de evolução criado com sucesso para {form.instance.beneficiary}')
+        return response
     
     model = EvolutionRecord
     template_name = 'evolution/evolution_form.html'

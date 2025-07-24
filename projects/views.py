@@ -278,3 +278,18 @@ def export_project_data(request, pk):
         ])
     
     return response
+
+
+@login_required
+@requires_technician
+def project_delete(request, pk):
+    """Excluir um projeto"""
+    project = get_object_or_404(Project, pk=pk)
+    
+    if request.method == 'POST':
+        project.delete()
+        messages.success(request, 'Projeto excluído com sucesso!')
+        return redirect('projects:project-list')
+    
+    return render(request, 'projects/project_confirm_delete.html', {'project': project})
+

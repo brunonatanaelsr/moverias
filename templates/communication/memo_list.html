@@ -1,242 +1,180 @@
-{% extends 'base_optimized.html' %}
+{% extends "layouts/base.html" %}
 {% load static %}
 
-{% block title %}Memorandos - MoveMarias{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}Memorandos - Move Marias{% endblock %}
 
 {% block content %}
-<div id="alert-container" class="mb-4" aria-live="polite"></div>
-<div class="dashboard-container-optimized">
-    <!-- Welcome Header -->
-    <div class="dashboard-header-optimized dashboard-fade-in">
-        <div class="dashboard-header-content-optimized">
-            <div class="dashboard-header-icon">📢</div>
-            <div class="dashboard-header-text">
-                <h1>Comunicação</h1>
-                <p>Gerencie comunicações e anúncios</p>
-            </div>
-        </div>
-        <div class="hidden lg:block text-right">
-            <div class="text-sm opacity-90">{{ "now"|date:"l, j \d\e F \d\e Y" }}</div>
-            <div class="text-xl font-bold">{{ "now"|date:"H:i" }}</div>
-        </div>
+<div class="container mx-auto px-4 py-8">
+    <!-- Cabeçalho -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Memorandos</h1>
+        {% if user.is_staff %}
+        <a href="{% url 'communication:create_memo' %}" 
+           class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
+            Novo Memorando
+        </a>
+        {% endif %}
     </div>
 
-<div class="grid-optimized grid-optimized-2">
-        <div class="card-optimized card-padding-md" dashboard-card-hover dashboard-slide-up>
-            <div class="flex justify-between items-center mb-4">
-                <h1 class="h3 mb-0">Memorandos Internos</h1>
-                <a href="{% url 'communication:create_memo' %}" class="btn-primary">
-                    <i class="fas fa-plus"></i> Novo Memorando
-                </a>
+    <!-- Filtros -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Busca -->
+            <div class="col-span-4 md:col-span-2">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search|default:'' }}"
+                       placeholder="Buscar memorandos..." 
+                       class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
             </div>
 
-            <!-- Filtros -->
-            <div class="card-optimized card-padding-md section-spacing-md" dashboard-card-hover dashboard-slide-up>
-                <div class="card-padding-md">
-                    <form method="get" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="search" class="form-label-optimized">Buscar</label>
-                            <input type="text" class="input-field" id="search" name="search" 
-                                   value="{{ search }}" placeholder="Assunto ou conteúdo...">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="type" class="form-label-optimized">Tipo</label>
-                            <select class="form-select" id="type" name="type">
-                                <option value="">Todos</option>
-                                <option value="informative" {% if current_type == 'informative' %}selected{% endif %}>Informativo</option>
-                                <option value="directive" {% if current_type == 'directive' %}selected{% endif %}>Diretivo</option>
-                                <option value="request" {% if current_type == 'request' %}selected{% endif %}>Solicitação</option>
-                                <option value="policy" {% if current_type == 'policy' %}selected{% endif %}>Política</option>
-                                <option value="procedure" {% if current_type == 'procedure' %}selected{% endif %}>Procedimento</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="requires_response" class="form-label-optimized">Resposta</label>
-                            <select class="form-select" id="requires_response" name="requires_response">
-                                <option value="">Todos</option>
-                                <option value="true" {% if requires_response == 'true' %}selected{% endif %}>Requer Resposta</option>
-                                <option value="false" {% if requires_response == 'false' %}selected{% endif %}>Apenas Informativo</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label>&nbsp;</label>
-                            <div class="flex gap-2">
-                                <button type="submit" class="btn-outline-primary">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                <a href="{% url 'communication:memo_list' %}" class="mm-btn mm-btn-outline-secondary">
-                                    <i class="fas fa-times"></i>
+            <!-- Tipo -->
+            <div>
+                <select name="type" 
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="">Todos os Tipos</option>
+                    {% for memo_value, memo_label in memo_types %}
+                    <option value="{{ memo_value }}" {% if current_type == memo_value %}selected{% endif %}>
+                        {{ memo_label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Status de Resposta -->
+            <div>
+                <select name="requires_response" 
+                        class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary">
+                    <option value="">Todos os Status</option>
+                    <option value="true" {% if requires_response == 'true' %}selected{% endif %}>
+                        Requer Resposta
+                    </option>
+                    <option value="false" {% if requires_response == 'false' %}selected{% endif %}>
+                        Sem Resposta Necessária
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-span-4 flex justify-end">
+                <button type="submit" 
+                        class="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded">
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Memorandos -->
+    <div class="space-y-4">
+        {% if memos %}
+            {% for memo in memos %}
+                <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-800">
+                                <a href="{% url 'communication:memo_detail' memo.pk %}" 
+                                   class="hover:text-primary">
+                                    {{ memo.subject }}
                                 </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Lista de Memorandos -->
-            {% if memos %}
-                <div class="grid-optimized grid-optimized-2">
-                    {% for memo in memos %}
-                    <div class="col-12 mb-3">
-                        <div class="card memo-card">
-                            <div class="mm-mm-card-header flex justify-between items-center">
-                                <div>
-                                    <h5 class="mb-0">{{ memo.subject }}</h5>
-                                    <text-sm class="text-gray-600">
-                                        <i class="fas fa-user"></i> {{ memo.from_user.get_full_name|default:memo.from_user.username }}
-                                        | <i class="fas fa-calendar-alt"></i> {{ memo.created_at|date:"d/m/Y H:i" }}
-                                    </text-sm>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    {% if memo.requires_response %}
-                                    <span class="mm-badge mm-badge-warning">
-                                        <i class="fas fa-reply"></i> Requer Resposta
-                                    </span>
+                            </h2>
+                            <p class="text-sm text-gray-600">
+                                Para: {% if memo.to_departments.exists %}
+                                    {{ memo.to_departments.first.name }}
+                                    {% if memo.to_departments.count > 1 %}
+                                        e outros {{ memo.to_departments.count|add:"-1" }}
                                     {% endif %}
-                                    <span class="mm-badge mm-badge-info">
-                                        {% if memo.memo_type == 'informative' %}Informativo
-                                        {% elif memo.memo_type == 'directive' %}Diretivo
-                                        {% elif memo.memo_type == 'request' %}Solicitação
-                                        {% elif memo.memo_type == 'policy' %}Política
-                                        {% elif memo.memo_type == 'procedure' %}Procedimento
-                                        {% else %}{{ memo.memo_type }}{% endif %}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="card-padding-md">
-                                <p class="mm-mm-card-text">{{ memo.content|truncatewords:30 }}</p>
-                                
-                                {% if memo.response_deadline %}
-                                <text-sm class="text-gray-600">
-                                    <i class="fas fa-clock"></i> 
-                                    <strong>Prazo:</strong> {{ memo.response_deadline|date:"d/m/Y" }}
-                                    {% if memo.response_deadline.date < today %}
-                                    <span class="mm-badge mm-badge-danger">Vencido</span>
-                                    {% endif %}
-                                </text-sm>
+                                {% else %}
+                                    Destinatários específicos
                                 {% endif %}
-                            </div>
-                            <div class="card-padding-md border-t">
-                                <div class="flex justify-between items-center">
-                                    <text-sm class="text-gray-600">
-                                        <i class="fas fa-users"></i>
-                                        Destinatários: {{ memo.to_users.count }}
-                                        {% if memo.to_departments.exists %}
-                                        | Departamentos: {{ memo.to_departments.count }}
-                                        {% endif %}
-                                    </text-sm>
-                                    <a href="{% url 'communication:memo_detail' memo.pk %}" class="btn mm-mm-btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> Ver Detalhes
-                                    </a>
-                                </div>
-                            </div>
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                Enviado em {{ memo.created_at|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            {% if memo.requires_response %}
+                                {% if memo.responses.exists %}
+                                    <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                        Respondido
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+                                        Aguardando Resposta
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                                {{ memo.get_memo_type_display }}
+                            </span>
                         </div>
                     </div>
-                    {% endfor %}
+                    
+                    <p class="text-gray-600 mb-4">
+                        {{ memo.content|truncatewords:50 }}
+                    </p>
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            {% if memo.deadline %}
+                                {% if memo.deadline|date:"Y-m-d" < today|date:"Y-m-d" %}
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                                        Prazo vencido: {{ memo.deadline|date:"d/m/Y" }}
+                                    </span>
+                                {% else %}
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                        Prazo: {{ memo.deadline|date:"d/m/Y" }}
+                                    </span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'communication:memo_detail' memo.pk %}" 
+                           class="text-primary hover:text-primary-dark font-medium">
+                            Ver detalhes →
+                        </a>
+                    </div>
                 </div>
+            {% endfor %}
 
-                <!-- Paginação -->
-                {% if memos.has_other_pages %}
-                <nav aria-label="Paginação de memorandos">
-                    <ul class="pagination justify-center">
-                        {% if memos.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ memos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        
-                        {% for num in memos.paginator.page_range %}
+            <!-- Paginação -->
+            {% if memos.has_other_pages %}
+                <div class="flex justify-center space-x-2 mt-6">
+                    {% if memos.has_previous %}
+                        <a href="?page={{ memos.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}" 
+                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                            Anterior
+                        </a>
+                    {% endif %}
+
+                    {% for num in memos.paginator.page_range %}
                         {% if memos.number == num %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ num }}</span>
-                        </li>
-                        {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">{{ num }}</a>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                        
-                        {% if memos.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ memos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}">
-                                <i class="fas fa-chevron-right"></i>
+                            <span class="px-4 py-2 bg-primary text-white rounded">{{ num }}</span>
+                        {% elif num > memos.number|add:'-3' and num < memos.number|add:'3' %}
+                            <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}" 
+                               class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                                {{ num }}
                             </a>
-                        </li>
                         {% endif %}
-                    </ul>
-                </nav>
-                {% endif %}
-            {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-memo text-gray-600" style="font-size: 4rem;"></i>
-                    <h3 class="mt-3">Nenhum memorando encontrado</h3>
-                    <p class="text-gray-600">Não há memorandos correspondentes aos filtros aplicados.</p>
-                    <a href="{% url 'communication:create_memo' %}" class="btn-primary">
-                        <i class="fas fa-plus"></i> Criar Primeiro Memorando
-                    </a>
+                    {% endfor %}
+
+                    {% if memos.has_next %}
+                        <a href="?page={{ memos.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_type %}&type={{ current_type }}{% endif %}{% if requires_response %}&requires_response={{ requires_response }}{% endif %}" 
+                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                            Próximo
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
-        </div>
+        {% else %}
+            <div class="text-center py-12">
+                <p class="text-gray-600">Nenhum memorando encontrado.</p>
+                {% if user.is_staff %}
+                    <a href="{% url 'communication:create_memo' %}" 
+                       class="inline-block mt-4 bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded">
+                        Criar Novo Memorando
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
-</div>
-
-<style>
-.memo-card {
-    border-left: 4px solid #007bff;
-    transition: all 0.3s ease;
-}
-
-.memo-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.memo-card .mm-mm-card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-</style>
 </div>
 {% endblock %}

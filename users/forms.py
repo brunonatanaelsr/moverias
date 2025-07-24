@@ -58,9 +58,13 @@ class UserProfileForm(forms.ModelForm):
     
     class Meta:
         model = UserProfile
-        fields = ['bio', 'birth_date', 'address', 'emergency_contact', 'emergency_phone', 
+        fields = ['profile_image', 'bio', 'birth_date', 'address', 'emergency_contact', 'emergency_phone', 
                  'skills', 'availability', 'notes']
         widgets = {
+            'profile_image': forms.FileInput(attrs={
+                'accept': 'image/*',
+                'class': 'block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
+            }),
             'bio': forms.Textarea(attrs={'rows': 3}),
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
             'address': forms.Textarea(attrs={'rows': 2}),
@@ -69,8 +73,12 @@ class UserProfileForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
         labels = {
+            'profile_image': 'Foto de Perfil',
             'emergency_contact': 'Nome do Contato de Emergência',
             'emergency_phone': 'Telefone do Contato de Emergência',
+        }
+        help_texts = {
+            'profile_image': 'Imagens aceitas: JPG, JPEG, PNG, GIF (máx. 2MB)',
         }
         
     def __init__(self, *args, **kwargs):
@@ -78,6 +86,9 @@ class UserProfileForm(forms.ModelForm):
         
         # Aplicar classes CSS
         for field_name, field in self.fields.items():
+            if field_name == 'profile_image':
+                # O widget já tem sua classe definida
+                continue
             field.widget.attrs.update({
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500'
             })
@@ -87,6 +98,29 @@ class UserProfileForm(forms.ModelForm):
             self.fields['emergency_phone'].widget.attrs.update({
                 'data-validate': 'phone'
             })
+    
+    def clean_profile_image(self):
+        """Validação customizada para imagem de perfil"""
+        image = self.cleaned_data.get('profile_image')
+        
+        if image:
+            # Verificar tamanho (2MB máximo)
+            max_size = 2 * 1024 * 1024  # 2MB em bytes
+            if image.size > max_size:
+                raise forms.ValidationError(
+                    f'A imagem é muito grande ({image.size / (1024*1024):.1f}MB). '
+                    f'O tamanho máximo permitido é {max_size / (1024*1024):.0f}MB.'
+                )
+            
+            # Verificar se é uma imagem válida
+            try:
+                from PIL import Image
+                img = Image.open(image)
+                img.verify()
+            except Exception:
+                raise forms.ValidationError('Arquivo inválido. Por favor, envie uma imagem válida.')
+        
+        return image
 
 
 class SystemRoleForm(forms.ModelForm):

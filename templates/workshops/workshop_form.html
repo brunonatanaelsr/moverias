@@ -1,277 +1,56 @@
-{% extends 'base_optimized.html' %}
+{% extends "layouts/base.html" %}
 {% load crispy_forms_tags %}
 
-{% block title %}
-    {% if object %}
-        Editar {{ object.name }} - Oficinas
-    {% else %}
-        Nova Oficina - Move Marias
-    {% endif %}
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Dashboard specific animations */
-    .dashboard-fade-in {
-        animation: fadeIn 0.4s ease-out;
-    }
-    
-    .dashboard-slide-up {
-        animation: slideUp 0.5s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slideUp {
-        from { 
-            opacity: 0;
-            transform: translateY(15px);
-        }
-        to { 
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    /* Hover effects */
-    .dashboard-card-hover:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-</style>
-{% endblock %}
-
-{% block breadcrumb_items %}
-<!-- Add breadcrumb items here if needed -->
-{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar Workshop{% else %}Novo Workshop{% endif %} - Move Marias{% endblock %}
 
 {% block content %}
-<div class="dashboard-container-optimized">
-{% include 'workshops/workshops_nav.html' %}
-
-    <div class="section-spacing-lg">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900">
-                    {% if object %}
-                        Editar Oficina
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">
+                    {% if form.instance.pk %}
+                        Editar Workshop
                     {% else %}
-                        Nova Oficina
+                        Novo Workshop
                     {% endif %}
-                </h1>
-                <p class="mt-2 text-sm text-gray-600">
-                    {% if object %}
-                        Atualize as informações da oficina
+                </h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    {% if form.instance.pk %}
+                        Atualize as informações do workshop.
                     {% else %}
-                        Preencha as informações para criar uma nova oficina
+                        Preencha as informações para criar um novo workshop.
                     {% endif %}
                 </p>
             </div>
-            <a href="{% url 'workshops:workshop-list' %}" 
-               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                ← Voltar
-            </a>
         </div>
-    </div>
-
-    <div class="bg-white shadow rounded-lg">
-        <div class="px-6 py-6">
-            <!-- Progress Bar -->
-            <div class="section-spacing-md">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-gray-700">Progresso do Formulário</span>
-                    <span class="text-sm text-gray-500" id="progress-text">0% completo</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-purple-600 h-2 rounded-full transition-all duration-300" 
-                         id="progress-bar" style="width: 0%"></div>
-                </div>
-            </div>
-
-            <form method="post" id="workshop-form" class="space-y-6" 
-                  data-loading-form="true" 
-                  data-validation="true"
-                  novalidate>
+        
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <form method="post" class="space-y-6">
                 {% csrf_token %}
-
-                <div class="grid-optimized grid-optimized-1">
-                    <!-- Informações Básicas -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium text-gray-900">Informações Básicas</h3>
-                        
-                        {{ form.name|as_crispy_field }}
-                        {{ form.description|as_crispy_field }}
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {{ form.workshop_type|as_crispy_field }}
-                            {{ form.facilitator|as_crispy_field }}
-                        </div>
-                        
-                        {{ form.location|as_crispy_field }}
+                
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        {{ form|crispy }}
                     </div>
-
-                    <!-- Cronograma -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium text-gray-900">Cronograma</h3>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {{ form.start_date|as_crispy_field }}
-                            {{ form.end_date|as_crispy_field }}
-                        </div>
-                        
-                        {% if object %}
-                            {{ form.status|as_crispy_field }}
-                        {% endif %}
+                    
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                        <a href="{% url 'workshops:workshop-list' %}" 
+                           class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 mr-3">
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                            {% if form.instance.pk %}
+                                Atualizar Workshop
+                            {% else %}
+                                Criar Workshop
+                            {% endif %}
+                        </button>
                     </div>
-
-                    <!-- Configurações -->
-                    <div class="space-y-4">
-                        <h3 class="text-lg font-medium text-gray-900">Configurações</h3>
-                        
-                        {{ form.max_participants|as_crispy_field }}
-                        {{ form.objectives|as_crispy_field }}
-                        {{ form.materials_needed|as_crispy_field }}
-                    </div>
-                </div>
-
-                <div class="flex justify-end space-x-4">
-                    <a href="{% url 'workshops:workshop-list' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        Cancelar
-                    </a>
-                    <button type="submit" 
-                            id="submit-btn"
-                            class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors disabled:opacity-50"
-                            data-loading-text="{% if object %}Salvando...{% else %}Criando...{% endif %}"
-                            data-action="{% if object %}update-workshop{% else %}create-workshop{% endif %}"
-                            disabled>
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        {% if object %}
-                            Salvar Alterações
-                        {% else %}
-                            Criar Oficina
-                        {% endif %}
-                    </button>
                 </div>
             </form>
         </div>
     </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('workshop-form');
-    const progressBar = document.getElementById('progress-bar');
-    const progressText = document.getElementById('progress-text');
-    const submitBtn = document.getElementById('submit-btn');
-    
-    // Campos obrigatórios
-    const requiredFields = ['name', 'description', 'workshop_type', 'facilitator', 'start_date', 'end_date', 'max_participants'];
-    
-    // Atualizar progresso
-    function updateProgress() {
-        let filledFields = 0;
-        
-        requiredFields.forEach(fieldName => {
-            const field = form.querySelector(`[name="${fieldName}"]`);
-            if (field && field.value.trim() !== '') {
-                filledFields++;
-            }
-        });
-        
-        const progress = Math.round((filledFields / requiredFields.length) * 100);
-        progressBar.style.width = progress + '%';
-        progressText.textContent = progress + '% completo';
-        
-        // Habilitar/desabilitar botão submit
-        submitBtn.disabled = progress < 100;
-        
-        // Cor da barra de progresso
-        if (progress < 30) {
-            progressBar.className = 'bg-red-500 h-2 rounded-full transition-all duration-300';
-        } else if (progress < 70) {
-            progressBar.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-300';
-        } else {
-            progressBar.className = 'bg-purple-600 h-2 rounded-full transition-all duration-300';
-        }
-    }
-    
-    // Eventos de atualização
-    requiredFields.forEach(fieldName => {
-        const field = form.querySelector(`[name="${fieldName}"]`);
-        if (field) {
-            field.addEventListener('input', updateProgress);
-            field.addEventListener('change', updateProgress);
-        }
-    });
-    
-    // Validação de datas
-    const startDate = form.querySelector('[name="start_date"]');
-    const endDate = form.querySelector('[name="end_date"]');
-    
-    if (startDate && endDate) {
-        function validateDates() {
-            if (startDate.value && endDate.value) {
-                const start = new Date(startDate.value);
-                const end = new Date(endDate.value);
-                
-                if (start >= end) {
-                    endDate.setCustomValidity('Data final deve ser posterior à data inicial');
-                    showFieldError(endDate, 'Data final deve ser posterior à data inicial');
-                } else {
-                    endDate.setCustomValidity('');
-                    hideFieldError(endDate);
-                }
-            }
-        }
-        
-        startDate.addEventListener('change', validateDates);
-        endDate.addEventListener('change', validateDates);
-    }
-    
-    // Funções de erro
-    function showFieldError(field, message) {
-        let errorElement = field.parentNode.querySelector('.field-error');
-        if (!errorElement) {
-            errorElement = document.createElement('div');
-            errorElement.className = 'field-error text-red-500 text-sm mt-1';
-            field.parentNode.appendChild(errorElement);
-        }
-        errorElement.textContent = message;
-        field.classList.add('border-red-500');
-    }
-    
-    function hideFieldError(field) {
-        const errorElement = field.parentNode.querySelector('.field-error');
-        if (errorElement) {
-            errorElement.remove();
-        }
-        field.classList.remove('border-red-500');
-    }
-    
-    // Progresso inicial
-    updateProgress();
-    
-    // Submissão com loading
-    form.addEventListener('submit', function(e) {
-        if (submitBtn.disabled) {
-            e.preventDefault();
-            return;
-        }
-        
-        submitBtn.disabled = true;
-        const loadingText = submitBtn.dataset.loadingText || 'Processando...';
-        submitBtn.innerHTML = `<svg class="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>${loadingText}`;
-    });
-});
-</script>
 </div>
 {% endblock %}

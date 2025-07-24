@@ -8,7 +8,8 @@ from . import views
 app_name = 'activities'
 
 urlpatterns = [
-    # Dashboard principal
+    # Dashboards
+    path('dashboard/', views.activities_dashboard, name='dashboard'),
     path(
         'beneficiary/<int:beneficiary_id>/dashboard/',
         views.beneficiary_activities_dashboard,
