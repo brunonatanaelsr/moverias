@@ -410,9 +410,12 @@ def training_dashboard(request):
     user_employee = getattr(request.user, 'employee_profile', None)
     
     # Minhas inscrições
-    my_registrations = TrainingRegistration.objects.filter(
-        employee=user_employee
-    ).select_related('training') if user_employee else []
+    if user_employee:
+        my_registrations = TrainingRegistration.objects.filter(
+            employee=user_employee
+        ).select_related('training')
+    else:
+        my_registrations = TrainingRegistration.objects.none()
     
     # Estatísticas
     stats = {

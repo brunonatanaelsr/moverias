@@ -1,0 +1,285 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Configurações de Notificações - Move Marias{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
+    <!-- Cabeçalho da página -->
+    <div class="mb-6">
+        <div class="flex items-center">
+            <a href="{% url 'notifications:list' %}" 
+               class="inline-flex items-center text-pink-600 hover:text-pink-700 mr-4">
+                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Voltar para Notificações
+            </a>
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl">
+                Configurações de Notificações
+            </h1>
+        </div>
+        <p class="mt-1 text-sm text-gray-500">
+            Configure como e quando você deseja receber notificações
+        </p>
+    </div>
+
+    <!-- Formulário -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <form method="post" class="divide-y divide-gray-200">
+            {% csrf_token %}
+            
+            <!-- Canais de Notificação -->
+            <div class="px-6 py-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    <svg class="inline w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Canais de Notificação
+                </h3>
+                
+                <div class="space-y-4">
+                    <!-- Email -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.email_enabled|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.email_enabled.id_for_label }}" class="font-medium text-gray-700">
+                                Email
+                            </label>
+                            <p class="text-gray-500">{{ form.email_enabled.help_text }}</p>
+                        </div>
+                    </div>
+
+                    <!-- SMS -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.sms_enabled|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.sms_enabled.id_for_label }}" class="font-medium text-gray-700">
+                                SMS
+                            </label>
+                            <p class="text-gray-500">{{ form.sms_enabled.help_text }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Push -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.push_enabled|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.push_enabled.id_for_label }}" class="font-medium text-gray-700">
+                                Notificações Push
+                            </label>
+                            <p class="text-gray-500">{{ form.push_enabled.help_text }}</p>
+                        </div>
+                    </div>
+
+                    <!-- In-App -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.in_app_enabled|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.in_app_enabled.id_for_label }}" class="font-medium text-gray-700">
+                                Notificações na Aplicação
+                            </label>
+                            <p class="text-gray-500">{{ form.in_app_enabled.help_text }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tipos de Notificação -->
+            <div class="px-6 py-6 bg-gray-50">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    <svg class="inline w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    Tipos de Notificação
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <!-- Workshops -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.workshop_notifications|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.workshop_notifications.id_for_label }}" class="font-medium text-gray-700">
+                                Workshops
+                            </label>
+                            <p class="text-gray-500">Novos workshops, cronogramas e atualizações</p>
+                        </div>
+                    </div>
+
+                    <!-- Certificados -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.certificate_notifications|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.certificate_notifications.id_for_label }}" class="font-medium text-gray-700">
+                                Certificados
+                            </label>
+                            <p class="text-gray-500">Emissão e status de certificados</p>
+                        </div>
+                    </div>
+
+                    <!-- Projetos -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.project_notifications|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.project_notifications.id_for_label }}" class="font-medium text-gray-700">
+                                Projetos
+                            </label>
+                            <p class="text-gray-500">Atualizações de projetos e marcos</p>
+                        </div>
+                    </div>
+
+                    <!-- Coaching -->
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            {{ form.coaching_notifications|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.coaching_notifications.id_for_label }}" class="font-medium text-gray-700">
+                                Coaching
+                            </label>
+                            <p class="text-gray-500">Sessões de coaching e acompanhamento</p>
+                        </div>
+                    </div>
+
+                    <!-- Sistema -->
+                    <div class="flex items-start sm:col-span-2">
+                        <div class="flex items-center h-5">
+                            {{ form.system_notifications|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.system_notifications.id_for_label }}" class="font-medium text-gray-700">
+                                Notificações do Sistema
+                            </label>
+                            <p class="text-gray-500">Atualizações do sistema, manutenções e avisos importantes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configurações Avançadas -->
+            <div class="px-6 py-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                    <svg class="inline w-5 h-5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Configurações Avançadas
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    <!-- Horário Silencioso - Início -->
+                    <div>
+                        <label for="{{ form.quiet_hours_start.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Início do Horário Silencioso
+                        </label>
+                        <div class="mt-1">
+                            {{ form.quiet_hours_start|add_class:"block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" }}
+                        </div>
+                        {% if form.quiet_hours_start.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.quiet_hours_start.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">{{ form.quiet_hours_start.help_text }}</p>
+                    </div>
+
+                    <!-- Horário Silencioso - Fim -->
+                    <div>
+                        <label for="{{ form.quiet_hours_end.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Fim do Horário Silencioso
+                        </label>
+                        <div class="mt-1">
+                            {{ form.quiet_hours_end|add_class:"block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" }}
+                        </div>
+                        {% if form.quiet_hours_end.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.quiet_hours_end.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">{{ form.quiet_hours_end.help_text }}</p>
+                    </div>
+
+                    <!-- Limite de Frequência -->
+                    <div>
+                        <label for="{{ form.frequency_limit.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                            Limite por Dia
+                        </label>
+                        <div class="mt-1">
+                            {{ form.frequency_limit|add_class:"block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" }}
+                        </div>
+                        {% if form.frequency_limit.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.frequency_limit.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">Máximo de notificações por dia</p>
+                    </div>
+                </div>
+
+                <!-- Explicação do Horário Silencioso -->
+                <div class="mt-4 p-4 bg-blue-50 rounded-md">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">
+                                Sobre o Horário Silencioso
+                            </h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>Durante o horário silencioso, você não receberá notificações por email, SMS ou push. Notificações urgentes ainda podem ser enviadas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de ação -->
+            <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                <a href="{% url 'notifications:list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                    Cancelar
+                </a>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Salvar Configurações
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Dica de privacidade -->
+    <div class="mt-6 bg-gray-50 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-gray-900">
+                    Privacidade e Segurança
+                </h3>
+                <div class="mt-1 text-sm text-gray-600">
+                    <p>Suas preferências de notificação são privadas e seguras. Você pode alterá-las a qualquer momento. Nunca compartilhamos suas informações com terceiros.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

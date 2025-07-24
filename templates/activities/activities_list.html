@@ -13,7 +13,7 @@
                class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded">
                 Dashboard
             </a>
-            <a href="{% url 'activities:create' %}" 
+            <a href="{% url 'activities:activity_create' %}" 
                class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
                 Nova Atividade
             </a>
@@ -127,12 +127,12 @@
                                     {{ activity.responsible_user.get_full_name|default:activity.responsible_user.email }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <a href="{% url 'activities:detail' activity.pk %}" 
+                                    <a href="{% url 'activities:activity_detail' activity.pk %}" 
                                        class="text-primary hover:text-primary-dark mr-3">
                                         Ver
                                     </a>
                                     {% if activity.status != 'completed' and activity.status != 'cancelled' %}
-                                        <a href="{% url 'activities:edit' activity.pk %}" 
+                                        <a href="{% url 'activities:activity_edit' activity.pk %}" 
                                            class="text-gray-600 hover:text-gray-800">
                                             Editar
                                         </a>
@@ -187,7 +187,7 @@
                     {% endif %}
                 </p>
                 <div class="mt-6">
-                    <a href="{% url 'activities:create' %}" 
+                    <a href="{% url 'activities:activity_create' %}" 
                        class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
                         Nova Atividade
                     </a>

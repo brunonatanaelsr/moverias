@@ -1,0 +1,152 @@
+{% extends "layouts/public_base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Login - Move Marias{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <!-- Logo -->
+            <div class="flex justify-center">
+                <img class="h-16 w-auto" src="{% static 'images/logo-move-marias.png' %}" alt="Move Marias" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="hidden h-16 w-16 bg-pink-600 rounded-full flex items-center justify-center">
+                    <span class="text-white font-bold text-xl">MM</span>
+                </div>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+                Entre na sua conta
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Acesse o sistema Move Marias
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="post">
+            {% csrf_token %}
+            
+            <!-- Mensagens de erro -->
+            {% if form.non_field_errors %}
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Erro no login
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="space-y-4">
+                <!-- Campo de Email/Login -->
+                <div>
+                    <label for="{{ form.login.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.login.label }}
+                    </label>
+                    <div class="mt-1 relative">
+                        {{ form.login|add_class:"appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm" }}
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                            </svg>
+                        </div>
+                    </div>
+                    {% if form.login.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.login.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Campo de Senha -->
+                <div>
+                    <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.password.label }}
+                    </label>
+                    <div class="mt-1 relative">
+                        {{ form.password|add_class:"appearance-none relative block w-full px-3 py-2 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm" }}
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                    </div>
+                    {% if form.password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Lembrar-me -->
+                {% if form.remember %}
+                    <div class="flex items-center">
+                        <div class="flex items-center">
+                            {{ form.remember|add_class:"h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" }}
+                            <label for="{{ form.remember.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                                {{ form.remember.label }}
+                            </label>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition duration-150 ease-in-out">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <svg class="h-5 w-5 text-pink-500 group-hover:text-pink-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 0a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </span>
+                    Entrar
+                </button>
+            </div>
+
+            <!-- Links adicionais -->
+            <div class="text-center space-y-2">
+                <a href="{% url 'account_reset_password' %}" class="text-sm text-pink-600 hover:text-pink-500">
+                    Esqueceu sua senha?
+                </a>
+            </div>
+        </form>
+
+        <!-- Rodapé -->
+        <div class="text-center text-xs text-gray-500">
+            <p>&copy; {{ current_year|default:"2025" }} Move Marias. Todos os direitos reservados.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Foco automático no primeiro campo
+    const firstInput = document.querySelector('input[type="email"], input[type="text"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+    
+    // Feedback visual nos campos
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentNode.classList.add('ring-2', 'ring-pink-500');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentNode.classList.remove('ring-2', 'ring-pink-500');
+        });
+    });
+});
+</script>
+{% endblock %}

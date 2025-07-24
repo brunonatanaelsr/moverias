@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="h-full bg-gray-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Move Marias{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full">
+    <div class="min-h-full">
+        <!-- Header público com navegação simples -->
+        <header class="bg-white shadow-sm">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 justify-between items-center">
+                    <div class="flex items-center">
+                        <img class="h-8 w-auto" src="/static/img/logo.jpg" alt="Move Marias">
+                        <span class="ml-3 text-xl font-bold text-gray-900">Move Marias</span>
+                    </div>
+                    
+                    {% if request.user.is_authenticated %}
+                        <div class="flex items-center space-x-4">
+                            <span class="text-sm text-gray-700">Olá, {{ request.user.get_full_name|default:request.user.username }}</span>
+                            <a href="{% url 'dashboard:home' %}" class="bg-pink-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-700 transition duration-150 ease-in-out">
+                                Dashboard
+                            </a>
+                            <a href="{% url 'account_logout' %}" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                                Sair
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-4">
+                            <a href="{% url 'account_login' %}" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                                Entrar
+                            </a>
+                            <a href="{% url 'account_login' %}" class="bg-pink-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-700 transition duration-150 ease-in-out">
+                                Acessar Sistema
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <!-- Conteúdo principal sem sidebar -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-white">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="col-span-1 md:col-span-2">
+                        <div class="flex items-center">
+                            <img class="h-8 w-auto" src="/static/img/logo.jpg" alt="Move Marias">
+                            <span class="ml-3 text-xl font-bold">Move Marias</span>
+                        </div>
+                        <p class="mt-4 text-gray-300 max-w-md">
+                            Sistema de Gestão Social para acompanhamento e desenvolvimento de beneficiárias.
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-sm font-semibold text-white tracking-wider uppercase">Sistema</h3>
+                        <ul class="mt-4 space-y-4">
+                            {% if request.user.is_authenticated %}
+                                <li>
+                                    <a href="{% url 'dashboard:home' %}" class="text-base text-gray-300 hover:text-white">
+                                        Dashboard
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="{% url 'account_login' %}" class="text-base text-gray-300 hover:text-white">
+                                        Entrar
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-sm font-semibold text-white tracking-wider uppercase">Contato</h3>
+                        <ul class="mt-4 space-y-4">
+                            <li>
+                                <a href="mailto:contato@movemarias.org" class="text-base text-gray-300 hover:text-white">
+                                    contato@movemarias.org
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-8 border-t border-gray-700 pt-8">
+                    <p class="text-base text-gray-400 text-center">
+                        &copy; {{ current_year|default:"2025" }} Move Marias. Todos os direitos reservados.
+                    </p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
