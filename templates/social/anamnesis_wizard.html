@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'Anamnese Social' %} - MOVE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/social-wizard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="social-wizard-container" x-data="socialWizard()">
+    <!-- Header Section -->
+    <header class="wizard-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                        </svg>
+                        {% trans 'Dashboard' %}
+                    </a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <a href="{% url 'social:anamnesis_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {% trans 'Anamneses Sociais' %}
+                    </a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="breadcrumb-current">{% trans 'Nova Anamnese' %}</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">{% trans 'Anamnese Social' %}</h1>
+                    <p class="page-subtitle">{% trans 'Avaliação socioeconômica e identificação de vulnerabilidades' %}</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="beneficiary-info" x-show="wizardData.beneficiary">
+                    <div class="beneficiary-avatar">
+                        <img :src="wizardData.beneficiary?.avatar || '/static/images/default-avatar.png'" 
+                             :alt="wizardData.beneficiary?.name" class="avatar-image">
+                    </div>
+                    <div class="beneficiary-details">
+                        <span class="beneficiary-name" x-text="wizardData.beneficiary?.name">Beneficiária</span>
+                        <span class="beneficiary-id" x-text="`ID: ${wizardData.beneficiary?.id || '--'}`"></span>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button @click="saveDraft()" class="btn-secondary" :disabled="saving">
+                        <svg x-show="!saving" class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
+                        </svg>
+                        <svg x-show="saving" class="btn-icon animate-spin" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Salvar Rascunho' %}
+                    </button>
+                    
+                    <button @click="exitWizard()" class="btn-outline">
+                        <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Sair' %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="step" :class="{ active: currentStep >= 1, completed: currentStep > 1 }" @click="goToStep(1)">
+                    <div class="step-indicator">
+                        <svg x-show="currentStep > 1" class="step-check" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-show="currentStep <= 1" class="step-number">1</span>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">{% trans 'Dados Básicos' %}</div>
+                        <div class="step-description">{% trans 'Informações pessoais e familiares' %}</div>
+                    </div>
+                </div>
+                
+                <div class="step-connector" :class="{ active: currentStep > 1 }"></div>
+                
+                <div class="step" :class="{ active: currentStep >= 2, completed: currentStep > 2 }" @click="goToStep(2)">
+                    <div class="step-indicator">
+                        <svg x-show="currentStep > 2" class="step-check" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-show="currentStep <= 2" class="step-number">2</span>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">{% trans 'Situação Socioeconômica' %}</div>
+                        <div class="step-description">{% trans 'Renda, moradia e condições sociais' %}</div>
+                    </div>
+                </div>
+                
+                <div class="step-connector" :class="{ active: currentStep > 2 }"></div>
+                
+                <div class="step" :class="{ active: currentStep >= 3, completed: currentStep > 3 }" @click="goToStep(3)">
+                    <div class="step-indicator">
+                        <svg x-show="currentStep > 3" class="step-check" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-show="currentStep <= 3" class="step-number">3</span>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">{% trans 'Vulnerabilidades' %}</div>
+                        <div class="step-description">{% trans 'Identificação de riscos e apoios' %}</div>
+                    </div>
+                </div>
+                
+                <div class="step-connector" :class="{ active: currentStep > 3 }"></div>
+                
+                <div class="step" :class="{ active: currentStep >= 4, completed: currentStep > 4 }" @click="goToStep(4)">
+                    <div class="step-indicator">
+                        <svg x-show="currentStep > 4" class="step-check" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-show="currentStep <= 4" class="step-number">4</span>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">{% trans 'Revisão' %}</div>
+                        <div class="step-description">{% trans 'Confirmar informações' %}</div>
+                    </div>
+                </div>
+                
+                <div class="step-connector" :class="{ active: currentStep > 4 }"></div>
+                
+                <div class="step" :class="{ active: currentStep >= 5, completed: currentStep > 5 }">
+                    <div class="step-indicator">
+                        <svg x-show="currentStep > 5" class="step-check" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <span x-show="currentStep <= 5" class="step-number">5</span>
+                    </div>
+                    <div class="step-content">
+                        <div class="step-title">{% trans 'Assinatura' %}</div>
+                        <div class="step-description">{% trans 'Finalização da anamnese' %}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" :style="`width: ${((currentStep - 1) / 4) * 100}%`"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="wizard-content">
+        <!-- Step 1: Dados Básicos -->
+        <div x-show="currentStep === 1" class="wizard-step" x-transition>
+            <div class="step-container">
+                <div class="step-header">
+                    <h2 class="step-title">{% trans 'Dados Básicos e Composição Familiar' %}</h2>
+                    <p class="step-description">{% trans 'Colete as informações fundamentais sobre a beneficiária e sua família' %}</p>
+                </div>
+                
+                <div class="step-content">
+                    <div class="form-sections">
+                        <!-- Dados Pessoais -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                </svg>
+                                {% trans 'Dados Pessoais' %}
+                            </h3>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'Nome Completo' %}</label>
+                                    <input type="text" x-model="wizardData.personal.fullName" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'Data de Nascimento' %}</label>
+                                    <input type="date" x-model="wizardData.personal.birthDate" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'CPF' %}</label>
+                                    <input type="text" x-model="wizardData.personal.cpf" x-mask="999.999.999-99" class="form-input" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'Estado Civil' %}</label>
+                                    <select x-model="wizardData.personal.maritalStatus" class="form-select" required>
+                                        <option value="">{% trans 'Selecione' %}</option>
+                                        <option value="single">{% trans 'Solteira' %}</option>
+                                        <option value="married">{% trans 'Casada' %}</option>
+                                        <option value="divorced">{% trans 'Divorciada' %}</option>
+                                        <option value="widowed">{% trans 'Viúva' %}</option>
+                                        <option value="stable_union">{% trans 'União Estável' %}</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'Escolaridade' %}</label>
+                                    <select x-model="wizardData.personal.education" class="form-select" required>
+                                        <option value="">{% trans 'Selecione' %}</option>
+                                        <option value="illiterate">{% trans 'Analfabeta' %}</option>
+                                        <option value="elementary_incomplete">{% trans 'Fundamental Incompleto' %}</option>
+                                        <option value="elementary_complete">{% trans 'Fundamental Completo' %}</option>
+                                        <option value="high_school_incomplete">{% trans 'Médio Incompleto' %}</option>
+                                        <option value="high_school_complete">{% trans 'Médio Completo' %}</option>
+                                        <option value="higher_incomplete">{% trans 'Superior Incompleto' %}</option>
+                                        <option value="higher_complete">{% trans 'Superior Completo' %}</option>
+                                        <option value="postgraduate">{% trans 'Pós-graduação' %}</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">{% trans 'Profissão' %}</label>
+                                    <input type="text" x-model="wizardData.personal.profession" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Composição Familiar -->
+                        <div class="form-section">
+                            <h3 class="section-title">
+                                <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                </svg>
+                                {% trans 'Composição Familiar' %}
+                            </h3>
+                            
+                            <div class="family-members">
+                                <template x-for="(member, index) in wizardData.family.members" :key="index">
+                                    <div class="family-member-card">
+                                        <div class="member-header">
+                                            <h4 class="member-title" x-text="`Membro ${index + 1}`"></h4>
+                                            <button @click="removeFamilyMember(index)" class="remove-member" x-show="wizardData.family.members.length > 1">
+                                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="member-form">
+                                            <div class="form-grid">
+                                                <div class="form-group">
+                                                    <label class="form-label">{% trans 'Nome' %}</label>
+                                                    <input type="text" x-model="member.name" class="form-input" required>
+                                                </div>
+                                                
+                                                <div class="form-group">
+                                                    <label class="form-label">{% trans 'Parentesco' %}</label>
+                                                    <select x-model="member.relationship" class="form-select" required>
+                                                        <option value="">{% trans 'Selecione' %}</option>
+                                                        <option value="spouse">{% trans 'Cônjuge/Companheiro(a)' %}</option>
+                                                        <option value="child">{% trans 'Filho(a)' %}</option>
+                                                        <option value="parent">{% trans 'Pai/Mãe' %}</option>
+                                                        <option value="sibling">{% trans 'Irmão/Irmã' %}</option>
+                                                        <option value="grandparent">{% trans 'Avô/Avó' %}</option>
+                                                        <option value="grandchild">{% trans 'Neto(a)' %}</option>
+                                                        <option value="other">{% trans 'Outro' %}</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="form-group">
+                                                    <label class="form-label">{% trans 'Idade' %}</label>
+                                                    <input type="number" x-model="member.age" class="form-input" min="0" max="120">
+                                                </div>
+                                                
+                                                <div class="form-group">
+                                                    <label class="form-label">{% trans 'Situação Profissional' %}</label>
+                                                    <select x-model="member.workStatus" class="form-select">
+                                                        <option value="">{% trans 'Selecione' %}</option>
+                                                        <option value="employed">{% trans 'Empregado(a)' %}</option>
+                                                        <option value="unemployed">{% trans 'Desempregado(a)' %}</option>
+                                                        <option value="student">{% trans 'Estudante' %}</option>
+                                                        <option value="retired">{% trans 'Aposentado(a)' %}</option>
+                                                        <option value="housework">{% trans 'Do lar' %}</option>
+                                                        <option value="informal">{% trans 'Trabalho informal' %}</option>
+                                                        <option value="other">{% trans 'Outro' %}</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                
+                                <button @click="addFamilyMember()" class="add-member-btn">
+                                    <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {% trans 'Adicionar Membro da Família' %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Situação Socioeconômica -->
+        <div x-show="currentStep === 2" class="wizard-step" x-transition>
+            <div class="step-container">
+                <div class="step-header">
+                    <h2 class="step-title">{% trans 'Situação Socioeconômica' %}</h2>
+                    <p class="step-description">{% trans 'Avalie as condições econômicas e de moradia da família' %}</p>
+                </div>
+                
+                <div class="step-content">
+                    <!-- Conteúdo será implementado no próximo template -->
+                    <div class="placeholder-content">
+                        <p>{% trans 'Conteúdo da Etapa 2 será implementado no próximo template' %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="wizard-navigation">
+            <button @click="previousStep()" :disabled="currentStep === 1" class="btn-secondary">
+                <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                {% trans 'Anterior' %}
+            </button>
+            
+            <div class="navigation-center">
+                <span class="step-indicator" x-text="`${currentStep} de 5`"></span>
+            </div>
+            
+            <button @click="nextStep()" :disabled="!canProceed()" class="btn-primary">
+                {% trans 'Próximo' %}
+                <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+            </button>
+        </div>
+    </main>
+</div>
+
+<script>
+function socialWizard() {
+    return {
+        // State
+        currentStep: 1,
+        saving: false,
+        
+        // Wizard Data
+        wizardData: {
+            beneficiary: {
+                id: 'BEN001',
+                name: 'Maria Silva Santos',
+                avatar: '/static/images/avatars/maria.jpg'
+            },
+            personal: {
+                fullName: '',
+                birthDate: '',
+                cpf: '',
+                maritalStatus: '',
+                education: '',
+                profession: ''
+            },
+            family: {
+                members: [
+                    {
+                        name: '',
+                        relationship: '',
+                        age: '',
+                        workStatus: ''
+                    }
+                ]
+            }
+        },
+        
+        // Methods
+        init() {
+            this.loadDraftData();
+        },
+        
+        goToStep(step) {
+            if (step <= this.currentStep || this.validateCurrentStep()) {
+                this.currentStep = step;
+            }
+        },
+        
+        nextStep() {
+            if (this.canProceed()) {
+                this.currentStep++;
+                this.saveDraft();
+            }
+        },
+        
+        previousStep() {
+            if (this.currentStep > 1) {
+                this.currentStep--;
+            }
+        },
+        
+        canProceed() {
+            return this.validateCurrentStep();
+        },
+        
+        validateCurrentStep() {
+            switch (this.currentStep) {
+                case 1:
+                    return this.validateStep1();
+                case 2:
+                    return this.validateStep2();
+                case 3:
+                    return this.validateStep3();
+                default:
+                    return true;
+            }
+        },
+        
+        validateStep1() {
+            const personal = this.wizardData.personal;
+            const hasValidPersonal = personal.fullName && personal.birthDate && 
+                                   personal.cpf && personal.maritalStatus && personal.education;
+            
+            const hasValidFamily = this.wizardData.family.members.every(member => 
+                member.name && member.relationship && member.age
+            );
+            
+            return hasValidPersonal && hasValidFamily;
+        },
+        
+        validateStep2() {
+            // Will be implemented with step 2 content
+            return true;
+        },
+        
+        validateStep3() {
+            // Will be implemented with step 3 content
+            return true;
+        },
+        
+        addFamilyMember() {
+            this.wizardData.family.members.push({
+                name: '',
+                relationship: '',
+                age: '',
+                workStatus: ''
+            });
+        },
+        
+        removeFamilyMember(index) {
+            if (this.wizardData.family.members.length > 1) {
+                this.wizardData.family.members.splice(index, 1);
+            }
+        },
+        
+        saveDraft() {
+            this.saving = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                localStorage.setItem('socialWizardDraft', JSON.stringify(this.wizardData));
+                this.saving = false;
+                this.showNotification('Rascunho salvo com sucesso!', 'success');
+            }, 1000);
+        },
+        
+        loadDraftData() {
+            const draft = localStorage.getItem('socialWizardDraft');
+            if (draft) {
+                try {
+                    const parsedDraft = JSON.parse(draft);
+                    this.wizardData = { ...this.wizardData, ...parsedDraft };
+                } catch (e) {
+                    console.error('Error loading draft:', e);
+                }
+            }
+        },
+        
+        exitWizard() {
+            if (confirm('Tem certeza que deseja sair? As alterações não salvas serão perdidas.')) {
+                window.location.href = '{% url "social:anamnesis_list" %}';
+            }
+        },
+        
+        showNotification(message, type = 'info') {
+            // Simple notification - can be replaced with a proper notification system
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#10B981' : '#3B82F6'};
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script src="https://unpkg.com/@alpinejs/mask@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}

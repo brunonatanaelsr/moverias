@@ -54,7 +54,7 @@ def board_detail(request, board_id):
         'assignee_filter': assignee_filter,
         'priority_filter': priority_filter,
     }
-    return render(request, 'tasks/base.html', context)
+    return render(request, 'tasks/board_kanban.html', context)
 
 
 @login_required

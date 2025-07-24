@@ -1,0 +1,649 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ employee.full_name }} - Detalhes do Funcionário{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/hr-employee-detail.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50" x-data="employeeDetail()">
+    <!-- Header with Navigation -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Breadcrumb -->
+            <nav class="flex items-center py-4 text-sm">
+                <a href="{% url 'hr:dashboard' %}" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    HR
+                </a>
+                <svg class="w-4 h-4 mx-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <a href="{% url 'hr:employee_list' %}" class="text-gray-500 hover:text-gray-700 transition-colors">Funcionários</a>
+                <svg class="w-4 h-4 mx-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-gray-900 font-medium">{{ employee.full_name }}</span>
+            </nav>
+
+            <!-- Employee Header -->
+            <div class="py-6">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex items-center space-x-6">
+                        <!-- Avatar with Status Indicator -->
+                        <div class="relative">
+                            {% if employee.photo %}
+                                <img class="h-24 w-24 rounded-2xl object-cover ring-4 ring-white shadow-lg" src="{{ employee.photo.url }}" alt="{{ employee.full_name }}">
+                            {% else %}
+                                <div class="h-24 w-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ring-4 ring-white shadow-lg">
+                                    <span class="text-white font-bold text-2xl">{{ employee.full_name|first|upper }}</span>
+                                </div>
+                            {% endif %}
+                            <!-- Online Status -->
+                            <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-400 border-2 border-white rounded-full"></div>
+                        </div>
+                        
+                        <!-- Employee Info -->
+                        <div class="space-y-1">
+                            <h1 class="text-3xl font-bold text-gray-900">{{ employee.full_name }}</h1>
+                            <p class="text-xl text-gray-600">{{ employee.job_position.title }}</p>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <span class="status-badge status-{{ employee.employment_status }}">
+                                    {% if employee.employment_status == 'active' %}
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Ativo
+                                    {% elif employee.employment_status == 'vacation' %}
+                                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        Em Férias
+                                    {% else %}
+                                        {{ employee.get_employment_status_display }}
+                                    {% endif %}
+                                </span>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 012-2h2a2 2 0 012 2v2m-4 0a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    ID: {{ employee.employee_number }}
+                                </div>
+                                <div class="flex items-center text-sm text-gray-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                    </svg>
+                                    {{ employee.department.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="mt-6 lg:mt-0 flex flex-wrap gap-3">
+                        <button @click="openModal('edit')" class="btn-primary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Editar Perfil
+                        </button>
+                        <button @click="generateReport()" class="btn-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Relatório
+                        </button>
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="btn-tertiary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                </svg>
+                                Mais Ações
+                            </button>
+                            <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                <div class="py-1">
+                                    <button @click="sendMessage()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Enviar Mensagem</button>
+                                    <button @click="scheduleReview()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Agendar Avaliação</button>
+                                    <button @click="addTraining()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Adicionar Treinamento</button>
+                                    <hr class="my-1">
+                                    <button @click="exportData()" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Exportar Dados</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card">
+                <div class="metric-icon bg-gradient-to-r from-blue-500 to-blue-600">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-label">Tempo de Empresa</p>
+                    <p class="metric-value">{{ employee.years_of_service|default:"N/A" }}</p>
+                    <p class="metric-subtext">anos</p>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon bg-gradient-to-r from-green-500 to-green-600">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-label">Performance</p>
+                    <p class="metric-value">8.5</p>
+                    <p class="metric-subtext">de 10</p>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon bg-gradient-to-r from-purple-500 to-purple-600">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-label">Treinamentos</p>
+                    <p class="metric-value">12</p>
+                    <p class="metric-subtext">concluídos</p>
+                </div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-icon bg-gradient-to-r from-orange-500 to-orange-600">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                    </svg>
+                </div>
+                <div class="metric-content">
+                    <p class="metric-label">Avaliações</p>
+                    <p class="metric-value">4</p>
+                    <p class="metric-subtext">realizadas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" x-data="{ activeTab: 'overview' }">
+                    <button @click="activeTab = 'overview'" 
+                            :class="activeTab === 'overview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" 
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Visão Geral
+                    </button>
+                    <button @click="activeTab = 'performance'" 
+                            :class="activeTab === 'performance' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" 
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Performance
+                    </button>
+                    <button @click="activeTab = 'training'" 
+                            :class="activeTab === 'training' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" 
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Treinamentos
+                    </button>
+                    <button @click="activeTab = 'timeline'" 
+                            :class="activeTab === 'timeline' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" 
+                            class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        Timeline
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Overview Tab -->
+                <div x-show="activeTab === 'overview'" x-transition class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Personal Information -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="info-section">
+                            <h3 class="section-title">Informações Pessoais</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="info-field">
+                                    <label class="info-label">Nome Completo</label>
+                                    <p class="info-value">{{ employee.full_name }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">CPF</label>
+                                    <p class="info-value">{{ employee.cpf|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Data de Nascimento</label>
+                                    <p class="info-value">{{ employee.birth_date|date:"d/m/Y"|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Idade</label>
+                                    <p class="info-value">{{ employee.age|default:"N/A" }} anos</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Gênero</label>
+                                    <p class="info-value">{{ employee.get_gender_display|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Estado Civil</label>
+                                    <p class="info-value">{{ employee.get_marital_status_display|default:"Não informado" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3 class="section-title">Informações de Contato</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="info-field">
+                                    <label class="info-label">Email Corporativo</label>
+                                    <p class="info-value">{{ employee.user.email|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Telefone</label>
+                                    <p class="info-value">{{ employee.phone|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field md:col-span-2">
+                                    <label class="info-label">Endereço</label>
+                                    <p class="info-value">{{ employee.address|default:"Não informado" }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <h3 class="section-title">Informações Profissionais</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="info-field">
+                                    <label class="info-label">Cargo</label>
+                                    <p class="info-value">{{ employee.job_position.title|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Departamento</label>
+                                    <p class="info-value">{{ employee.department.name|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Data de Admissão</label>
+                                    <p class="info-value">{{ employee.hire_date|date:"d/m/Y"|default:"Não informado" }}</p>
+                                </div>
+                                <div class="info-field">
+                                    <label class="info-label">Tipo de Vínculo</label>
+                                    <p class="info-value">{{ employee.get_employment_type_display|default:"Não informado" }}</p>
+                                </div>
+                                {% if employee.direct_supervisor %}
+                                <div class="info-field">
+                                    <label class="info-label">Supervisor Direto</label>
+                                    <p class="info-value">{{ employee.direct_supervisor.full_name }}</p>
+                                </div>
+                                {% endif %}
+                                <div class="info-field">
+                                    <label class="info-label">Status</label>
+                                    <span class="status-badge status-{{ employee.employment_status }}">
+                                        {{ employee.get_employment_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="space-y-6">
+                        <!-- Quick Actions -->
+                        <div class="info-section">
+                            <h3 class="section-title">Ações Rápidas</h3>
+                            <div class="space-y-3">
+                                <button @click="scheduleReview()" class="quick-action-btn">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                                    </svg>
+                                    <span>Agendar Avaliação</span>
+                                </button>
+                                <button @click="addTraining()" class="quick-action-btn">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                    </svg>
+                                    <span>Adicionar Treinamento</span>
+                                </button>
+                                <button @click="sendFeedback()" class="quick-action-btn">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <span>Enviar Feedback</span>
+                                </button>
+                                <button @click="viewDocuments()" class="quick-action-btn">
+                                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span>Ver Documentos</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Skills & Competencies -->
+                        <div class="info-section">
+                            <h3 class="section-title">Habilidades & Competências</h3>
+                            <div class="space-y-3">
+                                {% if employee.skills %}
+                                    <p class="text-sm text-gray-700">{{ employee.skills }}</p>
+                                {% else %}
+                                    <div class="skill-tag">JavaScript</div>
+                                    <div class="skill-tag">Python</div>
+                                    <div class="skill-tag">Django</div>
+                                    <div class="skill-tag">Gestão de Projetos</div>
+                                    <div class="skill-tag">Liderança</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Benefits -->
+                        <div class="info-section">
+                            <h3 class="section-title">Benefícios</h3>
+                            <div class="space-y-3">
+                                <div class="benefit-item">
+                                    <span class="benefit-name">Plano de Saúde</span>
+                                    <span class="benefit-status {% if employee.has_health_insurance %}active{% else %}inactive{% endif %}">
+                                        {% if employee.has_health_insurance %}Ativo{% else %}Inativo{% endif %}
+                                    </span>
+                                </div>
+                                <div class="benefit-item">
+                                    <span class="benefit-name">Plano Odontológico</span>
+                                    <span class="benefit-status {% if employee.has_dental_insurance %}active{% else %}inactive{% endif %}">
+                                        {% if employee.has_dental_insurance %}Ativo{% else %}Inativo{% endif %}
+                                    </span>
+                                </div>
+                                <div class="benefit-item">
+                                    <span class="benefit-name">Seguro de Vida</span>
+                                    <span class="benefit-status {% if employee.has_life_insurance %}active{% else %}inactive{% endif %}">
+                                        {% if employee.has_life_insurance %}Ativo{% else %}Inativo{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        {% if employee.emergency_contact_name %}
+                        <div class="info-section">
+                            <h3 class="section-title">Contato de Emergência</h3>
+                            <div class="space-y-2">
+                                <div class="text-sm">
+                                    <span class="font-medium text-gray-900">{{ employee.emergency_contact_name }}</span>
+                                    <span class="text-gray-500">({{ employee.emergency_contact_relationship }})</span>
+                                </div>
+                                <div class="text-sm text-gray-700">{{ employee.emergency_contact_phone }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div x-show="activeTab === 'performance'" x-transition>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="info-section">
+                                <h3 class="section-title">Gráfico de Performance</h3>
+                                <div class="h-64">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="info-section">
+                                <h3 class="section-title">Métricas de Performance</h3>
+                                <div class="space-y-4">
+                                    <div class="performance-metric">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Produtividade</span>
+                                            <span class="text-sm text-gray-600">85%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="performance-metric">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Qualidade</span>
+                                            <span class="text-sm text-gray-600">92%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 92%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="performance-metric">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700">Colaboração</span>
+                                            <span class="text-sm text-gray-600">78%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 78%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Training Tab -->
+                <div x-show="activeTab === 'training'" x-transition>
+                    <div class="space-y-6">
+                        <div class="info-section">
+                            <h3 class="section-title">Treinamentos em Andamento</h3>
+                            <div class="space-y-4">
+                                <div class="training-item">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">Liderança e Gestão de Equipes</h4>
+                                            <p class="text-sm text-gray-500">40 horas • Iniciado em 15/01/2025</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-sm font-medium text-blue-600">75% concluído</span>
+                                            <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                                                <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="training-item">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-gray-900">Segurança da Informação</h4>
+                                            <p class="text-sm text-gray-500">20 horas • Iniciado em 10/01/2025</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-sm font-medium text-green-600">Concluído</span>
+                                            <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                                                <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline Tab -->
+                <div x-show="activeTab === 'timeline'" x-transition>
+                    <div class="space-y-6">
+                        <div class="info-section">
+                            <h3 class="section-title">Timeline de Atividades</h3>
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-blue-500"></div>
+                                    <div class="timeline-content">
+                                        <h4 class="timeline-title">Perfil Atualizado</h4>
+                                        <p class="timeline-description">Informações de contato atualizadas</p>
+                                        <span class="timeline-date">{{ employee.updated_at|date:"d/m/Y H:i" }}</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-green-500"></div>
+                                    <div class="timeline-content">
+                                        <h4 class="timeline-title">Treinamento Concluído</h4>
+                                        <p class="timeline-description">Segurança da Informação - 20h</p>
+                                        <span class="timeline-date">22/01/2025</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-purple-500"></div>
+                                    <div class="timeline-content">
+                                        <h4 class="timeline-title">Avaliação de Performance</h4>
+                                        <p class="timeline-description">Avaliação semestral realizada</p>
+                                        <span class="timeline-date">15/01/2025</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-marker bg-orange-500"></div>
+                                    <div class="timeline-content">
+                                        <h4 class="timeline-title">Admissão</h4>
+                                        <p class="timeline-description">Início na empresa</p>
+                                        <span class="timeline-date">{{ employee.hire_date|date:"d/m/Y" }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" @click="closeModal()"></div>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-medium text-gray-900" x-text="modalTitle"></h3>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-500" x-text="modalContent"></p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button @click="confirmAction()" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Confirmar
+                    </button>
+                    <button @click="closeModal()" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function employeeDetail() {
+    return {
+        showModal: false,
+        modalTitle: '',
+        modalContent: '',
+        currentAction: null,
+        
+        openModal(action) {
+            this.currentAction = action;
+            switch(action) {
+                case 'edit':
+                    this.modalTitle = 'Editar Perfil';
+                    this.modalContent = 'Deseja editar o perfil deste funcionário?';
+                    break;
+                default:
+                    this.modalTitle = 'Confirmar Ação';
+                    this.modalContent = 'Deseja continuar com esta ação?';
+            }
+            this.showModal = true;
+        },
+        
+        closeModal() {
+            this.showModal = false;
+            this.currentAction = null;
+        },
+        
+        confirmAction() {
+            switch(this.currentAction) {
+                case 'edit':
+                    window.location.href = "{% url 'hr:employee_edit' employee.pk %}";
+                    break;
+            }
+            this.closeModal();
+        },
+        
+        generateReport() {
+            // Simulate report generation
+            alert('Relatório sendo gerado...');
+        },
+        
+        sendMessage() {
+            alert('Funcionalidade de mensagem será implementada');
+        },
+        
+        scheduleReview() {
+            alert('Agendamento de avaliação será implementado');
+        },
+        
+        addTraining() {
+            alert('Adição de treinamento será implementada');
+        },
+        
+        sendFeedback() {
+            alert('Envio de feedback será implementado');
+        },
+        
+        viewDocuments() {
+            alert('Visualização de documentos será implementada');
+        },
+        
+        exportData() {
+            alert('Exportação de dados será implementada');
+        }
+    }
+}
+
+// Initialize performance chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('performanceChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                datasets: [{
+                    label: 'Performance',
+                    data: [75, 80, 78, 85, 88, 85],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

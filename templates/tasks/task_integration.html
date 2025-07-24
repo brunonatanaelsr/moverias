@@ -1,0 +1,818 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'Integrações de Tarefas' %} - MOVE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-integration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="task-integration-container" x-data="taskIntegration()">
+    <!-- Header Section -->
+    <header class="integration-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                        </svg>
+                        {% trans 'Dashboard' %}
+                    </a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <a href="{% url 'tasks:list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {% trans 'Tarefas' %}
+                    </a>
+                    <svg class="breadcrumb-separator" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="breadcrumb-current">{% trans 'Integrações' %}</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">{% trans 'Integrações de Tarefas' %}</h1>
+                    <p class="page-subtitle">{% trans 'Conecte suas tarefas com ferramentas externas e sistemas de automação' %}</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="integration-stats">
+                    <div class="stat-item">
+                        <span class="stat-count" x-text="integrations.active">0</span>
+                        <span class="stat-label">{% trans 'Ativas' %}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-count" x-text="integrations.available">0</span>
+                        <span class="stat-label">{% trans 'Disponíveis' %}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-count" x-text="integrations.syncs">0</span>
+                        <span class="stat-label">{% trans 'Sincronizações' %}</span>
+                    </div>
+                </div>
+                
+                <button @click="showModal = 'addIntegration'" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                    {% trans 'Nova Integração' %}
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Content Section -->
+    <div class="integration-content">
+        <!-- Categories Sidebar -->
+        <aside class="categories-sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">{% trans 'Categorias' %}</h3>
+                <nav class="category-nav">
+                    <button 
+                        @click="activeCategory = 'all'"
+                        :class="{ active: activeCategory === 'all' }"
+                        class="category-button">
+                        <svg class="category-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        {% trans 'Todas' %}
+                        <span class="category-count" x-text="integrations.total">0</span>
+                    </button>
+                    
+                    <template x-for="category in categories" :key="category.id">
+                        <button 
+                            @click="activeCategory = category.id"
+                            :class="{ active: activeCategory === category.id }"
+                            class="category-button">
+                            <svg class="category-icon" viewBox="0 0 20 20" fill="currentColor" x-html="category.icon"></svg>
+                            <span x-text="category.name"></span>
+                            <span class="category-count" x-text="category.count">0</span>
+                        </button>
+                    </template>
+                </nav>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">{% trans 'Status' %}</h3>
+                <div class="status-filters">
+                    <label class="status-filter">
+                        <input type="checkbox" x-model="filters.active" @change="filterIntegrations()">
+                        <span class="checkmark"></span>
+                        {% trans 'Ativas' %}
+                    </label>
+                    <label class="status-filter">
+                        <input type="checkbox" x-model="filters.configured" @change="filterIntegrations()">
+                        <span class="checkmark"></span>
+                        {% trans 'Configuradas' %}
+                    </label>
+                    <label class="status-filter">
+                        <input type="checkbox" x-model="filters.error" @change="filterIntegrations()">
+                        <span class="checkmark"></span>
+                        {% trans 'Com Erro' %}
+                    </label>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">{% trans 'Última Sincronização' %}</h3>
+                <div class="sync-status">
+                    <div class="sync-item">
+                        <div class="sync-indicator success"></div>
+                        <div class="sync-info">
+                            <span class="sync-time" x-text="lastSync.time">--</span>
+                            <span class="sync-label">{% trans 'Sucesso' %}</span>
+                        </div>
+                    </div>
+                    <button @click="syncAll()" class="sync-all-btn" :disabled="syncing">
+                        <svg class="sync-icon" :class="{ 'animate-spin': syncing }" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Sincronizar Tudo' %}
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="integrations-main">
+            <!-- Search and Filters -->
+            <div class="search-section">
+                <div class="search-container">
+                    <svg class="search-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                    </svg>
+                    <input 
+                        type="text" 
+                        x-model="searchQuery" 
+                        @input="filterIntegrations()"
+                        class="search-input" 
+                        placeholder="{% trans 'Buscar integrações...' %}">
+                </div>
+                
+                <div class="view-controls">
+                    <button 
+                        @click="viewMode = 'grid'"
+                        :class="{ active: viewMode === 'grid' }" 
+                        class="view-btn">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                    </button>
+                    <button 
+                        @click="viewMode = 'list'"
+                        :class="{ active: viewMode === 'list' }" 
+                        class="view-btn">
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Integrations Grid/List -->
+            <div class="integrations-container" :class="viewMode">
+                <template x-for="integration in filteredIntegrations" :key="integration.id">
+                    <div class="integration-card" :class="integration.status">
+                        <div class="integration-header">
+                            <div class="integration-logo">
+                                <img :src="integration.logo" :alt="integration.name" class="logo-image">
+                            </div>
+                            <div class="integration-info">
+                                <h3 class="integration-name" x-text="integration.name"></h3>
+                                <p class="integration-description" x-text="integration.description"></p>
+                            </div>
+                            <div class="integration-status">
+                                <div class="status-indicator" :class="integration.status"></div>
+                                <span class="status-text" x-text="getStatusText(integration.status)"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="integration-body">
+                            <div class="integration-stats">
+                                <div class="stat">
+                                    <span class="stat-value" x-text="integration.tasks_synced">0</span>
+                                    <span class="stat-label">{% trans 'Tarefas' %}</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value" x-text="integration.last_sync">--</span>
+                                    <span class="stat-label">{% trans 'Última Sync' %}</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="stat-value" x-text="integration.frequency">--</span>
+                                    <span class="stat-label">{% trans 'Frequência' %}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="integration-features" x-show="integration.features">
+                                <h4 class="features-title">{% trans 'Recursos' %}</h4>
+                                <ul class="features-list">
+                                    <template x-for="feature in integration.features" :key="feature">
+                                        <li class="feature-item" x-text="feature"></li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="integration-footer">
+                            <div class="integration-actions">
+                                <template x-if="integration.status === 'active'">
+                                    <div class="action-group">
+                                        <button @click="configureIntegration(integration)" class="btn-secondary btn-sm">
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% trans 'Configurar' %}
+                                        </button>
+                                        <button @click="syncIntegration(integration)" class="btn-secondary btn-sm" :disabled="integration.syncing">
+                                            <svg class="sync-icon" :class="{ 'animate-spin': integration.syncing }" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% trans 'Sincronizar' %}
+                                        </button>
+                                        <button @click="disconnectIntegration(integration)" class="btn-danger btn-sm">
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% trans 'Desconectar' %}
+                                        </button>
+                                    </div>
+                                </template>
+                                
+                                <template x-if="integration.status === 'available'">
+                                    <button @click="connectIntegration(integration)" class="btn-primary btn-sm">
+                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        </svg>
+                                        {% trans 'Conectar' %}
+                                    </button>
+                                </template>
+                                
+                                <template x-if="integration.status === 'error'">
+                                    <div class="action-group">
+                                        <button @click="viewIntegrationLogs(integration)" class="btn-warning btn-sm">
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% trans 'Ver Logs' %}
+                                        </button>
+                                        <button @click="retryIntegration(integration)" class="btn-secondary btn-sm">
+                                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                            </svg>
+                                            {% trans 'Tentar Novamente' %}
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Empty State -->
+                <div x-show="filteredIntegrations.length === 0" class="empty-state">
+                    <svg class="empty-icon" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                    </svg>
+                    <h3 class="empty-title">{% trans 'Nenhuma integração encontrada' %}</h3>
+                    <p class="empty-message">{% trans 'Tente ajustar os filtros ou adicionar uma nova integração.' %}</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Integration Modal -->
+    <div x-show="showModal === 'addIntegration'" class="modal-overlay" @click="showModal = null">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h2 class="modal-title">{% trans 'Adicionar Nova Integração' %}</h2>
+                <button @click="showModal = null" class="modal-close">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="available-integrations">
+                    <template x-for="integration in availableIntegrations" :key="integration.id">
+                        <div class="available-integration" @click="selectIntegration(integration)">
+                            <div class="integration-logo">
+                                <img :src="integration.logo" :alt="integration.name" class="logo-image">
+                            </div>
+                            <div class="integration-details">
+                                <h4 class="integration-name" x-text="integration.name"></h4>
+                                <p class="integration-description" x-text="integration.description"></p>
+                                <div class="integration-tags">
+                                    <template x-for="tag in integration.tags" :key="tag">
+                                        <span class="tag" x-text="tag"></span>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="integration-arrow">
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configure Integration Modal -->
+    <div x-show="showModal === 'configure'" class="modal-overlay" @click="showModal = null">
+        <div class="modal-content large" @click.stop>
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% trans 'Configurar' %} <span x-text="selectedIntegration?.name"></span>
+                </h2>
+                <button @click="showModal = null" class="modal-close">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form @submit.prevent="saveConfiguration()" class="config-form">
+                    <div class="config-section">
+                        <h3 class="section-title">{% trans 'Configurações de Conexão' %}</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">{% trans 'API Key' %}</label>
+                                <input type="password" x-model="config.apiKey" class="form-input" required>
+                                <p class="form-help">{% trans 'Sua chave de API para conectar com o serviço' %}</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{% trans 'URL Base' %}</label>
+                                <input type="url" x-model="config.baseUrl" class="form-input">
+                                <p class="form-help">{% trans 'URL base do serviço (opcional)' %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3 class="section-title">{% trans 'Configurações de Sincronização' %}</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">{% trans 'Frequência de Sincronização' %}</label>
+                                <select x-model="config.syncFrequency" class="form-select">
+                                    <option value="manual">{% trans 'Manual' %}</option>
+                                    <option value="hourly">{% trans 'A cada hora' %}</option>
+                                    <option value="daily">{% trans 'Diariamente' %}</option>
+                                    <option value="weekly">{% trans 'Semanalmente' %}</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">{% trans 'Direção da Sincronização' %}</label>
+                                <select x-model="config.syncDirection" class="form-select">
+                                    <option value="bidirectional">{% trans 'Bidirecional' %}</option>
+                                    <option value="import_only">{% trans 'Apenas Importar' %}</option>
+                                    <option value="export_only">{% trans 'Apenas Exportar' %}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="config-section">
+                        <h3 class="section-title">{% trans 'Mapeamento de Campos' %}</h3>
+                        <div class="field-mapping">
+                            <template x-for="mapping in config.fieldMappings" :key="mapping.id">
+                                <div class="mapping-row">
+                                    <div class="mapping-field">
+                                        <label class="mapping-label">{% trans 'Campo MOVE' %}</label>
+                                        <select x-model="mapping.moveField" class="mapping-select">
+                                            <option value="title">{% trans 'Título' %}</option>
+                                            <option value="description">{% trans 'Descrição' %}</option>
+                                            <option value="status">{% trans 'Status' %}</option>
+                                            <option value="priority">{% trans 'Prioridade' %}</option>
+                                            <option value="due_date">{% trans 'Data de Entrega' %}</option>
+                                            <option value="assignee">{% trans 'Responsável' %}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mapping-arrow">→</div>
+                                    <div class="mapping-field">
+                                        <label class="mapping-label">{% trans 'Campo Externo' %}</label>
+                                        <input type="text" x-model="mapping.externalField" class="mapping-input" placeholder="{% trans 'Nome do campo externo' %}">
+                                    </div>
+                                    <button @click="removeMapping(mapping.id)" class="remove-mapping">
+                                        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                            <button @click="addMapping()" type="button" class="add-mapping">
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {% trans 'Adicionar Mapeamento' %}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button @click="testConnection()" type="button" class="btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            {% trans 'Testar Conexão' %}
+                        </button>
+                        <button type="submit" class="btn-primary" :disabled="saving">
+                            <svg x-show="!saving" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <svg x-show="saving" class="animate-spin" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                            </svg>
+                            {% trans 'Salvar Configuração' %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div x-show="showModal === 'logs'" class="modal-overlay" @click="showModal = null">
+        <div class="modal-content large" @click.stop>
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    {% trans 'Logs de Integração' %} - <span x-text="selectedIntegration?.name"></span>
+                </h2>
+                <button @click="showModal = null" class="modal-close">
+                    <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="logs-container">
+                    <div class="logs-header">
+                        <div class="log-filters">
+                            <select x-model="logLevel" class="log-filter-select">
+                                <option value="all">{% trans 'Todos os Logs' %}</option>
+                                <option value="error">{% trans 'Apenas Erros' %}</option>
+                                <option value="warning">{% trans 'Avisos' %}</option>
+                                <option value="info">{% trans 'Informações' %}</option>
+                            </select>
+                            <button @click="refreshLogs()" class="refresh-logs">
+                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                </svg>
+                                {% trans 'Atualizar' %}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="logs-list">
+                        <template x-for="log in filteredLogs" :key="log.id">
+                            <div class="log-entry" :class="log.level">
+                                <div class="log-header">
+                                    <div class="log-level" :class="log.level" x-text="log.level.toUpperCase()"></div>
+                                    <div class="log-timestamp" x-text="formatTimestamp(log.timestamp)"></div>
+                                </div>
+                                <div class="log-message" x-text="log.message"></div>
+                                <div x-show="log.details" class="log-details">
+                                    <pre x-text="JSON.stringify(log.details, null, 2)"></pre>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function taskIntegration() {
+    return {
+        // State
+        showModal: null,
+        activeCategory: 'all',
+        viewMode: 'grid',
+        searchQuery: '',
+        syncing: false,
+        saving: false,
+        logLevel: 'all',
+        
+        // Filters
+        filters: {
+            active: true,
+            configured: true,
+            error: true
+        },
+        
+        // Data
+        integrations: {
+            active: 12,
+            available: 25,
+            syncs: 1247,
+            total: 37
+        },
+        
+        categories: [
+            {
+                id: 'project_management',
+                name: 'Gerenciamento de Projetos',
+                count: 8,
+                icon: '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+            },
+            {
+                id: 'communication',
+                name: 'Comunicação',
+                count: 6,
+                icon: '<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>'
+            },
+            {
+                id: 'calendar',
+                name: 'Calendário',
+                count: 4,
+                icon: '<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>'
+            },
+            {
+                id: 'storage',
+                name: 'Armazenamento',
+                count: 5,
+                icon: '<path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>'
+            },
+            {
+                id: 'automation',
+                name: 'Automação',
+                count: 7,
+                icon: '<path d="M13 10V3L4 14h7v7l9-11h-7z"/>'
+            }
+        ],
+        
+        lastSync: {
+            time: '2 minutos atrás'
+        },
+        
+        filteredIntegrations: [],
+        allIntegrations: [
+            {
+                id: 1,
+                name: 'Trello',
+                description: 'Sincronize tarefas com quadros do Trello',
+                logo: '/static/images/integrations/trello.png',
+                status: 'active',
+                category: 'project_management',
+                tasks_synced: 156,
+                last_sync: '2 min',
+                frequency: 'Hourly',
+                syncing: false,
+                features: ['Quadros', 'Listas', 'Cartões', 'Comentários']
+            },
+            {
+                id: 2,
+                name: 'Slack',
+                description: 'Receba notificações no Slack',
+                logo: '/static/images/integrations/slack.png',
+                status: 'active',
+                category: 'communication',
+                tasks_synced: 89,
+                last_sync: '1 hour',
+                frequency: 'Real-time',
+                syncing: false,
+                features: ['Notificações', 'Comandos', 'Bot']
+            },
+            {
+                id: 3,
+                name: 'Google Calendar',
+                description: 'Sincronize prazos com o Google Calendar',
+                logo: '/static/images/integrations/google-calendar.png',
+                status: 'error',
+                category: 'calendar',
+                tasks_synced: 0,
+                last_sync: 'Error',
+                frequency: 'Daily',
+                syncing: false,
+                features: ['Eventos', 'Lembretes', 'Calendários']
+            },
+            {
+                id: 4,
+                name: 'Asana',
+                description: 'Conecte com projetos do Asana',
+                logo: '/static/images/integrations/asana.png',
+                status: 'available',
+                category: 'project_management',
+                tasks_synced: 0,
+                last_sync: '--',
+                frequency: '--',
+                syncing: false,
+                features: ['Projetos', 'Tarefas', 'Equipes']
+            }
+        ],
+        
+        availableIntegrations: [
+            {
+                id: 5,
+                name: 'Jira',
+                description: 'Integração com Atlassian Jira para tracking de issues',
+                logo: '/static/images/integrations/jira.png',
+                tags: ['Desenvolvimento', 'Bugs', 'Issues']
+            },
+            {
+                id: 6,
+                name: 'Microsoft Teams',
+                description: 'Colaboração e notificações via Microsoft Teams',
+                logo: '/static/images/integrations/teams.png',
+                tags: ['Comunicação', 'Colaboração', 'Microsoft']
+            }
+        ],
+        
+        selectedIntegration: null,
+        config: {
+            apiKey: '',
+            baseUrl: '',
+            syncFrequency: 'daily',
+            syncDirection: 'bidirectional',
+            fieldMappings: [
+                { id: 1, moveField: 'title', externalField: '' }
+            ]
+        },
+        
+        logs: [
+            {
+                id: 1,
+                level: 'info',
+                timestamp: new Date(),
+                message: 'Sincronização iniciada com sucesso',
+                details: null
+            },
+            {
+                id: 2,
+                level: 'error',
+                timestamp: new Date(Date.now() - 300000),
+                message: 'Falha na autenticação com API externa',
+                details: { error_code: 401, response: 'Unauthorized' }
+            }
+        ],
+        
+        // Computed
+        get filteredLogs() {
+            if (this.logLevel === 'all') return this.logs;
+            return this.logs.filter(log => log.level === this.logLevel);
+        },
+        
+        // Methods
+        init() {
+            this.filteredIntegrations = [...this.allIntegrations];
+        },
+        
+        filterIntegrations() {
+            let filtered = [...this.allIntegrations];
+            
+            // Filter by category
+            if (this.activeCategory !== 'all') {
+                filtered = filtered.filter(integration => 
+                    integration.category === this.activeCategory
+                );
+            }
+            
+            // Filter by status
+            const activeFilters = Object.keys(this.filters).filter(key => this.filters[key]);
+            if (activeFilters.length > 0) {
+                filtered = filtered.filter(integration => 
+                    (this.filters.active && integration.status === 'active') ||
+                    (this.filters.configured && integration.status === 'configured') ||
+                    (this.filters.error && integration.status === 'error') ||
+                    integration.status === 'available'
+                );
+            }
+            
+            // Filter by search query
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(integration =>
+                    integration.name.toLowerCase().includes(query) ||
+                    integration.description.toLowerCase().includes(query)
+                );
+            }
+            
+            this.filteredIntegrations = filtered;
+        },
+        
+        getStatusText(status) {
+            const statusMap = {
+                'active': 'Ativo',
+                'error': 'Erro',
+                'available': 'Disponível',
+                'configured': 'Configurado'
+            };
+            return statusMap[status] || status;
+        },
+        
+        connectIntegration(integration) {
+            this.selectedIntegration = integration;
+            this.showModal = 'configure';
+        },
+        
+        configureIntegration(integration) {
+            this.selectedIntegration = integration;
+            this.showModal = 'configure';
+        },
+        
+        disconnectIntegration(integration) {
+            if (confirm('Tem certeza que deseja desconectar esta integração?')) {
+                integration.status = 'available';
+                integration.tasks_synced = 0;
+                integration.last_sync = '--';
+                integration.frequency = '--';
+            }
+        },
+        
+        syncIntegration(integration) {
+            integration.syncing = true;
+            setTimeout(() => {
+                integration.syncing = false;
+                integration.last_sync = 'Agora';
+            }, 2000);
+        },
+        
+        syncAll() {
+            this.syncing = true;
+            setTimeout(() => {
+                this.syncing = false;
+                this.lastSync.time = 'Agora';
+            }, 3000);
+        },
+        
+        retryIntegration(integration) {
+            integration.syncing = true;
+            setTimeout(() => {
+                integration.syncing = false;
+                integration.status = 'active';
+                integration.last_sync = 'Agora';
+            }, 3000);
+        },
+        
+        viewIntegrationLogs(integration) {
+            this.selectedIntegration = integration;
+            this.showModal = 'logs';
+        },
+        
+        selectIntegration(integration) {
+            this.selectedIntegration = integration;
+            this.showModal = 'configure';
+        },
+        
+        addMapping() {
+            const newId = Math.max(...this.config.fieldMappings.map(m => m.id)) + 1;
+            this.config.fieldMappings.push({
+                id: newId,
+                moveField: 'title',
+                externalField: ''
+            });
+        },
+        
+        removeMapping(id) {
+            this.config.fieldMappings = this.config.fieldMappings.filter(m => m.id !== id);
+        },
+        
+        testConnection() {
+            // Simulate connection test
+            alert('Testando conexão... (simulado)');
+        },
+        
+        saveConfiguration() {
+            this.saving = true;
+            setTimeout(() => {
+                this.saving = false;
+                this.showModal = null;
+                // Update integration status
+                if (this.selectedIntegration) {
+                    this.selectedIntegration.status = 'active';
+                }
+            }, 2000);
+        },
+        
+        refreshLogs() {
+            // Simulate log refresh
+            console.log('Refreshing logs...');
+        },
+        
+        formatTimestamp(timestamp) {
+            return new Intl.DateTimeFormat('pt-BR', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            }).format(timestamp);
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}

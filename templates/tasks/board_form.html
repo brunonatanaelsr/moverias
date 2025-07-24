@@ -1,0 +1,759 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if board %}Editar Quadro{% else %}Novo Quadro{% endif %} - {{ block.super }}
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/board-form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="board-form-container" x-data="boardForm()">
+    <!-- Header -->
+    <div class="board-form-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <a href="{% url 'tasks:board_list' %}" class="breadcrumb-link">Quadros</a>
+                    <svg class="breadcrumb-separator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <span class="breadcrumb-current">
+                        {% if board %}Editar Quadro{% else %}Novo Quadro{% endif %}
+                    </span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">
+                        {% if board %}Editar Quadro{% else %}Criar Novo Quadro{% endif %}
+                    </h1>
+                    <p class="page-subtitle">
+                        {% if board %}
+                            Gerencie as configurações e estrutura do quadro
+                        {% else %}
+                            Configure um novo quadro para organizar suas tarefas
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button type="button" @click="togglePreview()" class="btn-secondary" :class="{ 'active': showPreview }">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    <span x-text="showPreview ? 'Ocultar Preview' : 'Mostrar Preview'"></span>
+                </button>
+                
+                <button type="submit" form="board-form" class="btn-primary" :disabled="!isValid">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {% if board %}Salvar Alterações{% else %}Criar Quadro{% endif %}
+                </button>
+                
+                <a href="{% url 'tasks:board_list' %}" class="btn-cancel">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Content -->
+    <div class="form-content">
+        <form id="board-form" method="post" class="form-layout" @submit.prevent="submitForm()">
+            {% csrf_token %}
+            
+            <!-- Main Column -->
+            <div class="main-column">
+                <!-- Basic Information -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Informações Básicas</h2>
+                        <p class="card-subtitle">Configure as informações principais do quadro</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="name" class="form-label required">Nome do Quadro</label>
+                            <input 
+                                type="text" 
+                                id="name" 
+                                name="name" 
+                                class="form-input" 
+                                x-model="formData.name"
+                                @input="validateForm()"
+                                placeholder="Ex: Desenvolvimento do Produto, Marketing Q1..."
+                                value="{% if board %}{{ board.name }}{% endif %}"
+                                required
+                            >
+                            <div class="field-errors">
+                                {% for error in form.name.errors %}
+                                    <span class="error-message">{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description" class="form-label">Descrição</label>
+                            <div class="editor-container">
+                                <div id="description-editor" class="rich-editor"></div>
+                                <input type="hidden" name="description" x-model="formData.description">
+                            </div>
+                            <p class="editor-help">Use formatação rica para descrever o objetivo e escopo do quadro</p>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="color" class="form-label">Cor do Quadro</label>
+                                <div class="color-selector">
+                                    <div class="selected-color" @click="showColorPicker = !showColorPicker">
+                                        <div class="color-preview" :style="{ backgroundColor: formData.color }"></div>
+                                        <span x-text="getColorName(formData.color)">Azul</span>
+                                        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </div>
+                                    
+                                    <div x-show="showColorPicker" x-cloak class="color-dropdown">
+                                        <div class="color-grid">
+                                            <template x-for="color in colors" :key="color.value">
+                                                <button 
+                                                    type="button"
+                                                    class="color-option"
+                                                    :class="{ 'selected': formData.color === color.value }"
+                                                    :style="{ backgroundColor: color.value }"
+                                                    @click="selectColor(color.value)"
+                                                    :title="color.name"
+                                                ></button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="color" x-model="formData.color">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="visibility" class="form-label">Visibilidade</label>
+                                <select id="visibility" name="visibility" class="form-select" x-model="formData.visibility">
+                                    <option value="private">Privado - Apenas eu</option>
+                                    <option value="team">Equipe - Membros da equipe</option>
+                                    <option value="organization">Organização - Toda organização</option>
+                                    <option value="public">Público - Qualquer pessoa</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Columns Configuration -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Configuração de Colunas</h2>
+                        <p class="card-subtitle">Defina as colunas que organizarão as tarefas</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="columns-container">
+                            <div class="columns-list" x-sort="updateColumnOrder">
+                                <template x-for="(column, index) in formData.columns" :key="column.id">
+                                    <div class="column-item" :data-column-id="column.id">
+                                        <div class="column-handle">
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M7 2v2H5v16h2v2h2V2H7zM15 2v2h-2v16h2v2h2V2h-2z"/>
+                                            </svg>
+                                        </div>
+                                        
+                                        <div class="column-content">
+                                            <div class="column-header">
+                                                <input 
+                                                    type="text" 
+                                                    class="column-name-input" 
+                                                    x-model="column.name"
+                                                    placeholder="Nome da coluna"
+                                                    required
+                                                >
+                                                <div class="column-actions">
+                                                    <button type="button" @click="editColumn(index)" class="btn-icon">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button type="button" @click="removeColumn(index)" class="btn-icon btn-danger" :disabled="formData.columns.length <= 1">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="column-details">
+                                                <div class="column-limit">
+                                                    <label class="limit-label">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            x-model="column.hasLimit"
+                                                            class="limit-checkbox"
+                                                        >
+                                                        Limite de tarefas
+                                                    </label>
+                                                    <div x-show="column.hasLimit" class="limit-input">
+                                                        <input 
+                                                            type="number" 
+                                                            x-model="column.taskLimit"
+                                                            min="1"
+                                                            max="100"
+                                                            placeholder="Ex: 5"
+                                                            class="form-input"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <button type="button" @click="addColumn()" class="add-column-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Adicionar Coluna
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team & Permissions -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Equipe e Permissões</h2>
+                        <p class="card-subtitle">Gerencie quem pode acessar e modificar o quadro</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="team-section">
+                            <div class="members-list">
+                                <h3 class="section-title">Membros da Equipe</h3>
+                                
+                                <div class="selected-members">
+                                    <template x-for="member in formData.members" :key="member.id">
+                                        <div class="member-item">
+                                            <div class="member-info">
+                                                <img 
+                                                    :src="member.avatar || '/static/images/default-avatar.png'" 
+                                                    :alt="member.name"
+                                                    class="member-avatar"
+                                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                                                >
+                                                <div class="member-avatar-placeholder" style="display: none;">
+                                                    <span x-text="member.name.charAt(0).toUpperCase()"></span>
+                                                </div>
+                                                <div class="member-details">
+                                                    <span class="member-name" x-text="member.name"></span>
+                                                    <span class="member-email" x-text="member.email"></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="member-role">
+                                                <select x-model="member.role" class="role-select">
+                                                    <option value="viewer">Visualizador</option>
+                                                    <option value="editor">Editor</option>
+                                                    <option value="admin">Administrador</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <button type="button" @click="removeMember(member.id)" class="remove-member">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <div class="add-member-section">
+                                    <div class="member-selector" x-data="{ open: false }">
+                                        <button type="button" @click="open = !open" class="add-member-btn">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                            Adicionar Membro
+                                        </button>
+                                        
+                                        <div x-show="open" x-cloak class="member-dropdown">
+                                            <div class="member-search">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Buscar por nome ou email..."
+                                                    class="member-search-input"
+                                                    x-model="memberSearch"
+                                                    @input="searchMembers()"
+                                                >
+                                            </div>
+                                            
+                                            <div class="member-options">
+                                                <template x-for="user in availableMembers" :key="user.id">
+                                                    <button 
+                                                        type="button"
+                                                        class="member-option"
+                                                        @click="addMember(user); open = false"
+                                                    >
+                                                        <img 
+                                                            :src="user.avatar || '/static/images/default-avatar.png'" 
+                                                            :alt="user.name"
+                                                            class="member-avatar"
+                                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                                                        >
+                                                        <div class="member-avatar-placeholder" style="display: none;">
+                                                            <span x-text="user.name.charAt(0).toUpperCase()"></span>
+                                                        </div>
+                                                        <div class="member-info">
+                                                            <span class="member-name" x-text="user.name"></span>
+                                                            <span class="member-email" x-text="user.email"></span>
+                                                        </div>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if board %}
+                <!-- Danger Zone -->
+                <div class="form-card danger-zone">
+                    <div class="card-header">
+                        <h2 class="card-title danger-title">Zona de Perigo</h2>
+                        <p class="card-subtitle">Ações irreversíveis que afetam permanentemente o quadro</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="danger-actions">
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h3 class="danger-action-title">Arquivar Quadro</h3>
+                                    <p class="danger-action-description">
+                                        O quadro será arquivado e não aparecerá nas listagens principais, mas poderá ser restaurado.
+                                    </p>
+                                </div>
+                                <button type="button" @click="archiveBoard()" class="btn-warning">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l4 4 4-4"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 20v-8h14v8"/>
+                                    </svg>
+                                    Arquivar
+                                </button>
+                            </div>
+                            
+                            <div class="danger-item">
+                                <div class="danger-info">
+                                    <h3 class="danger-action-title">Excluir Quadro</h3>
+                                    <p class="danger-action-description">
+                                        Esta ação é <strong>irreversível</strong>. O quadro e todas as suas tarefas serão permanentemente excluídos.
+                                    </p>
+                                </div>
+                                <button type="button" @click="showDeleteModal = true" class="btn-danger">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Excluir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Sidebar Column -->
+            <div class="sidebar-column">
+                <!-- Preview -->
+                <div x-show="showPreview" x-cloak class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Preview do Quadro</h2>
+                        <p class="card-subtitle">Visualização de como o quadro aparecerá</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="board-preview">
+                            <div class="preview-header">
+                                <div class="preview-color" :style="{ backgroundColor: formData.color }"></div>
+                                <div class="preview-info">
+                                    <h3 class="preview-title" x-text="formData.name || 'Nome do Quadro'"></h3>
+                                    <p class="preview-description" x-html="formData.description || 'Descrição do quadro...'"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="preview-columns">
+                                <template x-for="column in formData.columns" :key="column.id">
+                                    <div class="preview-column">
+                                        <div class="preview-column-header">
+                                            <span class="preview-column-name" x-text="column.name || 'Nova Coluna'"></span>
+                                            <span x-show="column.hasLimit" class="preview-column-limit" x-text="'(0/' + column.taskLimit + ')'"></span>
+                                        </div>
+                                        <div class="preview-tasks">
+                                            <div class="preview-task-placeholder">
+                                                <span>Tarefas aparecerão aqui</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Ações Rápidas</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="quick-actions">
+                            <button type="button" @click="duplicateBoard()" class="quick-action-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                Duplicar Configuração
+                            </button>
+                            
+                            <button type="button" @click="saveAsTemplate()" class="quick-action-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                </svg>
+                                Salvar como Template
+                            </button>
+                            
+                            <button type="button" @click="exportBoard()" class="quick-action-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Exportar Configuração
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Help -->
+                <div class="form-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Ajuda</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="help-content">
+                            <div class="help-item">
+                                <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div class="help-text">
+                                    <strong>Colunas:</strong> Representam os estágios do seu fluxo de trabalho. Arraste para reordenar.
+                                </div>
+                            </div>
+                            
+                            <div class="help-item">
+                                <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <div class="help-text">
+                                    <strong>Equipe:</strong> Adicione membros e defina permissões específicas para cada pessoa.
+                                </div>
+                            </div>
+                            
+                            <div class="help-item">
+                                <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 21a4 4 0 004-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4"/>
+                                </svg>
+                                <div class="help-text">
+                                    <strong>Limites:</strong> Defina limites de tarefas para controlar o WIP (Work in Progress).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div x-show="showDeleteModal" x-cloak class="modal-overlay" @click.self="showDeleteModal = false">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmar Exclusão</h3>
+                <button type="button" @click="showDeleteModal = false" class="modal-close">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <div class="warning-icon">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="warning-content">
+                        <h4>Esta ação não pode ser desfeita</h4>
+                        <p>Ao excluir este quadro, você perderá permanentemente:</p>
+                        <ul>
+                            <li>Todas as tarefas do quadro</li>
+                            <li>Histórico de atividades</li>
+                            <li>Comentários e anexos</li>
+                            <li>Configurações e automações</li>
+                        </ul>
+                        <p>Digite <strong>EXCLUIR</strong> para confirmar:</p>
+                        <input 
+                            type="text" 
+                            x-model="deleteConfirmation" 
+                            class="delete-confirmation-input"
+                            placeholder="Digite EXCLUIR"
+                        >
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" @click="showDeleteModal = false" class="btn-cancel">Cancelar</button>
+                <button 
+                    type="button" 
+                    @click="deleteBoard()" 
+                    class="btn-danger"
+                    :disabled="deleteConfirmation !== 'EXCLUIR'"
+                >
+                    Excluir Permanentemente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+function boardForm() {
+    return {
+        showPreview: true,
+        showColorPicker: false,
+        showDeleteModal: false,
+        deleteConfirmation: '',
+        memberSearch: '',
+        isValid: false,
+        
+        formData: {
+            name: '{% if board %}{{ board.name|default:"" }}{% endif %}',
+            description: '{% if board %}{{ board.description|default:"" }}{% endif %}',
+            color: '{% if board %}{{ board.color|default:"#3b82f6" }}{% else %}#3b82f6{% endif %}',
+            visibility: '{% if board %}{{ board.visibility|default:"team" }}{% else %}team{% endif %}',
+            columns: {% if board %}{{ board.columns_json|default:"[]" }}{% else %}[
+                { id: Date.now(), name: 'A Fazer', hasLimit: false, taskLimit: 5 },
+                { id: Date.now() + 1, name: 'Em Progresso', hasLimit: true, taskLimit: 3 },
+                { id: Date.now() + 2, name: 'Concluído', hasLimit: false, taskLimit: null }
+            ]{% endif %},
+            members: {% if board %}{{ board.members_json|default:"[]" }}{% else %}[]{% endif %}
+        },
+        
+        colors: [
+            { name: 'Azul', value: '#3b82f6' },
+            { name: 'Verde', value: '#10b981' },
+            { name: 'Roxo', value: '#8b5cf6' },
+            { name: 'Rosa', value: '#ec4899' },
+            { name: 'Laranja', value: '#f59e0b' },
+            { name: 'Vermelho', value: '#ef4444' },
+            { name: 'Indigo', value: '#6366f1' },
+            { name: 'Teal', value: '#14b8a6' },
+            { name: 'Cinza', value: '#6b7280' },
+            { name: 'Slate', value: '#475569' }
+        ],
+        
+        availableMembers: [],
+        
+        init() {
+            this.initEditor();
+            this.initSortable();
+            this.loadAvailableMembers();
+            this.validateForm();
+        },
+        
+        initEditor() {
+            const editor = new Quill('#description-editor', {
+                theme: 'snow',
+                placeholder: 'Descreva o objetivo e escopo deste quadro...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        ['link', 'blockquote'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+            
+            editor.on('text-change', () => {
+                this.formData.description = editor.root.innerHTML;
+                this.validateForm();
+            });
+            
+            if (this.formData.description) {
+                editor.root.innerHTML = this.formData.description;
+            }
+        },
+        
+        initSortable() {
+            const columnsEl = document.querySelector('.columns-list');
+            if (columnsEl) {
+                Sortable.create(columnsEl, {
+                    handle: '.column-handle',
+                    animation: 150,
+                    onEnd: (evt) => {
+                        this.updateColumnOrder(evt);
+                    }
+                });
+            }
+        },
+        
+        validateForm() {
+            this.isValid = this.formData.name.trim().length > 0 && 
+                          this.formData.columns.length > 0 &&
+                          this.formData.columns.every(col => col.name.trim().length > 0);
+        },
+        
+        selectColor(colorValue) {
+            this.formData.color = colorValue;
+            this.showColorPicker = false;
+        },
+        
+        getColorName(colorValue) {
+            const color = this.colors.find(c => c.value === colorValue);
+            return color ? color.name : 'Personalizada';
+        },
+        
+        addColumn() {
+            this.formData.columns.push({
+                id: Date.now(),
+                name: '',
+                hasLimit: false,
+                taskLimit: 5
+            });
+            this.validateForm();
+        },
+        
+        removeColumn(index) {
+            if (this.formData.columns.length > 1) {
+                this.formData.columns.splice(index, 1);
+                this.validateForm();
+            }
+        },
+        
+        editColumn(index) {
+            // Implementar modal de edição de coluna se necessário
+            console.log('Edit column:', index);
+        },
+        
+        updateColumnOrder(evt) {
+            const item = this.formData.columns.splice(evt.oldIndex, 1)[0];
+            this.formData.columns.splice(evt.newIndex, 0, item);
+        },
+        
+        loadAvailableMembers() {
+            // Simular carregamento de usuários disponíveis
+            this.availableMembers = [
+                { id: 1, name: 'Ana Silva', email: 'ana@exemplo.com', avatar: null },
+                { id: 2, name: 'Carlos Santos', email: 'carlos@exemplo.com', avatar: null },
+                { id: 3, name: 'Maria Oliveira', email: 'maria@exemplo.com', avatar: null }
+            ];
+        },
+        
+        searchMembers() {
+            // Implementar busca real via API
+            console.log('Search members:', this.memberSearch);
+        },
+        
+        addMember(user) {
+            if (!this.formData.members.find(m => m.id === user.id)) {
+                this.formData.members.push({
+                    ...user,
+                    role: 'editor'
+                });
+            }
+        },
+        
+        removeMember(memberId) {
+            this.formData.members = this.formData.members.filter(m => m.id !== memberId);
+        },
+        
+        togglePreview() {
+            this.showPreview = !this.showPreview;
+        },
+        
+        submitForm() {
+            if (!this.isValid) return;
+            
+            // Preparar dados para envio
+            const formElement = document.getElementById('board-form');
+            const formData = new FormData(formElement);
+            
+            // Adicionar dados JSON
+            formData.append('columns_json', JSON.stringify(this.formData.columns));
+            formData.append('members_json', JSON.stringify(this.formData.members));
+            
+            // Enviar formulário
+            formElement.submit();
+        },
+        
+        duplicateBoard() {
+            // Implementar duplicação
+            console.log('Duplicate board');
+        },
+        
+        saveAsTemplate() {
+            // Implementar salvamento como template
+            console.log('Save as template');
+        },
+        
+        exportBoard() {
+            // Implementar exportação
+            console.log('Export board');
+        },
+        
+        archiveBoard() {
+            if (confirm('Tem certeza que deseja arquivar este quadro?')) {
+                // Implementar arquivamento
+                console.log('Archive board');
+            }
+        },
+        
+        deleteBoard() {
+            if (this.deleteConfirmation === 'EXCLUIR') {
+                // Implementar exclusão
+                window.location.href = '{% url "tasks:board_delete" board.id %}';
+            }
+        }
+    }
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Click outside to close dropdowns
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.color-selector')) {
+            Alpine.store('boardForm', { ...Alpine.store('boardForm'), showColorPicker: false });
+        }
+    });
+});
+</script>
+{% endblock %}

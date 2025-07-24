@@ -1,0 +1,560 @@
+/* ============================================
+   ANAMNESIS STEP 2 STYLES - Situação Socioeconômica
+   ============================================ */
+
+/* Input with Prefix */
+.input-with-prefix {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 0.75rem;
+    color: #6B7280;
+    font-weight: 500;
+    font-size: 0.875rem;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.input-with-prefix .form-input {
+    padding-left: 2.5rem;
+}
+
+/* Calculated Fields */
+.calculated-field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #F3F4F6;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.currency {
+    color: #6B7280;
+    font-size: 0.875rem;
+}
+
+.calculated-value {
+    color: #1F2937;
+    font-weight: 600;
+}
+
+/* Economic Classification */
+.economic-classification {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.economic-classification.extreme-poverty {
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
+}
+
+.economic-classification.poverty {
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    color: #D97706;
+}
+
+.economic-classification.low {
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    color: #D97706;
+}
+
+.economic-classification.lower-middle {
+    background: #DBEAFE;
+    border: 1px solid #BFDBFE;
+    color: #2563EB;
+}
+
+.economic-classification.middle {
+    background: #D1FAE5;
+    border: 1px solid #A7F3D0;
+    color: #059669;
+}
+
+.economic-classification.upper-middle {
+    background: #E0E7FF;
+    border: 1px solid #C7D2FE;
+    color: #4F46E5;
+}
+
+.classification-label {
+    font-size: 0.875rem;
+}
+
+.classification-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.classification-indicator.extreme-poverty {
+    background: #DC2626;
+}
+
+.classification-indicator.poverty {
+    background: #D97706;
+}
+
+.classification-indicator.low {
+    background: #D97706;
+}
+
+.classification-indicator.lower-middle {
+    background: #2563EB;
+}
+
+.classification-indicator.middle {
+    background: #059669;
+}
+
+.classification-indicator.upper-middle {
+    background: #4F46E5;
+}
+
+/* Subsections */
+.subsection {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #E5E7EB;
+}
+
+.subsection-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0 0 1.5rem 0;
+}
+
+/* Income Sources */
+.income-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.income-source-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.income-source-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: #D1D5DB;
+}
+
+.source-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.source-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1F2937;
+    margin: 0;
+}
+
+.remove-source {
+    padding: 0.5rem;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    color: #DC2626;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-source:hover {
+    background: #FEE2E2;
+    border-color: #FCA5A5;
+}
+
+.remove-source svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.add-source-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: transparent;
+    border: 2px dashed #D1D5DB;
+    border-radius: 12px;
+    color: #6B7280;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 60px;
+}
+
+.add-source-btn:hover {
+    border-color: #4F46E5;
+    color: #4F46E5;
+    background: rgba(79, 70, 229, 0.05);
+}
+
+/* Services Grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Custom Checkbox */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.checkbox-label:hover {
+    background: rgba(79, 70, 229, 0.05);
+}
+
+.checkbox {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #D1D5DB;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    background: white;
+}
+
+.checkbox:checked + .checkmark {
+    background: #4F46E5;
+    border-color: #4F46E5;
+}
+
+.checkbox:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Expenses Grid */
+.expenses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.expense-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Financial Summary */
+.financial-summary {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #E5E7EB;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.income-card {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    border: 1px solid #6EE7B7;
+}
+
+.expense-card {
+    background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+    border: 1px solid #F59E0B;
+}
+
+.balance-card.positive {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    border: 1px solid #6EE7B7;
+}
+
+.balance-card.negative {
+    background: linear-gradient(135deg, #FEF2F2, #FECACA);
+    border: 1px solid #F87171;
+}
+
+.balance-card.neutral {
+    background: linear-gradient(135deg, #F3F4F6, #E5E7EB);
+    border: 1px solid #D1D5DB;
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.income-card .summary-icon {
+    color: #059669;
+}
+
+.expense-card .summary-icon {
+    color: #D97706;
+}
+
+.balance-card.positive .summary-icon {
+    color: #059669;
+}
+
+.balance-card.negative .summary-icon {
+    color: #DC2626;
+}
+
+.balance-card.neutral .summary-icon {
+    color: #6B7280;
+}
+
+.summary-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1F2937;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .expenses-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .financial-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .income-source-card {
+        padding: 1rem;
+    }
+    
+    .source-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .remove-source {
+        align-self: flex-end;
+    }
+}
+
+@media (max-width: 480px) {
+    .economic-classification {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .summary-value {
+        font-size: 1.25rem;
+    }
+    
+    .checkbox-label {
+        padding: 0.5rem;
+        font-size: 0.8125rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .calculated-field {
+        background: #1F2937;
+        border-color: #374151;
+        color: #F9FAFB;
+    }
+    
+    .currency {
+        color: #9CA3AF;
+    }
+    
+    .calculated-value {
+        color: #F9FAFB;
+    }
+    
+    .income-source-card {
+        background: #1F2937;
+        border-color: #374151;
+    }
+    
+    .source-title {
+        color: #F9FAFB;
+    }
+    
+    .subsection-title {
+        color: #F9FAFB;
+    }
+    
+    .checkbox-label {
+        color: #F9FAFB;
+    }
+    
+    .checkbox-label:hover {
+        background: rgba(79, 70, 229, 0.2);
+    }
+    
+    .checkmark {
+        background: #1F2937;
+        border-color: #4B5563;
+    }
+    
+    .summary-label {
+        color: #F9FAFB;
+    }
+    
+    .summary-value {
+        color: #F9FAFB;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .economic-classification {
+        border-width: 2px;
+    }
+    
+    .summary-card {
+        border-width: 2px;
+    }
+    
+    .checkbox:checked + .checkmark {
+        border-width: 3px;
+    }
+    
+    .checkmark {
+        border-width: 2px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .anamnesis-step2 {
+        background: white;
+    }
+    
+    .add-source-btn,
+    .remove-source {
+        display: none;
+    }
+    
+    .income-source-card,
+    .summary-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .services-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .expenses-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .financial-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

@@ -1,0 +1,716 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Task Notifications - Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-notifications.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="task-notifications-container" x-data="taskNotifications()">
+    <!-- Header -->
+    <div class="notifications-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Tasks
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Notifications</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Task Notifications</h1>
+                    <p class="page-subtitle">Manage your task notifications and alerts</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="notification-summary">
+                    <div class="summary-item">
+                        <span class="summary-count" x-text="unreadCount">12</span>
+                        <span class="summary-label">Unread</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-count" x-text="todayCount">8</span>
+                        <span class="summary-label">Today</span>
+                    </div>
+                </div>
+                
+                <button @click="markAllAsRead()" :disabled="unreadCount === 0" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Mark All Read
+                </button>
+                
+                <button @click="openNotificationSettings()" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Content -->
+    <div class="notifications-content">
+        <div class="content-wrapper">
+            <!-- Filters and Controls -->
+            <div class="filters-section">
+                <div class="filter-tabs">
+                    <button @click="currentFilter = 'all'" :class="{'active': currentFilter === 'all'}" class="filter-tab">
+                        All Notifications
+                        <span class="tab-count" x-text="allNotifications.length">24</span>
+                    </button>
+                    <button @click="currentFilter = 'unread'" :class="{'active': currentFilter === 'unread'}" class="filter-tab">
+                        Unread
+                        <span class="tab-count" x-text="unreadCount">12</span>
+                    </button>
+                    <button @click="currentFilter = 'mentions'" :class="{'active': currentFilter === 'mentions'}" class="filter-tab">
+                        Mentions
+                        <span class="tab-count" x-text="mentionsCount">3</span>
+                    </button>
+                    <button @click="currentFilter = 'assignments'" :class="{'active': currentFilter === 'assignments'}" class="filter-tab">
+                        Assignments
+                        <span class="tab-count" x-text="assignmentsCount">5</span>
+                    </button>
+                    <button @click="currentFilter = 'due_soon'" :class="{'active': currentFilter === 'due_soon'}" class="filter-tab">
+                        Due Soon
+                        <span class="tab-count" x-text="dueSoonCount">4</span>
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <select class="filter-select" x-model="sortBy">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="priority">By Priority</option>
+                        <option value="project">By Project</option>
+                    </select>
+                    
+                    <div class="search-container">
+                        <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" x-model="searchQuery" placeholder="Search notifications..." class="search-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            <div class="notifications-list">
+                <template x-for="notification in filteredNotifications" :key="notification.id">
+                    <div class="notification-item" :class="{'unread': !notification.isRead, 'priority-high': notification.priority === 'high'}" @click="selectNotification(notification)">
+                        <div class="notification-indicator">
+                            <div class="notification-icon" :class="'icon-' + notification.type">
+                                <!-- Task Assignment -->
+                                <svg x-show="notification.type === 'task_assigned'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <!-- Task Completed -->
+                                <svg x-show="notification.type === 'task_completed'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <!-- Comment Added -->
+                                <svg x-show="notification.type === 'comment_added'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <!-- Due Date -->
+                                <svg x-show="notification.type === 'due_date'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <!-- Mention -->
+                                <svg x-show="notification.type === 'mention'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
+                                </svg>
+                                <!-- Priority Change -->
+                                <svg x-show="notification.type === 'priority_changed'" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <div class="priority-indicator" x-show="notification.priority === 'high'"></div>
+                        </div>
+                        
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <div class="notification-title">
+                                    <span class="notification-action" x-text="notification.title">You were assigned to task</span>
+                                    <a :href="notification.taskUrl" class="task-link" x-text="notification.taskName">Website Redesign</a>
+                                </div>
+                                <div class="notification-meta">
+                                    <span class="notification-time" x-text="notification.timeAgo">2 hours ago</span>
+                                    <span class="notification-project" x-text="notification.projectName">Marketing Site</span>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-message" x-show="notification.message">
+                                <p x-text="notification.message">Sarah Johnson assigned you to this task with high priority. Please review the requirements and provide an estimate.</p>
+                            </div>
+                            
+                            <div class="notification-footer">
+                                <div class="notification-sender">
+                                    <img :src="notification.sender.avatar" :alt="notification.sender.name" class="sender-avatar">
+                                    <span class="sender-name" x-text="notification.sender.name">Sarah Johnson</span>
+                                </div>
+                                
+                                <div class="notification-actions">
+                                    <button @click.stop="markAsRead(notification)" x-show="!notification.isRead" class="action-btn" title="Mark as read">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button @click.stop="archiveNotification(notification)" class="action-btn" title="Archive">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l6 6 6-6"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button @click.stop="deleteNotification(notification)" class="action-btn danger" title="Delete">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Empty State -->
+                <div x-show="filteredNotifications.length === 0" class="empty-state">
+                    <div class="empty-icon">
+                        <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 00-15 0v5h5l-5 5-5-5h5v-5a7.5 7.5 0 0115 0v5z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="empty-title">No notifications found</h3>
+                    <p class="empty-message">You're all caught up! No notifications match your current filter.</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions Panel -->
+            <div class="quick-actions-panel" x-show="selectedNotification" x-transition>
+                <div class="panel-header">
+                    <h3>Quick Actions</h3>
+                    <button @click="selectedNotification = null" class="close-panel">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="panel-content" x-show="selectedNotification">
+                    <div class="selected-notification">
+                        <div class="selected-title" x-text="selectedNotification?.title">Task Assignment</div>
+                        <div class="selected-task" x-text="selectedNotification?.taskName">Website Redesign</div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <a :href="selectedNotification?.taskUrl" class="action-button primary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            View Task
+                        </a>
+                        
+                        <button @click="addComment(selectedNotification)" class="action-button secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                            Add Comment
+                        </button>
+                        
+                        <button @click="updateTaskStatus(selectedNotification)" class="action-button secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            Update Status
+                        </button>
+                        
+                        <button @click="snoozeNotification(selectedNotification)" class="action-button secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Snooze
+                        </button>
+                    </div>
+                    
+                    <div class="related-info" x-show="selectedNotification?.relatedTasks?.length > 0">
+                        <h4>Related Tasks</h4>
+                        <div class="related-tasks">
+                            <template x-for="task in selectedNotification.relatedTasks" :key="task.id">
+                                <a :href="task.url" class="related-task">
+                                    <span class="task-name" x-text="task.name">API Integration</span>
+                                    <span class="task-status" x-text="task.status">In Progress</span>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Settings Modal -->
+    <div class="modal-overlay" x-show="showSettingsModal" x-transition @click="closeSettingsModal()">
+        <div class="modal-content" @click.stop x-show="showSettingsModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title">Notification Settings</h2>
+                <button @click="closeSettingsModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3 class="section-title">Email Notifications</h3>
+                    <div class="settings-grid">
+                        <template x-for="setting in emailSettings" :key="setting.key">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label" x-text="setting.label">Task Assignments</label>
+                                    <p class="setting-description" x-text="setting.description">Get notified when tasks are assigned to you</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="setting.enabled">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="section-title">Push Notifications</h3>
+                    <div class="settings-grid">
+                        <template x-for="setting in pushSettings" :key="setting.key">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label" x-text="setting.label">Comments</label>
+                                    <p class="setting-description" x-text="setting.description">Get notified about new comments on your tasks</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="setting.enabled">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="section-title">Notification Frequency</h3>
+                    <div class="frequency-options">
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="instant" x-model="notificationFrequency">
+                            <span class="radio-label">Instant</span>
+                            <span class="radio-description">Get notified immediately</span>
+                        </label>
+                        
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="hourly" x-model="notificationFrequency">
+                            <span class="radio-label">Hourly Digest</span>
+                            <span class="radio-description">Receive a summary every hour</span>
+                        </label>
+                        
+                        <label class="radio-option">
+                            <input type="radio" name="frequency" value="daily" x-model="notificationFrequency">
+                            <span class="radio-label">Daily Digest</span>
+                            <span class="radio-description">Receive a daily summary</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 class="section-title">Quiet Hours</h3>
+                    <div class="quiet-hours-section">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Enable Quiet Hours</label>
+                                <p class="setting-description">Disable notifications during specified hours</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="quietHoursEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div x-show="quietHoursEnabled" class="time-range">
+                            <div class="time-input">
+                                <label class="time-label">From</label>
+                                <input type="time" x-model="quietHours.start" class="time-field">
+                            </div>
+                            <div class="time-input">
+                                <label class="time-label">To</label>
+                                <input type="time" x-model="quietHours.end" class="time-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button @click="closeSettingsModal()" class="btn-secondary">Cancel</button>
+                    <button @click="saveSettings()" class="btn-primary" :disabled="saving">
+                        <svg x-show="saving" class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span x-show="!saving">Save Settings</span>
+                        <span x-show="saving">Saving...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function taskNotifications() {
+    return {
+        // State
+        currentFilter: 'all',
+        sortBy: 'newest',
+        searchQuery: '',
+        selectedNotification: null,
+        showSettingsModal: false,
+        saving: false,
+        
+        // Settings
+        notificationFrequency: 'instant',
+        quietHoursEnabled: false,
+        quietHours: {
+            start: '22:00',
+            end: '08:00'
+        },
+        
+        emailSettings: [
+            {
+                key: 'task_assignments',
+                label: 'Task Assignments',
+                description: 'Get notified when tasks are assigned to you',
+                enabled: true
+            },
+            {
+                key: 'due_dates',
+                label: 'Due Date Reminders',
+                description: 'Receive reminders before tasks are due',
+                enabled: true
+            },
+            {
+                key: 'task_updates',
+                label: 'Task Updates',
+                description: 'Get notified about status changes and updates',
+                enabled: false
+            },
+            {
+                key: 'comments',
+                label: 'Comments',
+                description: 'Receive notifications for new comments',
+                enabled: true
+            }
+        ],
+        
+        pushSettings: [
+            {
+                key: 'mentions',
+                label: 'Mentions',
+                description: 'Get notified when you are mentioned',
+                enabled: true
+            },
+            {
+                key: 'priority_changes',
+                label: 'Priority Changes',
+                description: 'Get notified about priority changes',
+                enabled: false
+            },
+            {
+                key: 'project_updates',
+                label: 'Project Updates',
+                description: 'Receive notifications about project milestones',
+                enabled: true
+            }
+        ],
+        
+        // Data
+        allNotifications: [
+            {
+                id: 1,
+                type: 'task_assigned',
+                title: 'You were assigned to task',
+                taskName: 'Website Redesign',
+                taskUrl: '/tasks/1/',
+                projectName: 'Marketing Site',
+                message: 'Sarah Johnson assigned you to this task with high priority. Please review the requirements and provide an estimate.',
+                sender: {
+                    name: 'Sarah Johnson',
+                    avatar: '/static/img/avatars/sarah.jpg'
+                },
+                timeAgo: '2 hours ago',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+                isRead: false,
+                priority: 'high',
+                relatedTasks: [
+                    { id: 2, name: 'API Integration', status: 'In Progress', url: '/tasks/2/' }
+                ]
+            },
+            {
+                id: 2,
+                type: 'comment_added',
+                title: 'New comment on',
+                taskName: 'User Authentication',
+                taskUrl: '/tasks/2/',
+                projectName: 'Backend System',
+                message: '@john mentioned you in a comment: "Can you review the security implementation?"',
+                sender: {
+                    name: 'Mike Chen',
+                    avatar: '/static/img/avatars/mike.jpg'
+                },
+                timeAgo: '4 hours ago',
+                timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+                isRead: false,
+                priority: 'normal',
+                relatedTasks: []
+            },
+            {
+                id: 3,
+                type: 'due_date',
+                title: 'Task due tomorrow',
+                taskName: 'Mobile App Testing',
+                taskUrl: '/tasks/3/',
+                projectName: 'Mobile App',
+                message: 'This task is due tomorrow. Please ensure all requirements are completed.',
+                sender: {
+                    name: 'System',
+                    avatar: '/static/img/system-avatar.jpg'
+                },
+                timeAgo: '6 hours ago',
+                timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+                isRead: true,
+                priority: 'high',
+                relatedTasks: []
+            },
+            {
+                id: 4,
+                type: 'task_completed',
+                title: 'Task completed',
+                taskName: 'Database Schema',
+                taskUrl: '/tasks/4/',
+                projectName: 'Infrastructure',
+                message: 'Emily Davis marked this task as completed.',
+                sender: {
+                    name: 'Emily Davis',
+                    avatar: '/static/img/avatars/emily.jpg'
+                },
+                timeAgo: '1 day ago',
+                timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+                isRead: true,
+                priority: 'normal',
+                relatedTasks: []
+            },
+            {
+                id: 5,
+                type: 'mention',
+                title: 'You were mentioned in',
+                taskName: 'Code Review',
+                taskUrl: '/tasks/5/',
+                projectName: 'Development',
+                message: 'Alex mentioned you: "John, can you take a look at the new API endpoints?"',
+                sender: {
+                    name: 'Alex Wilson',
+                    avatar: '/static/img/avatars/alex.jpg'
+                },
+                timeAgo: '2 days ago',
+                timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+                isRead: false,
+                priority: 'normal',
+                relatedTasks: []
+            }
+        ],
+        
+        // Computed properties
+        get filteredNotifications() {
+            let filtered = this.allNotifications;
+            
+            // Apply filter
+            switch (this.currentFilter) {
+                case 'unread':
+                    filtered = filtered.filter(n => !n.isRead);
+                    break;
+                case 'mentions':
+                    filtered = filtered.filter(n => n.type === 'mention');
+                    break;
+                case 'assignments':
+                    filtered = filtered.filter(n => n.type === 'task_assigned');
+                    break;
+                case 'due_soon':
+                    filtered = filtered.filter(n => n.type === 'due_date');
+                    break;
+            }
+            
+            // Apply search
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(n => 
+                    n.title.toLowerCase().includes(query) ||
+                    n.taskName.toLowerCase().includes(query) ||
+                    n.message.toLowerCase().includes(query) ||
+                    n.projectName.toLowerCase().includes(query)
+                );
+            }
+            
+            // Apply sorting
+            switch (this.sortBy) {
+                case 'oldest':
+                    filtered.sort((a, b) => a.timestamp - b.timestamp);
+                    break;
+                case 'priority':
+                    filtered.sort((a, b) => {
+                        const priorityOrder = { high: 3, normal: 2, low: 1 };
+                        return priorityOrder[b.priority] - priorityOrder[a.priority];
+                    });
+                    break;
+                case 'project':
+                    filtered.sort((a, b) => a.projectName.localeCompare(b.projectName));
+                    break;
+                default: // newest
+                    filtered.sort((a, b) => b.timestamp - a.timestamp);
+            }
+            
+            return filtered;
+        },
+        
+        get unreadCount() {
+            return this.allNotifications.filter(n => !n.isRead).length;
+        },
+        
+        get todayCount() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return this.allNotifications.filter(n => n.timestamp >= today).length;
+        },
+        
+        get mentionsCount() {
+            return this.allNotifications.filter(n => n.type === 'mention').length;
+        },
+        
+        get assignmentsCount() {
+            return this.allNotifications.filter(n => n.type === 'task_assigned').length;
+        },
+        
+        get dueSoonCount() {
+            return this.allNotifications.filter(n => n.type === 'due_date').length;
+        },
+        
+        // Methods
+        selectNotification(notification) {
+            this.selectedNotification = notification;
+            if (!notification.isRead) {
+                this.markAsRead(notification);
+            }
+        },
+        
+        markAsRead(notification) {
+            notification.isRead = true;
+        },
+        
+        markAllAsRead() {
+            this.allNotifications.forEach(n => n.isRead = true);
+        },
+        
+        archiveNotification(notification) {
+            const index = this.allNotifications.findIndex(n => n.id === notification.id);
+            if (index !== -1) {
+                this.allNotifications.splice(index, 1);
+            }
+            if (this.selectedNotification?.id === notification.id) {
+                this.selectedNotification = null;
+            }
+        },
+        
+        deleteNotification(notification) {
+            if (confirm('Are you sure you want to delete this notification?')) {
+                this.archiveNotification(notification);
+            }
+        },
+        
+        addComment(notification) {
+            console.log('Add comment to:', notification.taskName);
+            // Redirect to task with comment focus
+            window.location.href = notification.taskUrl + '#comment';
+        },
+        
+        updateTaskStatus(notification) {
+            console.log('Update status for:', notification.taskName);
+            // Open task status update modal
+        },
+        
+        snoozeNotification(notification) {
+            console.log('Snooze notification:', notification.id);
+            // Implement snooze functionality
+        },
+        
+        openNotificationSettings() {
+            this.showSettingsModal = true;
+        },
+        
+        closeSettingsModal() {
+            this.showSettingsModal = false;
+        },
+        
+        saveSettings() {
+            this.saving = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                console.log('Saving notification settings:', {
+                    emailSettings: this.emailSettings,
+                    pushSettings: this.pushSettings,
+                    frequency: this.notificationFrequency,
+                    quietHours: this.quietHoursEnabled ? this.quietHours : null
+                });
+                
+                this.saving = false;
+                this.closeSettingsModal();
+                
+                // Show success message
+                alert('Settings saved successfully!');
+            }, 1500);
+        },
+        
+        // Initialize
+        init() {
+            console.log('Task notifications initialized');
+        }
+    };
+}
+</script>
+{% endblock %}

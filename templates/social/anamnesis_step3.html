@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'Identificação de Vulnerabilidades' %} - MOVE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/anamnesis-step3.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="anamnesis-step3" x-data="stepThreeData()">
+    <!-- Step Content -->
+    <div class="step-container">
+        <div class="step-header">
+            <h2 class="step-title">{% trans 'Identificação de Vulnerabilidades e Riscos Sociais' %}</h2>
+            <p class="step-description">{% trans 'Avalie os riscos sociais, vulnerabilidades e necessidades de apoio da família' %}</p>
+        </div>
+        
+        <div class="step-content">
+            <div class="form-sections">
+                <!-- Vulnerabilidades Identificadas -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Vulnerabilidades Identificadas' %}
+                    </h3>
+                    
+                    <div class="vulnerabilities-container">
+                        <div class="vulnerability-categories">
+                            <div class="category-tabs">
+                                <button @click="activeCategory = 'social'" 
+                                        :class="{ active: activeCategory === 'social' }" 
+                                        class="category-tab">
+                                    <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                                    </svg>
+                                    {% trans 'Social' %}
+                                </button>
+                                
+                                <button @click="activeCategory = 'health'" 
+                                        :class="{ active: activeCategory === 'health' }" 
+                                        class="category-tab">
+                                    <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm1 3v6a2 2 0 002 2h8a2 2 0 002-2V7H4zm3 2h2v2H7V9zm4 0h2v2h-2V9zm-4 4h2v2H7v-2zm4 0h2v2h-2v-2z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {% trans 'Saúde' %}
+                                </button>
+                                
+                                <button @click="activeCategory = 'economic'" 
+                                        :class="{ active: activeCategory === 'economic' }" 
+                                        class="category-tab">
+                                    <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.51-1.31c-.562-.649-1.413-1.076-2.353-1.253V5z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {% trans 'Econômica' %}
+                                </button>
+                                
+                                <button @click="activeCategory = 'violence'" 
+                                        :class="{ active: activeCategory === 'violence' }" 
+                                        class="category-tab">
+                                    <svg class="tab-icon" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {% trans 'Violência' %}
+                                </button>
+                            </div>
+                            
+                            <!-- Social Vulnerabilities -->
+                            <div x-show="activeCategory === 'social'" class="vulnerability-content">
+                                <div class="vulnerabilities-grid">
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.family_breakdown" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Fragmentação Familiar' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Separações, abandono, conflitos familiares severos' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.social_isolation" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Isolamento Social' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Falta de rede de apoio, isolamento comunitário' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.discrimination" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Discriminação' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Preconceito racial, de gênero, orientação sexual ou religioso' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.substance_abuse" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Dependência Química' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Uso abusivo de álcool, drogas ou outras substâncias' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.child_labor" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Trabalho Infantil' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Crianças e adolescentes em situação de trabalho' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.social.street_situation" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Situação de Rua' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Pessoas em situação de rua ou moradia precária' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Health Vulnerabilities -->
+                            <div x-show="activeCategory === 'health'" class="vulnerability-content">
+                                <div class="vulnerabilities-grid">
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.chronic_illness" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Doença Crônica' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Doenças que requerem tratamento contínuo' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.disability" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Deficiência' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Limitações físicas, intelectuais ou sensoriais' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.mental_health" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Transtorno Mental' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Depressão, ansiedade, transtornos psiquiátricos' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.malnutrition" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Desnutrição' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Insegurança alimentar, desnutrição' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.pregnancy_risk" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Gravidez de Risco' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Gravidez na adolescência ou de alto risco' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.health.no_healthcare_access" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Sem Acesso à Saúde' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Dificuldade de acesso a serviços de saúde' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Economic Vulnerabilities -->
+                            <div x-show="activeCategory === 'economic'" class="vulnerability-content">
+                                <div class="vulnerabilities-grid">
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.extreme_poverty" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Extrema Pobreza' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Renda per capita inferior a R$ 89,00' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.unemployment" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Desemprego' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Desemprego de longa duração ou recorrente' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.informal_work" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Trabalho Informal' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Trabalho sem carteira assinada ou garantias' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.debt" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Endividamento' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Alto nível de endividamento familiar' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.housing_risk" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Risco de Perda da Moradia' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Despejo, execução hipotecária' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.economic.no_documentation" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Falta de Documentação' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Ausência de documentos básicos' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Violence Vulnerabilities -->
+                            <div x-show="activeCategory === 'violence'" class="vulnerability-content">
+                                <div class="vulnerabilities-grid">
+                                    <div class="vulnerability-item high-risk">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.domestic_violence" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Violência Doméstica' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Violência física, psicológica ou sexual no âmbito familiar' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item high-risk">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.child_abuse" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Maus-tratos Infantis' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Violência contra crianças e adolescentes' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item high-risk">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.sexual_abuse" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Abuso Sexual' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Violência sexual contra qualquer membro da família' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.community_violence" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Violência Comunitária' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Exposição à violência no território/comunidade' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.trafficking" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Tráfico de Pessoas' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Risco ou situação de tráfico humano' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="vulnerability-item">
+                                        <label class="vulnerability-label">
+                                            <input type="checkbox" x-model="data.vulnerabilities.violence.hate_crime" class="vulnerability-checkbox">
+                                            <span class="checkmark"></span>
+                                            <div class="vulnerability-info">
+                                                <span class="vulnerability-title">{% trans 'Crime de Ódio' %}</span>
+                                                <span class="vulnerability-description">{% trans 'Violência motivada por preconceito' %}</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Risk Assessment -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Avaliação de Risco' %}
+                    </h3>
+                    
+                    <div class="risk-assessment">
+                        <div class="risk-meter">
+                            <div class="risk-level" :class="getRiskLevel()">
+                                <div class="risk-indicator" :style="`width: ${getRiskPercentage()}%`"></div>
+                            </div>
+                            <div class="risk-labels">
+                                <span class="risk-label low">{% trans 'Baixo' %}</span>
+                                <span class="risk-label medium">{% trans 'Médio' %}</span>
+                                <span class="risk-label high">{% trans 'Alto' %}</span>
+                                <span class="risk-label critical">{% trans 'Crítico' %}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-summary">
+                            <div class="risk-score">
+                                <span class="score-label">{% trans 'Nível de Risco:' %}</span>
+                                <span class="score-value" :class="getRiskLevel()" x-text="getRiskLevelLabel()"></span>
+                            </div>
+                            <div class="vulnerabilities-count">
+                                <span x-text="getTotalVulnerabilities()"></span> {% trans 'vulnerabilidades identificadas' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Support Network -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                        </svg>
+                        {% trans 'Rede de Apoio' %}
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Possui Rede de Apoio Familiar?' %}</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.family" value="yes" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Sim' %}
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.family" value="no" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Não' %}
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.family" value="partial" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Parcial' %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Possui Rede de Apoio Comunitária?' %}</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.community" value="yes" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Sim' %}
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.community" value="no" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Não' %}
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" x-model="data.support.community" value="partial" class="radio-input">
+                                    <span class="radio-mark"></span>
+                                    {% trans 'Parcial' %}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label class="form-label">{% trans 'Observações sobre a Rede de Apoio' %}</label>
+                            <textarea x-model="data.support.observations" 
+                                      class="form-textarea" 
+                                      rows="4"
+                                      placeholder="Descreva a rede de apoio disponível, limitações identificadas e necessidades de fortalecimento..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Priority Actions -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Ações Prioritárias' %}
+                    </h3>
+                    
+                    <div class="priority-actions">
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Identificação de Ações Prioritárias' %}</label>
+                            <textarea x-model="data.priorityActions" 
+                                      class="form-textarea" 
+                                      rows="6"
+                                      placeholder="Com base nas vulnerabilidades identificadas, descreva as ações prioritárias para o atendimento e acompanhamento da família..."></textarea>
+                        </div>
+                        
+                        <div class="urgency-level">
+                            <label class="form-label">{% trans 'Nível de Urgência' %}</label>
+                            <div class="urgency-options">
+                                <label class="urgency-option low" :class="{ selected: data.urgency === 'low' }">
+                                    <input type="radio" x-model="data.urgency" value="low" class="urgency-radio">
+                                    <div class="urgency-content">
+                                        <div class="urgency-icon">
+                                            <svg viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12zm0-9a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="urgency-label">{% trans 'Baixa' %}</div>
+                                        <div class="urgency-description">{% trans 'Acompanhamento regular' %}</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="urgency-option medium" :class="{ selected: data.urgency === 'medium' }">
+                                    <input type="radio" x-model="data.urgency" value="medium" class="urgency-radio">
+                                    <div class="urgency-content">
+                                        <div class="urgency-icon">
+                                            <svg viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="urgency-label">{% trans 'Média' %}</div>
+                                        <div class="urgency-description">{% trans 'Atenção prioritária' %}</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="urgency-option high" :class="{ selected: data.urgency === 'high' }">
+                                    <input type="radio" x-model="data.urgency" value="high" class="urgency-radio">
+                                    <div class="urgency-content">
+                                        <div class="urgency-icon">
+                                            <svg viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="urgency-label">{% trans 'Alta' %}</div>
+                                        <div class="urgency-description">{% trans 'Intervenção imediata' %}</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function stepThreeData() {
+    return {
+        activeCategory: 'social',
+        
+        data: {
+            vulnerabilities: {
+                social: {
+                    family_breakdown: false,
+                    social_isolation: false,
+                    discrimination: false,
+                    substance_abuse: false,
+                    child_labor: false,
+                    street_situation: false
+                },
+                health: {
+                    chronic_illness: false,
+                    disability: false,
+                    mental_health: false,
+                    malnutrition: false,
+                    pregnancy_risk: false,
+                    no_healthcare_access: false
+                },
+                economic: {
+                    extreme_poverty: false,
+                    unemployment: false,
+                    informal_work: false,
+                    debt: false,
+                    housing_risk: false,
+                    no_documentation: false
+                },
+                violence: {
+                    domestic_violence: false,
+                    child_abuse: false,
+                    sexual_abuse: false,
+                    community_violence: false,
+                    trafficking: false,
+                    hate_crime: false
+                }
+            },
+            support: {
+                family: '',
+                community: '',
+                observations: ''
+            },
+            priorityActions: '',
+            urgency: ''
+        },
+        
+        getTotalVulnerabilities() {
+            let total = 0;
+            Object.values(this.data.vulnerabilities).forEach(category => {
+                Object.values(category).forEach(vulnerability => {
+                    if (vulnerability) total++;
+                });
+            });
+            return total;
+        },
+        
+        getRiskLevel() {
+            const total = this.getTotalVulnerabilities();
+            const hasHighRisk = this.data.vulnerabilities.violence.domestic_violence ||
+                              this.data.vulnerabilities.violence.child_abuse ||
+                              this.data.vulnerabilities.violence.sexual_abuse;
+            
+            if (hasHighRisk || total >= 8) return 'critical';
+            if (total >= 5) return 'high';
+            if (total >= 3) return 'medium';
+            return 'low';
+        },
+        
+        getRiskLevelLabel() {
+            const level = this.getRiskLevel();
+            const labels = {
+                'low': 'Baixo Risco',
+                'medium': 'Risco Médio',
+                'high': 'Alto Risco',
+                'critical': 'Risco Crítico'
+            };
+            return labels[level] || 'Não Avaliado';
+        },
+        
+        getRiskPercentage() {
+            const level = this.getRiskLevel();
+            const percentages = {
+                'low': 25,
+                'medium': 50,
+                'high': 75,
+                'critical': 100
+            };
+            return percentages[level] || 0;
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}

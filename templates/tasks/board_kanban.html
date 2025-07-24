@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ board.name }} - Quadro Kanban{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/kanban-board.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="kanban-container" x-data="kanbanBoard()">
+    <!-- Board Header -->
+    <div class="board-header">
+        <div class="board-header-content">
+            <!-- Board Info -->
+            <div class="board-info">
+                <div class="board-breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:board_list' %}" class="breadcrumb-link">Quadros</a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">{{ board.name }}</span>
+                </div>
+                
+                <div class="board-title-section">
+                    <h1 class="board-title">{{ board.name }}</h1>
+                    <p class="board-description">{{ board.description }}</p>
+                </div>
+            </div>
+
+            <!-- Board Controls -->
+            <div class="board-controls">
+                <!-- Filters -->
+                <div class="board-filters">
+                    <button @click="showFilters = !showFilters" class="filter-toggle" :class="{ 'active': showFilters }">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                        </svg>
+                        Filtros
+                    </button>
+                    
+                    <button @click="showSearch = !showSearch" class="search-toggle" :class="{ 'active': showSearch }">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Buscar
+                    </button>
+                </div>
+
+                <!-- Actions -->
+                <div class="board-actions">
+                    <button @click="openQuickAdd()" class="btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nova Tarefa
+                    </button>
+                    
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="btn-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                            </svg>
+                            Mais
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition class="dropdown-menu">
+                            <button @click="addColumn()" class="dropdown-item">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Nova Coluna
+                            </button>
+                            <button @click="boardSettings()" class="dropdown-item">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Configurações
+                            </button>
+                            <hr class="dropdown-divider">
+                            <button @click="exportBoard()" class="dropdown-item">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m3-6H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"></path>
+                                </svg>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div x-show="showFilters" x-transition class="filter-bar">
+            <div class="filter-controls">
+                <select x-model="filters.assignee" @change="applyFilters()" class="filter-select">
+                    <option value="">Todos os responsáveis</option>
+                    {% for member in board.members.all %}
+                    <option value="{{ member.id }}">{{ member.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select x-model="filters.priority" @change="applyFilters()" class="filter-select">
+                    <option value="">Todas as prioridades</option>
+                    <option value="high">Alta prioridade</option>
+                    <option value="medium">Média prioridade</option>
+                    <option value="low">Baixa prioridade</option>
+                </select>
+                
+                <select x-model="filters.labels" @change="applyFilters()" class="filter-select">
+                    <option value="">Todas as etiquetas</option>
+                    <!-- Labels serão carregadas dinamicamente -->
+                </select>
+                
+                <button @click="clearFilters()" class="filter-clear">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Limpar
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div x-show="showSearch" x-transition class="search-bar">
+            <div class="search-input-container">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input 
+                    type="text" 
+                    x-model="searchQuery" 
+                    @input="searchTasks()" 
+                    class="search-input" 
+                    placeholder="Buscar tarefas por título, descrição ou responsável..."
+                >
+                <button x-show="searchQuery" @click="clearSearch()" class="search-clear">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board" id="kanban-board">
+        {% for column in board.columns.all %}
+        <div class="kanban-column" data-column-id="{{ column.id }}">
+            <!-- Column Header -->
+            <div class="column-header">
+                <div class="column-title-section">
+                    <h3 class="column-title" style="color: {{ column.color|default:'#3b82f6' }}">
+                        {{ column.name }}
+                    </h3>
+                    <span class="task-count">{{ column.tasks.count }}</span>
+                    {% if column.wip_limit %}
+                    <span class="wip-limit" :class="{ 'exceeded': {{ column.tasks.count }} > {{ column.wip_limit }} }">
+                        / {{ column.wip_limit }}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="column-actions">
+                    <button @click="addTaskToColumn({{ column.id }})" class="column-action-btn" title="Adicionar tarefa">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </button>
+                    <button @click="editColumn({{ column.id }})" class="column-action-btn" title="Editar coluna">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tasks Container -->
+            <div class="tasks-container" data-column-id="{{ column.id }}">
+                {% for task in column.tasks.all %}
+                <div class="task-card" data-task-id="{{ task.id }}" @click="openTask('{{ task.id }}')">
+                    <!-- Priority Indicator -->
+                    <div class="task-priority priority-{{ task.priority }}"></div>
+                    
+                    <!-- Task Content -->
+                    <div class="task-content">
+                        <!-- Labels -->
+                        {% if task.labels.all %}
+                        <div class="task-labels">
+                            {% for label in task.labels.all %}
+                            <span class="task-label" style="background-color: {{ label.color }}">
+                                {{ label.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Title -->
+                        <h4 class="task-title">{{ task.title }}</h4>
+                        
+                        <!-- Description Preview -->
+                        {% if task.description %}
+                        <p class="task-description">{{ task.description|truncatechars:100 }}</p>
+                        {% endif %}
+                        
+                        <!-- Task Meta -->
+                        <div class="task-meta">
+                            <!-- Due Date -->
+                            {% if task.due_date %}
+                            <div class="task-due-date" :class="{ 'overdue': new Date('{{ task.due_date|date:"Y-m-d" }}') < new Date() }">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                                </svg>
+                                {{ task.due_date|date:"d/m" }}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Comments Count -->
+                            {% if task.comments.count > 0 %}
+                            <div class="task-comments">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                {{ task.comments.count }}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Attachments Count -->
+                            {% if task.attachments.count > 0 %}
+                            <div class="task-attachments">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                {{ task.attachments.count }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Assignees -->
+                        {% if task.assigned_to.all %}
+                        <div class="task-assignees">
+                            {% for assignee in task.assigned_to.all %}
+                            {% if assignee.profile.avatar %}
+                            <img src="{{ assignee.profile.avatar.url }}" alt="{{ assignee.get_full_name }}" class="assignee-avatar" title="{{ assignee.get_full_name }}">
+                            {% else %}
+                            <div class="assignee-avatar-placeholder" title="{{ assignee.get_full_name }}">
+                                {{ assignee.first_name|first|upper }}{{ assignee.last_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Task Actions -->
+                    <div class="task-actions" @click.stop>
+                        <button @click="quickEdit('{{ task.id }}')" class="task-action" title="Edição rápida">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                            </svg>
+                        </button>
+                        <button @click="archiveTask('{{ task.id }}')" class="task-action" title="Arquivar">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l6 6m0 0l6-6m-6 6V3"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="column-empty-state">
+                    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="empty-text">Nenhuma tarefa</p>
+                    <button @click="addTaskToColumn({{ column.id }})" class="empty-action">
+                        Adicionar primeira tarefa
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Add Column Button -->
+        {% if board.can_edit %}
+        <div class="add-column">
+            <button @click="addColumn()" class="add-column-btn">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Nova Coluna
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div x-show="showQuickAdd" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="modal-overlay" style="display: none;">
+        <div class="modal-container" @click.away="closeQuickAdd()">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Nova Tarefa</h3>
+                <button @click="closeQuickAdd()" class="modal-close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form @submit.prevent="createTask()">
+                    <div class="form-group">
+                        <label class="form-label">Título da Tarefa</label>
+                        <input type="text" x-model="newTask.title" class="form-input" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Coluna</label>
+                            <select x-model="newTask.column" class="form-select" required>
+                                {% for column in board.columns.all %}
+                                <option value="{{ column.id }}">{{ column.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prioridade</label>
+                            <select x-model="newTask.priority" class="form-select">
+                                <option value="low">Baixa</option>
+                                <option value="medium" selected>Média</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrição</label>
+                        <textarea x-model="newTask.description" class="form-textarea" rows="3"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" @click="closeQuickAdd()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">Criar Tarefa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function kanbanBoard() {
+    return {
+        showFilters: false,
+        showSearch: false,
+        showQuickAdd: false,
+        searchQuery: '',
+        filters: {
+            assignee: '',
+            priority: '',
+            labels: ''
+        },
+        newTask: {
+            title: '',
+            description: '',
+            column: '',
+            priority: 'medium'
+        },
+        
+        init() {
+            this.initSortable();
+        },
+        
+        initSortable() {
+            const columns = document.querySelectorAll('.tasks-container');
+            columns.forEach(column => {
+                new Sortable(column, {
+                    group: 'kanban',
+                    animation: 150,
+                    ghostClass: 'task-ghost',
+                    dragClass: 'task-drag',
+                    onEnd: (evt) => {
+                        this.updateTaskColumn(evt);
+                    }
+                });
+            });
+        },
+        
+        async updateTaskColumn(evt) {
+            const taskId = evt.item.dataset.taskId;
+            const newColumnId = evt.to.dataset.columnId;
+            const newIndex = evt.newIndex;
+            
+            try {
+                const response = await fetch("{% url 'tasks:task_update_column' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        task_id: taskId,
+                        column_id: newColumnId,
+                        position: newIndex
+                    })
+                });
+                
+                if (!response.ok) {
+                    // Revert the move if it failed
+                    evt.from.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+                    alert('Erro ao mover a tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao mover a tarefa');
+            }
+        },
+        
+        openQuickAdd() {
+            this.showQuickAdd = true;
+            this.resetNewTask();
+        },
+        
+        closeQuickAdd() {
+            this.showQuickAdd = false;
+            this.resetNewTask();
+        },
+        
+        resetNewTask() {
+            this.newTask = {
+                title: '',
+                description: '',
+                column: '',
+                priority: 'medium'
+            };
+        },
+        
+        async createTask() {
+            try {
+                const response = await fetch(`/tasks/boards/{{ board.id }}/tasks/create/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.newTask)
+                });
+                
+                if (response.ok) {
+                    this.closeQuickAdd();
+                    window.location.reload();
+                } else {
+                    alert('Erro ao criar tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao criar tarefa');
+            }
+        },
+        
+        openTask(taskId) {
+            window.location.href = `/tasks/tasks/${taskId}/`;
+        },
+        
+        addTaskToColumn(columnId) {
+            this.newTask.column = columnId;
+            this.openQuickAdd();
+        },
+        
+        applyFilters() {
+            // Implement filter logic
+            console.log('Applying filters:', this.filters);
+        },
+        
+        clearFilters() {
+            this.filters = {
+                assignee: '',
+                priority: '',
+                labels: ''
+            };
+            this.applyFilters();
+        },
+        
+        searchTasks() {
+            // Implement search logic
+            console.log('Searching:', this.searchQuery);
+        },
+        
+        clearSearch() {
+            this.searchQuery = '';
+            this.searchTasks();
+        },
+        
+        quickEdit(taskId) {
+            console.log('Quick edit:', taskId);
+        },
+        
+        archiveTask(taskId) {
+            if (confirm('Arquivar esta tarefa?')) {
+                console.log('Archive task:', taskId);
+            }
+        },
+        
+        addColumn() {
+            console.log('Add column');
+        },
+        
+        editColumn(columnId) {
+            console.log('Edit column:', columnId);
+        },
+        
+        boardSettings() {
+            console.log('Board settings');
+        },
+        
+        exportBoard() {
+            console.log('Export board');
+        }
+    }
+}
+</script>
+{% endblock %}

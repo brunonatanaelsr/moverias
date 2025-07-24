@@ -1,173 +1,674 @@
-{% extends "layouts/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Lista de Tarefas - Move Marias{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-list.css' %}">
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <!-- Cabeçalho -->
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">Lista de Tarefas</h1>
-        <div class="flex gap-4">
-            <a href="{% url 'tasks:dashboard' %}" 
-               class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded">
-                Ver Dashboard
-            </a>
-            <a href="{% url 'tasks:board_list' %}" 
-               class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
-                Ver Quadros
-            </a>
+<div class="task-list-container" x-data="taskList()">
+    <!-- Header -->
+    <div class="task-list-header">
+        <div class="header-content">
+            <!-- Navigation -->
+            <div class="header-nav">
+                <div class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Tarefas</span>
+                </div>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Lista de Tarefas</h1>
+                    <p class="page-subtitle">Gerencie todas as suas tarefas em um só lugar</p>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="header-controls">
+                <div class="view-options">
+                    <button @click="viewMode = 'table'" 
+                            :class="{ 'active': viewMode === 'table' }" 
+                            class="view-btn" title="Visualização em tabela">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18m-9 8h9"></path>
+                        </svg>
+                    </button>
+                    <button @click="viewMode = 'cards'" 
+                            :class="{ 'active': viewMode === 'cards' }" 
+                            class="view-btn" title="Visualização em cards">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Nova Tarefa
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Filtros -->
-    <div class="bg-white rounded-lg shadow p-6 mb-8">
-        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <!-- Filtro por Status -->
-            <div>
-                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="status" id="status" class="w-full rounded-md border-gray-300">
-                    <option value="">Todos</option>
-                    {% for value, label in status_choices %}
-                        <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filters-content">
+            <!-- Search -->
+            <div class="search-container">
+                <div class="search-input-wrapper">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" 
+                           x-model="filters.search" 
+                           @input="applyFilters()" 
+                           class="search-input" 
+                           placeholder="Buscar tarefas...">
+                    <button x-show="filters.search" @click="clearSearch()" class="search-clear">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <!-- Filtro por Prioridade -->
-            <div>
-                <label for="priority" class="block text-sm font-medium text-gray-700 mb-2">Prioridade</label>
-                <select name="priority" id="priority" class="w-full rounded-md border-gray-300">
-                    <option value="">Todas</option>
-                    {% for value, label in priority_choices %}
-                        <option value="{{ value }}" {% if value == priority_filter %}selected{% endif %}>
-                            {{ label }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Filtro por Quadro -->
-            <div>
-                <label for="board" class="block text-sm font-medium text-gray-700 mb-2">Quadro</label>
-                <select name="board" id="board" class="w-full rounded-md border-gray-300">
-                    <option value="">Todos</option>
+            <!-- Filter Controls -->
+            <div class="filter-controls">
+                <select x-model="filters.board" @change="applyFilters()" class="filter-select">
+                    <option value="">Todos os quadros</option>
                     {% for board in boards %}
-                        <option value="{{ board.id }}" {% if board.id|stringformat:"s" == board_filter %}selected{% endif %}>
-                            {{ board.name }}
-                        </option>
+                    <option value="{{ board.id }}">{{ board.name }}</option>
                     {% endfor %}
                 </select>
-            </div>
 
-            <!-- Botão de Filtrar -->
-            <div class="flex items-end">
-                <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
-                    Filtrar
+                <select x-model="filters.status" @change="applyFilters()" class="filter-select">
+                    <option value="">Todos os status</option>
+                    {% for column in columns %}
+                    <option value="{{ column.id }}">{{ column.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <select x-model="filters.priority" @change="applyFilters()" class="filter-select">
+                    <option value="">Todas as prioridades</option>
+                    <option value="high">Alta prioridade</option>
+                    <option value="medium">Média prioridade</option>
+                    <option value="low">Baixa prioridade</option>
+                </select>
+
+                <select x-model="filters.assignee" @change="applyFilters()" class="filter-select">
+                    <option value="">Todos os responsáveis</option>
+                    {% for user in team_members %}
+                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+
+                <select x-model="filters.due_date" @change="applyFilters()" class="filter-select">
+                    <option value="">Todas as datas</option>
+                    <option value="overdue">Atrasadas</option>
+                    <option value="today">Hoje</option>
+                    <option value="this_week">Esta semana</option>
+                    <option value="next_week">Próxima semana</option>
+                    <option value="no_date">Sem data</option>
+                </select>
+
+                <button @click="clearAllFilters()" 
+                        x-show="hasActiveFilters()" 
+                        class="clear-filters-btn">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Limpar Filtros
                 </button>
             </div>
-        </form>
+
+            <!-- Active Filters Display -->
+            <div x-show="hasActiveFilters()" class="active-filters">
+                <span class="active-filters-label">Filtros ativos:</span>
+                <div class="filter-tags">
+                    <span x-show="filters.search" class="filter-tag">
+                        Busca: "<span x-text="filters.search"></span>"
+                        <button @click="filters.search = ''; applyFilters()" class="remove-filter">×</button>
+                    </span>
+                    <span x-show="filters.board" class="filter-tag">
+                        Quadro: <span x-text="getBoardName(filters.board)"></span>
+                        <button @click="filters.board = ''; applyFilters()" class="remove-filter">×</button>
+                    </span>
+                    <span x-show="filters.priority" class="filter-tag">
+                        Prioridade: <span x-text="getPriorityName(filters.priority)"></span>
+                        <button @click="filters.priority = ''; applyFilters()" class="remove-filter">×</button>
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Lista de Tarefas -->
-    <div class="bg-white rounded-lg shadow">
-        {% if page_obj %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stats-content">
+            <div class="stat-item">
+                <span class="stat-value">{{ total_tasks }}</span>
+                <span class="stat-label">Total</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ pending_tasks }}</span>
+                <span class="stat-label">Pendentes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ in_progress_tasks }}</span>
+                <span class="stat-label">Em Progresso</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ completed_tasks }}</span>
+                <span class="stat-label">Concluídas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ overdue_tasks }}</span>
+                <span class="stat-label">Atrasadas</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Content -->
+    <div class="tasks-content">
+        <!-- Table View -->
+        <div x-show="viewMode === 'table'" class="table-view">
+            <div class="table-container">
+                <table class="tasks-table">
+                    <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Título
+                            <th class="sortable" @click="sort('title')">
+                                Tarefa
+                                <svg class="sort-icon" :class="getSortClass('title')" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z"></path>
+                                </svg>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Quadro
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Prioridade
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Data de Vencimento
-                            </th>
+                            <th class="sortable" @click="sort('board')">Quadro</th>
+                            <th class="sortable" @click="sort('priority')">Prioridade</th>
+                            <th class="sortable" @click="sort('status')">Status</th>
+                            <th class="sortable" @click="sort('assignee')">Responsável</th>
+                            <th class="sortable" @click="sort('due_date')">Data Limite</th>
+                            <th class="sortable" @click="sort('created_at')">Criado</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for task in page_obj %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <a href="{% url 'tasks:task_detail' task.id %}" 
-                                       class="text-gray-900 hover:text-primary font-medium">
-                                        {{ task.title }}
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <a href="{% url 'tasks:board_detail' task.board.id %}" 
-                                       class="text-gray-500 hover:text-primary">
-                                        {{ task.board.name }}
-                                    </a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-sm rounded-full 
-                                        {% if task.status == 'completed' %}bg-green-100 text-green-800
-                                        {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
-                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                        {{ task.get_status_display }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-sm rounded-full 
-                                        {% if task.priority == 'high' %}bg-red-100 text-red-800
-                                        {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
-                                        {% else %}bg-green-100 text-green-800{% endif %}">
-                                        {{ task.get_priority_display }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-gray-500">
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr class="task-row" data-task-id="{{ task.id }}">
+                            <td class="task-title-cell">
+                                <div class="task-title-content">
+                                    <div class="priority-indicator priority-{{ task.priority }}"></div>
+                                    <div class="task-info">
+                                        <a href="{% url 'tasks:task_detail' task.id %}" class="task-title-link">
+                                            {{ task.title }}
+                                        </a>
+                                        {% if task.description %}
+                                        <p class="task-description">{{ task.description|truncatechars:60 }}</p>
+                                        {% endif %}
+                                        <div class="task-meta">
+                                            <span class="task-id">#{{ task.id|slice:":8" }}</span>
+                                            {% if task.labels.all %}
+                                            <div class="task-labels">
+                                                {% for label in task.labels.all|slice:":3" %}
+                                                <span class="task-label" style="background-color: {{ label.color }}">
+                                                    {{ label.name }}
+                                                </span>
+                                                {% endfor %}
+                                                {% if task.labels.count > 3 %}
+                                                <span class="more-labels">+{{ task.labels.count|add:"-3" }}</span>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="board-cell">
+                                <a href="{% url 'tasks:board_detail' task.board.id %}" class="board-link">
+                                    {{ task.board.name }}
+                                </a>
+                            </td>
+                            <td class="priority-cell">
+                                <span class="priority-badge priority-{{ task.priority }}">
+                                    {% if task.priority == 'high' %}Alta
+                                    {% elif task.priority == 'medium' %}Média
+                                    {% else %}Baixa{% endif %}
+                                </span>
+                            </td>
+                            <td class="status-cell">
+                                <span class="status-badge" style="background-color: {{ task.column.color }}">
+                                    {{ task.column.name }}
+                                </span>
+                            </td>
+                            <td class="assignee-cell">
+                                {% if task.assigned_to.all %}
+                                <div class="assignees">
+                                    {% for assignee in task.assigned_to.all|slice:":2" %}
+                                    {% if assignee.profile.avatar %}
+                                    <img src="{{ assignee.profile.avatar.url }}" 
+                                         alt="{{ assignee.get_full_name }}" 
+                                         class="assignee-avatar" 
+                                         title="{{ assignee.get_full_name }}">
+                                    {% else %}
+                                    <div class="assignee-avatar-placeholder" title="{{ assignee.get_full_name }}">
+                                        {{ assignee.first_name|first|upper }}{{ assignee.last_name|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if task.assigned_to.count > 2 %}
+                                    <span class="more-assignees">+{{ task.assigned_to.count|add:"-2" }}</span>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <span class="no-assignee">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="due-date-cell">
+                                {% if task.due_date %}
+                                <div class="due-date {{ task.is_overdue|yesno:'overdue,' }}">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                                    </svg>
                                     {{ task.due_date|date:"d/m/Y" }}
-                                </td>
-                            </tr>
+                                </div>
+                                {% else %}
+                                <span class="no-due-date">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="created-cell">
+                                <span class="created-date">{{ task.created_at|date:"d/m/Y" }}</span>
+                                <span class="created-time">{{ task.created_at|timesince }} atrás</span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="task-actions">
+                                    <a href="{% url 'tasks:task_detail' task.id %}" 
+                                       class="action-btn" title="Visualizar">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </a>
+                                    <a href="{% url 'tasks:task_edit' task.id %}" 
+                                       class="action-btn" title="Editar">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </a>
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open" class="action-btn" title="Mais ações">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                            </svg>
+                                        </button>
+                                        <div x-show="open" @click.away="open = false" x-transition class="action-dropdown">
+                                            <button @click="duplicateTask('{{ task.id }}')" class="dropdown-item">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                                Duplicar
+                                            </button>
+                                            <button @click="archiveTask('{{ task.id }}')" class="dropdown-item">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l6 6m0 0l6-6m-6 6V3"></path>
+                                                </svg>
+                                                Arquivar
+                                            </button>
+                                            <hr class="dropdown-divider">
+                                            <button @click="deleteTask('{{ task.id }}')" class="dropdown-item text-red-600">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                                Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="empty-table">
+                                <div class="empty-state">
+                                    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    <p class="empty-title">Nenhuma tarefa encontrada</p>
+                                    <p class="empty-description">Tente ajustar os filtros ou criar uma nova tarefa</p>
+                                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        Criar Tarefa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+        </div>
 
-            <!-- Paginação -->
-            {% if page_obj.paginator.num_pages > 1 %}
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <nav class="flex justify-between">
-                        {% if page_obj.has_previous %}
-                            <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if board_filter %}&board={{ board_filter }}{% endif %}" 
-                               class="text-primary hover:text-primary-dark">
-                                Anterior
-                            </a>
-                        {% else %}
-                            <span class="text-gray-400">Anterior</span>
+        <!-- Cards View -->
+        <div x-show="viewMode === 'cards'" class="cards-view">
+            <div class="cards-grid">
+                {% for task in tasks %}
+                <div class="task-card" data-task-id="{{ task.id }}">
+                    <!-- Card Header -->
+                    <div class="card-header">
+                        <div class="priority-indicator priority-{{ task.priority }}"></div>
+                        <div class="card-meta">
+                            <span class="task-id">#{{ task.id|slice:":8" }}</span>
+                            <div class="relative" x-data="{ open: false }">
+                                <button @click="open = !open" class="card-menu-btn">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                    </svg>
+                                </button>
+                                <div x-show="open" @click.away="open = false" x-transition class="card-dropdown">
+                                    <a href="{% url 'tasks:task_detail' task.id %}" class="dropdown-item">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        Visualizar
+                                    </a>
+                                    <a href="{% url 'tasks:task_edit' task.id %}" class="dropdown-item">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Editar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Content -->
+                    <div class="card-content">
+                        <a href="{% url 'tasks:task_detail' task.id %}" class="card-title">
+                            {{ task.title }}
+                        </a>
+                        {% if task.description %}
+                        <p class="card-description">{{ task.description|truncatechars:100 }}</p>
                         {% endif %}
-
-                        <span class="text-gray-700">
-                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                        </span>
-
-                        {% if page_obj.has_next %}
-                            <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if priority_filter %}&priority={{ priority_filter }}{% endif %}{% if board_filter %}&board={{ board_filter }}{% endif %}" 
-                               class="text-primary hover:text-primary-dark">
-                                Próxima
-                            </a>
-                        {% else %}
-                            <span class="text-gray-400">Próxima</span>
+                        
+                        <!-- Labels -->
+                        {% if task.labels.all %}
+                        <div class="card-labels">
+                            {% for label in task.labels.all|slice:":4" %}
+                            <span class="task-label" style="background-color: {{ label.color }}">
+                                {{ label.name }}
+                            </span>
+                            {% endfor %}
+                        </div>
                         {% endif %}
-                    </nav>
+                    </div>
+
+                    <!-- Card Meta -->
+                    <div class="card-meta-section">
+                        <div class="card-meta-row">
+                            <div class="board-info">
+                                <a href="{% url 'tasks:board_detail' task.board.id %}" class="board-name">
+                                    {{ task.board.name }}
+                                </a>
+                            </div>
+                            <div class="status-info">
+                                <span class="status-badge" style="background-color: {{ task.column.color }}">
+                                    {{ task.column.name }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="card-meta-row">
+                            <!-- Due Date -->
+                            {% if task.due_date %}
+                            <div class="due-date {{ task.is_overdue|yesno:'overdue,' }}">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                                </svg>
+                                {{ task.due_date|date:"d/m" }}
+                            </div>
+                            {% endif %}
+
+                            <!-- Priority -->
+                            <span class="priority-badge priority-{{ task.priority }}">
+                                {% if task.priority == 'high' %}Alta
+                                {% elif task.priority == 'medium' %}Média
+                                {% else %}Baixa{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="card-footer">
+                        <!-- Assignees -->
+                        <div class="card-assignees">
+                            {% for assignee in task.assigned_to.all|slice:":3" %}
+                            {% if assignee.profile.avatar %}
+                            <img src="{{ assignee.profile.avatar.url }}" 
+                                 alt="{{ assignee.get_full_name }}" 
+                                 class="assignee-avatar" 
+                                 title="{{ assignee.get_full_name }}">
+                            {% else %}
+                            <div class="assignee-avatar-placeholder" title="{{ assignee.get_full_name }}">
+                                {{ assignee.first_name|first|upper }}{{ assignee.last_name|first|upper }}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                            {% if task.assigned_to.count > 3 %}
+                            <span class="more-assignees">+{{ task.assigned_to.count|add:"-3" }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Activity Indicators -->
+                        <div class="activity-indicators">
+                            {% if task.comments.count > 0 %}
+                            <div class="activity-item">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                {{ task.comments.count }}
+                            </div>
+                            {% endif %}
+                            {% if task.attachments.count > 0 %}
+                            <div class="activity-item">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                </svg>
+                                {{ task.attachments.count }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
-        {% else %}
-            <div class="p-6 text-center text-gray-500">
-                Nenhuma tarefa encontrada.
+                {% empty %}
+                <div class="empty-state">
+                    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <p class="empty-title">Nenhuma tarefa encontrada</p>
+                    <p class="empty-description">Tente ajustar os filtros ou criar uma nova tarefa</p>
+                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Criar Tarefa
+                    </a>
+                </div>
+                {% endfor %}
             </div>
-        {% endif %}
+        </div>
     </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="pagination-section">
+        <div class="pagination-info">
+            <span>Mostrando {{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }} tarefas</span>
+        </div>
+        <div class="pagination-controls">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="pagination-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Anterior
+            </a>
+            {% endif %}
+            
+            <span class="pagination-current">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+            
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="pagination-btn">
+                Próxima
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+function taskList() {
+    return {
+        viewMode: 'table',
+        sortField: '',
+        sortDirection: 'asc',
+        filters: {
+            search: '',
+            board: '',
+            status: '',
+            priority: '',
+            assignee: '',
+            due_date: ''
+        },
+
+        applyFilters() {
+            // Implement filter logic
+            console.log('Applying filters:', this.filters);
+        },
+
+        clearSearch() {
+            this.filters.search = '';
+            this.applyFilters();
+        },
+
+        clearAllFilters() {
+            this.filters = {
+                search: '',
+                board: '',
+                status: '',
+                priority: '',
+                assignee: '',
+                due_date: ''
+            };
+            this.applyFilters();
+        },
+
+        hasActiveFilters() {
+            return Object.values(this.filters).some(value => value !== '');
+        },
+
+        sort(field) {
+            if (this.sortField === field) {
+                this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortField = field;
+                this.sortDirection = 'asc';
+            }
+            console.log(`Sorting by ${field} ${this.sortDirection}`);
+        },
+
+        getSortClass(field) {
+            if (this.sortField !== field) return '';
+            return this.sortDirection === 'asc' ? 'sort-asc' : 'sort-desc';
+        },
+
+        getBoardName(boardId) {
+            // This would typically come from the backend
+            return 'Board Name';
+        },
+
+        getPriorityName(priority) {
+            const names = { high: 'Alta', medium: 'Média', low: 'Baixa' };
+            return names[priority] || priority;
+        },
+
+        async duplicateTask(taskId) {
+            try {
+                const response = await fetch(`/tasks/api/task/${taskId}/duplicate/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao duplicar tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao duplicar tarefa');
+            }
+        },
+
+        async archiveTask(taskId) {
+            if (!confirm('Arquivar esta tarefa?')) return;
+            
+            try {
+                const response = await fetch(`/tasks/api/task/${taskId}/archive/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao arquivar tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao arquivar tarefa');
+            }
+        },
+
+        async deleteTask(taskId) {
+            if (!confirm('Excluir esta tarefa permanentemente? Esta ação não pode ser desfeita.')) return;
+            
+            try {
+                const response = await fetch(`/tasks/api/task/${taskId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Erro ao excluir tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao excluir tarefa');
+            }
+        }
+    }
+}
+</script>
 {% endblock %}

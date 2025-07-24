@@ -1,0 +1,987 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics - Tarefas - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/task-analytics.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container" x-data="taskAnalytics()">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <span class="breadcrumb-current">Analytics</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Analytics de Tarefas</h1>
+                    <p class="page-subtitle">
+                        Relatórios detalhados e insights sobre produtividade e performance da equipe
+                    </p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="period-selector" x-data="{ open: false }">
+                    <button @click="open = !open" class="period-button">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 4h6M5 21h14a2 2 0 002-2V10a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2z"/>
+                        </svg>
+                        <span x-text="getPeriodLabel()">Últimos 30 dias</span>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="{ 'rotate-180': open }">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <div x-show="open" x-cloak @click.away="open = false" class="period-dropdown">
+                        <div class="dropdown-section">
+                            <h4 class="dropdown-title">Períodos Rápidos</h4>
+                            <button @click="setPeriod('7d'); open = false" class="dropdown-item" :class="{ 'active': selectedPeriod === '7d' }">
+                                <span>Últimos 7 dias</span>
+                            </button>
+                            <button @click="setPeriod('30d'); open = false" class="dropdown-item" :class="{ 'active': selectedPeriod === '30d' }">
+                                <span>Últimos 30 dias</span>
+                            </button>
+                            <button @click="setPeriod('90d'); open = false" class="dropdown-item" :class="{ 'active': selectedPeriod === '90d' }">
+                                <span>Últimos 90 dias</span>
+                            </button>
+                            <button @click="setPeriod('1y'); open = false" class="dropdown-item" :class="{ 'active': selectedPeriod === '1y' }">
+                                <span>Último ano</span>
+                            </button>
+                        </div>
+                        
+                        <div class="dropdown-section">
+                            <h4 class="dropdown-title">Período Personalizado</h4>
+                            <div class="custom-period">
+                                <input type="date" x-model="customStartDate" class="date-input">
+                                <span>até</span>
+                                <input type="date" x-model="customEndDate" class="date-input">
+                                <button @click="setCustomPeriod(); open = false" class="apply-custom-btn">
+                                    Aplicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" @click="exportReport()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar Relatório
+                </button>
+                
+                <button type="button" @click="scheduleReport()" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 017.5-7.5H19m-2 15v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2z"/>
+                    </svg>
+                    Agendar Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Metrics -->
+    <div class="metrics-section">
+        <div class="metrics-content">
+            <div class="metrics-grid">
+                <div class="metric-card primary">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" x-text="metrics.completedTasks">{{ completed_tasks }}</div>
+                        <div class="metric-label">Tarefas Concluídas</div>
+                        <div class="metric-change positive">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l10-10M17 7v10"/>
+                            </svg>
+                            <span x-text="metrics.completedTasksChange">+12%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" x-text="metrics.averageCompletionTime">{{ avg_completion_time }}</div>
+                        <div class="metric-label">Tempo Médio de Conclusão</div>
+                        <div class="metric-change negative">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17l-10-10M7 17V7"/>
+                            </svg>
+                            <span x-text="metrics.averageCompletionTimeChange">-8%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" x-text="metrics.activeUsers">{{ active_users }}</div>
+                        <div class="metric-label">Usuários Ativos</div>
+                        <div class="metric-change positive">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l10-10M17 7v10"/>
+                            </svg>
+                            <span x-text="metrics.activeUsersChange">+5%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                    <div class="metric-content">
+                        <div class="metric-value" x-text="metrics.productivityScore">{{ productivity_score }}</div>
+                        <div class="metric-label">Score de Produtividade</div>
+                        <div class="metric-change positive">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17l10-10M17 7v10"/>
+                            </svg>
+                            <span x-text="metrics.productivityScoreChange">+15%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <div class="charts-content">
+            <div class="charts-grid">
+                <!-- Task Completion Trend -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Tendência de Conclusão de Tarefas</h3>
+                        <div class="chart-actions">
+                            <div class="chart-legend">
+                                <div class="legend-item">
+                                    <div class="legend-color primary"></div>
+                                    <span>Concluídas</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-color secondary"></div>
+                                    <span>Criadas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="completionTrendChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Task Status Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Distribuição por Status</h3>
+                        <div class="chart-actions">
+                            <button type="button" @click="toggleChartView('status')" class="chart-toggle" :class="{ 'active': chartViews.status === 'pie' }">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="statusDistributionChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Team Performance -->
+                <div class="chart-card wide">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Performance da Equipe</h3>
+                        <div class="chart-actions">
+                            <div class="chart-filters">
+                                <select x-model="teamMetric" @change="updateTeamChart()" class="metric-select">
+                                    <option value="completed">Tarefas Concluídas</option>
+                                    <option value="efficiency">Eficiência</option>
+                                    <option value="velocity">Velocidade</option>
+                                    <option value="quality">Qualidade</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="teamPerformanceChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Priority Breakdown -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Breakdown por Prioridade</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="priorityBreakdownChart" class="chart-canvas"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Completion Time Analysis -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">Análise de Tempo de Conclusão</h3>
+                        <div class="chart-actions">
+                            <button type="button" @click="showTimeDetails = !showTimeDetails" class="details-toggle" :class="{ 'active': showTimeDetails }">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Detalhes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="completionTimeChart" class="chart-canvas"></canvas>
+                        <div x-show="showTimeDetails" x-cloak class="time-details">
+                            <div class="detail-stats">
+                                <div class="detail-stat">
+                                    <span class="detail-label">Média:</span>
+                                    <span class="detail-value" x-text="timeStats.average">4.2 dias</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="detail-label">Mediana:</span>
+                                    <span class="detail-value" x-text="timeStats.median">3.5 dias</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="detail-label">Mais Rápida:</span>
+                                    <span class="detail-value" x-text="timeStats.fastest">0.5 dias</span>
+                                </div>
+                                <div class="detail-stat">
+                                    <span class="detail-label">Mais Lenta:</span>
+                                    <span class="detail-value" x-text="timeStats.slowest">15 dias</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Insights Section -->
+    <div class="insights-section">
+        <div class="insights-content">
+            <div class="insights-header">
+                <h2 class="insights-title">Insights e Recomendações</h2>
+                <button type="button" @click="refreshInsights()" class="refresh-insights">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="{ 'animate-spin': refreshingInsights }">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Atualizar
+                </button>
+            </div>
+            
+            <div class="insights-grid">
+                <template x-for="insight in insights" :key="insight.id">
+                    <div class="insight-card" :class="'insight-' + insight.type">
+                        <div class="insight-icon">
+                            <svg x-show="insight.type === 'positive'" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <svg x-show="insight.type === 'warning'" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            <svg x-show="insight.type === 'info'" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <svg x-show="insight.type === 'critical'" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="insight-content">
+                            <h4 class="insight-title" x-text="insight.title"></h4>
+                            <p class="insight-description" x-text="insight.description"></p>
+                            
+                            <div x-show="insight.recommendation" class="insight-recommendation">
+                                <strong>Recomendação:</strong>
+                                <span x-text="insight.recommendation"></span>
+                            </div>
+                            
+                            <div x-show="insight.action" class="insight-action">
+                                <button type="button" @click="executeInsightAction(insight)" class="action-button">
+                                    <span x-text="insight.action.label"></span>
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Detailed Reports -->
+    <div class="reports-section">
+        <div class="reports-content">
+            <div class="reports-header">
+                <h2 class="reports-title">Relatórios Detalhados</h2>
+                <div class="reports-tabs">
+                    <button 
+                        type="button" 
+                        @click="activeReportTab = 'productivity'" 
+                        class="report-tab"
+                        :class="{ 'active': activeReportTab === 'productivity' }"
+                    >
+                        Produtividade
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="activeReportTab = 'performance'" 
+                        class="report-tab"
+                        :class="{ 'active': activeReportTab === 'performance' }"
+                    >
+                        Performance
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="activeReportTab = 'bottlenecks'" 
+                        class="report-tab"
+                        :class="{ 'active': activeReportTab === 'bottlenecks' }"
+                    >
+                        Gargalos
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="activeReportTab = 'forecasting'" 
+                        class="report-tab"
+                        :class="{ 'active': activeReportTab === 'forecasting' }"
+                    >
+                        Previsões
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Productivity Report -->
+            <div x-show="activeReportTab === 'productivity'" class="report-content">
+                <div class="report-summary">
+                    <h3>Resumo de Produtividade</h3>
+                    <p>Análise detalhada da produtividade da equipe no período selecionado.</p>
+                </div>
+                
+                <div class="report-table">
+                    <div class="table-header">
+                        <div class="header-cell">Membro</div>
+                        <div class="header-cell">Tarefas Concluídas</div>
+                        <div class="header-cell">Tempo Médio</div>
+                        <div class="header-cell">Eficiência</div>
+                        <div class="header-cell">Score</div>
+                    </div>
+                    
+                    <div class="table-body">
+                        <template x-for="member in productivityReport" :key="member.id">
+                            <div class="table-row">
+                                <div class="table-cell member-cell">
+                                    <img :src="member.avatar || '/static/images/default-avatar.png'" :alt="member.name" class="member-avatar">
+                                    <div class="member-info">
+                                        <span class="member-name" x-text="member.name"></span>
+                                        <span class="member-role" x-text="member.role"></span>
+                                    </div>
+                                </div>
+                                <div class="table-cell" x-text="member.completed_tasks"></div>
+                                <div class="table-cell" x-text="member.avg_time"></div>
+                                <div class="table-cell">
+                                    <div class="efficiency-bar">
+                                        <div class="efficiency-fill" :style="{ width: member.efficiency + '%' }"></div>
+                                        <span class="efficiency-text" x-text="member.efficiency + '%'"></span>
+                                    </div>
+                                </div>
+                                <div class="table-cell">
+                                    <div class="score-badge" :class="getScoreClass(member.score)">
+                                        <span x-text="member.score"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Report -->
+            <div x-show="activeReportTab === 'performance'" class="report-content">
+                <div class="report-summary">
+                    <h3>Análise de Performance</h3>
+                    <p>Métricas de performance por quadro e tipo de tarefa.</p>
+                </div>
+                
+                <div class="performance-metrics">
+                    <div class="metric-group">
+                        <h4>Por Quadro</h4>
+                        <template x-for="board in performanceByBoard" :key="board.id">
+                            <div class="performance-item">
+                                <div class="performance-header">
+                                    <span class="performance-name" x-text="board.name"></span>
+                                    <span class="performance-value" x-text="board.completion_rate + '%'"></span>
+                                </div>
+                                <div class="performance-bar">
+                                    <div class="performance-fill" :style="{ width: board.completion_rate + '%' }"></div>
+                                </div>
+                                <div class="performance-details">
+                                    <span x-text="board.completed + ' de ' + board.total + ' tarefas'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div class="metric-group">
+                        <h4>Por Prioridade</h4>
+                        <template x-for="priority in performanceByPriority" :key="priority.name">
+                            <div class="performance-item">
+                                <div class="performance-header">
+                                    <span class="performance-name" x-text="priority.name"></span>
+                                    <span class="performance-value" x-text="priority.avg_time"></span>
+                                </div>
+                                <div class="performance-details">
+                                    <span x-text="priority.completed + ' tarefas concluídas'"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottlenecks Report -->
+            <div x-show="activeReportTab === 'bottlenecks'" class="report-content">
+                <div class="report-summary">
+                    <h3>Análise de Gargalos</h3>
+                    <p>Identificação de bloqueios e áreas que precisam de atenção.</p>
+                </div>
+                
+                <div class="bottlenecks-list">
+                    <template x-for="bottleneck in bottlenecks" :key="bottleneck.id">
+                        <div class="bottleneck-item" :class="'severity-' + bottleneck.severity">
+                            <div class="bottleneck-icon">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                            </div>
+                            <div class="bottleneck-content">
+                                <h4 class="bottleneck-title" x-text="bottleneck.title"></h4>
+                                <p class="bottleneck-description" x-text="bottleneck.description"></p>
+                                <div class="bottleneck-impact">
+                                    <span class="impact-label">Impacto:</span>
+                                    <span class="impact-value" x-text="bottleneck.impact"></span>
+                                </div>
+                                <div class="bottleneck-suggestions">
+                                    <span class="suggestions-label">Sugestões:</span>
+                                    <ul>
+                                        <template x-for="suggestion in bottleneck.suggestions" :key="suggestion">
+                                            <li x-text="suggestion"></li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Forecasting Report -->
+            <div x-show="activeReportTab === 'forecasting'" class="report-content">
+                <div class="report-summary">
+                    <h3>Previsões e Tendências</h3>
+                    <p>Projeções baseadas nos dados históricos e tendências atuais.</p>
+                </div>
+                
+                <div class="forecasting-cards">
+                    <div class="forecast-card">
+                        <h4>Conclusão Estimada</h4>
+                        <div class="forecast-value" x-text="forecasting.estimated_completion">15 de Março</div>
+                        <div class="forecast-confidence">
+                            <span>Confiança: </span>
+                            <span x-text="forecasting.confidence">87%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-card">
+                        <h4>Capacidade Recomendada</h4>
+                        <div class="forecast-value" x-text="forecasting.recommended_capacity">8 tarefas/semana</div>
+                        <div class="forecast-explanation" x-text="forecasting.capacity_explanation">
+                            Baseado na velocidade média da equipe
+                        </div>
+                    </div>
+                    
+                    <div class="forecast-card">
+                        <h4>Risco de Atraso</h4>
+                        <div class="forecast-value risk" :class="'risk-' + forecasting.delay_risk.level" x-text="forecasting.delay_risk.percentage">
+                            23%
+                        </div>
+                        <div class="forecast-explanation" x-text="forecasting.delay_risk.reason">
+                            Baseado em gargalos identificados
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function taskAnalytics() {
+    return {
+        // Data
+        selectedPeriod: '30d',
+        customStartDate: '',
+        customEndDate: '',
+        
+        metrics: {
+            completedTasks: 127,
+            completedTasksChange: '+12%',
+            averageCompletionTime: '4.2 dias',
+            averageCompletionTimeChange: '-8%',
+            activeUsers: 23,
+            activeUsersChange: '+5%',
+            productivityScore: '8.4',
+            productivityScoreChange: '+15%'
+        },
+        
+        chartViews: {
+            status: 'pie'
+        },
+        
+        teamMetric: 'completed',
+        showTimeDetails: false,
+        refreshingInsights: false,
+        activeReportTab: 'productivity',
+        
+        // Charts
+        charts: {},
+        
+        // Sample data
+        insights: [
+            {
+                id: 1,
+                type: 'positive',
+                title: 'Excelente Performance da Equipe',
+                description: 'A produtividade aumentou 15% comparado ao período anterior.',
+                recommendation: 'Continue mantendo o ritmo atual e considere aumentar a capacidade.',
+                action: { label: 'Ver Detalhes', type: 'view_details' }
+            },
+            {
+                id: 2,
+                type: 'warning',
+                title: 'Gargalo Identificado',
+                description: 'Tarefas de revisão estão levando 2x mais tempo que o esperado.',
+                recommendation: 'Considere alocar mais recursos para o processo de revisão.',
+                action: { label: 'Criar Ação', type: 'create_action' }
+            },
+            {
+                id: 3,
+                type: 'info',
+                title: 'Padrão Sazonal Detectado',
+                description: 'Há uma queda de produtividade às sextas-feiras.',
+                recommendation: 'Considere ajustar o planejamento para este padrão.',
+                action: { label: 'Ajustar Planejamento', type: 'adjust_planning' }
+            }
+        ],
+        
+        productivityReport: [
+            {
+                id: 1,
+                name: 'João Silva',
+                role: 'Senior Developer',
+                avatar: null,
+                completed_tasks: 23,
+                avg_time: '3.2 dias',
+                efficiency: 92,
+                score: 9.1
+            },
+            {
+                id: 2,
+                name: 'Maria Santos',
+                role: 'Frontend Developer',
+                avatar: null,
+                completed_tasks: 18,
+                avg_time: '4.1 dias',
+                efficiency: 87,
+                score: 8.7
+            },
+            {
+                id: 3,
+                name: 'Pedro Costa',
+                role: 'Backend Developer',
+                avatar: null,
+                completed_tasks: 21,
+                avg_time: '3.8 dias',
+                efficiency: 89,
+                score: 8.9
+            }
+        ],
+        
+        performanceByBoard: [
+            { id: 1, name: 'Desenvolvimento', completion_rate: 89, completed: 34, total: 38 },
+            { id: 2, name: 'Design', completion_rate: 76, completed: 19, total: 25 },
+            { id: 3, name: 'Marketing', completion_rate: 92, completed: 23, total: 25 }
+        ],
+        
+        performanceByPriority: [
+            { name: 'Alta', avg_time: '2.1 dias', completed: 15 },
+            { name: 'Média', avg_time: '4.3 dias', completed: 42 },
+            { name: 'Baixa', avg_time: '6.7 dias', completed: 28 }
+        ],
+        
+        bottlenecks: [
+            {
+                id: 1,
+                severity: 'high',
+                title: 'Processo de Code Review',
+                description: 'Demora excessiva no processo de revisão de código.',
+                impact: 'Atraso médio de 1.5 dias nas entregas',
+                suggestions: [
+                    'Automatizar verificações básicas',
+                    'Definir SLA para reviews',
+                    'Treinar mais revisores'
+                ]
+            },
+            {
+                id: 2,
+                severity: 'medium',
+                title: 'Dependências Externas',
+                description: 'Muitas tarefas dependem de aprovações externas.',
+                impact: 'Bloqueio de 23% das tarefas em progresso',
+                suggestions: [
+                    'Melhorar comunicação com stakeholders',
+                    'Paralelizar aprovações quando possível'
+                ]
+            }
+        ],
+        
+        forecasting: {
+            estimated_completion: '15 de Março',
+            confidence: '87%',
+            recommended_capacity: '8 tarefas/semana',
+            capacity_explanation: 'Baseado na velocidade média da equipe',
+            delay_risk: {
+                level: 'medium',
+                percentage: '23%',
+                reason: 'Baseado em gargalos identificados'
+            }
+        },
+        
+        timeStats: {
+            average: '4.2 dias',
+            median: '3.5 dias',
+            fastest: '0.5 dias',
+            slowest: '15 dias'
+        },
+        
+        init() {
+            this.$nextTick(() => {
+                this.initializeCharts();
+            });
+        },
+        
+        // Period management
+        setPeriod(period) {
+            this.selectedPeriod = period;
+            this.refreshData();
+        },
+        
+        setCustomPeriod() {
+            if (this.customStartDate && this.customEndDate) {
+                this.selectedPeriod = 'custom';
+                this.refreshData();
+            }
+        },
+        
+        getPeriodLabel() {
+            switch (this.selectedPeriod) {
+                case '7d': return 'Últimos 7 dias';
+                case '30d': return 'Últimos 30 dias';
+                case '90d': return 'Últimos 90 dias';
+                case '1y': return 'Último ano';
+                case 'custom': return 'Período personalizado';
+                default: return 'Últimos 30 dias';
+            }
+        },
+        
+        // Chart management
+        initializeCharts() {
+            this.initCompletionTrendChart();
+            this.initStatusDistributionChart();
+            this.initTeamPerformanceChart();
+            this.initPriorityBreakdownChart();
+            this.initCompletionTimeChart();
+        },
+        
+        initCompletionTrendChart() {
+            const ctx = document.getElementById('completionTrendChart').getContext('2d');
+            this.charts.completionTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+                    datasets: [{
+                        label: 'Concluídas',
+                        data: [12, 19, 15, 23],
+                        borderColor: '#0066cc',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Criadas',
+                        data: [15, 17, 18, 21],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        },
+        
+        initStatusDistributionChart() {
+            const ctx = document.getElementById('statusDistributionChart').getContext('2d');
+            this.charts.statusDistribution = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['To Do', 'In Progress', 'Review', 'Done'],
+                    datasets: [{
+                        data: [25, 30, 15, 85],
+                        backgroundColor: [
+                            '#94a3b8',
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#10b981'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        },
+        
+        initTeamPerformanceChart() {
+            const ctx = document.getElementById('teamPerformanceChart').getContext('2d');
+            this.charts.teamPerformance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['João Silva', 'Maria Santos', 'Pedro Costa', 'Ana Lima', 'Carlos Souza'],
+                    datasets: [{
+                        label: 'Tarefas Concluídas',
+                        data: [23, 18, 21, 16, 19],
+                        backgroundColor: '#0066cc'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        },
+        
+        initPriorityBreakdownChart() {
+            const ctx = document.getElementById('priorityBreakdownChart').getContext('2d');
+            this.charts.priorityBreakdown = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Alta', 'Média', 'Baixa'],
+                    datasets: [{
+                        data: [15, 42, 28],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        },
+        
+        initCompletionTimeChart() {
+            const ctx = document.getElementById('completionTimeChart').getContext('2d');
+            this.charts.completionTime = new Chart(ctx, {
+                type: 'histogram',
+                data: {
+                    labels: ['0-1 dias', '1-3 dias', '3-7 dias', '7-14 dias', '14+ dias'],
+                    datasets: [{
+                        label: 'Número de Tarefas',
+                        data: [5, 23, 34, 18, 7],
+                        backgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        },
+        
+        toggleChartView(chartType) {
+            if (chartType === 'status') {
+                this.chartViews.status = this.chartViews.status === 'pie' ? 'bar' : 'pie';
+                // Recreate chart with new type
+                this.charts.statusDistribution.destroy();
+                this.initStatusDistributionChart();
+            }
+        },
+        
+        updateTeamChart() {
+            // Update chart based on selected metric
+            let data, label;
+            
+            switch (this.teamMetric) {
+                case 'completed':
+                    data = [23, 18, 21, 16, 19];
+                    label = 'Tarefas Concluídas';
+                    break;
+                case 'efficiency':
+                    data = [92, 87, 89, 84, 88];
+                    label = 'Eficiência (%)';
+                    break;
+                case 'velocity':
+                    data = [7.2, 5.8, 6.5, 5.1, 6.0];
+                    label = 'Velocidade (tarefas/semana)';
+                    break;
+                case 'quality':
+                    data = [9.1, 8.7, 8.9, 8.2, 8.5];
+                    label = 'Qualidade (score)';
+                    break;
+            }
+            
+            this.charts.teamPerformance.data.datasets[0].data = data;
+            this.charts.teamPerformance.data.datasets[0].label = label;
+            this.charts.teamPerformance.update();
+        },
+        
+        // Actions
+        refreshData() {
+            // Simulate data refresh
+            console.log('Refreshing data for period:', this.selectedPeriod);
+        },
+        
+        refreshInsights() {
+            this.refreshingInsights = true;
+            
+            setTimeout(() => {
+                this.refreshingInsights = false;
+                // Simulate insights refresh
+            }, 2000);
+        },
+        
+        executeInsightAction(insight) {
+            console.log('Executing action:', insight.action.type, 'for insight:', insight.id);
+        },
+        
+        exportReport() {
+            // Generate comprehensive report
+            const reportData = {
+                period: this.selectedPeriod,
+                metrics: this.metrics,
+                insights: this.insights,
+                productivity: this.productivityReport,
+                performance: {
+                    byBoard: this.performanceByBoard,
+                    byPriority: this.performanceByPriority
+                },
+                bottlenecks: this.bottlenecks,
+                forecasting: this.forecasting,
+                generated_at: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(reportData, null, 2)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+        
+        scheduleReport() {
+            // Open modal or redirect to scheduling interface
+            alert('Funcionalidade de agendamento será implementada');
+        },
+        
+        // Utilities
+        getScoreClass(score) {
+            if (score >= 9) return 'excellent';
+            if (score >= 7) return 'good';
+            if (score >= 5) return 'average';
+            return 'poor';
+        }
+    }
+}
+</script>
+{% endblock %}

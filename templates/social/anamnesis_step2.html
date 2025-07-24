@@ -1,0 +1,547 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'Situação Socioeconômica' %} - MOVE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/anamnesis-step2.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="anamnesis-step2" x-data="stepTwoData()">
+    <!-- Step Content -->
+    <div class="step-container">
+        <div class="step-header">
+            <h2 class="step-title">{% trans 'Situação Socioeconômica' %}</h2>
+            <p class="step-description">{% trans 'Avalie as condições econômicas, habitacionais e de acesso a serviços da família' %}</p>
+        </div>
+        
+        <div class="step-content">
+            <div class="form-sections">
+                <!-- Renda Familiar -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.51-1.31c-.562-.649-1.413-1.076-2.353-1.253V5z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Renda Familiar' %}
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Renda Total da Família' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.income.total" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Número de Pessoas na Família' %}</label>
+                            <input type="number" 
+                                   x-model="data.income.familySize" 
+                                   class="form-input"
+                                   min="1"
+                                   placeholder="Quantas pessoas dependem desta renda">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Renda Per Capita' %}</label>
+                            <div class="calculated-field">
+                                <span class="currency">R$</span>
+                                <span x-text="calculatePerCapitaIncome()" class="calculated-value"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Classificação Econômica' %}</label>
+                            <div class="economic-classification" :class="getEconomicClass()">
+                                <span x-text="getEconomicClassLabel()" class="classification-label"></span>
+                                <div class="classification-indicator" :class="getEconomicClass()"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fontes de Renda -->
+                    <div class="subsection">
+                        <h4 class="subsection-title">{% trans 'Fontes de Renda' %}</h4>
+                        <div class="income-sources">
+                            <template x-for="(source, index) in data.income.sources" :key="index">
+                                <div class="income-source-card">
+                                    <div class="source-header">
+                                        <h5 class="source-title" x-text="`Fonte ${index + 1}`"></h5>
+                                        <button @click="removeIncomeSource(index)" 
+                                                class="remove-source" 
+                                                x-show="data.income.sources.length > 1">
+                                            <svg viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="source-form">
+                                        <div class="form-grid">
+                                            <div class="form-group">
+                                                <label class="form-label">{% trans 'Tipo de Renda' %}</label>
+                                                <select x-model="source.type" class="form-select" required>
+                                                    <option value="">{% trans 'Selecione' %}</option>
+                                                    <option value="formal_work">{% trans 'Trabalho Formal' %}</option>
+                                                    <option value="informal_work">{% trans 'Trabalho Informal' %}</option>
+                                                    <option value="autonomous">{% trans 'Autônomo' %}</option>
+                                                    <option value="retirement">{% trans 'Aposentadoria' %}</option>
+                                                    <option value="pension">{% trans 'Pensão' %}</option>
+                                                    <option value="unemployment">{% trans 'Seguro Desemprego' %}</option>
+                                                    <option value="bpc">{% trans 'BPC' %}</option>
+                                                    <option value="family_allowance">{% trans 'Auxílio Família' %}</option>
+                                                    <option value="emergency_aid">{% trans 'Auxílio Emergencial' %}</option>
+                                                    <option value="other">{% trans 'Outro' %}</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label">{% trans 'Valor' %}</label>
+                                                <div class="input-with-prefix">
+                                                    <span class="input-prefix">R$</span>
+                                                    <input type="number" 
+                                                           x-model="source.amount" 
+                                                           class="form-input"
+                                                           step="0.01"
+                                                           min="0"
+                                                           placeholder="0,00">
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label">{% trans 'Responsável' %}</label>
+                                                <input type="text" 
+                                                       x-model="source.responsible" 
+                                                       class="form-input"
+                                                       placeholder="Nome do responsável">
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label class="form-label">{% trans 'Regularidade' %}</label>
+                                                <select x-model="source.regularity" class="form-select">
+                                                    <option value="">{% trans 'Selecione' %}</option>
+                                                    <option value="monthly">{% trans 'Mensal' %}</option>
+                                                    <option value="weekly">{% trans 'Semanal' %}</option>
+                                                    <option value="daily">{% trans 'Diária' %}</option>
+                                                    <option value="irregular">{% trans 'Irregular' %}</option>
+                                                    <option value="temporary">{% trans 'Temporária' %}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <button @click="addIncomeSource()" class="add-source-btn">
+                                <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                </svg>
+                                {% trans 'Adicionar Fonte de Renda' %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Situação Habitacional -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                        </svg>
+                        {% trans 'Situação Habitacional' %}
+                    </h3>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Tipo de Moradia' %}</label>
+                            <select x-model="data.housing.type" class="form-select" required>
+                                <option value="">{% trans 'Selecione' %}</option>
+                                <option value="own_house">{% trans 'Casa Própria' %}</option>
+                                <option value="own_apartment">{% trans 'Apartamento Próprio' %}</option>
+                                <option value="rented_house">{% trans 'Casa Alugada' %}</option>
+                                <option value="rented_apartment">{% trans 'Apartamento Alugado' %}</option>
+                                <option value="financing">{% trans 'Financiamento' %}</option>
+                                <option value="borrowed">{% trans 'Cedida/Emprestada' %}</option>
+                                <option value="occupation">{% trans 'Ocupação' %}</option>
+                                <option value="shelter">{% trans 'Abrigo' %}</option>
+                                <option value="street">{% trans 'Situação de Rua' %}</option>
+                                <option value="other">{% trans 'Outro' %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" x-show="['rented_house', 'rented_apartment', 'financing'].includes(data.housing.type)">
+                            <label class="form-label">{% trans 'Valor do Aluguel/Financiamento' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.housing.rent" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Número de Cômodos' %}</label>
+                            <input type="number" 
+                                   x-model="data.housing.rooms" 
+                                   class="form-input"
+                                   min="1"
+                                   placeholder="Quantos cômodos tem a moradia">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Número de Dormitórios' %}</label>
+                            <input type="number" 
+                                   x-model="data.housing.bedrooms" 
+                                   class="form-input"
+                                   min="0"
+                                   placeholder="Quantos quartos">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Material da Construção' %}</label>
+                            <select x-model="data.housing.material" class="form-select">
+                                <option value="">{% trans 'Selecione' %}</option>
+                                <option value="masonry">{% trans 'Alvenaria' %}</option>
+                                <option value="wood">{% trans 'Madeira' %}</option>
+                                <option value="mixed">{% trans 'Mista (Alvenaria e Madeira)' %}</option>
+                                <option value="zinc_sheet">{% trans 'Chapa de Zinco' %}</option>
+                                <option value="canvas">{% trans 'Lona/Canvas' %}</option>
+                                <option value="other">{% trans 'Outro' %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">{% trans 'Condições da Moradia' %}</label>
+                            <select x-model="data.housing.condition" class="form-select">
+                                <option value="">{% trans 'Selecione' %}</option>
+                                <option value="excellent">{% trans 'Excelente' %}</option>
+                                <option value="good">{% trans 'Boa' %}</option>
+                                <option value="regular">{% trans 'Regular' %}</option>
+                                <option value="poor">{% trans 'Ruim' %}</option>
+                                <option value="very_poor">{% trans 'Muito Ruim' %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Serviços de Infraestrutura -->
+                    <div class="subsection">
+                        <h4 class="subsection-title">{% trans 'Acesso a Serviços Básicos' %}</h4>
+                        <div class="services-grid">
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.water" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Água Encanada' %}
+                                </label>
+                            </div>
+                            
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.sewage" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Rede de Esgoto' %}
+                                </label>
+                            </div>
+                            
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.electricity" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Energia Elétrica' %}
+                                </label>
+                            </div>
+                            
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.garbage" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Coleta de Lixo' %}
+                                </label>
+                            </div>
+                            
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.internet" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Internet' %}
+                                </label>
+                            </div>
+                            
+                            <div class="service-item">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="data.housing.services.phone" class="checkbox">
+                                    <span class="checkmark"></span>
+                                    {% trans 'Telefone' %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Gastos e Despesas -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
+                            <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+                        </svg>
+                        {% trans 'Principais Despesas' %}
+                    </h3>
+                    
+                    <div class="expenses-grid">
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Alimentação' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.food" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Transporte' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.transport" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Saúde' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.health" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Educação' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.education" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Habitação' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.housing" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                        
+                        <div class="expense-item">
+                            <label class="form-label">{% trans 'Outros' %}</label>
+                            <div class="input-with-prefix">
+                                <span class="input-prefix">R$</span>
+                                <input type="number" 
+                                       x-model="data.expenses.other" 
+                                       class="form-input"
+                                       step="0.01"
+                                       min="0"
+                                       placeholder="0,00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumo Financeiro -->
+                    <div class="financial-summary">
+                        <div class="summary-card income-card">
+                            <div class="summary-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-label">{% trans 'Renda Total' %}</div>
+                                <div class="summary-value" x-text="`R$ ${formatCurrency(data.income.total || 0)}`"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card expense-card">
+                            <div class="summary-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L9 14.586V3a1 1 0 012 0v11.586l4.293-4.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-label">{% trans 'Gastos Totais' %}</div>
+                                <div class="summary-value" x-text="`R$ ${formatCurrency(getTotalExpenses())}`"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-card balance-card" :class="getBalanceClass()">
+                            <div class="summary-icon">
+                                <svg viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="summary-content">
+                                <div class="summary-label">{% trans 'Saldo' %}</div>
+                                <div class="summary-value" x-text="`R$ ${formatCurrency(getBalance())}`"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function stepTwoData() {
+    return {
+        data: {
+            income: {
+                total: 0,
+                familySize: 1,
+                sources: [
+                    {
+                        type: '',
+                        amount: 0,
+                        responsible: '',
+                        regularity: ''
+                    }
+                ]
+            },
+            housing: {
+                type: '',
+                rent: 0,
+                rooms: 0,
+                bedrooms: 0,
+                material: '',
+                condition: '',
+                services: {
+                    water: false,
+                    sewage: false,
+                    electricity: false,
+                    garbage: false,
+                    internet: false,
+                    phone: false
+                }
+            },
+            expenses: {
+                food: 0,
+                transport: 0,
+                health: 0,
+                education: 0,
+                housing: 0,
+                other: 0
+            }
+        },
+        
+        calculatePerCapitaIncome() {
+            if (this.data.income.total && this.data.income.familySize) {
+                return this.formatCurrency(this.data.income.total / this.data.income.familySize);
+            }
+            return '0,00';
+        },
+        
+        getEconomicClass() {
+            const perCapita = this.data.income.total / (this.data.income.familySize || 1);
+            const minimumWage = 1320; // Valor do salário mínimo em 2024
+            
+            if (perCapita <= 0.25 * minimumWage) return 'extreme-poverty';
+            if (perCapita <= 0.5 * minimumWage) return 'poverty';
+            if (perCapita <= 1 * minimumWage) return 'low';
+            if (perCapita <= 3 * minimumWage) return 'lower-middle';
+            if (perCapita <= 5 * minimumWage) return 'middle';
+            return 'upper-middle';
+        },
+        
+        getEconomicClassLabel() {
+            const economicClass = this.getEconomicClass();
+            const labels = {
+                'extreme-poverty': 'Extrema Pobreza',
+                'poverty': 'Pobreza',
+                'low': 'Baixa Renda',
+                'lower-middle': 'Classe Média Baixa',
+                'middle': 'Classe Média',
+                'upper-middle': 'Classe Média Alta'
+            };
+            return labels[economicClass] || 'Não Classificado';
+        },
+        
+        addIncomeSource() {
+            this.data.income.sources.push({
+                type: '',
+                amount: 0,
+                responsible: '',
+                regularity: ''
+            });
+        },
+        
+        removeIncomeSource(index) {
+            if (this.data.income.sources.length > 1) {
+                this.data.income.sources.splice(index, 1);
+            }
+        },
+        
+        getTotalExpenses() {
+            return Object.values(this.data.expenses).reduce((total, expense) => {
+                return total + (parseFloat(expense) || 0);
+            }, 0);
+        },
+        
+        getBalance() {
+            return (this.data.income.total || 0) - this.getTotalExpenses();
+        },
+        
+        getBalanceClass() {
+            const balance = this.getBalance();
+            if (balance > 0) return 'positive';
+            if (balance < 0) return 'negative';
+            return 'neutral';
+        },
+        
+        formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}

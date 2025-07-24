@@ -1,0 +1,881 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if object %}Editar Tarefa{% else %}Nova Tarefa{% endif %} - Move Marias
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-form.css' %}">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="task-form-container" x-data="taskForm()">
+    <!-- Header -->
+    <div class="task-form-header">
+        <div class="header-content">
+            <!-- Navigation -->
+            <div class="header-nav">
+                <div class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">Tarefas</a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">
+                        {% if object %}Editar{% else %}Nova Tarefa{% endif %}
+                    </span>
+                </div>
+                
+                <div class="title-section">
+                    <h1 class="page-title">
+                        {% if object %}
+                            Editar Tarefa
+                        {% else %}
+                            Nova Tarefa
+                        {% endif %}
+                    </h1>
+                    <p class="page-subtitle">
+                        {% if object %}
+                            Atualize as informações da tarefa
+                        {% else %}
+                            Preencha os detalhes da nova tarefa
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="header-actions">
+                {% if object %}
+                <a href="{% url 'tasks:task_detail' object.id %}" class="btn-secondary">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Visualizar
+                </a>
+                {% endif %}
+                <button @click="showPreview = !showPreview" class="btn-secondary" :class="{ 'active': showPreview }">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <div class="form-content">
+        <form method="post" enctype="multipart/form-data" id="taskForm" @submit="validateForm">
+            {% csrf_token %}
+            
+            <!-- Main Form -->
+            <div class="form-layout">
+                <!-- Left Column - Main Fields -->
+                <div class="main-column">
+                    <!-- Basic Information Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Informações Básicas</h3>
+                            <div class="card-subtitle">Defina o título e descrição da tarefa</div>
+                        </div>
+                        <div class="card-content">
+                            <!-- Title -->
+                            <div class="form-group">
+                                <label for="id_title" class="form-label required">Título da Tarefa</label>
+                                <input type="text" 
+                                       name="title" 
+                                       id="id_title" 
+                                       class="form-input"
+                                       value="{{ form.title.value|default:'' }}"
+                                       placeholder="Digite um título descritivo para a tarefa"
+                                       required
+                                       x-model="formData.title"
+                                       @input="updatePreview()">
+                                {% if form.title.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.title.errors %}
+                                            <span class="error-message">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description -->
+                            <div class="form-group">
+                                <label for="description-editor" class="form-label">Descrição</label>
+                                <div class="editor-container">
+                                    <div id="description-editor" class="rich-editor"></div>
+                                    <textarea name="description" 
+                                              id="id_description" 
+                                              style="display: none;"
+                                              x-model="formData.description">{{ form.description.value|default:'' }}</textarea>
+                                </div>
+                                <div class="editor-help">
+                                    Use a barra de ferramentas para formatar o texto, adicionar links e listas
+                                </div>
+                                {% if form.description.errors %}
+                                    <div class="field-errors">
+                                        {% for error in form.description.errors %}
+                                            <span class="error-message">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment & Timeline Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Atribuição e Cronograma</h3>
+                            <div class="card-subtitle">Defina responsáveis e prazos</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="form-row">
+                                <!-- Board -->
+                                <div class="form-group">
+                                    <label for="id_board" class="form-label required">Quadro</label>
+                                    <select name="board" id="id_board" class="form-select" required x-model="formData.board" @change="loadColumns()">
+                                        <option value="">Selecione um quadro</option>
+                                        {% for board in boards %}
+                                            <option value="{{ board.id }}" 
+                                                    {% if form.board.value == board.id %}selected{% endif %}>
+                                                {{ board.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.board.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.board.errors %}
+                                                <span class="error-message">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Column -->
+                                <div class="form-group">
+                                    <label for="id_column" class="form-label">Status</label>
+                                    <select name="column" id="id_column" class="form-select" x-model="formData.column">
+                                        <option value="">Selecione um status</option>
+                                        <template x-for="column in availableColumns" :key="column.id">
+                                            <option :value="column.id" x-text="column.name"></option>
+                                        </template>
+                                    </select>
+                                    {% if form.column.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.column.errors %}
+                                                <span class="error-message">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <!-- Priority -->
+                                <div class="form-group">
+                                    <label for="id_priority" class="form-label">Prioridade</label>
+                                    <select name="priority" id="id_priority" class="form-select" x-model="formData.priority">
+                                        <option value="low" {% if form.priority.value == 'low' %}selected{% endif %}>
+                                            Baixa Prioridade
+                                        </option>
+                                        <option value="medium" {% if form.priority.value == 'medium' %}selected{% endif %}>
+                                            Média Prioridade
+                                        </option>
+                                        <option value="high" {% if form.priority.value == 'high' %}selected{% endif %}>
+                                            Alta Prioridade
+                                        </option>
+                                    </select>
+                                    {% if form.priority.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.priority.errors %}
+                                                <span class="error-message">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Due Date -->
+                                <div class="form-group">
+                                    <label for="id_due_date" class="form-label">Data Limite</label>
+                                    <input type="date" 
+                                           name="due_date" 
+                                           id="id_due_date" 
+                                           class="form-input"
+                                           value="{{ form.due_date.value|date:'Y-m-d'|default:'' }}"
+                                           x-model="formData.due_date">
+                                    {% if form.due_date.errors %}
+                                        <div class="field-errors">
+                                            {% for error in form.due_date.errors %}
+                                                <span class="error-message">{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Assignees -->
+                            <div class="form-group">
+                                <label class="form-label">Responsáveis</label>
+                                <div class="assignees-container">
+                                    <div class="selected-assignees" x-show="selectedAssignees.length > 0">
+                                        <template x-for="assignee in selectedAssignees" :key="assignee.id">
+                                            <div class="assignee-chip">
+                                                <img x-show="assignee.avatar" :src="assignee.avatar" :alt="assignee.name" class="assignee-avatar">
+                                                <div x-show="!assignee.avatar" class="assignee-avatar-placeholder" x-text="assignee.initials"></div>
+                                                <span class="assignee-name" x-text="assignee.name"></span>
+                                                <button type="button" @click="removeAssignee(assignee.id)" class="remove-assignee">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <div class="assignee-selector" x-data="{ open: false }">
+                                        <button type="button" @click="open = !open" class="add-assignee-btn">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Adicionar Responsável
+                                        </button>
+                                        
+                                        <div x-show="open" @click.away="open = false" x-transition class="assignee-dropdown">
+                                            <div class="assignee-search">
+                                                <input type="text" 
+                                                       x-model="assigneeSearch" 
+                                                       placeholder="Buscar pessoa..." 
+                                                       class="assignee-search-input">
+                                            </div>
+                                            <div class="assignee-list">
+                                                <template x-for="user in filteredUsers" :key="user.id">
+                                                    <button type="button" 
+                                                            @click="addAssignee(user); open = false" 
+                                                            class="assignee-option"
+                                                            :class="{ 'selected': isAssigneeSelected(user.id) }"
+                                                            :disabled="isAssigneeSelected(user.id)">
+                                                        <img x-show="user.avatar" :src="user.avatar" :alt="user.name" class="assignee-avatar">
+                                                        <div x-show="!user.avatar" class="assignee-avatar-placeholder" x-text="user.initials"></div>
+                                                        <div class="assignee-info">
+                                                            <span class="assignee-name" x-text="user.name"></span>
+                                                            <span class="assignee-email" x-text="user.email"></span>
+                                                        </div>
+                                                        <svg x-show="isAssigneeSelected(user.id)" class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hidden inputs for selected assignees -->
+                                    <template x-for="assignee in selectedAssignees" :key="assignee.id">
+                                        <input type="hidden" name="assigned_to" :value="assignee.id">
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Labels Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Labels</h3>
+                            <div class="card-subtitle">Organize a tarefa com etiquetas</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="labels-container">
+                                <div class="selected-labels" x-show="selectedLabels.length > 0">
+                                    <template x-for="label in selectedLabels" :key="label.id">
+                                        <div class="label-chip" :style="`background-color: ${label.color}`">
+                                            <span x-text="label.name"></span>
+                                            <button type="button" @click="removeLabel(label.id)" class="remove-label">×</button>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="label-selector" x-data="{ open: false }">
+                                    <button type="button" @click="open = !open" class="add-label-btn">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                        </svg>
+                                        Adicionar Label
+                                    </button>
+
+                                    <div x-show="open" @click.away="open = false" x-transition class="label-dropdown">
+                                        <div class="label-search">
+                                            <input type="text" 
+                                                   x-model="labelSearch" 
+                                                   placeholder="Buscar label..." 
+                                                   class="label-search-input">
+                                        </div>
+                                        <div class="label-list">
+                                            <template x-for="label in filteredLabels" :key="label.id">
+                                                <button type="button" 
+                                                        @click="toggleLabel(label)" 
+                                                        class="label-option"
+                                                        :class="{ 'selected': isLabelSelected(label.id) }">
+                                                    <div class="label-color" :style="`background-color: ${label.color}`"></div>
+                                                    <span x-text="label.name"></span>
+                                                    <svg x-show="isLabelSelected(label.id)" class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                </button>
+                                            </template>
+                                        </div>
+                                        <div class="label-actions">
+                                            <button type="button" @click="showCreateLabel = true; open = false" class="create-label-btn">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                </svg>
+                                                Criar Nova Label
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden inputs for selected labels -->
+                                <template x-for="label in selectedLabels" :key="label.id">
+                                    <input type="hidden" name="labels" :value="label.id">
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attachments Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Anexos</h3>
+                            <div class="card-subtitle">Adicione arquivos relacionados à tarefa</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="attachment-upload" x-data="fileUpload()">
+                                <div class="upload-area" 
+                                     @drop.prevent="handleDrop($event)" 
+                                     @dragover.prevent 
+                                     @dragenter.prevent
+                                     :class="{ 'drag-over': isDragOver }"
+                                     @dragenter="isDragOver = true"
+                                     @dragleave="isDragOver = false">
+                                    <input type="file" 
+                                           id="attachment-input" 
+                                           multiple 
+                                           @change="handleFileSelect($event)" 
+                                           class="file-input">
+                                    <label for="attachment-input" class="upload-label">
+                                        <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        <span class="upload-text">
+                                            Clique para selecionar arquivos ou arraste e solte aqui
+                                        </span>
+                                        <span class="upload-hint">
+                                            Máximo 10MB por arquivo. Formatos: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, GIF
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <!-- File List -->
+                                <div x-show="attachments.length > 0" class="attachment-list">
+                                    <template x-for="(file, index) in attachments" :key="index">
+                                        <div class="attachment-item">
+                                            <div class="attachment-info">
+                                                <svg class="attachment-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                </svg>
+                                                <div class="attachment-details">
+                                                    <span class="attachment-name" x-text="file.name"></span>
+                                                    <span class="attachment-size" x-text="formatFileSize(file.size)"></span>
+                                                </div>
+                                            </div>
+                                            <button type="button" @click="removeAttachment(index)" class="remove-attachment">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Preview & Actions -->
+                <div class="sidebar-column">
+                    <!-- Preview Card -->
+                    <div class="form-card" x-show="showPreview">
+                        <div class="card-header">
+                            <h3 class="card-title">Preview da Tarefa</h3>
+                            <div class="card-subtitle">Veja como ficará a tarefa</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="task-preview">
+                                <div class="preview-header">
+                                    <div class="preview-priority" :class="`priority-${formData.priority}`"></div>
+                                    <div class="preview-title" x-text="formData.title || 'Título da tarefa'"></div>
+                                </div>
+                                
+                                <div class="preview-description" x-show="formData.description">
+                                    <div x-html="formData.description"></div>
+                                </div>
+
+                                <div class="preview-meta">
+                                    <div class="preview-meta-item" x-show="formData.due_date">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4m-8 0h10a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
+                                        </svg>
+                                        <span x-text="formData.due_date"></span>
+                                    </div>
+                                    
+                                    <div class="preview-meta-item" x-show="selectedAssignees.length > 0">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        <span x-text="`${selectedAssignees.length} responsável(is)`"></span>
+                                    </div>
+                                </div>
+
+                                <div class="preview-labels" x-show="selectedLabels.length > 0">
+                                    <template x-for="label in selectedLabels" :key="label.id">
+                                        <span class="preview-label" :style="`background-color: ${label.color}`" x-text="label.name"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Ações</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="action-buttons">
+                                <button type="submit" class="btn-primary" form="taskForm">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    {% if object %}Salvar Alterações{% else %}Criar Tarefa{% endif %}
+                                </button>
+
+                                {% if object %}
+                                <button type="button" @click="saveDraft()" class="btn-secondary">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
+                                    </svg>
+                                    Salvar Rascunho
+                                </button>
+                                {% endif %}
+
+                                <a href="{% url 'tasks:task_list' %}" class="btn-cancel">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Cancelar
+                                </a>
+                            </div>
+
+                            {% if object %}
+                            <div class="danger-zone">
+                                <h4 class="danger-title">Zona de Perigo</h4>
+                                <p class="danger-description">Ações irreversíveis</p>
+                                <button type="button" @click="deleteTask()" class="btn-danger">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Excluir Tarefa
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Help Card -->
+                    <div class="form-card">
+                        <div class="card-header">
+                            <h3 class="card-title">Dicas</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="help-content">
+                                <div class="help-item">
+                                    <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="help-text">
+                                        <strong>Título:</strong> Use um título claro e descritivo
+                                    </div>
+                                </div>
+                                <div class="help-item">
+                                    <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="help-text">
+                                        <strong>Prioridade:</strong> Defina conforme a urgência da tarefa
+                                    </div>
+                                </div>
+                                <div class="help-item">
+                                    <svg class="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="help-text">
+                                        <strong>Labels:</strong> Use para categorizar e filtrar tarefas
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Create Label Modal -->
+    <div x-show="showCreateLabel" class="modal-overlay" @click="showCreateLabel = false">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Nova Label</h3>
+                <button @click="showCreateLabel = false" class="modal-close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Nome da Label</label>
+                    <input type="text" x-model="newLabel.name" class="form-input" placeholder="Digite o nome da label">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cor</label>
+                    <div class="color-picker">
+                        <template x-for="color in labelColors" :key="color">
+                            <button type="button" 
+                                    @click="newLabel.color = color" 
+                                    :style="`background-color: ${color}`"
+                                    class="color-option"
+                                    :class="{ 'selected': newLabel.color === color }">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button @click="createLabel()" class="btn-primary">Criar Label</button>
+                <button @click="showCreateLabel = false" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize form data
+const initialFormData = {
+    title: '{{ form.title.value|default:"" }}',
+    description: `{{ form.description.value|default:"" }}`,
+    board: '{{ form.board.value|default:"" }}',
+    column: '{{ form.column.value|default:"" }}',
+    priority: '{{ form.priority.value|default:"medium" }}',
+    due_date: '{{ form.due_date.value|date:"Y-m-d"|default:"" }}'
+};
+
+// Available data
+const availableUsers = {{ users_json|safe }};
+const availableLabels = {{ labels_json|safe }};
+const availableBoards = {{ boards_json|safe }};
+const existingAssignees = {{ existing_assignees|safe }};
+const existingLabels = {{ existing_labels|safe }};
+
+function taskForm() {
+    return {
+        showPreview: false,
+        showCreateLabel: false,
+        formData: { ...initialFormData },
+        
+        selectedAssignees: existingAssignees || [],
+        selectedLabels: existingLabels || [],
+        
+        assigneeSearch: '',
+        labelSearch: '',
+        
+        availableColumns: [],
+        
+        newLabel: {
+            name: '',
+            color: '#3b82f6'
+        },
+        
+        labelColors: [
+            '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+            '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6b7280'
+        ],
+
+        get filteredUsers() {
+            if (!this.assigneeSearch) return availableUsers;
+            return availableUsers.filter(user => 
+                user.name.toLowerCase().includes(this.assigneeSearch.toLowerCase()) ||
+                user.email.toLowerCase().includes(this.assigneeSearch.toLowerCase())
+            );
+        },
+
+        get filteredLabels() {
+            if (!this.labelSearch) return availableLabels;
+            return availableLabels.filter(label => 
+                label.name.toLowerCase().includes(this.labelSearch.toLowerCase())
+            );
+        },
+
+        init() {
+            this.initializeEditor();
+            this.loadColumns();
+        },
+
+        initializeEditor() {
+            const quill = new Quill('#description-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['link', 'blockquote', 'code-block'],
+                        ['clean']
+                    ]
+                },
+                placeholder: 'Descreva os detalhes da tarefa...'
+            });
+
+            // Set initial content
+            if (this.formData.description) {
+                quill.root.innerHTML = this.formData.description;
+            }
+
+            // Update form data when editor changes
+            quill.on('text-change', () => {
+                this.formData.description = quill.root.innerHTML;
+                document.getElementById('id_description').value = quill.root.innerHTML;
+                this.updatePreview();
+            });
+        },
+
+        async loadColumns() {
+            if (!this.formData.board) {
+                this.availableColumns = [];
+                return;
+            }
+
+            try {
+                const response = await fetch(`/tasks/api/boards/${this.formData.board}/columns/`);
+                if (response.ok) {
+                    this.availableColumns = await response.json();
+                }
+            } catch (error) {
+                console.error('Error loading columns:', error);
+            }
+        },
+
+        updatePreview() {
+            // Preview is updated automatically via x-model
+        },
+
+        addAssignee(user) {
+            if (!this.isAssigneeSelected(user.id)) {
+                this.selectedAssignees.push(user);
+            }
+        },
+
+        removeAssignee(userId) {
+            this.selectedAssignees = this.selectedAssignees.filter(a => a.id !== userId);
+        },
+
+        isAssigneeSelected(userId) {
+            return this.selectedAssignees.some(a => a.id === userId);
+        },
+
+        toggleLabel(label) {
+            if (this.isLabelSelected(label.id)) {
+                this.removeLabel(label.id);
+            } else {
+                this.selectedLabels.push(label);
+            }
+        },
+
+        removeLabel(labelId) {
+            this.selectedLabels = this.selectedLabels.filter(l => l.id !== labelId);
+        },
+
+        isLabelSelected(labelId) {
+            return this.selectedLabels.some(l => l.id === labelId);
+        },
+
+        async createLabel() {
+            if (!this.newLabel.name) return;
+
+            try {
+                const response = await fetch('/tasks/api/labels/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.newLabel)
+                });
+
+                if (response.ok) {
+                    const label = await response.json();
+                    availableLabels.push(label);
+                    this.selectedLabels.push(label);
+                    this.newLabel = { name: '', color: '#3b82f6' };
+                    this.showCreateLabel = false;
+                } else {
+                    alert('Erro ao criar label');
+                }
+            } catch (error) {
+                console.error('Error creating label:', error);
+                alert('Erro ao criar label');
+            }
+        },
+
+        validateForm(event) {
+            // Custom validation logic
+            if (!this.formData.title.trim()) {
+                event.preventDefault();
+                alert('Título é obrigatório');
+                return false;
+            }
+
+            if (!this.formData.board) {
+                event.preventDefault();
+                alert('Selecione um quadro');
+                return false;
+            }
+
+            return true;
+        },
+
+        async saveDraft() {
+            // Save as draft logic
+            const formData = new FormData(document.getElementById('taskForm'));
+            formData.append('is_draft', 'true');
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('Rascunho salvo com sucesso');
+                } else {
+                    alert('Erro ao salvar rascunho');
+                }
+            } catch (error) {
+                console.error('Error saving draft:', error);
+                alert('Erro ao salvar rascunho');
+            }
+        },
+
+        async deleteTask() {
+            if (!confirm('Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/tasks/api/task/{{ object.id }}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.href = '{% url "tasks:task_list" %}';
+                } else {
+                    alert('Erro ao excluir tarefa');
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert('Erro ao excluir tarefa');
+            }
+        }
+    }
+}
+
+function fileUpload() {
+    return {
+        attachments: [],
+        isDragOver: false,
+
+        handleDrop(event) {
+            this.isDragOver = false;
+            const files = Array.from(event.dataTransfer.files);
+            this.addFiles(files);
+        },
+
+        handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            this.addFiles(files);
+        },
+
+        addFiles(files) {
+            files.forEach(file => {
+                if (this.validateFile(file)) {
+                    this.attachments.push(file);
+                }
+            });
+        },
+
+        validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'image/png',
+                'image/jpeg',
+                'image/gif'
+            ];
+
+            if (file.size > maxSize) {
+                alert(`Arquivo ${file.name} é muito grande. Máximo 10MB.`);
+                return false;
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                alert(`Tipo de arquivo ${file.name} não permitido.`);
+                return false;
+            }
+
+            return true;
+        },
+
+        removeAttachment(index) {
+            this.attachments.splice(index, 1);
+        },
+
+        formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,926 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Workflow Templates - Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-workflow-templates.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="workflow-templates-container" x-data="workflowTemplates()">
+    <!-- Header -->
+    <div class="templates-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Tasks
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Workflow Templates</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Workflow Templates</h1>
+                    <p class="page-subtitle">Create and manage reusable workflow templates for consistent task execution</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button @click="showFilters = !showFilters" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z"></path>
+                    </svg>
+                    Filters
+                </button>
+                
+                <button @click="openTemplateModal('create')" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    New Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" x-show="showFilters" x-transition>
+        <div class="filters-content">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Category</label>
+                    <select class="filter-select" x-model="filters.category">
+                        <option value="">All Categories</option>
+                        <option value="development">Development</option>
+                        <option value="design">Design</option>
+                        <option value="marketing">Marketing</option>
+                        <option value="operations">Operations</option>
+                        <option value="hr">Human Resources</option>
+                        <option value="finance">Finance</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Complexity</label>
+                    <select class="filter-select" x-model="filters.complexity">
+                        <option value="">All Levels</option>
+                        <option value="simple">Simple</option>
+                        <option value="medium">Medium</option>
+                        <option value="complex">Complex</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Duration</label>
+                    <select class="filter-select" x-model="filters.duration">
+                        <option value="">Any Duration</option>
+                        <option value="short">Short (< 1 day)</option>
+                        <option value="medium">Medium (1-7 days)</option>
+                        <option value="long">Long (> 1 week)</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Status</label>
+                    <select class="filter-select" x-model="filters.status">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                        <option value="archived">Archived</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Search</label>
+                    <input type="text" class="filter-input" placeholder="Search templates..." x-model="filters.search">
+                </div>
+                
+                <div class="filter-actions">
+                    <button @click="clearFilters()" class="btn-secondary btn-sm">Clear All</button>
+                    <button @click="applyFilters()" class="btn-primary btn-sm">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Templates Grid -->
+    <div class="templates-content">
+        <div class="content-wrapper">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" x-text="stats.totalTemplates">24</div>
+                        <div class="stat-label">Total Templates</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" x-text="stats.activeTemplates">18</div>
+                        <div class="stat-label">Active Templates</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" x-text="stats.usageCount">342</div>
+                        <div class="stat-label">Total Usage</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-details">
+                        <div class="stat-value" x-text="stats.avgDuration">5.2d</div>
+                        <div class="stat-label">Avg Duration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="view-controls">
+                <div class="view-toggle">
+                    <button @click="viewMode = 'grid'" :class="{'active': viewMode === 'grid'}" class="toggle-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                        Grid
+                    </button>
+                    <button @click="viewMode = 'list'" :class="{'active': viewMode === 'list'}" class="toggle-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                        List
+                    </button>
+                </div>
+                
+                <div class="sort-controls">
+                    <select class="sort-select" x-model="sortBy">
+                        <option value="name">Sort by Name</option>
+                        <option value="created">Sort by Created</option>
+                        <option value="usage">Sort by Usage</option>
+                        <option value="category">Sort by Category</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Templates Grid View -->
+            <div class="templates-grid" x-show="viewMode === 'grid'">
+                <template x-for="template in filteredTemplates" :key="template.id">
+                    <div class="template-card" @click="openTemplateModal('view', template)">
+                        <div class="template-header">
+                            <div class="template-category" :class="`category-${template.category}`" x-text="template.category"></div>
+                            <div class="template-actions" @click.stop>
+                                <button @click="duplicateTemplate(template)" class="action-btn" title="Duplicate">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                                <button @click="editTemplate(template)" class="action-btn" title="Edit">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="template-content">
+                            <h3 class="template-title" x-text="template.name"></h3>
+                            <p class="template-description" x-text="template.description"></p>
+                            
+                            <div class="template-meta">
+                                <div class="meta-item">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span x-text="template.estimatedDuration"></span>
+                                </div>
+                                <div class="meta-item">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <span x-text="template.stepCount + ' steps'"></span>
+                                </div>
+                                <div class="meta-item">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                    <span x-text="template.usageCount + ' uses'"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-tags">
+                                <template x-for="tag in template.tags" :key="tag">
+                                    <span class="template-tag" x-text="tag"></span>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <div class="template-footer">
+                            <div class="template-status" :class="`status-${template.status}`" x-text="template.status"></div>
+                            <div class="template-date" x-text="formatDate(template.createdAt)"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Templates List View -->
+            <div class="templates-list" x-show="viewMode === 'list'">
+                <div class="list-header">
+                    <div class="list-column name">Name</div>
+                    <div class="list-column category">Category</div>
+                    <div class="list-column steps">Steps</div>
+                    <div class="list-column duration">Duration</div>
+                    <div class="list-column usage">Usage</div>
+                    <div class="list-column status">Status</div>
+                    <div class="list-column actions">Actions</div>
+                </div>
+                
+                <template x-for="template in filteredTemplates" :key="template.id">
+                    <div class="list-row" @click="openTemplateModal('view', template)">
+                        <div class="list-column name">
+                            <div class="template-name-cell">
+                                <h4 x-text="template.name"></h4>
+                                <p x-text="template.description"></p>
+                            </div>
+                        </div>
+                        <div class="list-column category">
+                            <span class="category-badge" :class="`category-${template.category}`" x-text="template.category"></span>
+                        </div>
+                        <div class="list-column steps" x-text="template.stepCount"></div>
+                        <div class="list-column duration" x-text="template.estimatedDuration"></div>
+                        <div class="list-column usage" x-text="template.usageCount"></div>
+                        <div class="list-column status">
+                            <span class="status-badge" :class="`status-${template.status}`" x-text="template.status"></span>
+                        </div>
+                        <div class="list-column actions" @click.stop>
+                            <button @click="useTemplate(template)" class="action-btn primary" title="Use Template">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-15S8 2 8 6v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6c0-4 1-4 1-4h4.5S8 2 8 6v7a2 2 0 002 2h1m0-5.5a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z"></path>
+                                </svg>
+                            </button>
+                            <button @click="duplicateTemplate(template)" class="action-btn" title="Duplicate">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                            <button @click="editTemplate(template)" class="action-btn" title="Edit">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" x-show="filteredTemplates.length === 0">
+                <div class="empty-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="empty-title">No templates found</h3>
+                <p class="empty-description">Get started by creating your first workflow template or adjust your filters.</p>
+                <button @click="openTemplateModal('create')" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Create Your First Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal-overlay" x-show="showModal" x-transition @click="closeModal()">
+        <div class="modal-content" @click.stop x-show="showModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title" x-text="modalTitle"></h2>
+                <button @click="closeModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Create/Edit Template Form -->
+                <div x-show="modalMode === 'create' || modalMode === 'edit'">
+                    <form @submit.prevent="saveTemplate()">
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">Template Name</label>
+                                <input type="text" class="form-input" x-model="currentTemplate.name" placeholder="Enter template name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" x-model="currentTemplate.category" required>
+                                    <option value="">Select category</option>
+                                    <option value="development">Development</option>
+                                    <option value="design">Design</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="operations">Operations</option>
+                                    <option value="hr">Human Resources</option>
+                                    <option value="finance">Finance</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Complexity</label>
+                                <select class="form-select" x-model="currentTemplate.complexity" required>
+                                    <option value="">Select complexity</option>
+                                    <option value="simple">Simple</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="complex">Complex</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Estimated Duration</label>
+                                <input type="text" class="form-input" x-model="currentTemplate.estimatedDuration" placeholder="e.g., 2 days" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" x-model="currentTemplate.status" required>
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="archived">Archived</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-textarea" x-model="currentTemplate.description" placeholder="Describe what this template does" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="form-group full-width">
+                                <label class="form-label">Tags</label>
+                                <div class="tags-input">
+                                    <template x-for="(tag, index) in currentTemplate.tags" :key="index">
+                                        <span class="tag">
+                                            <span x-text="tag"></span>
+                                            <button type="button" @click="removeTag(index)" class="tag-remove">×</button>
+                                        </span>
+                                    </template>
+                                    <input type="text" class="tag-input" placeholder="Add tag..." @keydown.enter.prevent="addTag($event)" @keydown.comma.prevent="addTag($event)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Workflow Steps -->
+                        <div class="workflow-steps">
+                            <div class="section-header">
+                                <h3>Workflow Steps</h3>
+                                <button type="button" @click="addStep()" class="btn-secondary btn-sm">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Step
+                                </button>
+                            </div>
+                            
+                            <div class="steps-list">
+                                <template x-for="(step, index) in currentTemplate.steps" :key="index">
+                                    <div class="step-item">
+                                        <div class="step-header">
+                                            <div class="step-number" x-text="index + 1"></div>
+                                            <input type="text" class="step-title" x-model="step.title" placeholder="Step title">
+                                            <div class="step-actions">
+                                                <button type="button" @click="moveStep(index, -1)" :disabled="index === 0" class="step-action">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" @click="moveStep(index, 1)" :disabled="index === currentTemplate.steps.length - 1" class="step-action">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                                    </svg>
+                                                </button>
+                                                <button type="button" @click="removeStep(index)" class="step-action danger">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="step-content">
+                                            <textarea class="step-description" x-model="step.description" placeholder="Step description and instructions" rows="2"></textarea>
+                                            
+                                            <div class="step-details">
+                                                <div class="detail-group">
+                                                    <label class="detail-label">Duration</label>
+                                                    <input type="text" class="detail-input" x-model="step.estimatedDuration" placeholder="e.g., 2h">
+                                                </div>
+                                                
+                                                <div class="detail-group">
+                                                    <label class="detail-label">Assignee</label>
+                                                    <select class="detail-select" x-model="step.assigneeRole">
+                                                        <option value="">Any team member</option>
+                                                        <option value="developer">Developer</option>
+                                                        <option value="designer">Designer</option>
+                                                        <option value="manager">Manager</option>
+                                                        <option value="qa">QA Tester</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div class="detail-group">
+                                                    <label class="detail-label">Priority</label>
+                                                    <select class="detail-select" x-model="step.priority">
+                                                        <option value="low">Low</option>
+                                                        <option value="medium">Medium</option>
+                                                        <option value="high">High</option>
+                                                        <option value="urgent">Urgent</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" @click="closeModal()" class="btn-secondary">Cancel</button>
+                            <button type="submit" class="btn-primary" :disabled="saving">
+                                <svg x-show="saving" class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span x-show="!saving" x-text="modalMode === 'create' ? 'Create Template' : 'Update Template'"></span>
+                                <span x-show="saving">Saving...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- View Template -->
+                <div x-show="modalMode === 'view'">
+                    <div class="template-view">
+                        <div class="template-info">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Category:</label>
+                                    <span class="category-badge" :class="`category-${currentTemplate.category}`" x-text="currentTemplate.category"></span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Complexity:</label>
+                                    <span x-text="currentTemplate.complexity"></span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Duration:</label>
+                                    <span x-text="currentTemplate.estimatedDuration"></span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Status:</label>
+                                    <span class="status-badge" :class="`status-${currentTemplate.status}`" x-text="currentTemplate.status"></span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Usage Count:</label>
+                                    <span x-text="currentTemplate.usageCount + ' times'"></span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Created:</label>
+                                    <span x-text="formatDate(currentTemplate.createdAt)"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="template-description">
+                                <h4>Description</h4>
+                                <p x-text="currentTemplate.description"></p>
+                            </div>
+                            
+                            <div class="template-tags" x-show="currentTemplate.tags && currentTemplate.tags.length > 0">
+                                <h4>Tags</h4>
+                                <div class="tags-list">
+                                    <template x-for="tag in currentTemplate.tags" :key="tag">
+                                        <span class="template-tag" x-text="tag"></span>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="workflow-preview">
+                            <h4>Workflow Steps</h4>
+                            <div class="steps-preview">
+                                <template x-for="(step, index) in currentTemplate.steps" :key="index">
+                                    <div class="preview-step">
+                                        <div class="preview-step-header">
+                                            <div class="preview-step-number" x-text="index + 1"></div>
+                                            <h5 x-text="step.title"></h5>
+                                            <div class="preview-step-meta">
+                                                <span class="meta-duration" x-text="step.estimatedDuration"></span>
+                                                <span class="meta-priority" :class="`priority-${step.priority}`" x-text="step.priority"></span>
+                                            </div>
+                                        </div>
+                                        <div class="preview-step-content">
+                                            <p x-text="step.description"></p>
+                                            <div class="step-assignee" x-show="step.assigneeRole">
+                                                <strong>Assignee:</strong> <span x-text="step.assigneeRole"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button @click="useTemplate(currentTemplate)" class="btn-primary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-15S8 2 8 6v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6c0-4 1-4 1-4h4.5S8 2 8 6v7a2 2 0 002 2h1m0-5.5a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z"></path>
+                            </svg>
+                            Use This Template
+                        </button>
+                        <button @click="duplicateTemplate(currentTemplate)" class="btn-secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            Duplicate
+                        </button>
+                        <button @click="editTemplate(currentTemplate)" class="btn-secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function workflowTemplates() {
+    return {
+        // View state
+        viewMode: 'grid',
+        showFilters: false,
+        showModal: false,
+        modalMode: 'view',
+        modalTitle: '',
+        saving: false,
+        
+        // Data
+        templates: [
+            {
+                id: 1,
+                name: 'Website Launch Checklist',
+                description: 'Comprehensive checklist for launching a new website including testing, SEO, and deployment steps.',
+                category: 'development',
+                complexity: 'medium',
+                estimatedDuration: '3 days',
+                status: 'active',
+                usageCount: 45,
+                stepCount: 12,
+                createdAt: '2024-01-15',
+                tags: ['website', 'launch', 'checklist', 'seo'],
+                steps: [
+                    {
+                        title: 'Code Review',
+                        description: 'Review all code for quality and best practices',
+                        estimatedDuration: '4h',
+                        assigneeRole: 'developer',
+                        priority: 'high'
+                    },
+                    {
+                        title: 'Testing',
+                        description: 'Run all automated tests and perform manual testing',
+                        estimatedDuration: '6h',
+                        assigneeRole: 'qa',
+                        priority: 'high'
+                    }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Product Feature Development',
+                description: 'Standard workflow for developing new product features from conception to deployment.',
+                category: 'development',
+                complexity: 'complex',
+                estimatedDuration: '2 weeks',
+                status: 'active',
+                usageCount: 32,
+                stepCount: 18,
+                createdAt: '2024-01-10',
+                tags: ['feature', 'development', 'agile'],
+                steps: [
+                    {
+                        title: 'Requirements Analysis',
+                        description: 'Analyze and document feature requirements',
+                        estimatedDuration: '1 day',
+                        assigneeRole: 'manager',
+                        priority: 'high'
+                    },
+                    {
+                        title: 'Design Mockups',
+                        description: 'Create visual mockups and user flow designs',
+                        estimatedDuration: '2 days',
+                        assigneeRole: 'designer',
+                        priority: 'medium'
+                    }
+                ]
+            },
+            {
+                id: 3,
+                name: 'Marketing Campaign Launch',
+                description: 'Template for launching marketing campaigns across multiple channels.',
+                category: 'marketing',
+                complexity: 'medium',
+                estimatedDuration: '1 week',
+                status: 'active',
+                usageCount: 28,
+                stepCount: 10,
+                createdAt: '2024-01-08',
+                tags: ['marketing', 'campaign', 'launch'],
+                steps: [
+                    {
+                        title: 'Campaign Strategy',
+                        description: 'Define campaign goals, target audience, and key messages',
+                        estimatedDuration: '1 day',
+                        assigneeRole: 'manager',
+                        priority: 'high'
+                    }
+                ]
+            },
+            {
+                id: 4,
+                name: 'Employee Onboarding',
+                description: 'Complete onboarding process for new team members.',
+                category: 'hr',
+                complexity: 'simple',
+                estimatedDuration: '5 days',
+                status: 'active',
+                usageCount: 67,
+                stepCount: 8,
+                createdAt: '2024-01-05',
+                tags: ['onboarding', 'hr', 'training'],
+                steps: [
+                    {
+                        title: 'Welcome Package',
+                        description: 'Prepare and send welcome package with company information',
+                        estimatedDuration: '30min',
+                        assigneeRole: 'manager',
+                        priority: 'medium'
+                    }
+                ]
+            }
+        ],
+        
+        currentTemplate: {
+            name: '',
+            description: '',
+            category: '',
+            complexity: '',
+            estimatedDuration: '',
+            status: 'draft',
+            tags: [],
+            steps: []
+        },
+        
+        // Filters
+        filters: {
+            category: '',
+            complexity: '',
+            duration: '',
+            status: '',
+            search: ''
+        },
+        
+        sortBy: 'name',
+        
+        // Statistics
+        stats: {
+            totalTemplates: 24,
+            activeTemplates: 18,
+            usageCount: 342,
+            avgDuration: '5.2d'
+        },
+        
+        // Computed properties
+        get filteredTemplates() {
+            let filtered = this.templates;
+            
+            if (this.filters.category) {
+                filtered = filtered.filter(t => t.category === this.filters.category);
+            }
+            
+            if (this.filters.complexity) {
+                filtered = filtered.filter(t => t.complexity === this.filters.complexity);
+            }
+            
+            if (this.filters.status) {
+                filtered = filtered.filter(t => t.status === this.filters.status);
+            }
+            
+            if (this.filters.search) {
+                const search = this.filters.search.toLowerCase();
+                filtered = filtered.filter(t => 
+                    t.name.toLowerCase().includes(search) ||
+                    t.description.toLowerCase().includes(search) ||
+                    t.tags.some(tag => tag.toLowerCase().includes(search))
+                );
+            }
+            
+            // Sort results
+            return filtered.sort((a, b) => {
+                switch (this.sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'created':
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    case 'usage':
+                        return b.usageCount - a.usageCount;
+                    case 'category':
+                        return a.category.localeCompare(b.category);
+                    default:
+                        return 0;
+                }
+            });
+        },
+        
+        // Methods
+        openTemplateModal(mode, template = null) {
+            this.modalMode = mode;
+            this.showModal = true;
+            
+            switch (mode) {
+                case 'create':
+                    this.modalTitle = 'Create New Template';
+                    this.currentTemplate = {
+                        name: '',
+                        description: '',
+                        category: '',
+                        complexity: '',
+                        estimatedDuration: '',
+                        status: 'draft',
+                        tags: [],
+                        steps: [{
+                            title: '',
+                            description: '',
+                            estimatedDuration: '',
+                            assigneeRole: '',
+                            priority: 'medium'
+                        }]
+                    };
+                    break;
+                case 'edit':
+                    this.modalTitle = 'Edit Template';
+                    this.currentTemplate = { ...template };
+                    break;
+                case 'view':
+                    this.modalTitle = template.name;
+                    this.currentTemplate = template;
+                    break;
+            }
+        },
+        
+        closeModal() {
+            this.showModal = false;
+            this.currentTemplate = {};
+        },
+        
+        saveTemplate() {
+            this.saving = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                if (this.modalMode === 'create') {
+                    this.currentTemplate.id = Date.now();
+                    this.currentTemplate.createdAt = new Date().toISOString().split('T')[0];
+                    this.currentTemplate.usageCount = 0;
+                    this.currentTemplate.stepCount = this.currentTemplate.steps.length;
+                    this.templates.push({ ...this.currentTemplate });
+                } else {
+                    const index = this.templates.findIndex(t => t.id === this.currentTemplate.id);
+                    if (index !== -1) {
+                        this.currentTemplate.stepCount = this.currentTemplate.steps.length;
+                        this.templates[index] = { ...this.currentTemplate };
+                    }
+                }
+                
+                this.saving = false;
+                this.closeModal();
+            }, 1000);
+        },
+        
+        duplicateTemplate(template) {
+            const duplicate = {
+                ...template,
+                id: Date.now(),
+                name: template.name + ' (Copy)',
+                createdAt: new Date().toISOString().split('T')[0],
+                usageCount: 0,
+                status: 'draft'
+            };
+            this.templates.push(duplicate);
+        },
+        
+        editTemplate(template) {
+            this.openTemplateModal('edit', template);
+        },
+        
+        useTemplate(template) {
+            // Logic to create project from template
+            console.log('Using template:', template.name);
+            this.closeModal();
+        },
+        
+        addStep() {
+            this.currentTemplate.steps.push({
+                title: '',
+                description: '',
+                estimatedDuration: '',
+                assigneeRole: '',
+                priority: 'medium'
+            });
+        },
+        
+        removeStep(index) {
+            this.currentTemplate.steps.splice(index, 1);
+        },
+        
+        moveStep(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < this.currentTemplate.steps.length) {
+                const temp = this.currentTemplate.steps[index];
+                this.currentTemplate.steps[index] = this.currentTemplate.steps[newIndex];
+                this.currentTemplate.steps[newIndex] = temp;
+            }
+        },
+        
+        addTag(event) {
+            const tag = event.target.value.trim();
+            if (tag && !this.currentTemplate.tags.includes(tag)) {
+                this.currentTemplate.tags.push(tag);
+                event.target.value = '';
+            }
+        },
+        
+        removeTag(index) {
+            this.currentTemplate.tags.splice(index, 1);
+        },
+        
+        clearFilters() {
+            this.filters = {
+                category: '',
+                complexity: '',
+                duration: '',
+                status: '',
+                search: ''
+            };
+        },
+        
+        applyFilters() {
+            // Filters are applied automatically through computed property
+            this.showFilters = false;
+        },
+        
+        formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString();
+        }
+    };
+}
+</script>
+{% endblock %}

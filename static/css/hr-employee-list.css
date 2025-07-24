@@ -1,0 +1,206 @@
+/* HR Employee List Styles */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.avatar-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.employee-card {
+    transition: all 0.2s ease-in-out;
+}
+
+.employee-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* List view styles */
+.list-view .employee-card {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+}
+
+.list-view .employee-card .p-6 {
+    padding: 0;
+    flex: 1;
+}
+
+.list-view .employee-card .px-6 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.list-view .employee-card .bg-gray-50 {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-left: auto;
+}
+
+/* View toggle buttons */
+.view-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    color: #374151;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.view-toggle:hover {
+    background-color: #f9fafb;
+}
+
+.view-toggle:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.view-toggle.active {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.view-toggle.active:hover {
+    background-color: #1d4ed8;
+}
+
+/* Advanced filters */
+.filter-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.filter-chip button {
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    color: #60a5fa;
+    transition: all 0.15s ease-in-out;
+}
+
+.filter-chip button:hover {
+    color: #2563eb;
+    background-color: #bfdbfe;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .employee-card {
+        margin-bottom: 1rem;
+    }
+    
+    .grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading states */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Export button styles */
+.export-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    color: #374151;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.export-btn:hover {
+    background-color: #f9fafb;
+}
+
+.export-btn:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Bulk actions */
+.bulk-actions {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 1rem;
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.bulk-actions.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Accessibility improvements */
+.employee-card:focus-within {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .employee-card {
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+}

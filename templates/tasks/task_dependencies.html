@@ -1,0 +1,883 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Task Dependencies - Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-dependencies.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dependencies-container" x-data="taskDependencies()">
+    <!-- Header -->
+    <div class="dependencies-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Tasks
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Dependencies</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Task Dependencies</h1>
+                    <p class="page-subtitle">Visualize and manage task relationships and dependencies</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="view-toggle">
+                    <button @click="viewMode = 'visual'" :class="{'active': viewMode === 'visual'}" class="toggle-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Visual
+                    </button>
+                    <button @click="viewMode = 'table'" :class="{'active': viewMode === 'table'}" class="toggle-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0V4a2 2 0 012-2h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Table
+                    </button>
+                    <button @click="viewMode = 'timeline'" :class="{'active': viewMode === 'timeline'}" class="toggle-btn">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Timeline
+                    </button>
+                </div>
+                
+                <button @click="openDependencyModal()" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Dependency
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependencies Content -->
+    <div class="dependencies-content">
+        <div class="content-wrapper">
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-value" x-text="stats.totalDependencies">42</div>
+                        <div class="card-label">Total Dependencies</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card blocked">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"></path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-value" x-text="stats.blockedTasks">8</div>
+                        <div class="card-label">Blocked Tasks</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card critical">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-value" x-text="stats.criticalPath">12</div>
+                        <div class="card-label">Critical Path Tasks</div>
+                    </div>
+                </div>
+                
+                <div class="summary-card ready">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-value" x-text="stats.readyTasks">15</div>
+                        <div class="card-label">Ready to Start</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Dependencies View -->
+            <div class="dependencies-visual" x-show="viewMode === 'visual'">
+                <div class="visual-controls">
+                    <div class="controls-left">
+                        <div class="zoom-controls">
+                            <button @click="zoomIn()" class="zoom-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </button>
+                            <span class="zoom-level" x-text="Math.round(zoomLevel * 100) + '%'">100%</span>
+                            <button @click="zoomOut()" class="zoom-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <button @click="resetView()" class="btn-secondary btn-sm">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Reset View
+                        </button>
+                    </div>
+                    
+                    <div class="controls-right">
+                        <div class="layout-controls">
+                            <label class="control-label">Layout:</label>
+                            <select class="control-select" x-model="layoutType">
+                                <option value="hierarchical">Hierarchical</option>
+                                <option value="force">Force Directed</option>
+                                <option value="circular">Circular</option>
+                                <option value="grid">Grid</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-controls">
+                            <label class="control-label">Show:</label>
+                            <div class="filter-checkboxes">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="showCompleted">
+                                    <span class="checkmark"></span>
+                                    Completed
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" x-model="showBlocked">
+                                    <span class="checkmark"></span>
+                                    Blocked
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dependency-graph" id="dependencyGraph">
+                    <!-- SVG canvas will be rendered here by D3.js -->
+                    <svg width="100%" height="600"></svg>
+                    
+                    <!-- Legend -->
+                    <div class="graph-legend">
+                        <div class="legend-title">Legend</div>
+                        <div class="legend-items">
+                            <div class="legend-item">
+                                <div class="legend-node pending"></div>
+                                <span>Pending</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-node in-progress"></div>
+                                <span>In Progress</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-node completed"></div>
+                                <span>Completed</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-node blocked"></div>
+                                <span>Blocked</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-node critical"></div>
+                                <span>Critical Path</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Dependencies View -->
+            <div class="dependencies-table" x-show="viewMode === 'table'">
+                <div class="table-controls">
+                    <div class="search-box">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input type="text" class="search-input" placeholder="Search tasks..." x-model="searchQuery">
+                    </div>
+                    
+                    <div class="table-filters">
+                        <select class="filter-select" x-model="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="blocked">Blocked</option>
+                        </select>
+                        
+                        <select class="filter-select" x-model="priorityFilter">
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="dependencies-table-grid">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Dependencies</th>
+                                <th>Blocked By</th>
+                                <th>Blocks</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="task in filteredTasks" :key="task.id">
+                                <tr class="table-row" :class="{'blocked': task.isBlocked, 'critical': task.isCritical}">
+                                    <td class="task-cell">
+                                        <div class="task-info">
+                                            <h4 class="task-title" x-text="task.title"></h4>
+                                            <p class="task-description" x-text="task.description"></p>
+                                            <div class="task-meta">
+                                                <span class="task-id" x-text="'#' + task.id"></span>
+                                                <span class="task-assignee" x-text="task.assignee"></span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="status-cell">
+                                        <span class="status-badge" :class="`status-${task.status}`" x-text="task.status"></span>
+                                    </td>
+                                    <td class="priority-cell">
+                                        <span class="priority-badge" :class="`priority-${task.priority}`" x-text="task.priority"></span>
+                                    </td>
+                                    <td class="dependencies-cell">
+                                        <div class="dependency-count" x-text="task.dependencies.length + ' deps'"></div>
+                                        <div class="dependency-list" x-show="task.dependencies.length > 0">
+                                            <template x-for="dep in task.dependencies.slice(0, 3)" :key="dep.id">
+                                                <span class="dependency-tag" x-text="'#' + dep.id"></span>
+                                            </template>
+                                            <span x-show="task.dependencies.length > 3" class="more-deps" x-text="'+' + (task.dependencies.length - 3)"></span>
+                                        </div>
+                                    </td>
+                                    <td class="blocked-by-cell">
+                                        <div class="blocked-count" x-show="task.blockedBy.length > 0" x-text="task.blockedBy.length + ' tasks'"></div>
+                                        <div class="blocked-list" x-show="task.blockedBy.length > 0">
+                                            <template x-for="blocker in task.blockedBy.slice(0, 2)" :key="blocker.id">
+                                                <span class="blocker-tag" x-text="'#' + blocker.id"></span>
+                                            </template>
+                                            <span x-show="task.blockedBy.length > 2" class="more-blockers" x-text="'+' + (task.blockedBy.length - 2)"></span>
+                                        </div>
+                                    </td>
+                                    <td class="blocks-cell">
+                                        <div class="blocks-count" x-show="task.blocks.length > 0" x-text="task.blocks.length + ' tasks'"></div>
+                                        <div class="blocks-list" x-show="task.blocks.length > 0">
+                                            <template x-for="blocked in task.blocks.slice(0, 2)" :key="blocked.id">
+                                                <span class="blocked-tag" x-text="'#' + blocked.id"></span>
+                                            </template>
+                                            <span x-show="task.blocks.length > 2" class="more-blocked" x-text="'+' + (task.blocks.length - 2)"></span>
+                                        </div>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <div class="action-buttons">
+                                            <button @click="viewTaskDetails(task)" class="action-btn" title="View Details">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="editDependencies(task)" class="action-btn" title="Edit Dependencies">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="removeDependency(task)" class="action-btn danger" title="Remove Dependencies">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Timeline Dependencies View -->
+            <div class="dependencies-timeline" x-show="viewMode === 'timeline'">
+                <div class="timeline-controls">
+                    <div class="timeline-nav">
+                        <button @click="timelinePrevious()" class="nav-btn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="timeline-period" x-text="currentPeriod">January 2024</div>
+                        <button @click="timelineNext()" class="nav-btn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="timeline-zoom">
+                        <button @click="timelineZoom = 'day'" :class="{'active': timelineZoom === 'day'}" class="zoom-btn">Day</button>
+                        <button @click="timelineZoom = 'week'" :class="{'active': timelineZoom === 'week'}" class="zoom-btn">Week</button>
+                        <button @click="timelineZoom = 'month'" :class="{'active': timelineZoom === 'month'}" class="zoom-btn">Month</button>
+                    </div>
+                </div>
+                
+                <div class="timeline-container">
+                    <div class="timeline-header">
+                        <div class="timeline-dates" id="timelineDates">
+                            <!-- Timeline dates will be generated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-content">
+                        <div class="timeline-tasks">
+                            <template x-for="task in timelineTasks" :key="task.id">
+                                <div class="timeline-task" :class="{'blocked': task.isBlocked, 'critical': task.isCritical}">
+                                    <div class="task-label">
+                                        <span class="task-name" x-text="task.title"></span>
+                                        <span class="task-duration" x-text="task.duration"></span>
+                                    </div>
+                                    <div class="task-bar" :style="`left: ${task.startPosition}%; width: ${task.width}%`" :class="`status-${task.status}`">
+                                        <div class="task-progress" :style="`width: ${task.progress}%`"></div>
+                                        <div class="task-dependencies">
+                                            <template x-for="dep in task.dependencies" :key="dep.id">
+                                                <div class="dependency-line" :style="dep.lineStyle"></div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dependency Modal -->
+    <div class="modal-overlay" x-show="showModal" x-transition @click="closeModal()">
+        <div class="modal-content" @click.stop x-show="showModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title" x-text="modalTitle">Add Dependency</h2>
+                <button @click="closeModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form @submit.prevent="saveDependency()">
+                    <div class="form-section">
+                        <h3>Dependency Type</h3>
+                        <div class="dependency-types">
+                            <label class="type-option">
+                                <input type="radio" name="dependencyType" value="finish-to-start" x-model="currentDependency.type">
+                                <div class="type-card">
+                                    <div class="type-icon">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="type-info">
+                                        <h4>Finish to Start</h4>
+                                        <p>Task A must finish before Task B can start</p>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="type-option">
+                                <input type="radio" name="dependencyType" value="start-to-start" x-model="currentDependency.type">
+                                <div class="type-card">
+                                    <div class="type-icon">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="type-info">
+                                        <h4>Start to Start</h4>
+                                        <p>Task A must start before Task B can start</p>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="type-option">
+                                <input type="radio" name="dependencyType" value="finish-to-finish" x-model="currentDependency.type">
+                                <div class="type-card">
+                                    <div class="type-icon">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="type-info">
+                                        <h4>Finish to Finish</h4>
+                                        <p>Task A must finish before Task B can finish</p>
+                                    </div>
+                                </div>
+                            </label>
+                            
+                            <label class="type-option">
+                                <input type="radio" name="dependencyType" value="start-to-finish" x-model="currentDependency.type">
+                                <div class="type-card">
+                                    <div class="type-icon">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="type-info">
+                                        <h4>Start to Finish</h4>
+                                        <p>Task A must start before Task B can finish</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Predecessor Task</label>
+                            <select class="form-select" x-model="currentDependency.predecessorId" required>
+                                <option value="">Select predecessor task</option>
+                                <template x-for="task in availableTasks" :key="task.id">
+                                    <option :value="task.id" x-text="task.title"></option>
+                                </template>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Successor Task</label>
+                            <select class="form-select" x-model="currentDependency.successorId" required>
+                                <option value="">Select successor task</option>
+                                <template x-for="task in availableTasks" :key="task.id">
+                                    <option :value="task.id" x-text="task.title"></option>
+                                </template>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Lag Time (days)</label>
+                            <input type="number" class="form-input" x-model="currentDependency.lagTime" placeholder="0" min="0">
+                            <small class="form-help">Optional delay between tasks</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Constraint Type</label>
+                            <select class="form-select" x-model="currentDependency.constraintType">
+                                <option value="flexible">Flexible</option>
+                                <option value="hard">Hard Dependency</option>
+                                <option value="soft">Soft Dependency</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-textarea" x-model="currentDependency.notes" placeholder="Additional notes about this dependency" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" @click="closeModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary" :disabled="saving">
+                            <svg x-show="saving" class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-show="!saving">Create Dependency</span>
+                            <span x-show="saving">Creating...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Details Modal -->
+    <div class="modal-overlay" x-show="showDetailsModal" x-transition @click="closeDetailsModal()">
+        <div class="modal-content large" @click.stop x-show="showDetailsModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title" x-text="selectedTask?.title">Task Details</h2>
+                <button @click="closeDetailsModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="task-details" x-show="selectedTask">
+                    <div class="details-grid">
+                        <div class="detail-section">
+                            <h3>Task Information</h3>
+                            <div class="detail-item">
+                                <label>ID:</label>
+                                <span x-text="'#' + selectedTask?.id"></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Status:</label>
+                                <span class="status-badge" :class="`status-${selectedTask?.status}`" x-text="selectedTask?.status"></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Priority:</label>
+                                <span class="priority-badge" :class="`priority-${selectedTask?.priority}`" x-text="selectedTask?.priority"></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Assignee:</label>
+                                <span x-text="selectedTask?.assignee"></span>
+                            </div>
+                            <div class="detail-item">
+                                <label>Due Date:</label>
+                                <span x-text="selectedTask?.dueDate"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>Dependencies</h3>
+                            <div class="dependency-details">
+                                <div class="dep-section">
+                                    <h4>Depends On</h4>
+                                    <div class="dep-list" x-show="selectedTask?.dependencies?.length > 0">
+                                        <template x-for="dep in selectedTask?.dependencies" :key="dep.id">
+                                            <div class="dep-item">
+                                                <span class="dep-id" x-text="'#' + dep.id"></span>
+                                                <span class="dep-title" x-text="dep.title"></span>
+                                                <span class="dep-type" x-text="dep.type"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-show="!selectedTask?.dependencies?.length" class="no-deps">No dependencies</div>
+                                </div>
+                                
+                                <div class="dep-section">
+                                    <h4>Blocks</h4>
+                                    <div class="dep-list" x-show="selectedTask?.blocks?.length > 0">
+                                        <template x-for="blocked in selectedTask?.blocks" :key="blocked.id">
+                                            <div class="dep-item">
+                                                <span class="dep-id" x-text="'#' + blocked.id"></span>
+                                                <span class="dep-title" x-text="blocked.title"></span>
+                                                <span class="dep-type" x-text="blocked.type"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-show="!selectedTask?.blocks?.length" class="no-deps">Doesn't block any tasks</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section full-width">
+                        <h3>Description</h3>
+                        <p class="task-description-full" x-text="selectedTask?.description"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function taskDependencies() {
+    return {
+        // View state
+        viewMode: 'visual',
+        showModal: false,
+        showDetailsModal: false,
+        modalTitle: 'Add Dependency',
+        saving: false,
+        
+        // Visual controls
+        zoomLevel: 1,
+        layoutType: 'hierarchical',
+        showCompleted: true,
+        showBlocked: true,
+        
+        // Table controls
+        searchQuery: '',
+        statusFilter: '',
+        priorityFilter: '',
+        
+        // Timeline controls
+        timelineZoom: 'week',
+        currentPeriod: 'January 2024',
+        
+        // Data
+        stats: {
+            totalDependencies: 42,
+            blockedTasks: 8,
+            criticalPath: 12,
+            readyTasks: 15
+        },
+        
+        tasks: [
+            {
+                id: 1,
+                title: 'Database Design',
+                description: 'Design the database schema for the new application',
+                status: 'completed',
+                priority: 'high',
+                assignee: 'John Doe',
+                dueDate: '2024-01-15',
+                isBlocked: false,
+                isCritical: true,
+                dependencies: [],
+                blockedBy: [],
+                blocks: [
+                    { id: 2, title: 'Backend API Development', type: 'finish-to-start' },
+                    { id: 3, title: 'Frontend Integration', type: 'finish-to-start' }
+                ],
+                duration: '5 days',
+                progress: 100,
+                startPosition: 10,
+                width: 15
+            },
+            {
+                id: 2,
+                title: 'Backend API Development',
+                description: 'Develop REST API endpoints for the application',
+                status: 'in-progress',
+                priority: 'high',
+                assignee: 'Jane Smith',
+                dueDate: '2024-01-25',
+                isBlocked: false,
+                isCritical: true,
+                dependencies: [
+                    { id: 1, title: 'Database Design', type: 'finish-to-start' }
+                ],
+                blockedBy: [],
+                blocks: [
+                    { id: 4, title: 'API Testing', type: 'finish-to-start' }
+                ],
+                duration: '8 days',
+                progress: 60,
+                startPosition: 25,
+                width: 20
+            },
+            {
+                id: 3,
+                title: 'Frontend Integration',
+                description: 'Integrate frontend with backend APIs',
+                status: 'pending',
+                priority: 'medium',
+                assignee: 'Mike Johnson',
+                dueDate: '2024-02-05',
+                isBlocked: true,
+                isCritical: false,
+                dependencies: [
+                    { id: 1, title: 'Database Design', type: 'finish-to-start' },
+                    { id: 2, title: 'Backend API Development', type: 'finish-to-start' }
+                ],
+                blockedBy: [
+                    { id: 2, title: 'Backend API Development', type: 'finish-to-start' }
+                ],
+                blocks: [],
+                duration: '6 days',
+                progress: 0,
+                startPosition: 45,
+                width: 18
+            },
+            {
+                id: 4,
+                title: 'API Testing',
+                description: 'Comprehensive testing of API endpoints',
+                status: 'pending',
+                priority: 'high',
+                assignee: 'Sarah Wilson',
+                dueDate: '2024-02-10',
+                isBlocked: true,
+                isCritical: true,
+                dependencies: [
+                    { id: 2, title: 'Backend API Development', type: 'finish-to-start' }
+                ],
+                blockedBy: [
+                    { id: 2, title: 'Backend API Development', type: 'finish-to-start' }
+                ],
+                blocks: [
+                    { id: 5, title: 'Deployment', type: 'finish-to-start' }
+                ],
+                duration: '4 days',
+                progress: 0,
+                startPosition: 63,
+                width: 12
+            },
+            {
+                id: 5,
+                title: 'Deployment',
+                description: 'Deploy application to production environment',
+                status: 'pending',
+                priority: 'urgent',
+                assignee: 'Tom Brown',
+                dueDate: '2024-02-15',
+                isBlocked: true,
+                isCritical: true,
+                dependencies: [
+                    { id: 4, title: 'API Testing', type: 'finish-to-start' }
+                ],
+                blockedBy: [
+                    { id: 4, title: 'API Testing', type: 'finish-to-start' }
+                ],
+                blocks: [],
+                duration: '2 days',
+                progress: 0,
+                startPosition: 75,
+                width: 8
+            }
+        ],
+        
+        currentDependency: {
+            type: 'finish-to-start',
+            predecessorId: '',
+            successorId: '',
+            lagTime: 0,
+            constraintType: 'flexible',
+            notes: ''
+        },
+        
+        selectedTask: null,
+        
+        // Computed properties
+        get filteredTasks() {
+            let filtered = this.tasks;
+            
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(task => 
+                    task.title.toLowerCase().includes(query) ||
+                    task.description.toLowerCase().includes(query) ||
+                    task.assignee.toLowerCase().includes(query)
+                );
+            }
+            
+            if (this.statusFilter) {
+                filtered = filtered.filter(task => task.status === this.statusFilter);
+            }
+            
+            if (this.priorityFilter) {
+                filtered = filtered.filter(task => task.priority === this.priorityFilter);
+            }
+            
+            return filtered;
+        },
+        
+        get availableTasks() {
+            return this.tasks.map(task => ({
+                id: task.id,
+                title: task.title
+            }));
+        },
+        
+        get timelineTasks() {
+            return this.tasks.filter(task => {
+                if (!this.showCompleted && task.status === 'completed') return false;
+                if (!this.showBlocked && task.isBlocked) return false;
+                return true;
+            });
+        },
+        
+        // Methods
+        openDependencyModal() {
+            this.modalTitle = 'Add Dependency';
+            this.currentDependency = {
+                type: 'finish-to-start',
+                predecessorId: '',
+                successorId: '',
+                lagTime: 0,
+                constraintType: 'flexible',
+                notes: ''
+            };
+            this.showModal = true;
+        },
+        
+        closeModal() {
+            this.showModal = false;
+        },
+        
+        saveDependency() {
+            this.saving = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                // Add dependency logic here
+                console.log('Creating dependency:', this.currentDependency);
+                this.saving = false;
+                this.closeModal();
+            }, 1000);
+        },
+        
+        viewTaskDetails(task) {
+            this.selectedTask = task;
+            this.showDetailsModal = true;
+        },
+        
+        closeDetailsModal() {
+            this.showDetailsModal = false;
+            this.selectedTask = null;
+        },
+        
+        editDependencies(task) {
+            // Logic to edit task dependencies
+            console.log('Editing dependencies for:', task.title);
+        },
+        
+        removeDependency(task) {
+            // Logic to remove dependencies
+            console.log('Removing dependencies for:', task.title);
+        },
+        
+        // Visual controls
+        zoomIn() {
+            this.zoomLevel = Math.min(this.zoomLevel * 1.2, 3);
+        },
+        
+        zoomOut() {
+            this.zoomLevel = Math.max(this.zoomLevel / 1.2, 0.5);
+        },
+        
+        resetView() {
+            this.zoomLevel = 1;
+        },
+        
+        // Timeline controls
+        timelinePrevious() {
+            // Logic to go to previous period
+            console.log('Previous period');
+        },
+        
+        timelineNext() {
+            // Logic to go to next period
+            console.log('Next period');
+        }
+    };
+}
+</script>
+{% endblock %}

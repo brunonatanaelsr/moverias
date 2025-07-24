@@ -1,213 +1,531 @@
-{% extends "layouts/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %}Tarefas - Dashboard - Move Marias{% endblock %}
+{% block title %}Dashboard de Tarefas - Move Marias{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/tasks-dashboard.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <!-- Cabeçalho -->
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-gray-800">Dashboard de Tarefas</h1>
-        <a href="{% url 'tasks:board_list' %}" 
-           class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded">
-            Ver Quadros
-        </a>
-    </div>
-
-    <!-- Estatísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <!-- Total de Tarefas -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-100 text-blue-800">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
+<div class="min-h-screen bg-gray-50" x-data="tasksDashboard()">
+    <!-- Header Navigation -->
+    <div class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Dashboard de Tarefas</h1>
+                    
+                    <!-- Quick Filters -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <select x-model="selectedFilter" @change="applyFilter()" class="form-select-sm">
+                            <option value="all">Todas as tarefas</option>
+                            <option value="assigned">Atribuídas a mim</option>
+                            <option value="created">Criadas por mim</option>
+                            <option value="overdue">Atrasadas</option>
+                            <option value="urgent">Urgentes</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Total de Tarefas</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ total_tasks }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarefas Concluídas Hoje -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-green-100 text-green-800">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Concluídas Hoje</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ completed_tasks }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarefas Atrasadas -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-red-100 text-red-800">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Atrasadas</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ overdue_count }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarefas de Alta Prioridade -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-yellow-100 text-yellow-800">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Alta Prioridade</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ high_priority_tasks|length }}</p>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-3">
+                    <button @click="openQuickAdd()" class="btn-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nova Tarefa
+                    </button>
+                    <a href="{% url 'tasks:board_list' %}" class="btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+                        </svg>
+                        Ver Quadros
+                    </a>
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="btn-tertiary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition class="dropdown-menu">
+                            <a href="{% url 'tasks:reports' %}" class="dropdown-item">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                Relatórios
+                            </a>
+                            <button @click="exportTasks()" class="dropdown-item">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-4-4m4 4l4-4m3-6H5a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2z"></path>
+                                </svg>
+                                Exportar Dados
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Minhas Tarefas Recentes -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Minhas Tarefas Recentes</h2>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card metric-primary">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-trend metric-up">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                        </svg>
+                        +12%
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ total_tasks|default:"0" }}</div>
+                    <div class="metric-label">Total de Tarefas</div>
+                    <div class="metric-subtitle">+3 esta semana</div>
+                </div>
             </div>
-            <div class="p-6">
-                {% if my_tasks %}
-                    <div class="space-y-4">
+
+            <div class="metric-card metric-success">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-trend metric-up">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                        </svg>
+                        +18%
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ completed_tasks|default:"0" }}</div>
+                    <div class="metric-label">Concluídas Hoje</div>
+                    <div class="metric-subtitle">Meta: 15 tarefas</div>
+                </div>
+            </div>
+
+            <div class="metric-card metric-warning">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-trend metric-down">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>
+                        </svg>
+                        -5%
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ overdue_count|default:"0" }}</div>
+                    <div class="metric-label">Atrasadas</div>
+                    <div class="metric-subtitle">Requer atenção</div>
+                </div>
+            </div>
+
+            <div class="metric-card metric-info">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <div class="metric-trend metric-stable">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                        </svg>
+                        0%
+                    </div>
+                </div>
+                <div class="metric-content">
+                    <div class="metric-number">{{ high_priority_tasks.count|default:"0" }}</div>
+                    <div class="metric-label">Alta Prioridade</div>
+                    <div class="metric-subtitle">Para hoje</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Analytics -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Productivity Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Produtividade Semanal</h3>
+                    <div class="chart-controls">
+                        <select class="form-select-sm">
+                            <option>Últimos 7 dias</option>
+                            <option>Últimos 30 dias</option>
+                            <option>Últimos 3 meses</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="productivityChart" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Priority Distribution -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Distribuição por Prioridade</h3>
+                    <div class="chart-legend">
+                        <div class="legend-item legend-high">Alta</div>
+                        <div class="legend-item legend-medium">Média</div>
+                        <div class="legend-item legend-low">Baixa</div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="priorityChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Lists -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- My Recent Tasks -->
+            <div class="task-list-card">
+                <div class="task-list-header">
+                    <h3 class="task-list-title">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Minhas Tarefas Recentes
+                    </h3>
+                    <span class="task-count">{{ my_tasks.count|default:"0" }}</span>
+                </div>
+                <div class="task-list-content">
+                    {% if my_tasks %}
                         {% for task in my_tasks %}
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <a href="{% url 'tasks:task_detail' task.id %}" 
-                                       class="text-gray-800 hover:text-primary font-medium">
-                                        {{ task.title }}
-                                    </a>
-                                    <p class="text-sm text-gray-600">
-                                        {{ task.board.name }} • Vence em {{ task.due_date|date:"d/m/Y" }}
-                                    </p>
+                        <div class="task-item" @click="openTaskModal('{{ task.id }}')">
+                            <div class="task-priority priority-{{ task.priority }}"></div>
+                            <div class="task-content">
+                                <div class="task-title">{{ task.title }}</div>
+                                <div class="task-meta">
+                                    <span class="task-board">{{ task.board.name }}</span>
+                                    <span class="task-separator">•</span>
+                                    <span class="task-due-date">{{ task.due_date|date:"d/m/Y"|default:"Sem prazo" }}</span>
                                 </div>
-                                <span class="px-2 py-1 text-sm rounded-full 
-                                    {% if task.priority == 'high' %}bg-red-100 text-red-800
-                                    {% elif task.priority == 'medium' %}bg-yellow-100 text-yellow-800
-                                    {% else %}bg-green-100 text-green-800{% endif %}">
-                                    {{ task.get_priority_display }}
-                                </span>
                             </div>
+                            <div class="task-actions">
+                                <button class="task-action-btn">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-gray-600 text-center py-4">Nenhuma tarefa encontrada.</p>
-                {% endif %}
+                    {% else %}
+                        <div class="empty-state">
+                            <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                            <p class="empty-text">Nenhuma tarefa encontrada</p>
+                            <button @click="openQuickAdd()" class="empty-action">Criar primeira tarefa</button>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        </div>
 
-        <!-- Tarefas Atrasadas -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Tarefas Atrasadas</h2>
-            </div>
-            <div class="p-6">
-                {% if overdue_tasks %}
-                    <div class="space-y-4">
+            <!-- Overdue Tasks -->
+            <div class="task-list-card urgent">
+                <div class="task-list-header">
+                    <h3 class="task-list-title">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Tarefas Atrasadas
+                    </h3>
+                    <span class="task-count urgent">{{ overdue_tasks.count|default:"0" }}</span>
+                </div>
+                <div class="task-list-content">
+                    {% if overdue_tasks %}
                         {% for task in overdue_tasks %}
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <a href="{% url 'tasks:task_detail' task.id %}" 
-                                       class="text-gray-800 hover:text-primary font-medium">
-                                        {{ task.title }}
-                                    </a>
-                                    <p class="text-sm text-red-600">
-                                        Atrasada desde {{ task.due_date|date:"d/m/Y" }}
-                                    </p>
+                        <div class="task-item overdue" @click="openTaskModal('{{ task.id }}')">
+                            <div class="task-priority priority-high"></div>
+                            <div class="task-content">
+                                <div class="task-title">{{ task.title }}</div>
+                                <div class="task-meta">
+                                    <span class="task-overdue">Atrasada desde {{ task.due_date|date:"d/m/Y" }}</span>
                                 </div>
-                                <span class="px-2 py-1 text-sm bg-red-100 text-red-800 rounded-full">
-                                    {{ task.get_status_display }}
-                                </span>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-gray-600 text-center py-4">Nenhuma tarefa atrasada.</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Tarefas Urgentes -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b">
-                <h2 class="text-lg font-semibold text-gray-800">Tarefas Urgentes</h2>
-            </div>
-            <div class="p-6">
-                {% if urgent_tasks %}
-                    <div class="space-y-4">
-                        {% for task in urgent_tasks %}
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <a href="{% url 'tasks:task_detail' task.id %}" 
-                                       class="text-gray-800 hover:text-primary font-medium">
-                                        {{ task.title }}
-                                    </a>
-                                    <p class="text-sm text-gray-600">
-                                        Vence em {{ task.due_date|date:"d/m/Y" }}
-                                    </p>
-                                </div>
-                                <span class="px-2 py-1 text-sm bg-yellow-100 text-yellow-800 rounded-full">
-                                    Urgente
-                                </span>
+                            <div class="task-actions">
+                                <button class="task-action-btn urgent">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                </button>
                             </div>
+                        </div>
                         {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="text-gray-600 text-center py-4">Nenhuma tarefa urgente.</p>
-                {% endif %}
+                    {% else %}
+                        <div class="empty-state success">
+                            <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <p class="empty-text">Tudo em dia!</p>
+                            <p class="empty-subtext">Nenhuma tarefa atrasada</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
-        </div>
 
-        <!-- Meus Quadros -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b flex justify-between items-center">
-                <h2 class="text-lg font-semibold text-gray-800">Meus Quadros</h2>
-                <a href="{% url 'tasks:board_create' %}" 
-                   class="text-primary hover:text-primary-dark font-medium">
-                    Novo Quadro
-                </a>
-            </div>
-            <div class="p-6">
-                {% if user_boards %}
-                    <div class="space-y-4">
+            <!-- My Boards -->
+            <div class="task-list-card">
+                <div class="task-list-header">
+                    <h3 class="task-list-title">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+                        </svg>
+                        Meus Quadros
+                    </h3>
+                    <button @click="createBoard()" class="task-list-action">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="task-list-content">
+                    {% if user_boards %}
                         {% for board in user_boards %}
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <a href="{% url 'tasks:board_detail' board.id %}" 
-                                       class="text-gray-800 hover:text-primary font-medium">
-                                        {{ board.name }}
-                                    </a>
-                                    <p class="text-sm text-gray-600">
-                                        {{ board.description|truncatechars:50 }}
-                                    </p>
+                        <div class="board-item" @click="openBoard('{{ board.id }}')">
+                            <div class="board-color" style="background-color: {{ board.color|default:'#3b82f6' }}"></div>
+                            <div class="board-content">
+                                <div class="board-title">{{ board.name }}</div>
+                                <div class="board-meta">
+                                    <span class="board-tasks">{{ board.tasks.count }} tarefas</span>
+                                    <span class="board-separator">•</span>
+                                    <span class="board-members">{{ board.members.count }} membros</span>
                                 </div>
-                                <span class="text-sm text-gray-600">
-                                    {{ board.tasks.count }} tarefas
-                                </span>
                             </div>
+                            <div class="board-actions">
+                                <button class="board-action-btn">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"></path>
+                            </svg>
+                            <p class="empty-text">Nenhum quadro encontrado</p>
+                            <button @click="createBoard()" class="empty-action">Criar primeiro quadro</button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div x-show="showQuickAdd" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="modal-overlay" style="display: none;">
+        <div class="modal-container" @click.away="closeQuickAdd()">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Nova Tarefa</h3>
+                <button @click="closeQuickAdd()" class="modal-close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-content">
+                <form @submit.prevent="createQuickTask()">
+                    <div class="form-group">
+                        <label class="form-label">Título da Tarefa</label>
+                        <input type="text" x-model="quickTask.title" class="form-input" placeholder="Ex: Revisar documentação do projeto" required>
                     </div>
-                {% else %}
-                    <p class="text-gray-600 text-center py-4">Nenhum quadro encontrado.</p>
-                {% endif %}
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Quadro</label>
+                            <select x-model="quickTask.board" class="form-select" required>
+                                <option value="">Selecione um quadro</option>
+                                {% for board in user_boards %}
+                                <option value="{{ board.id }}">{{ board.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prioridade</label>
+                            <select x-model="quickTask.priority" class="form-select">
+                                <option value="low">Baixa</option>
+                                <option value="medium" selected>Média</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrição (opcional)</label>
+                        <textarea x-model="quickTask.description" class="form-textarea" rows="3" placeholder="Descreva os detalhes da tarefa..."></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" @click="closeQuickAdd()" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">Criar Tarefa</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function tasksDashboard() {
+    return {
+        selectedFilter: 'all',
+        showQuickAdd: false,
+        quickTask: {
+            title: '',
+            description: '',
+            board: '',
+            priority: 'medium'
+        },
+        
+        applyFilter() {
+            // Implement filter logic
+            console.log('Applying filter:', this.selectedFilter);
+        },
+        
+        openQuickAdd() {
+            this.showQuickAdd = true;
+            this.resetQuickTask();
+        },
+        
+        closeQuickAdd() {
+            this.showQuickAdd = false;
+            this.resetQuickTask();
+        },
+        
+        resetQuickTask() {
+            this.quickTask = {
+                title: '',
+                description: '',
+                board: '',
+                priority: 'medium'
+            };
+        },
+        
+        async createQuickTask() {
+            try {
+                const response = await fetch("{% url 'tasks:task_create_ajax' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(this.quickTask)
+                });
+                
+                if (response.ok) {
+                    this.closeQuickAdd();
+                    window.location.reload();
+                } else {
+                    alert('Erro ao criar tarefa');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Erro ao criar tarefa');
+            }
+        },
+        
+        openTaskModal(taskId) {
+            window.location.href = `/tasks/tasks/${taskId}/`;
+        },
+        
+        openBoard(boardId) {
+            window.location.href = `/tasks/boards/${boardId}/`;
+        },
+        
+        createBoard() {
+            window.location.href = "{% url 'tasks:board_create' %}";
+        },
+        
+        exportTasks() {
+            alert('Funcionalidade de exportação será implementada');
+        }
+    }
+}
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Productivity Chart
+    const productivityCtx = document.getElementById('productivityChart');
+    if (productivityCtx) {
+        new Chart(productivityCtx, {
+            type: 'line',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Tarefas Concluídas',
+                    data: [12, 15, 8, 22, 18, 5, 3],
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // Priority Chart
+    const priorityCtx = document.getElementById('priorityChart');
+    if (priorityCtx) {
+        new Chart(priorityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Alta', 'Média', 'Baixa'],
+                datasets: [{
+                    data: [{{ high_priority_tasks.count|default:"0" }}, 25, 15],
+                    backgroundColor: [
+                        '#ef4444',
+                        '#f59e0b',
+                        '#10b981'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

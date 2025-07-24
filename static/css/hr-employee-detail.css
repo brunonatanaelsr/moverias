@@ -1,0 +1,431 @@
+/* HR Employee Detail Styles */
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.status-vacation {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-inactive {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Buttons */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #10b981;
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-tertiary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #6b7280;
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-tertiary:hover {
+    background-color: #4b5563;
+    transform: translateY(-1px);
+}
+
+/* Metric Cards */
+.metric-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.metric-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.metric-content {
+    text-align: left;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1;
+    margin-bottom: 0.125rem;
+}
+
+.metric-subtext {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Info Sections */
+.info-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.info-field {
+    margin-bottom: 1rem;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 0.875rem;
+    color: #111827;
+    font-weight: 400;
+}
+
+/* Quick Actions */
+.quick-action-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    text-align: left;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.quick-action-btn:hover {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    transform: translateX(2px);
+}
+
+.quick-action-btn span {
+    margin-left: 0.75rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Skills */
+.skill-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background-color: #eff6ff;
+    color: #1e40af;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Benefits */
+.benefit-item {
+    display: flex;
+    align-items: center;
+    justify-content: between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.benefit-item:last-child {
+    border-bottom: none;
+}
+
+.benefit-name {
+    font-size: 0.875rem;
+    color: #374151;
+    flex: 1;
+}
+
+.benefit-status {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+}
+
+.benefit-status.active {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.benefit-status.inactive {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Performance Metrics */
+.performance-metric {
+    margin-bottom: 1rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* Training Items */
+.training-item {
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e5e7eb, transparent);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2.25rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+.timeline-content {
+    padding-left: 0.5rem;
+}
+
+.timeline-title {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .metric-card {
+        padding: 1rem;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    .info-section {
+        padding: 1rem;
+    }
+    
+    .timeline {
+        padding-left: 1.5rem;
+    }
+    
+    .timeline-marker {
+        left: -1.75rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .btn-primary,
+    .btn-secondary,
+    .btn-tertiary,
+    .quick-action-btn {
+        display: none;
+    }
+    
+    .metric-card,
+    .info-section {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+    }
+}
+
+/* Focus States for Accessibility */
+button:focus,
+.btn-primary:focus,
+.btn-secondary:focus,
+.btn-tertiary:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Hover Effects */
+.metric-card:hover .metric-icon {
+    transform: scale(1.05);
+}
+
+.timeline-item:hover .timeline-marker {
+    transform: scale(1.2);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .info-section {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+    
+    .section-title {
+        color: #f9fafb;
+        border-color: #374151;
+    }
+    
+    .info-label {
+        color: #d1d5db;
+    }
+    
+    .info-value {
+        color: #f9fafb;
+    }
+    
+    .metric-card {
+        background-color: #1f2937;
+        border-color: #374151;
+    }
+    
+    .metric-value {
+        color: #f9fafb;
+    }
+}

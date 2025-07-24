@@ -1,0 +1,949 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tarefas Arquivadas - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/task-archive.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="archive-container" x-data="taskArchive()">
+    <!-- Header -->
+    <div class="archive-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <span class="breadcrumb-current">Arquivo de Tarefas</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Arquivo de Tarefas</h1>
+                    <p class="page-subtitle">
+                        Gerencie tarefas concluídas e arquivadas. Total de <span x-text="filteredTasks.length">{{ archived_tasks.count }}</span> tarefas no arquivo.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button type="button" @click="showBulkActions = !showBulkActions" class="btn-secondary" :class="{ 'active': showBulkActions }">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H9a2 2 0 01-2-2V5z"/>
+                    </svg>
+                    Ações em Lote
+                </button>
+                
+                <button type="button" @click="showCleanupModal = true" class="btn-warning">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Limpeza Automática
+                </button>
+                
+                <button type="button" @click="exportArchive()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters and Search -->
+    <div class="filters-section">
+        <div class="filters-content">
+            <div class="search-container">
+                <div class="search-box">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input 
+                        type="text" 
+                        placeholder="Buscar tarefas arquivadas..." 
+                        class="search-input"
+                        x-model="searchQuery"
+                        @input="applyFilters()"
+                    >
+                    <button x-show="searchQuery" @click="clearSearch()" class="clear-search">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label class="filter-label">Período:</label>
+                    <select x-model="filters.period" @change="applyFilters()" class="filter-select">
+                        <option value="">Todos os períodos</option>
+                        <option value="today">Hoje</option>
+                        <option value="week">Esta semana</option>
+                        <option value="month">Este mês</option>
+                        <option value="quarter">Este trimestre</option>
+                        <option value="year">Este ano</option>
+                        <option value="custom">Período personalizado</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Quadro:</label>
+                    <select x-model="filters.board" @change="applyFilters()" class="filter-select">
+                        <option value="">Todos os quadros</option>
+                        {% for board in boards %}
+                            <option value="{{ board.id }}">{{ board.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Responsável:</label>
+                    <select x-model="filters.assignee" @change="applyFilters()" class="filter-select">
+                        <option value="">Todos os responsáveis</option>
+                        <option value="me">Eu</option>
+                        {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">Prioridade:</label>
+                    <select x-model="filters.priority" @change="applyFilters()" class="filter-select">
+                        <option value="">Todas as prioridades</option>
+                        <option value="high">Alta</option>
+                        <option value="medium">Média</option>
+                        <option value="low">Baixa</option>
+                    </select>
+                </div>
+                
+                <button type="button" @click="clearFilters()" class="clear-filters" :class="{ 'visible': hasActiveFilters }">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Limpar Filtros
+                </button>
+            </div>
+            
+            <!-- Custom Date Range -->
+            <div x-show="filters.period === 'custom'" x-cloak class="date-range-section">
+                <div class="date-range-inputs">
+                    <div class="date-input-group">
+                        <label class="date-label">Data inicial:</label>
+                        <input type="date" x-model="filters.startDate" @change="applyFilters()" class="date-input">
+                    </div>
+                    <div class="date-input-group">
+                        <label class="date-label">Data final:</label>
+                        <input type="date" x-model="filters.endDate" @change="applyFilters()" class="date-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bulk Actions Bar -->
+    <div x-show="showBulkActions && selectedTasks.length > 0" x-cloak class="bulk-actions-bar">
+        <div class="bulk-actions-content">
+            <div class="bulk-info">
+                <span x-text="selectedTasks.length"></span> tarefas selecionadas
+            </div>
+            
+            <div class="bulk-buttons">
+                <button type="button" @click="bulkRestore()" class="bulk-btn bulk-restore">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                    </svg>
+                    Restaurar
+                </button>
+                
+                <button type="button" @click="bulkDelete()" class="bulk-btn bulk-delete">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Excluir Permanentemente
+                </button>
+                
+                <button type="button" @click="bulkExport()" class="bulk-btn bulk-export">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar Selecionadas
+                </button>
+                
+                <button type="button" @click="clearSelection()" class="bulk-btn bulk-clear">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tasks Grid -->
+    <div class="tasks-section">
+        <div class="tasks-content">
+            <!-- View Toggle -->
+            <div class="view-controls">
+                <div class="view-toggle">
+                    <button 
+                        type="button" 
+                        @click="viewMode = 'grid'" 
+                        class="view-btn"
+                        :class="{ 'active': viewMode === 'grid' }"
+                    >
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                        Grade
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="viewMode = 'list'" 
+                        class="view-btn"
+                        :class="{ 'active': viewMode === 'list' }"
+                    >
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        Lista
+                    </button>
+                </div>
+                
+                <div class="sort-controls">
+                    <label class="sort-label">Ordenar por:</label>
+                    <select x-model="sortBy" @change="applySorting()" class="sort-select">
+                        <option value="archived_at">Data de arquivamento</option>
+                        <option value="completed_at">Data de conclusão</option>
+                        <option value="created_at">Data de criação</option>
+                        <option value="title">Título</option>
+                        <option value="priority">Prioridade</option>
+                    </select>
+                    <button type="button" @click="toggleSortOrder()" class="sort-order-btn" :title="sortOrder === 'desc' ? 'Decrescente' : 'Crescente'">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="{ 'rotate-180': sortOrder === 'asc' }">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Grid View -->
+            <div x-show="viewMode === 'grid'" class="tasks-grid">
+                <template x-for="task in paginatedTasks" :key="task.id">
+                    <div class="task-card" :class="{ 'selected': selectedTasks.includes(task.id) }">
+                        <!-- Selection Checkbox -->
+                        <div x-show="showBulkActions" class="task-checkbox">
+                            <input 
+                                type="checkbox" 
+                                :value="task.id"
+                                x-model="selectedTasks"
+                                class="checkbox"
+                            >
+                        </div>
+                        
+                        <!-- Task Content -->
+                        <div class="task-content">
+                            <div class="task-header">
+                                <div class="task-priority" :class="'priority-' + task.priority"></div>
+                                <div class="task-meta">
+                                    <span class="task-board" x-text="task.board_name"></span>
+                                    <span class="task-id">#<span x-text="task.id"></span></span>
+                                </div>
+                            </div>
+                            
+                            <h3 class="task-title" x-text="task.title"></h3>
+                            <p class="task-description" x-text="task.description || 'Sem descrição'"></p>
+                            
+                            <div class="task-labels">
+                                <template x-for="label in task.labels" :key="label.id">
+                                    <span class="label" :style="{ backgroundColor: label.color }" x-text="label.name"></span>
+                                </template>
+                            </div>
+                            
+                            <div class="task-footer">
+                                <div class="task-assignees">
+                                    <template x-for="assignee in task.assignees.slice(0, 3)" :key="assignee.id">
+                                        <img 
+                                            :src="assignee.avatar || '/static/images/default-avatar.png'" 
+                                            :alt="assignee.name"
+                                            :title="assignee.name"
+                                            class="assignee-avatar"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                                        >
+                                        <div class="assignee-placeholder" style="display: none;" :title="assignee.name">
+                                            <span x-text="assignee.name.charAt(0).toUpperCase()"></span>
+                                        </div>
+                                    </template>
+                                    <span x-show="task.assignees.length > 3" class="more-assignees" x-text="'+' + (task.assignees.length - 3)"></span>
+                                </div>
+                                
+                                <div class="task-dates">
+                                    <div class="date-info">
+                                        <svg class="date-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 012-2h10a2 2 0 012 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                        </svg>
+                                        <span class="date-text" x-text="formatDate(task.archived_at)"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Task Actions -->
+                        <div class="task-actions">
+                            <button type="button" @click="viewTask(task)" class="action-btn" title="Visualizar">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            
+                            <button type="button" @click="restoreTask(task)" class="action-btn" title="Restaurar">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                </svg>
+                            </button>
+                            
+                            <button type="button" @click="deleteTask(task)" class="action-btn action-danger" title="Excluir permanentemente">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- List View -->
+            <div x-show="viewMode === 'list'" class="tasks-table">
+                <div class="table-header">
+                    <div class="header-cell checkbox-cell">
+                        <input 
+                            x-show="showBulkActions"
+                            type="checkbox" 
+                            @change="toggleSelectAll()"
+                            :checked="selectedTasks.length === filteredTasks.length && filteredTasks.length > 0"
+                            class="checkbox"
+                        >
+                    </div>
+                    <div class="header-cell title-cell">Tarefa</div>
+                    <div class="header-cell board-cell">Quadro</div>
+                    <div class="header-cell assignee-cell">Responsável</div>
+                    <div class="header-cell priority-cell">Prioridade</div>
+                    <div class="header-cell date-cell">Arquivada em</div>
+                    <div class="header-cell actions-cell">Ações</div>
+                </div>
+                
+                <div class="table-body">
+                    <template x-for="task in paginatedTasks" :key="task.id">
+                        <div class="table-row" :class="{ 'selected': selectedTasks.includes(task.id) }">
+                            <div class="table-cell checkbox-cell">
+                                <input 
+                                    x-show="showBulkActions"
+                                    type="checkbox" 
+                                    :value="task.id"
+                                    x-model="selectedTasks"
+                                    class="checkbox"
+                                >
+                            </div>
+                            
+                            <div class="table-cell title-cell">
+                                <div class="task-title-row">
+                                    <span class="task-title" x-text="task.title"></span>
+                                    <span class="task-id">#<span x-text="task.id"></span></span>
+                                </div>
+                                <div class="task-labels-row">
+                                    <template x-for="label in task.labels.slice(0, 3)" :key="label.id">
+                                        <span class="label-small" :style="{ backgroundColor: label.color }" x-text="label.name"></span>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <div class="table-cell board-cell">
+                                <span class="board-name" x-text="task.board_name"></span>
+                            </div>
+                            
+                            <div class="table-cell assignee-cell">
+                                <div class="assignees-list">
+                                    <template x-for="assignee in task.assignees.slice(0, 2)" :key="assignee.id">
+                                        <img 
+                                            :src="assignee.avatar || '/static/images/default-avatar.png'" 
+                                            :alt="assignee.name"
+                                            :title="assignee.name"
+                                            class="assignee-avatar-small"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                                        >
+                                        <div class="assignee-placeholder-small" style="display: none;" :title="assignee.name">
+                                            <span x-text="assignee.name.charAt(0).toUpperCase()"></span>
+                                        </div>
+                                    </template>
+                                    <span x-show="task.assignees.length > 2" class="more-assignees-small" x-text="'+' + (task.assignees.length - 2)"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="table-cell priority-cell">
+                                <span class="priority-badge" :class="'priority-' + task.priority">
+                                    <span x-text="task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'"></span>
+                                </span>
+                            </div>
+                            
+                            <div class="table-cell date-cell">
+                                <span class="date-text" x-text="formatDate(task.archived_at)"></span>
+                            </div>
+                            
+                            <div class="table-cell actions-cell">
+                                <div class="action-buttons">
+                                    <button type="button" @click="viewTask(task)" class="action-btn-small" title="Visualizar">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button type="button" @click="restoreTask(task)" class="action-btn-small" title="Restaurar">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button type="button" @click="deleteTask(task)" class="action-btn-small action-danger" title="Excluir permanentemente">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div x-show="filteredTasks.length === 0" class="empty-state">
+                <div class="empty-icon">
+                    <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 012-2h10a2 2 0 012 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">Nenhuma tarefa arquivada encontrada</h3>
+                <p class="empty-description">
+                    <span x-show="!hasActiveFilters">Ainda não há tarefas arquivadas no sistema.</span>
+                    <span x-show="hasActiveFilters">Tente ajustar os filtros ou termos de busca.</span>
+                </p>
+                <button x-show="hasActiveFilters" type="button" @click="clearFilters()" class="btn-secondary">
+                    Limpar Filtros
+                </button>
+            </div>
+            
+            <!-- Pagination -->
+            <div x-show="filteredTasks.length > itemsPerPage" class="pagination">
+                <div class="pagination-info">
+                    <span>
+                        Mostrando <span x-text="(currentPage - 1) * itemsPerPage + 1"></span> a 
+                        <span x-text="Math.min(currentPage * itemsPerPage, filteredTasks.length)"></span> 
+                        de <span x-text="filteredTasks.length"></span> tarefas
+                    </span>
+                </div>
+                
+                <div class="pagination-controls">
+                    <button 
+                        type="button" 
+                        @click="goToPage(currentPage - 1)" 
+                        :disabled="currentPage === 1"
+                        class="pagination-btn"
+                    >
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                        Anterior
+                    </button>
+                    
+                    <div class="pagination-pages">
+                        <template x-for="page in visiblePages" :key="page">
+                            <button 
+                                type="button" 
+                                @click="goToPage(page)" 
+                                class="pagination-page"
+                                :class="{ 'active': page === currentPage }"
+                                x-text="page"
+                            ></button>
+                        </template>
+                    </div>
+                    
+                    <button 
+                        type="button" 
+                        @click="goToPage(currentPage + 1)" 
+                        :disabled="currentPage === totalPages"
+                        class="pagination-btn"
+                    >
+                        Próximo
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cleanup Modal -->
+    <div x-show="showCleanupModal" x-cloak class="modal-overlay" @click.self="showCleanupModal = false">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Limpeza Automática do Arquivo</h3>
+                <button type="button" @click="showCleanupModal = false" class="modal-close">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="cleanup-options">
+                    <div class="cleanup-option">
+                        <label class="cleanup-label">
+                            <input type="radio" name="cleanup_type" value="old" x-model="cleanupType">
+                            <div class="cleanup-content">
+                                <h4>Excluir tarefas antigas</h4>
+                                <p>Remove tarefas arquivadas há mais de um período específico</p>
+                                <div x-show="cleanupType === 'old'" class="cleanup-config">
+                                    <select x-model="cleanupPeriod" class="form-select">
+                                        <option value="30">30 dias</option>
+                                        <option value="60">60 dias</option>
+                                        <option value="90">90 dias</option>
+                                        <option value="180">6 meses</option>
+                                        <option value="365">1 ano</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="cleanup-option">
+                        <label class="cleanup-label">
+                            <input type="radio" name="cleanup_type" value="limit" x-model="cleanupType">
+                            <div class="cleanup-content">
+                                <h4>Manter apenas um número específico</h4>
+                                <p>Mantém apenas as tarefas arquivadas mais recentes</p>
+                                <div x-show="cleanupType === 'limit'" class="cleanup-config">
+                                    <input type="number" x-model="cleanupLimit" min="10" max="1000" class="form-input" placeholder="Ex: 100">
+                                    <span class="config-help">tarefas mais recentes</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="cleanup-option">
+                        <label class="cleanup-label">
+                            <input type="radio" name="cleanup_type" value="all" x-model="cleanupType">
+                            <div class="cleanup-content">
+                                <h4>Excluir todas as tarefas arquivadas</h4>
+                                <p class="warning-text">⚠️ Esta ação é irreversível e remove todo o arquivo</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="cleanup-preview" x-show="cleanupType">
+                    <h4>Preview da limpeza:</h4>
+                    <div class="preview-stats">
+                        <div class="stat">
+                            <span class="stat-value" x-text="getCleanupCount()"></span>
+                            <span class="stat-label">Tarefas serão excluídas</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" x-text="getRemainCount()"></span>
+                            <span class="stat-label">Tarefas permanecerão</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" @click="showCleanupModal = false" class="btn-cancel">Cancelar</button>
+                <button type="button" @click="executeCleanup()" class="btn-danger" :disabled="!cleanupType">
+                    Executar Limpeza
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function taskArchive() {
+    return {
+        // View state
+        viewMode: 'grid',
+        showBulkActions: false,
+        showCleanupModal: false,
+        
+        // Data
+        allTasks: {{ archived_tasks_json|default:"[]"|safe }},
+        filteredTasks: [],
+        paginatedTasks: [],
+        selectedTasks: [],
+        
+        // Filters
+        searchQuery: '',
+        filters: {
+            period: '',
+            board: '',
+            assignee: '',
+            priority: '',
+            startDate: '',
+            endDate: ''
+        },
+        
+        // Sorting
+        sortBy: 'archived_at',
+        sortOrder: 'desc',
+        
+        // Pagination
+        currentPage: 1,
+        itemsPerPage: 20,
+        totalPages: 1,
+        visiblePages: [],
+        
+        // Cleanup
+        cleanupType: '',
+        cleanupPeriod: '90',
+        cleanupLimit: 100,
+        
+        init() {
+            this.allTasks = [
+                // Dados de exemplo - substituir pelos dados reais do Django
+                {
+                    id: 1,
+                    title: 'Implementar sistema de login',
+                    description: 'Desenvolver tela de login com autenticação segura',
+                    priority: 'high',
+                    board_name: 'Desenvolvimento',
+                    assignees: [
+                        { id: 1, name: 'João Silva', avatar: null }
+                    ],
+                    labels: [
+                        { id: 1, name: 'Backend', color: '#3b82f6' },
+                        { id: 2, name: 'Urgente', color: '#ef4444' }
+                    ],
+                    archived_at: '2024-01-15T10:30:00Z',
+                    completed_at: '2024-01-15T09:45:00Z',
+                    created_at: '2024-01-10T08:00:00Z'
+                },
+                {
+                    id: 2,
+                    title: 'Criar documentação da API',
+                    description: 'Documentar todos os endpoints da API REST',
+                    priority: 'medium',
+                    board_name: 'Documentação',
+                    assignees: [
+                        { id: 2, name: 'Maria Santos', avatar: null }
+                    ],
+                    labels: [
+                        { id: 3, name: 'Documentação', color: '#10b981' }
+                    ],
+                    archived_at: '2024-01-14T16:20:00Z',
+                    completed_at: '2024-01-14T15:30:00Z',
+                    created_at: '2024-01-08T14:00:00Z'
+                }
+            ];
+            
+            this.applyFilters();
+        },
+        
+        // Computed properties
+        get hasActiveFilters() {
+            return this.searchQuery || 
+                   this.filters.period || 
+                   this.filters.board || 
+                   this.filters.assignee || 
+                   this.filters.priority;
+        },
+        
+        // Filtering
+        applyFilters() {
+            let filtered = [...this.allTasks];
+            
+            // Search filter
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(task => 
+                    task.title.toLowerCase().includes(query) ||
+                    task.description.toLowerCase().includes(query) ||
+                    task.board_name.toLowerCase().includes(query)
+                );
+            }
+            
+            // Period filter
+            if (this.filters.period) {
+                const now = new Date();
+                const filterDate = new Date();
+                
+                switch (this.filters.period) {
+                    case 'today':
+                        filterDate.setHours(0, 0, 0, 0);
+                        break;
+                    case 'week':
+                        filterDate.setDate(now.getDate() - 7);
+                        break;
+                    case 'month':
+                        filterDate.setMonth(now.getMonth() - 1);
+                        break;
+                    case 'quarter':
+                        filterDate.setMonth(now.getMonth() - 3);
+                        break;
+                    case 'year':
+                        filterDate.setFullYear(now.getFullYear() - 1);
+                        break;
+                    case 'custom':
+                        if (this.filters.startDate && this.filters.endDate) {
+                            const start = new Date(this.filters.startDate);
+                            const end = new Date(this.filters.endDate);
+                            filtered = filtered.filter(task => {
+                                const taskDate = new Date(task.archived_at);
+                                return taskDate >= start && taskDate <= end;
+                            });
+                        }
+                        break;
+                }
+                
+                if (this.filters.period !== 'custom') {
+                    filtered = filtered.filter(task => 
+                        new Date(task.archived_at) >= filterDate
+                    );
+                }
+            }
+            
+            // Other filters
+            if (this.filters.board) {
+                filtered = filtered.filter(task => task.board_id == this.filters.board);
+            }
+            
+            if (this.filters.assignee) {
+                if (this.filters.assignee === 'me') {
+                    // Filtrar por usuário atual
+                    filtered = filtered.filter(task => 
+                        task.assignees.some(a => a.id === window.currentUserId)
+                    );
+                } else {
+                    filtered = filtered.filter(task => 
+                        task.assignees.some(a => a.id == this.filters.assignee)
+                    );
+                }
+            }
+            
+            if (this.filters.priority) {
+                filtered = filtered.filter(task => task.priority === this.filters.priority);
+            }
+            
+            this.filteredTasks = filtered;
+            this.applySorting();
+        },
+        
+        applySorting() {
+            this.filteredTasks.sort((a, b) => {
+                let aValue = a[this.sortBy];
+                let bValue = b[this.sortBy];
+                
+                // Handle date strings
+                if (this.sortBy.includes('_at')) {
+                    aValue = new Date(aValue);
+                    bValue = new Date(bValue);
+                }
+                
+                if (aValue < bValue) {
+                    return this.sortOrder === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return this.sortOrder === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+            
+            this.updatePagination();
+        },
+        
+        toggleSortOrder() {
+            this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+            this.applySorting();
+        },
+        
+        clearSearch() {
+            this.searchQuery = '';
+            this.applyFilters();
+        },
+        
+        clearFilters() {
+            this.searchQuery = '';
+            this.filters = {
+                period: '',
+                board: '',
+                assignee: '',
+                priority: '',
+                startDate: '',
+                endDate: ''
+            };
+            this.applyFilters();
+        },
+        
+        // Pagination
+        updatePagination() {
+            this.totalPages = Math.ceil(this.filteredTasks.length / this.itemsPerPage);
+            this.currentPage = Math.min(this.currentPage, this.totalPages || 1);
+            
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            this.paginatedTasks = this.filteredTasks.slice(start, end);
+            
+            this.updateVisiblePages();
+        },
+        
+        updateVisiblePages() {
+            const pages = [];
+            const maxVisible = 5;
+            const half = Math.floor(maxVisible / 2);
+            
+            let start = Math.max(1, this.currentPage - half);
+            let end = Math.min(this.totalPages, start + maxVisible - 1);
+            
+            if (end - start < maxVisible - 1) {
+                start = Math.max(1, end - maxVisible + 1);
+            }
+            
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+            
+            this.visiblePages = pages;
+        },
+        
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+                this.updatePagination();
+            }
+        },
+        
+        // Selection
+        toggleSelectAll() {
+            if (this.selectedTasks.length === this.filteredTasks.length) {
+                this.selectedTasks = [];
+            } else {
+                this.selectedTasks = this.filteredTasks.map(task => task.id);
+            }
+        },
+        
+        clearSelection() {
+            this.selectedTasks = [];
+            this.showBulkActions = false;
+        },
+        
+        // Task actions
+        viewTask(task) {
+            window.open(`/tasks/task/${task.id}/`, '_blank');
+        },
+        
+        restoreTask(task) {
+            if (confirm(`Restaurar a tarefa "${task.title}"?`)) {
+                // Implementar restauração
+                console.log('Restore task:', task.id);
+            }
+        },
+        
+        deleteTask(task) {
+            if (confirm(`Excluir permanentemente a tarefa "${task.title}"? Esta ação não pode ser desfeita.`)) {
+                // Implementar exclusão
+                console.log('Delete task:', task.id);
+            }
+        },
+        
+        // Bulk actions
+        bulkRestore() {
+            if (confirm(`Restaurar ${this.selectedTasks.length} tarefas selecionadas?`)) {
+                console.log('Bulk restore:', this.selectedTasks);
+                this.clearSelection();
+            }
+        },
+        
+        bulkDelete() {
+            if (confirm(`Excluir permanentemente ${this.selectedTasks.length} tarefas selecionadas? Esta ação não pode ser desfeita.`)) {
+                console.log('Bulk delete:', this.selectedTasks);
+                this.clearSelection();
+            }
+        },
+        
+        bulkExport() {
+            console.log('Bulk export:', this.selectedTasks);
+        },
+        
+        // Export
+        exportArchive() {
+            const data = JSON.stringify(this.filteredTasks, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `arquivo-tarefas-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+        
+        // Cleanup
+        getCleanupCount() {
+            if (!this.cleanupType) return 0;
+            
+            switch (this.cleanupType) {
+                case 'old':
+                    const cutoffDate = new Date();
+                    cutoffDate.setDate(cutoffDate.getDate() - parseInt(this.cleanupPeriod));
+                    return this.allTasks.filter(task => 
+                        new Date(task.archived_at) < cutoffDate
+                    ).length;
+                    
+                case 'limit':
+                    return Math.max(0, this.allTasks.length - parseInt(this.cleanupLimit));
+                    
+                case 'all':
+                    return this.allTasks.length;
+                    
+                default:
+                    return 0;
+            }
+        },
+        
+        getRemainCount() {
+            return this.allTasks.length - this.getCleanupCount();
+        },
+        
+        executeCleanup() {
+            const count = this.getCleanupCount();
+            if (confirm(`Confirma a exclusão permanente de ${count} tarefas? Esta ação não pode ser desfeita.`)) {
+                console.log('Execute cleanup:', this.cleanupType, this.cleanupPeriod, this.cleanupLimit);
+                this.showCleanupModal = false;
+            }
+        },
+        
+        // Utilities
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

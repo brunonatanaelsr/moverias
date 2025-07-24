@@ -1,0 +1,1135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurações - Tarefas - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/task-settings.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container" x-data="taskSettings()">
+    <!-- Header -->
+    <div class="settings-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"/>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                    <span class="breadcrumb-current">Configurações</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Configurações do Sistema</h1>
+                    <p class="page-subtitle">
+                        Personalize o comportamento e a aparência do sistema de tarefas
+                    </p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button type="button" @click="resetToDefaults()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Restaurar Padrões
+                </button>
+                
+                <button type="button" @click="exportSettings()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar Configurações
+                </button>
+                
+                <button type="button" @click="saveSettings()" class="btn-primary" :disabled="!hasChanges || saving">
+                    <svg x-show="!saving" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <svg x-show="saving" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="animate-spin">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span x-text="saving ? 'Salvando...' : 'Salvar Configurações'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Navigation -->
+    <div class="settings-nav">
+        <div class="nav-content">
+            <div class="nav-tabs">
+                <button 
+                    type="button" 
+                    @click="activeTab = 'general'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'general' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Geral
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'appearance'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'appearance' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"/>
+                    </svg>
+                    Aparência
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'notifications'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'notifications' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 117.5-7.5H19m-2 15v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2z"/>
+                    </svg>
+                    Notificações
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'automation'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'automation' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Automação
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'integrations'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'integrations' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Integrações
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'security'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'security' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    Segurança
+                </button>
+                
+                <button 
+                    type="button" 
+                    @click="activeTab = 'advanced'" 
+                    class="nav-tab"
+                    :class="{ 'active': activeTab === 'advanced' }"
+                >
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                    </svg>
+                    Avançado
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Content -->
+    <div class="settings-content">
+        <div class="content-wrapper">
+            <!-- General Settings -->
+            <div x-show="activeTab === 'general'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações Gerais</h2>
+                    <p class="panel-description">Configurações básicas do sistema de tarefas</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <h3 class="section-title">Configurações de Sistema</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Nome da Organização</label>
+                                <p class="setting-description">Nome que aparecerá nos relatórios e notificações</p>
+                            </div>
+                            <div class="setting-control">
+                                <input type="text" x-model="settings.general.organizationName" class="setting-input">
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Fuso Horário</label>
+                                <p class="setting-description">Fuso horário usado para exibir datas e horários</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.general.timezone" class="setting-select">
+                                    <option value="America/Sao_Paulo">São Paulo (UTC-3)</option>
+                                    <option value="America/New_York">New York (UTC-5)</option>
+                                    <option value="Europe/London">London (UTC+0)</option>
+                                    <option value="Asia/Tokyo">Tokyo (UTC+9)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Idioma do Sistema</label>
+                                <p class="setting-description">Idioma padrão da interface</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.general.language" class="setting-select">
+                                    <option value="pt-BR">Português (Brasil)</option>
+                                    <option value="en-US">English (US)</option>
+                                    <option value="es-ES">Español</option>
+                                    <option value="fr-FR">Français</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Formato de Data</label>
+                                <p class="setting-description">Como as datas são exibidas no sistema</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.general.dateFormat" class="setting-select">
+                                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                    <option value="DD-MM-YYYY">DD-MM-YYYY</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="section-title">Configurações de Tarefas</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Status Padrão</label>
+                                <p class="setting-description">Status inicial para novas tarefas</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.general.defaultStatus" class="setting-select">
+                                    <option value="todo">A Fazer</option>
+                                    <option value="backlog">Backlog</option>
+                                    <option value="draft">Rascunho</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Prioridade Padrão</label>
+                                <p class="setting-description">Prioridade inicial para novas tarefas</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.general.defaultPriority" class="setting-select">
+                                    <option value="baixa">Baixa</option>
+                                    <option value="media">Média</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="critica">Crítica</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Auto-atribuição</label>
+                                <p class="setting-description">Atribuir automaticamente tarefas ao criador</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.general.autoAssign">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Numeração Automática</label>
+                                <p class="setting-description">Gerar automaticamente números para tarefas (ex: TASK-001)</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.general.autoNumbering">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Appearance Settings -->
+            <div x-show="activeTab === 'appearance'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações de Aparência</h2>
+                    <p class="panel-description">Personalize a aparência e o layout do sistema</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <h3 class="section-title">Tema e Cores</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Tema</label>
+                                <p class="setting-description">Escolha entre tema claro, escuro ou automático</p>
+                            </div>
+                            <div class="setting-control">
+                                <div class="theme-selector">
+                                    <label class="theme-option">
+                                        <input type="radio" name="theme" x-model="settings.appearance.theme" value="light">
+                                        <div class="theme-preview light">
+                                            <div class="theme-header"></div>
+                                            <div class="theme-body">
+                                                <div class="theme-card"></div>
+                                                <div class="theme-card"></div>
+                                            </div>
+                                        </div>
+                                        <span class="theme-label">Claro</span>
+                                    </label>
+                                    
+                                    <label class="theme-option">
+                                        <input type="radio" name="theme" x-model="settings.appearance.theme" value="dark">
+                                        <div class="theme-preview dark">
+                                            <div class="theme-header"></div>
+                                            <div class="theme-body">
+                                                <div class="theme-card"></div>
+                                                <div class="theme-card"></div>
+                                            </div>
+                                        </div>
+                                        <span class="theme-label">Escuro</span>
+                                    </label>
+                                    
+                                    <label class="theme-option">
+                                        <input type="radio" name="theme" x-model="settings.appearance.theme" value="auto">
+                                        <div class="theme-preview auto">
+                                            <div class="theme-header"></div>
+                                            <div class="theme-body">
+                                                <div class="theme-card half-light"></div>
+                                                <div class="theme-card half-dark"></div>
+                                            </div>
+                                        </div>
+                                        <span class="theme-label">Automático</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Cor Primária</label>
+                                <p class="setting-description">Cor principal do sistema</p>
+                            </div>
+                            <div class="setting-control">
+                                <div class="color-selector">
+                                    <template x-for="color in colorOptions" :key="color.value">
+                                        <label class="color-option">
+                                            <input type="radio" name="primaryColor" x-model="settings.appearance.primaryColor" :value="color.value">
+                                            <div class="color-preview" :style="{ backgroundColor: color.hex }"></div>
+                                            <span class="color-name" x-text="color.name"></span>
+                                        </label>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Modo de Alto Contraste</label>
+                                <p class="setting-description">Ativar modo de alto contraste para melhor acessibilidade</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.appearance.highContrast">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="section-title">Layout e Navegação</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Layout do Dashboard</label>
+                                <p class="setting-description">Escolha o layout padrão do dashboard</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.appearance.dashboardLayout" class="setting-select">
+                                    <option value="cards">Cards</option>
+                                    <option value="list">Lista</option>
+                                    <option value="kanban">Kanban</option>
+                                    <option value="calendar">Calendário</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Sidebar Compacta</label>
+                                <p class="setting-description">Usar sidebar em modo compacto por padrão</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.appearance.compactSidebar">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Animações</label>
+                                <p class="setting-description">Ativar animações e transições</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.appearance.animations">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Densidade da Interface</label>
+                                <p class="setting-description">Controla o espaçamento entre elementos</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.appearance.density" class="setting-select">
+                                    <option value="comfortable">Confortável</option>
+                                    <option value="standard">Padrão</option>
+                                    <option value="compact">Compacto</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notifications Settings -->
+            <div x-show="activeTab === 'notifications'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações de Notificações</h2>
+                    <p class="panel-description">Configure como e quando receber notificações</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <h3 class="section-title">Notificações por Email</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Ativar Notificações por Email</label>
+                                <p class="setting-description">Receber notificações importantes por email</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.notifications.emailEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div x-show="settings.notifications.emailEnabled" class="notification-types">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label">Tarefas Atribuídas</label>
+                                    <p class="setting-description">Quando uma tarefa for atribuída a você</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="settings.notifications.email.taskAssigned">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label">Prazos Próximos</label>
+                                    <p class="setting-description">Lembrete antes do prazo de uma tarefa</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="settings.notifications.email.dueDateReminder">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label">Comentários</label>
+                                    <p class="setting-description">Quando alguém comentar em uma tarefa sua</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="settings.notifications.email.comments">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <label class="setting-label">Mudanças de Status</label>
+                                    <p class="setting-description">Quando o status de uma tarefa sua mudar</p>
+                                </div>
+                                <div class="setting-control">
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" x-model="settings.notifications.email.statusChanges">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="section-title">Notificações no Navegador</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Notificações Push</label>
+                                <p class="setting-description">Receber notificações push no navegador</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.notifications.browserEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Sons de Notificação</label>
+                                <p class="setting-description">Reproduzir som ao receber notificações</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.notifications.sounds">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Não Perturbe</label>
+                                <p class="setting-description">Horário em que não deseja receber notificações</p>
+                            </div>
+                            <div class="setting-control">
+                                <div class="time-range">
+                                    <input type="time" x-model="settings.notifications.doNotDisturbStart" class="time-input">
+                                    <span>até</span>
+                                    <input type="time" x-model="settings.notifications.doNotDisturbEnd" class="time-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Automation Settings -->
+            <div x-show="activeTab === 'automation'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações de Automação</h2>
+                    <p class="panel-description">Configure regras automáticas para otimizar seu fluxo de trabalho</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <h3 class="section-title">Regras de Automação</h3>
+                        
+                        <div class="automation-rules">
+                            <template x-for="(rule, index) in settings.automation.rules" :key="index">
+                                <div class="automation-rule">
+                                    <div class="rule-header">
+                                        <div class="rule-info">
+                                            <h4 class="rule-name" x-text="rule.name"></h4>
+                                            <p class="rule-description" x-text="rule.description"></p>
+                                        </div>
+                                        <div class="rule-controls">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" x-model="rule.enabled">
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <button @click="editRule(index)" class="rule-edit">
+                                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </button>
+                                            <button @click="deleteRule(index)" class="rule-delete">
+                                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="rule-conditions" x-show="rule.enabled">
+                                        <div class="condition-item">
+                                            <strong>Quando:</strong>
+                                            <span x-text="rule.trigger"></span>
+                                        </div>
+                                        <div class="condition-item">
+                                            <strong>Então:</strong>
+                                            <span x-text="rule.action"></span>
+                                        </div>
+                                        <div class="condition-item" x-show="rule.conditions.length > 0">
+                                            <strong>Condições:</strong>
+                                            <ul>
+                                                <template x-for="condition in rule.conditions" :key="condition">
+                                                    <li x-text="condition"></li>
+                                                </template>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <button @click="createNewRule()" class="btn-secondary">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Nova Regra de Automação
+                        </button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="section-title">Configurações Avançadas</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Auto-arquivar Tarefas Concluídas</label>
+                                <p class="setting-description">Arquivar automaticamente tarefas após X dias de conclusão</p>
+                            </div>
+                            <div class="setting-control">
+                                <div class="input-group">
+                                    <input type="number" x-model="settings.automation.autoArchiveDays" min="1" max="365" class="setting-input">
+                                    <span class="input-suffix">dias</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Lembrete de Inatividade</label>
+                                <p class="setting-description">Notificar sobre tarefas sem atividade há X dias</p>
+                            </div>
+                            <div class="setting-control">
+                                <div class="input-group">
+                                    <input type="number" x-model="settings.automation.inactivityReminderDays" min="1" max="30" class="setting-input">
+                                    <span class="input-suffix">dias</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Integrations Settings -->
+            <div x-show="activeTab === 'integrations'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Integrações</h2>
+                    <p class="panel-description">Conecte com outras ferramentas e serviços</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="integrations-grid">
+                        <template x-for="integration in availableIntegrations" :key="integration.id">
+                            <div class="integration-card" :class="{ 'connected': integration.connected }">
+                                <div class="integration-header">
+                                    <div class="integration-icon">
+                                        <img :src="integration.icon" :alt="integration.name" class="integration-logo">
+                                    </div>
+                                    <div class="integration-info">
+                                        <h4 class="integration-name" x-text="integration.name"></h4>
+                                        <p class="integration-description" x-text="integration.description"></p>
+                                    </div>
+                                    <div class="integration-status">
+                                        <span x-show="integration.connected" class="status-badge connected">Conectado</span>
+                                        <span x-show="!integration.connected" class="status-badge disconnected">Desconectado</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="integration-features">
+                                    <h5>Recursos:</h5>
+                                    <ul>
+                                        <template x-for="feature in integration.features" :key="feature">
+                                            <li x-text="feature"></li>
+                                        </template>
+                                    </ul>
+                                </div>
+                                
+                                <div class="integration-actions">
+                                    <button 
+                                        x-show="!integration.connected" 
+                                        @click="connectIntegration(integration)"
+                                        class="btn-primary"
+                                    >
+                                        Conectar
+                                    </button>
+                                    <button 
+                                        x-show="integration.connected" 
+                                        @click="configureIntegration(integration)"
+                                        class="btn-secondary"
+                                    >
+                                        Configurar
+                                    </button>
+                                    <button 
+                                        x-show="integration.connected" 
+                                        @click="disconnectIntegration(integration)"
+                                        class="btn-danger"
+                                    >
+                                        Desconectar
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Settings -->
+            <div x-show="activeTab === 'security'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações de Segurança</h2>
+                    <p class="panel-description">Gerencie a segurança e privacidade dos dados</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <h3 class="section-title">Autenticação</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Autenticação de Dois Fatores (2FA)</label>
+                                <p class="setting-description">Adicionar uma camada extra de segurança</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.security.twoFactorEnabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Timeout de Sessão</label>
+                                <p class="setting-description">Tempo de inatividade antes de fazer logout automático</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.security.sessionTimeout" class="setting-select">
+                                    <option value="30">30 minutos</option>
+                                    <option value="60">1 hora</option>
+                                    <option value="240">4 horas</option>
+                                    <option value="480">8 horas</option>
+                                    <option value="never">Nunca</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="section-title">Privacidade</h3>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Logs de Auditoria</label>
+                                <p class="setting-description">Manter registro de ações dos usuários</p>
+                            </div>
+                            <div class="setting-control">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" x-model="settings.security.auditLogs">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <label class="setting-label">Retenção de Dados</label>
+                                <p class="setting-description">Tempo para manter dados arquivados</p>
+                            </div>
+                            <div class="setting-control">
+                                <select x-model="settings.security.dataRetention" class="setting-select">
+                                    <option value="90">90 dias</option>
+                                    <option value="180">6 meses</option>
+                                    <option value="365">1 ano</option>
+                                    <option value="1095">3 anos</option>
+                                    <option value="forever">Para sempre</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Advanced Settings -->
+            <div x-show="activeTab === 'advanced'" class="settings-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Configurações Avançadas</h2>
+                    <p class="panel-description">Configurações técnicas e experimentais</p>
+                </div>
+                
+                <div class="settings-sections">
+                    <div class="settings-section">
+                        <div class="danger-zone">
+                            <h3 class="danger-title">⚠️ Zona de Perigo</h3>
+                            <p class="danger-description">Estas ações são irreversíveis. Proceda com cuidado.</p>
+                            
+                            <div class="danger-actions">
+                                <button @click="exportAllData()" class="btn-warning">
+                                    Exportar Todos os Dados
+                                </button>
+                                <button @click="clearAllCache()" class="btn-warning">
+                                    Limpar Cache do Sistema
+                                </button>
+                                <button @click="resetAllSettings()" class="btn-danger">
+                                    Restaurar Todas as Configurações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Confirmation -->
+    <div x-show="showSaveConfirmation" x-cloak class="save-notification">
+        <div class="notification-content">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Configurações salvas com sucesso!</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function taskSettings() {
+    return {
+        activeTab: 'general',
+        hasChanges: false,
+        saving: false,
+        showSaveConfirmation: false,
+        
+        settings: {
+            general: {
+                organizationName: 'Minha Empresa',
+                timezone: 'America/Sao_Paulo',
+                language: 'pt-BR',
+                dateFormat: 'DD/MM/YYYY',
+                defaultStatus: 'todo',
+                defaultPriority: 'media',
+                autoAssign: true,
+                autoNumbering: true
+            },
+            appearance: {
+                theme: 'light',
+                primaryColor: 'blue',
+                highContrast: false,
+                dashboardLayout: 'cards',
+                compactSidebar: false,
+                animations: true,
+                density: 'standard'
+            },
+            notifications: {
+                emailEnabled: true,
+                email: {
+                    taskAssigned: true,
+                    dueDateReminder: true,
+                    comments: true,
+                    statusChanges: false
+                },
+                browserEnabled: true,
+                sounds: true,
+                doNotDisturbStart: '22:00',
+                doNotDisturbEnd: '08:00'
+            },
+            automation: {
+                autoArchiveDays: 30,
+                inactivityReminderDays: 7,
+                rules: [
+                    {
+                        name: 'Auto-atribuir tarefas críticas',
+                        description: 'Atribuir automaticamente tarefas críticas ao líder da equipe',
+                        enabled: true,
+                        trigger: 'Tarefa criada com prioridade crítica',
+                        action: 'Atribuir ao líder da equipe',
+                        conditions: ['Prioridade = Crítica', 'Sem responsável']
+                    },
+                    {
+                        name: 'Lembrete de prazo',
+                        description: 'Enviar lembrete 24h antes do prazo',
+                        enabled: true,
+                        trigger: '24 horas antes do prazo',
+                        action: 'Enviar notificação por email',
+                        conditions: ['Tarefa não concluída', 'Prazo definido']
+                    }
+                ]
+            },
+            security: {
+                twoFactorEnabled: false,
+                sessionTimeout: '240',
+                auditLogs: true,
+                dataRetention: '365'
+            }
+        },
+        
+        colorOptions: [
+            { name: 'Azul', value: 'blue', hex: '#3b82f6' },
+            { name: 'Verde', value: 'green', hex: '#10b981' },
+            { name: 'Roxo', value: 'purple', hex: '#8b5cf6' },
+            { name: 'Rosa', value: 'pink', hex: '#ec4899' },
+            { name: 'Laranja', value: 'orange', hex: '#f59e0b' },
+            { name: 'Vermelho', value: 'red', hex: '#ef4444' }
+        ],
+        
+        availableIntegrations: [
+            {
+                id: 'slack',
+                name: 'Slack',
+                description: 'Integração com Slack para notificações e comandos',
+                icon: '/static/images/integrations/slack.png',
+                connected: true,
+                features: [
+                    'Notificações em canais',
+                    'Comandos slash',
+                    'Criação de tarefas via mensagem'
+                ]
+            },
+            {
+                id: 'github',
+                name: 'GitHub',
+                description: 'Sincronização com repositórios GitHub',
+                icon: '/static/images/integrations/github.png',
+                connected: false,
+                features: [
+                    'Sincronização de issues',
+                    'Commits linkados a tarefas',
+                    'Pull requests automáticos'
+                ]
+            },
+            {
+                id: 'google_calendar',
+                name: 'Google Calendar',
+                description: 'Sincronização com Google Calendar',
+                icon: '/static/images/integrations/google-calendar.png',
+                connected: false,
+                features: [
+                    'Eventos para prazos',
+                    'Lembretes automáticos',
+                    'Sincronização bidirecional'
+                ]
+            },
+            {
+                id: 'trello',
+                name: 'Trello',
+                description: 'Importação de boards do Trello',
+                icon: '/static/images/integrations/trello.png',
+                connected: false,
+                features: [
+                    'Importação de boards',
+                    'Sincronização de cartões',
+                    'Migração completa'
+                ]
+            }
+        ],
+        
+        init() {
+            this.watchForChanges();
+        },
+        
+        watchForChanges() {
+            this.$watch('settings', () => {
+                this.hasChanges = true;
+            }, { deep: true });
+        },
+        
+        async saveSettings() {
+            this.saving = true;
+            
+            try {
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                this.hasChanges = false;
+                this.showSaveConfirmation = true;
+                
+                setTimeout(() => {
+                    this.showSaveConfirmation = false;
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                alert('Erro ao salvar configurações. Tente novamente.');
+            } finally {
+                this.saving = false;
+            }
+        },
+        
+        resetToDefaults() {
+            if (confirm('Tem certeza que deseja restaurar todas as configurações para os valores padrão?')) {
+                // Reset to default values
+                this.settings = {
+                    general: {
+                        organizationName: 'Minha Empresa',
+                        timezone: 'America/Sao_Paulo',
+                        language: 'pt-BR',
+                        dateFormat: 'DD/MM/YYYY',
+                        defaultStatus: 'todo',
+                        defaultPriority: 'media',
+                        autoAssign: true,
+                        autoNumbering: true
+                    },
+                    appearance: {
+                        theme: 'light',
+                        primaryColor: 'blue',
+                        highContrast: false,
+                        dashboardLayout: 'cards',
+                        compactSidebar: false,
+                        animations: true,
+                        density: 'standard'
+                    },
+                    notifications: {
+                        emailEnabled: true,
+                        email: {
+                            taskAssigned: true,
+                            dueDateReminder: true,
+                            comments: true,
+                            statusChanges: false
+                        },
+                        browserEnabled: true,
+                        sounds: true,
+                        doNotDisturbStart: '22:00',
+                        doNotDisturbEnd: '08:00'
+                    },
+                    automation: {
+                        autoArchiveDays: 30,
+                        inactivityReminderDays: 7,
+                        rules: []
+                    },
+                    security: {
+                        twoFactorEnabled: false,
+                        sessionTimeout: '240',
+                        auditLogs: true,
+                        dataRetention: '365'
+                    }
+                };
+                this.hasChanges = true;
+            }
+        },
+        
+        exportSettings() {
+            const settingsBlob = new Blob([JSON.stringify(this.settings, null, 2)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(settingsBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `task-settings-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        },
+        
+        // Automation methods
+        createNewRule() {
+            // Open rule creation modal
+            console.log('Creating new automation rule');
+        },
+        
+        editRule(index) {
+            console.log('Editing rule:', index);
+        },
+        
+        deleteRule(index) {
+            if (confirm('Tem certeza que deseja excluir esta regra?')) {
+                this.settings.automation.rules.splice(index, 1);
+                this.hasChanges = true;
+            }
+        },
+        
+        // Integration methods
+        connectIntegration(integration) {
+            console.log('Connecting integration:', integration.name);
+            // Simulate connection
+            integration.connected = true;
+            this.hasChanges = true;
+        },
+        
+        configureIntegration(integration) {
+            console.log('Configuring integration:', integration.name);
+            // Open configuration modal
+        },
+        
+        disconnectIntegration(integration) {
+            if (confirm(`Tem certeza que deseja desconectar ${integration.name}?`)) {
+                integration.connected = false;
+                this.hasChanges = true;
+            }
+        },
+        
+        // Advanced/Danger zone methods
+        exportAllData() {
+            if (confirm('Isto irá exportar todos os dados do sistema. Continuar?')) {
+                console.log('Exporting all data');
+                // Implement data export
+            }
+        },
+        
+        clearAllCache() {
+            if (confirm('Tem certeza que deseja limpar todo o cache do sistema?')) {
+                console.log('Clearing all cache');
+                // Implement cache clearing
+            }
+        },
+        
+        resetAllSettings() {
+            if (confirm('⚠️ ATENÇÃO: Isto irá remover TODAS as configurações e dados. Esta ação é IRREVERSÍVEL. Tem certeza absoluta?')) {
+                if (confirm('Última confirmação: Isto irá apagar tudo. Confirma?')) {
+                    console.log('Resetting all settings');
+                    // Implement complete reset
+                }
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

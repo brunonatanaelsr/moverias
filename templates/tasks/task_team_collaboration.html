@@ -1,0 +1,880 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Team Collaboration - Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-team-collaboration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="team-collaboration-container" x-data="teamCollaboration()">
+    <!-- Header -->
+    <div class="collaboration-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Tasks
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Team Collaboration</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Team Collaboration</h1>
+                    <p class="page-subtitle">Collaborate effectively with your team on tasks and projects</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button @click="openInviteModal()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Invite Members
+                </button>
+                
+                <button @click="createTeam()" class="btn-primary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    Create Team
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collaboration Content -->
+    <div class="collaboration-content">
+        <div class="content-wrapper">
+            <!-- Team Activity Feed -->
+            <div class="activity-section">
+                <div class="section-header">
+                    <h3>Team Activity</h3>
+                    <div class="activity-filters">
+                        <select class="filter-select" x-model="activityFilter">
+                            <option value="all">All Activity</option>
+                            <option value="tasks">Task Updates</option>
+                            <option value="comments">Comments</option>
+                            <option value="assignments">Assignments</option>
+                            <option value="completions">Completions</option>
+                        </select>
+                        
+                        <div class="time-filters">
+                            <button @click="timeFilter = 'today'" :class="{'active': timeFilter === 'today'}" class="time-btn">Today</button>
+                            <button @click="timeFilter = 'week'" :class="{'active': timeFilter === 'week'}" class="time-btn">This Week</button>
+                            <button @click="timeFilter = 'month'" :class="{'active': timeFilter === 'month'}" class="time-btn">This Month</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="activity-feed">
+                    <template x-for="activity in filteredActivities" :key="activity.id">
+                        <div class="activity-item" :class="'activity-' + activity.type">
+                            <div class="activity-avatar">
+                                <img :src="activity.user.avatar" :alt="activity.user.name" class="avatar-img">
+                                <div class="activity-icon" :class="'icon-' + activity.type">
+                                    <!-- Task Created -->
+                                    <svg x-show="activity.type === 'task_created'" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    <!-- Task Completed -->
+                                    <svg x-show="activity.type === 'task_completed'" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    <!-- Comment Added -->
+                                    <svg x-show="activity.type === 'comment_added'" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    <!-- Assignment -->
+                                    <svg x-show="activity.type === 'task_assigned'" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            
+                            <div class="activity-content">
+                                <div class="activity-header">
+                                    <span class="activity-user" x-text="activity.user.name">John Doe</span>
+                                    <span class="activity-action" x-text="activity.action">created task</span>
+                                    <a :href="activity.taskUrl" class="activity-task" x-text="activity.taskName">Website Redesign</a>
+                                </div>
+                                
+                                <div class="activity-details" x-show="activity.details">
+                                    <p x-text="activity.details"></p>
+                                </div>
+                                
+                                <div class="activity-meta">
+                                    <span class="activity-time" x-text="activity.timeAgo">2 hours ago</span>
+                                    <span class="activity-project" x-text="activity.projectName">Marketing Site</span>
+                                </div>
+                            </div>
+                            
+                            <div class="activity-actions">
+                                <button @click="likeActivity(activity)" class="action-btn" :class="{'liked': activity.isLiked}">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <span x-text="activity.likes || ''"></span>
+                                </button>
+                                
+                                <button @click="replyToActivity(activity)" class="action-btn">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                    </svg>
+                                    Reply
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Team Members & Task Assignment -->
+            <div class="team-section">
+                <div class="team-overview">
+                    <div class="section-header">
+                        <h3>Team Members</h3>
+                        <div class="team-stats">
+                            <span class="stat-item">
+                                <span class="stat-value" x-text="teamStats.totalMembers">12</span>
+                                <span class="stat-label">Members</span>
+                            </span>
+                            <span class="stat-item">
+                                <span class="stat-value" x-text="teamStats.activeMembers">8</span>
+                                <span class="stat-label">Active</span>
+                            </span>
+                            <span class="stat-item">
+                                <span class="stat-value" x-text="teamStats.onlineMembers">5</span>
+                                <span class="stat-label">Online</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="team-grid">
+                        <template x-for="member in teamMembers" :key="member.id">
+                            <div class="member-card" :class="{'online': member.isOnline, 'busy': member.status === 'busy'}">
+                                <div class="member-avatar">
+                                    <img :src="member.avatar" :alt="member.name" class="avatar-img">
+                                    <div class="status-indicator" :class="member.status"></div>
+                                </div>
+                                
+                                <div class="member-info">
+                                    <h4 class="member-name" x-text="member.name">Sarah Johnson</h4>
+                                    <p class="member-role" x-text="member.role">Frontend Developer</p>
+                                    <div class="member-stats">
+                                        <span class="stat">
+                                            <span class="stat-value" x-text="member.activeTasks">3</span>
+                                            <span class="stat-label">Active</span>
+                                        </span>
+                                        <span class="stat">
+                                            <span class="stat-value" x-text="member.completedTasks">28</span>
+                                            <span class="stat-label">Done</span>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="member-actions">
+                                    <button @click="assignTask(member)" class="action-btn" title="Assign Task">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <button @click="messageUser(member)" class="action-btn" title="Send Message">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                    </button>
+                                    
+                                    <div class="member-dropdown" x-data="{ open: false }" @click.away="open = false">
+                                        <button @click="open = !open" class="action-btn" title="More Options">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div class="dropdown-menu" x-show="open" x-transition>
+                                            <button @click="viewProfile(member)" class="dropdown-item">View Profile</button>
+                                            <button @click="viewTasks(member)" class="dropdown-item">View Tasks</button>
+                                            <button @click="removeFromTeam(member)" class="dropdown-item danger">Remove from Team</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Collaborative Tasks Board -->
+            <div class="board-section">
+                <div class="section-header">
+                    <h3>Collaborative Tasks Board</h3>
+                    <div class="board-controls">
+                        <select class="filter-select" x-model="boardFilter">
+                            <option value="all">All Tasks</option>
+                            <option value="assigned-to-me">Assigned to Me</option>
+                            <option value="created-by-me">Created by Me</option>
+                            <option value="collaborative">Collaborative</option>
+                        </select>
+                        
+                        <div class="view-options">
+                            <button @click="boardView = 'kanban'" :class="{'active': boardView === 'kanban'}" class="view-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0v10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2z"></path>
+                                </svg>
+                                Kanban
+                            </button>
+                            <button @click="boardView = 'list'" :class="{'active': boardView === 'list'}" class="view-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                                List
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kanban Board -->
+                <div class="kanban-board" x-show="boardView === 'kanban'">
+                    <template x-for="column in kanbanColumns" :key="column.id">
+                        <div class="kanban-column" :class="'column-' + column.status">
+                            <div class="column-header">
+                                <h4 class="column-title" x-text="column.name">To Do</h4>
+                                <span class="column-count" x-text="column.tasks.length">3</span>
+                            </div>
+                            
+                            <div class="column-tasks" @drop="onDrop($event, column.status)" @dragover.prevent @dragenter.prevent>
+                                <template x-for="task in column.tasks" :key="task.id">
+                                    <div class="task-card" draggable="true" @dragstart="onDragStart($event, task)">
+                                        <div class="task-header">
+                                            <div class="task-priority" :class="'priority-' + task.priority"></div>
+                                            <h5 class="task-title" x-text="task.title">Website Homepage Design</h5>
+                                            <div class="task-menu" x-data="{ open: false }" @click.away="open = false">
+                                                <button @click="open = !open" class="menu-trigger">
+                                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                                    </svg>
+                                                </button>
+                                                <div class="task-menu-dropdown" x-show="open" x-transition>
+                                                    <button @click="editTask(task)" class="menu-item">Edit</button>
+                                                    <button @click="assignTask(task)" class="menu-item">Assign</button>
+                                                    <button @click="addComment(task)" class="menu-item">Comment</button>
+                                                    <button @click="deleteTask(task)" class="menu-item danger">Delete</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <p class="task-description" x-text="task.description">Create responsive homepage layout with modern design</p>
+                                        
+                                        <div class="task-meta">
+                                            <div class="task-assignees">
+                                                <template x-for="assignee in task.assignees.slice(0, 3)" :key="assignee.id">
+                                                    <img :src="assignee.avatar" :alt="assignee.name" class="assignee-avatar" :title="assignee.name">
+                                                </template>
+                                                <span x-show="task.assignees.length > 3" class="more-assignees" x-text="'+' + (task.assignees.length - 3)"></span>
+                                            </div>
+                                            
+                                            <div class="task-stats">
+                                                <span class="task-comments" x-show="task.comments > 0">
+                                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                                    </svg>
+                                                    <span x-text="task.comments">3</span>
+                                                </span>
+                                                
+                                                <span class="task-attachments" x-show="task.attachments > 0">
+                                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                    </svg>
+                                                    <span x-text="task.attachments">2</span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="task-footer">
+                                            <span class="task-due-date" :class="{'overdue': task.isOverdue}" x-text="task.dueDate">Jul 28</span>
+                                            <div class="task-progress">
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill" :style="`width: ${task.progress}%`"></div>
+                                                </div>
+                                                <span class="progress-text" x-text="task.progress + '%'">75%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                                
+                                <button @click="addTaskToColumn(column)" class="add-task-btn">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add Task
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- List View -->
+                <div class="tasks-list" x-show="boardView === 'list'">
+                    <div class="list-header">
+                        <div class="list-col col-task">Task</div>
+                        <div class="list-col col-assignee">Assignee</div>
+                        <div class="list-col col-status">Status</div>
+                        <div class="list-col col-priority">Priority</div>
+                        <div class="list-col col-due">Due Date</div>
+                        <div class="list-col col-progress">Progress</div>
+                        <div class="list-col col-actions">Actions</div>
+                    </div>
+                    
+                    <template x-for="task in allTasks" :key="task.id">
+                        <div class="list-row">
+                            <div class="list-col col-task">
+                                <div class="task-info">
+                                    <h5 class="task-title" x-text="task.title">Website Homepage Design</h5>
+                                    <p class="task-project" x-text="task.project">Marketing Site</p>
+                                </div>
+                            </div>
+                            
+                            <div class="list-col col-assignee">
+                                <div class="assignee-list">
+                                    <template x-for="assignee in task.assignees.slice(0, 2)" :key="assignee.id">
+                                        <img :src="assignee.avatar" :alt="assignee.name" class="assignee-avatar" :title="assignee.name">
+                                    </template>
+                                    <span x-show="task.assignees.length > 2" class="more-assignees" x-text="'+' + (task.assignees.length - 2)"></span>
+                                </div>
+                            </div>
+                            
+                            <div class="list-col col-status">
+                                <span class="status-badge" :class="'status-' + task.status" x-text="task.statusLabel">In Progress</span>
+                            </div>
+                            
+                            <div class="list-col col-priority">
+                                <span class="priority-badge" :class="'priority-' + task.priority" x-text="task.priorityLabel">High</span>
+                            </div>
+                            
+                            <div class="list-col col-due">
+                                <span class="due-date" :class="{'overdue': task.isOverdue}" x-text="task.dueDate">Jul 28, 2024</span>
+                            </div>
+                            
+                            <div class="list-col col-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" :style="`width: ${task.progress}%`"></div>
+                                </div>
+                                <span class="progress-text" x-text="task.progress + '%'">75%</span>
+                            </div>
+                            
+                            <div class="list-col col-actions">
+                                <button @click="editTask(task)" class="action-btn" title="Edit">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <button @click="addComment(task)" class="action-btn" title="Comment">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                </button>
+                                
+                                <button @click="assignTask(task)" class="action-btn" title="Assign">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Team Communication Panel -->
+            <div class="communication-panel">
+                <div class="panel-header">
+                    <h3>Team Chat</h3>
+                    <div class="chat-controls">
+                        <button @click="toggleChatPanel()" class="toggle-btn">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-container" x-show="chatPanelOpen" x-transition>
+                    <div class="chat-messages" id="chatMessages">
+                        <template x-for="message in chatMessages" :key="message.id">
+                            <div class="chat-message" :class="{'own-message': message.isOwn}">
+                                <div class="message-avatar">
+                                    <img :src="message.user.avatar" :alt="message.user.name" class="avatar-img">
+                                </div>
+                                
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-user" x-text="message.user.name">Sarah Johnson</span>
+                                        <span class="message-time" x-text="message.timeAgo">2 min ago</span>
+                                    </div>
+                                    
+                                    <div class="message-text" x-html="message.content">
+                                        Great work on the homepage design! The new layout looks amazing. 👏
+                                    </div>
+                                    
+                                    <div class="message-actions" x-show="!message.isOwn">
+                                        <button @click="replyToMessage(message)" class="msg-action">Reply</button>
+                                        <button @click="reactToMessage(message, '👍')" class="msg-action">👍</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <div class="input-container">
+                            <input type="text" x-model="newMessage" @keyup.enter="sendMessage()" placeholder="Type a message..." class="message-input">
+                            <button @click="sendMessage()" :disabled="!newMessage.trim()" class="send-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Members Modal -->
+    <div class="modal-overlay" x-show="showInviteModal" x-transition @click="closeInviteModal()">
+        <div class="modal-content" @click.stop x-show="showInviteModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title">Invite Team Members</h2>
+                <button @click="closeInviteModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form @submit.prevent="sendInvites()">
+                    <div class="form-group">
+                        <label class="form-label">Email Addresses</label>
+                        <textarea class="form-textarea" x-model="inviteEmails" placeholder="Enter email addresses separated by commas or new lines" rows="4"></textarea>
+                        <small class="form-help">You can add multiple email addresses separated by commas or new lines</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" x-model="inviteRole">
+                            <option value="member">Team Member</option>
+                            <option value="admin">Team Admin</option>
+                            <option value="viewer">Viewer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Personal Message (Optional)</label>
+                        <textarea class="form-textarea" x-model="inviteMessage" placeholder="Add a personal message to your invitation" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" @click="closeInviteModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary" :disabled="sending">
+                            <svg x-show="sending" class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-show="!sending">Send Invitations</span>
+                            <span x-show="sending">Sending...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function teamCollaboration() {
+    return {
+        // State
+        activityFilter: 'all',
+        timeFilter: 'today',
+        boardFilter: 'all',
+        boardView: 'kanban',
+        showInviteModal: false,
+        chatPanelOpen: true,
+        sending: false,
+        
+        // Data
+        teamStats: {
+            totalMembers: 12,
+            activeMembers: 8,
+            onlineMembers: 5
+        },
+        
+        activities: [
+            {
+                id: 1,
+                type: 'task_created',
+                user: { name: 'John Doe', avatar: '/static/img/avatars/john.jpg' },
+                action: 'created task',
+                taskName: 'Website Redesign',
+                taskUrl: '/tasks/1/',
+                projectName: 'Marketing Site',
+                details: 'Added task with high priority and assigned to design team',
+                timeAgo: '2 hours ago',
+                likes: 3,
+                isLiked: false
+            },
+            {
+                id: 2,
+                type: 'task_completed',
+                user: { name: 'Sarah Johnson', avatar: '/static/img/avatars/sarah.jpg' },
+                action: 'completed task',
+                taskName: 'API Integration',
+                taskUrl: '/tasks/2/',
+                projectName: 'Backend System',
+                details: 'Successfully integrated payment gateway API',
+                timeAgo: '4 hours ago',
+                likes: 7,
+                isLiked: true
+            },
+            {
+                id: 3,
+                type: 'comment_added',
+                user: { name: 'Mike Chen', avatar: '/static/img/avatars/mike.jpg' },
+                action: 'commented on',
+                taskName: 'User Testing',
+                taskUrl: '/tasks/3/',
+                projectName: 'Mobile App',
+                details: 'Great feedback from users! The new navigation is much more intuitive.',
+                timeAgo: '6 hours ago',
+                likes: 2,
+                isLiked: false
+            }
+        ],
+        
+        teamMembers: [
+            {
+                id: 1,
+                name: 'Sarah Johnson',
+                role: 'Frontend Developer',
+                avatar: '/static/img/avatars/sarah.jpg',
+                status: 'online',
+                isOnline: true,
+                activeTasks: 3,
+                completedTasks: 28
+            },
+            {
+                id: 2,
+                name: 'Mike Chen',
+                role: 'Backend Developer',
+                avatar: '/static/img/avatars/mike.jpg',
+                status: 'busy',
+                isOnline: true,
+                activeTasks: 5,
+                completedTasks: 32
+            },
+            {
+                id: 3,
+                name: 'Emily Davis',
+                role: 'UI/UX Designer',
+                avatar: '/static/img/avatars/emily.jpg',
+                status: 'away',
+                isOnline: false,
+                activeTasks: 2,
+                completedTasks: 19
+            }
+        ],
+        
+        kanbanColumns: [
+            {
+                id: 'todo',
+                name: 'To Do',
+                status: 'todo',
+                tasks: [
+                    {
+                        id: 1,
+                        title: 'Website Homepage Design',
+                        description: 'Create responsive homepage layout with modern design',
+                        priority: 'high',
+                        status: 'todo',
+                        progress: 0,
+                        dueDate: 'Jul 28',
+                        isOverdue: false,
+                        assignees: [
+                            { id: 1, name: 'Sarah', avatar: '/static/img/avatars/sarah.jpg' },
+                            { id: 2, name: 'Mike', avatar: '/static/img/avatars/mike.jpg' }
+                        ],
+                        comments: 3,
+                        attachments: 2
+                    }
+                ]
+            },
+            {
+                id: 'inprogress',
+                name: 'In Progress',
+                status: 'inprogress',
+                tasks: [
+                    {
+                        id: 2,
+                        title: 'API Development',
+                        description: 'Implement user authentication endpoints',
+                        priority: 'medium',
+                        status: 'inprogress',
+                        progress: 75,
+                        dueDate: 'Jul 30',
+                        isOverdue: false,
+                        assignees: [
+                            { id: 2, name: 'Mike', avatar: '/static/img/avatars/mike.jpg' }
+                        ],
+                        comments: 5,
+                        attachments: 1
+                    }
+                ]
+            },
+            {
+                id: 'review',
+                name: 'Review',
+                status: 'review',
+                tasks: []
+            },
+            {
+                id: 'done',
+                name: 'Done',
+                status: 'done',
+                tasks: [
+                    {
+                        id: 3,
+                        title: 'Database Schema',
+                        description: 'Design and implement user database schema',
+                        priority: 'high',
+                        status: 'done',
+                        progress: 100,
+                        dueDate: 'Jul 25',
+                        isOverdue: false,
+                        assignees: [
+                            { id: 2, name: 'Mike', avatar: '/static/img/avatars/mike.jpg' }
+                        ],
+                        comments: 2,
+                        attachments: 0
+                    }
+                ]
+            }
+        ],
+        
+        chatMessages: [
+            {
+                id: 1,
+                user: { name: 'Sarah Johnson', avatar: '/static/img/avatars/sarah.jpg' },
+                content: 'Great work on the homepage design! The new layout looks amazing. 👏',
+                timeAgo: '2 min ago',
+                isOwn: false
+            },
+            {
+                id: 2,
+                user: { name: 'You', avatar: '/static/img/avatars/you.jpg' },
+                content: 'Thanks! I\'m working on the mobile responsive version now.',
+                timeAgo: '1 min ago',
+                isOwn: true
+            }
+        ],
+        
+        newMessage: '',
+        inviteEmails: '',
+        inviteRole: 'member',
+        inviteMessage: '',
+        
+        // Computed
+        get filteredActivities() {
+            return this.activities.filter(activity => {
+                if (this.activityFilter !== 'all') {
+                    const typeMatch = {
+                        'tasks': activity.type.includes('task'),
+                        'comments': activity.type === 'comment_added',
+                        'assignments': activity.type === 'task_assigned',
+                        'completions': activity.type === 'task_completed'
+                    };
+                    if (!typeMatch[this.activityFilter]) return false;
+                }
+                return true;
+            });
+        },
+        
+        get allTasks() {
+            return this.kanbanColumns.flatMap(column => column.tasks);
+        },
+        
+        // Methods
+        likeActivity(activity) {
+            activity.isLiked = !activity.isLiked;
+            activity.likes = activity.isLiked ? (activity.likes || 0) + 1 : Math.max(0, (activity.likes || 0) - 1);
+        },
+        
+        replyToActivity(activity) {
+            console.log('Reply to activity:', activity);
+        },
+        
+        assignTask(memberOrTask) {
+            console.log('Assign task:', memberOrTask);
+        },
+        
+        messageUser(member) {
+            console.log('Message user:', member);
+        },
+        
+        viewProfile(member) {
+            console.log('View profile:', member);
+        },
+        
+        viewTasks(member) {
+            console.log('View tasks for:', member);
+        },
+        
+        removeFromTeam(member) {
+            if (confirm(`Remove ${member.name} from the team?`)) {
+                const index = this.teamMembers.findIndex(m => m.id === member.id);
+                if (index !== -1) {
+                    this.teamMembers.splice(index, 1);
+                }
+            }
+        },
+        
+        onDragStart(event, task) {
+            event.dataTransfer.setData('text/plain', JSON.stringify(task));
+        },
+        
+        onDrop(event, status) {
+            const taskData = JSON.parse(event.dataTransfer.getData('text/plain'));
+            
+            // Remove from current column
+            this.kanbanColumns.forEach(column => {
+                const index = column.tasks.findIndex(t => t.id === taskData.id);
+                if (index !== -1) {
+                    column.tasks.splice(index, 1);
+                }
+            });
+            
+            // Add to new column
+            const targetColumn = this.kanbanColumns.find(c => c.status === status);
+            if (targetColumn) {
+                taskData.status = status;
+                targetColumn.tasks.push(taskData);
+            }
+        },
+        
+        addTaskToColumn(column) {
+            console.log('Add task to column:', column);
+        },
+        
+        editTask(task) {
+            console.log('Edit task:', task);
+        },
+        
+        addComment(task) {
+            console.log('Add comment to task:', task);
+        },
+        
+        deleteTask(task) {
+            if (confirm('Delete this task?')) {
+                this.kanbanColumns.forEach(column => {
+                    const index = column.tasks.findIndex(t => t.id === task.id);
+                    if (index !== -1) {
+                        column.tasks.splice(index, 1);
+                    }
+                });
+            }
+        },
+        
+        toggleChatPanel() {
+            this.chatPanelOpen = !this.chatPanelOpen;
+        },
+        
+        sendMessage() {
+            if (!this.newMessage.trim()) return;
+            
+            const message = {
+                id: Date.now(),
+                user: { name: 'You', avatar: '/static/img/avatars/you.jpg' },
+                content: this.newMessage,
+                timeAgo: 'now',
+                isOwn: true
+            };
+            
+            this.chatMessages.push(message);
+            this.newMessage = '';
+            
+            // Scroll to bottom
+            this.$nextTick(() => {
+                const chatContainer = document.getElementById('chatMessages');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        },
+        
+        replyToMessage(message) {
+            console.log('Reply to message:', message);
+        },
+        
+        reactToMessage(message, reaction) {
+            console.log('React to message:', message, reaction);
+        },
+        
+        openInviteModal() {
+            this.showInviteModal = true;
+        },
+        
+        closeInviteModal() {
+            this.showInviteModal = false;
+            this.inviteEmails = '';
+            this.inviteRole = 'member';
+            this.inviteMessage = '';
+        },
+        
+        sendInvites() {
+            this.sending = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                console.log('Sending invitations:', {
+                    emails: this.inviteEmails,
+                    role: this.inviteRole,
+                    message: this.inviteMessage
+                });
+                
+                this.sending = false;
+                this.closeInviteModal();
+                
+                // Show success message
+                alert('Invitations sent successfully!');
+            }, 2000);
+        },
+        
+        createTeam() {
+            console.log('Create new team');
+        },
+        
+        // Initialize
+        init() {
+            console.log('Team collaboration initialized');
+        }
+    };
+}
+</script>
+{% endblock %}

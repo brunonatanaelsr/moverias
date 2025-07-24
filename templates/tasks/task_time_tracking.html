@@ -1,0 +1,848 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Time Tracking - Tasks{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/task-time-tracking.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="time-tracking-container" x-data="timeTracking()">
+    <!-- Header -->
+    <div class="tracking-header">
+        <div class="header-content">
+            <div class="header-nav">
+                <nav class="breadcrumb">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+                        <svg class="breadcrumb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        Tasks
+                    </a>
+                    <svg class="breadcrumb-separator" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="breadcrumb-current">Time Tracking</span>
+                </nav>
+                
+                <div class="title-section">
+                    <h1 class="page-title">Time Tracking</h1>
+                    <p class="page-subtitle">Track time spent on tasks and projects with detailed analytics</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="active-timer" x-show="activeTimer" x-transition>
+                    <div class="timer-display">
+                        <div class="timer-task" x-text="activeTimer?.taskName">Current Task</div>
+                        <div class="timer-duration" x-text="formatDuration(activeTimer?.elapsed || 0)">00:00:00</div>
+                    </div>
+                    <button @click="stopTimer()" class="timer-stop">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                        </svg>
+                        Stop
+                    </button>
+                </div>
+                
+                <button @click="openTimeEntryModal()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Time Entry
+                </button>
+                
+                <button @click="exportTimeData()" class="btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Tracking Content -->
+    <div class="tracking-content">
+        <div class="content-wrapper">
+            <!-- Quick Timer Section -->
+            <div class="quick-timer-section">
+                <div class="quick-timer-card">
+                    <div class="timer-header">
+                        <h3>Quick Timer</h3>
+                        <div class="timer-controls">
+                            <select class="task-select" x-model="quickTimer.taskId" :disabled="activeTimer">
+                                <option value="">Select a task</option>
+                                <template x-for="task in availableTasks" :key="task.id">
+                                    <option :value="task.id" x-text="task.name"></option>
+                                </template>
+                            </select>
+                            
+                            <button @click="startTimer()" x-show="!activeTimer" :disabled="!quickTimer.taskId" class="btn-primary">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-15S8 2 8 6v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6c0-4 1-4 1-4h4.5S8 2 8 6v7a2 2 0 002 2h1m0-5.5a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z"></path>
+                                </svg>
+                                Start Timer
+                            </button>
+                            
+                            <div class="timer-actions" x-show="activeTimer">
+                                <button @click="pauseTimer()" x-show="!activeTimer?.isPaused" class="btn-warning">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Pause
+                                </button>
+                                
+                                <button @click="resumeTimer()" x-show="activeTimer?.isPaused" class="btn-success">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-5-15S8 2 8 6v7a2 2 0 01-2 2H5a2 2 0 01-2-2V6c0-4 1-4 1-4h4.5S8 2 8 6v7a2 2 0 002 2h1m0-5.5a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z"></path>
+                                    </svg>
+                                    Resume
+                                </button>
+                                
+                                <button @click="stopTimer()" class="btn-danger">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                                    </svg>
+                                    Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" x-text="stats.todayTotal">8.5h</div>
+                        <div class="stat-label">Today</div>
+                        <div class="stat-change positive" x-text="'+' + stats.todayChange">+2.1h</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" x-text="stats.weekTotal">42.3h</div>
+                        <div class="stat-label">This Week</div>
+                        <div class="stat-change positive" x-text="'+' + stats.weekChange">+5.2h</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" x-text="stats.monthTotal">187.2h</div>
+                        <div class="stat-label">This Month</div>
+                        <div class="stat-change negative" x-text="stats.monthChange">-3.8h</div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-value" x-text="stats.avgDaily">7.8h</div>
+                        <div class="stat-label">Daily Average</div>
+                        <div class="stat-change positive" x-text="'+' + stats.avgChange">+0.3h</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Time Entries Section -->
+            <div class="time-entries-section">
+                <div class="section-header">
+                    <h3>Time Entries</h3>
+                    <div class="header-actions">
+                        <div class="date-filter">
+                            <select class="filter-select" x-model="dateFilter">
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="this-week">This Week</option>
+                                <option value="last-week">Last Week</option>
+                                <option value="this-month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        
+                        <div class="view-options">
+                            <button @click="viewMode = 'list'" :class="{'active': viewMode === 'list'}" class="view-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                            </button>
+                            <button @click="viewMode = 'calendar'" :class="{'active': viewMode === 'calendar'}" class="view-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- List View -->
+                <div class="entries-list" x-show="viewMode === 'list'">
+                    <template x-for="(group, date) in groupedEntries" :key="date">
+                        <div class="entries-group">
+                            <div class="group-header">
+                                <h4 class="group-date" x-text="formatDate(date)"></h4>
+                                <div class="group-total" x-text="formatDuration(group.total)"></div>
+                            </div>
+                            
+                            <div class="group-entries">
+                                <template x-for="entry in group.entries" :key="entry.id">
+                                    <div class="entry-item" :class="{'running': entry.isRunning}">
+                                        <div class="entry-task">
+                                            <div class="task-info">
+                                                <h5 class="task-name" x-text="entry.taskName"></h5>
+                                                <p class="task-project" x-text="entry.projectName"></p>
+                                            </div>
+                                            <div class="task-meta">
+                                                <span class="entry-duration" x-text="formatDuration(entry.duration)"></span>
+                                                <span class="entry-time" x-text="entry.startTime + ' - ' + (entry.endTime || 'Running')"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="entry-description" x-show="entry.description">
+                                            <p x-text="entry.description"></p>
+                                        </div>
+                                        
+                                        <div class="entry-actions">
+                                            <button @click="editEntry(entry)" class="action-btn" title="Edit">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="duplicateEntry(entry)" class="action-btn" title="Duplicate">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                            </button>
+                                            <button @click="deleteEntry(entry)" class="action-btn danger" title="Delete">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Calendar View -->
+                <div class="entries-calendar" x-show="viewMode === 'calendar'">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button @click="previousMonth()" class="nav-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                </svg>
+                            </button>
+                            <div class="calendar-title" x-text="currentMonthYear">January 2024</div>
+                            <button @click="nextMonth()" class="nav-btn">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <button @click="today()" class="btn-secondary btn-sm">Today</button>
+                    </div>
+                    
+                    <div class="calendar-grid">
+                        <div class="calendar-weekdays">
+                            <div class="weekday">Sun</div>
+                            <div class="weekday">Mon</div>
+                            <div class="weekday">Tue</div>
+                            <div class="weekday">Wed</div>
+                            <div class="weekday">Thu</div>
+                            <div class="weekday">Fri</div>
+                            <div class="weekday">Sat</div>
+                        </div>
+                        
+                        <div class="calendar-days">
+                            <template x-for="day in calendarDays" :key="day.date">
+                                <div class="calendar-day" :class="{'other-month': !day.currentMonth, 'today': day.isToday, 'has-entries': day.entries.length > 0}" @click="selectDay(day)">
+                                    <div class="day-number" x-text="day.number"></div>
+                                    <div class="day-total" x-show="day.entries.length > 0" x-text="formatDuration(day.totalTime)"></div>
+                                    <div class="day-entries">
+                                        <template x-for="entry in day.entries.slice(0, 2)" :key="entry.id">
+                                            <div class="day-entry" x-text="entry.taskName"></div>
+                                        </template>
+                                        <div x-show="day.entries.length > 2" class="more-entries" x-text="'+' + (day.entries.length - 2)"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="analytics-section">
+                <div class="analytics-header">
+                    <h3>Time Analytics</h3>
+                    <div class="analytics-filters">
+                        <select class="filter-select" x-model="analyticsFilter">
+                            <option value="this-week">This Week</option>
+                            <option value="last-week">Last Week</option>
+                            <option value="this-month">This Month</option>
+                            <option value="last-month">Last Month</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="analytics-grid">
+                    <!-- Time by Project Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Time by Project</h4>
+                            <div class="chart-total" x-text="'Total: ' + analytics.totalTime">Total: 42.5h</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="projectChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <template x-for="item in analytics.projectData" :key="item.name">
+                                <div class="legend-item">
+                                    <div class="legend-color" :style="`background: ${item.color}`"></div>
+                                    <span class="legend-name" x-text="item.name"></span>
+                                    <span class="legend-value" x-text="formatDuration(item.value)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Hours Chart -->
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h4>Daily Hours</h4>
+                            <div class="chart-average" x-text="'Avg: ' + analytics.dailyAverage">Avg: 8.5h</div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="dailyChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Task Distribution -->
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h4>Top Tasks by Time</h4>
+                            <div class="chart-period" x-text="analyticsFilter">This Week</div>
+                        </div>
+                        <div class="task-list">
+                            <template x-for="(task, index) in analytics.topTasks" :key="task.id">
+                                <div class="task-item">
+                                    <div class="task-rank" x-text="index + 1"></div>
+                                    <div class="task-details">
+                                        <div class="task-name" x-text="task.name"></div>
+                                        <div class="task-project" x-text="task.project"></div>
+                                    </div>
+                                    <div class="task-time" x-text="formatDuration(task.time)"></div>
+                                    <div class="task-percentage" x-text="task.percentage + '%'"></div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Entry Modal -->
+    <div class="modal-overlay" x-show="showModal" x-transition @click="closeModal()">
+        <div class="modal-content" @click.stop x-show="showModal" x-transition.scale>
+            <div class="modal-header">
+                <h2 class="modal-title" x-text="modalTitle">Add Time Entry</h2>
+                <button @click="closeModal()" class="modal-close">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <form @submit.prevent="saveTimeEntry()">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Task</label>
+                            <select class="form-select" x-model="currentEntry.taskId" required>
+                                <option value="">Select a task</option>
+                                <template x-for="task in availableTasks" :key="task.id">
+                                    <option :value="task.id" x-text="task.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-input" x-model="currentEntry.date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Start Time</label>
+                            <input type="time" class="form-input" x-model="currentEntry.startTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">End Time</label>
+                            <input type="time" class="form-input" x-model="currentEntry.endTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Description (Optional)</label>
+                        <textarea class="form-textarea" x-model="currentEntry.description" placeholder="What did you work on?" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="duration-display">
+                        <span class="duration-label">Duration:</span>
+                        <span class="duration-value" x-text="calculateDuration()">0h 0m</span>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" @click="closeModal()" class="btn-secondary">Cancel</button>
+                        <button type="submit" class="btn-primary" :disabled="saving">
+                            <svg x-show="saving" class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-show="!saving" x-text="modalMode === 'create' ? 'Add Entry' : 'Update Entry'">Add Entry</span>
+                            <span x-show="saving">Saving...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function timeTracking() {
+    return {
+        // State
+        activeTimer: null,
+        viewMode: 'list',
+        dateFilter: 'today',
+        analyticsFilter: 'this-week',
+        showModal: false,
+        modalMode: 'create',
+        modalTitle: 'Add Time Entry',
+        saving: false,
+        currentMonthYear: 'January 2024',
+        
+        // Timer
+        quickTimer: {
+            taskId: '',
+            elapsed: 0
+        },
+        
+        // Data
+        stats: {
+            todayTotal: '8.5h',
+            todayChange: '2.1h',
+            weekTotal: '42.3h',
+            weekChange: '5.2h',
+            monthTotal: '187.2h',
+            monthChange: '-3.8h',
+            avgDaily: '7.8h',
+            avgChange: '0.3h'
+        },
+        
+        availableTasks: [
+            { id: 1, name: 'Website Redesign', project: 'Marketing Site' },
+            { id: 2, name: 'API Development', project: 'Backend System' },
+            { id: 3, name: 'User Testing', project: 'Mobile App' },
+            { id: 4, name: 'Database Optimization', project: 'Infrastructure' },
+            { id: 5, name: 'Bug Fixes', project: 'General' }
+        ],
+        
+        timeEntries: [
+            {
+                id: 1,
+                taskId: 1,
+                taskName: 'Website Redesign',
+                projectName: 'Marketing Site',
+                date: '2024-01-24',
+                startTime: '09:00',
+                endTime: '12:30',
+                duration: 12600, // seconds
+                description: 'Working on homepage layout and responsive design',
+                isRunning: false
+            },
+            {
+                id: 2,
+                taskId: 2,
+                taskName: 'API Development',
+                projectName: 'Backend System',
+                date: '2024-01-24',
+                startTime: '13:30',
+                endTime: '17:00',
+                duration: 12600,
+                description: 'Implementing user authentication endpoints',
+                isRunning: false
+            },
+            {
+                id: 3,
+                taskId: 3,
+                taskName: 'User Testing',
+                projectName: 'Mobile App',
+                date: '2024-01-23',
+                startTime: '10:00',
+                endTime: '15:30',
+                duration: 19800,
+                description: 'Conducting usability tests with beta users',
+                isRunning: false
+            }
+        ],
+        
+        currentEntry: {
+            taskId: '',
+            date: new Date().toISOString().split('T')[0],
+            startTime: '',
+            endTime: '',
+            description: ''
+        },
+        
+        analytics: {
+            totalTime: '42.5h',
+            dailyAverage: '8.5h',
+            projectData: [
+                { name: 'Marketing Site', value: 25200, color: '#3B82F6' },
+                { name: 'Backend System', value: 18000, color: '#10B981' },
+                { name: 'Mobile App', value: 14400, color: '#F59E0B' },
+                { name: 'Infrastructure', value: 7200, color: '#EF4444' }
+            ],
+            topTasks: [
+                { id: 1, name: 'Website Redesign', project: 'Marketing Site', time: 25200, percentage: 35 },
+                { id: 2, name: 'API Development', project: 'Backend System', time: 18000, percentage: 25 },
+                { id: 3, name: 'User Testing', project: 'Mobile App', time: 14400, percentage: 20 },
+                { id: 4, name: 'Database Optimization', project: 'Infrastructure', time: 7200, percentage: 10 },
+                { id: 5, name: 'Bug Fixes', project: 'General', time: 3600, percentage: 5 }
+            ]
+        },
+        
+        calendarDays: [],
+        
+        // Computed properties
+        get groupedEntries() {
+            const groups = {};
+            
+            this.timeEntries.forEach(entry => {
+                if (!groups[entry.date]) {
+                    groups[entry.date] = {
+                        entries: [],
+                        total: 0
+                    };
+                }
+                groups[entry.date].entries.push(entry);
+                groups[entry.date].total += entry.duration;
+            });
+            
+            return groups;
+        },
+        
+        // Methods
+        startTimer() {
+            if (!this.quickTimer.taskId) return;
+            
+            const task = this.availableTasks.find(t => t.id == this.quickTimer.taskId);
+            this.activeTimer = {
+                taskId: this.quickTimer.taskId,
+                taskName: task.name,
+                startTime: new Date(),
+                elapsed: 0,
+                isPaused: false
+            };
+            
+            this.updateTimer();
+        },
+        
+        stopTimer() {
+            if (!this.activeTimer) return;
+            
+            // Create time entry
+            const entry = {
+                id: Date.now(),
+                taskId: this.activeTimer.taskId,
+                taskName: this.activeTimer.taskName,
+                projectName: this.availableTasks.find(t => t.id == this.activeTimer.taskId)?.project || '',
+                date: new Date().toISOString().split('T')[0],
+                startTime: this.activeTimer.startTime.toTimeString().slice(0, 5),
+                endTime: new Date().toTimeString().slice(0, 5),
+                duration: this.activeTimer.elapsed,
+                description: '',
+                isRunning: false
+            };
+            
+            this.timeEntries.unshift(entry);
+            this.activeTimer = null;
+            this.quickTimer.taskId = '';
+        },
+        
+        pauseTimer() {
+            if (this.activeTimer) {
+                this.activeTimer.isPaused = true;
+            }
+        },
+        
+        resumeTimer() {
+            if (this.activeTimer) {
+                this.activeTimer.isPaused = false;
+                this.updateTimer();
+            }
+        },
+        
+        updateTimer() {
+            if (!this.activeTimer || this.activeTimer.isPaused) return;
+            
+            const now = new Date();
+            this.activeTimer.elapsed = Math.floor((now - this.activeTimer.startTime) / 1000);
+            
+            setTimeout(() => this.updateTimer(), 1000);
+        },
+        
+        openTimeEntryModal() {
+            this.modalMode = 'create';
+            this.modalTitle = 'Add Time Entry';
+            this.currentEntry = {
+                taskId: '',
+                date: new Date().toISOString().split('T')[0],
+                startTime: '',
+                endTime: '',
+                description: ''
+            };
+            this.showModal = true;
+        },
+        
+        closeModal() {
+            this.showModal = false;
+        },
+        
+        saveTimeEntry() {
+            this.saving = true;
+            
+            // Simulate API call
+            setTimeout(() => {
+                const duration = this.calculateDurationInSeconds();
+                const task = this.availableTasks.find(t => t.id == this.currentEntry.taskId);
+                
+                const entry = {
+                    id: Date.now(),
+                    taskId: this.currentEntry.taskId,
+                    taskName: task.name,
+                    projectName: task.project,
+                    date: this.currentEntry.date,
+                    startTime: this.currentEntry.startTime,
+                    endTime: this.currentEntry.endTime,
+                    duration: duration,
+                    description: this.currentEntry.description,
+                    isRunning: false
+                };
+                
+                if (this.modalMode === 'create') {
+                    this.timeEntries.unshift(entry);
+                } else {
+                    // Update existing entry
+                    const index = this.timeEntries.findIndex(e => e.id === this.currentEntry.id);
+                    if (index !== -1) {
+                        this.timeEntries[index] = { ...entry, id: this.currentEntry.id };
+                    }
+                }
+                
+                this.saving = false;
+                this.closeModal();
+            }, 1000);
+        },
+        
+        editEntry(entry) {
+            this.modalMode = 'edit';
+            this.modalTitle = 'Edit Time Entry';
+            this.currentEntry = { ...entry };
+            this.showModal = true;
+        },
+        
+        duplicateEntry(entry) {
+            const duplicate = {
+                ...entry,
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                description: entry.description + ' (Copy)'
+            };
+            this.timeEntries.unshift(duplicate);
+        },
+        
+        deleteEntry(entry) {
+            if (confirm('Are you sure you want to delete this time entry?')) {
+                const index = this.timeEntries.findIndex(e => e.id === entry.id);
+                if (index !== -1) {
+                    this.timeEntries.splice(index, 1);
+                }
+            }
+        },
+        
+        calculateDuration() {
+            if (!this.currentEntry.startTime || !this.currentEntry.endTime) {
+                return '0h 0m';
+            }
+            
+            const duration = this.calculateDurationInSeconds();
+            return this.formatDuration(duration);
+        },
+        
+        calculateDurationInSeconds() {
+            const start = new Date(`2000-01-01T${this.currentEntry.startTime}`);
+            const end = new Date(`2000-01-01T${this.currentEntry.endTime}`);
+            return Math.max(0, (end - start) / 1000);
+        },
+        
+        formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            }
+            return `${minutes}m`;
+        },
+        
+        formatDate(dateString) {
+            const date = new Date(dateString);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === today.toDateString()) {
+                return 'Today';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            }
+            
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        },
+        
+        exportTimeData() {
+            console.log('Exporting time data...');
+        },
+        
+        previousMonth() {
+            console.log('Previous month');
+        },
+        
+        nextMonth() {
+            console.log('Next month');
+        },
+        
+        today() {
+            console.log('Go to today');
+        },
+        
+        selectDay(day) {
+            console.log('Selected day:', day);
+        },
+        
+        // Initialize
+        init() {
+            // Initialize calendar
+            this.generateCalendarDays();
+            
+            // Initialize charts
+            this.$nextTick(() => {
+                this.initializeCharts();
+            });
+        },
+        
+        generateCalendarDays() {
+            // Generate calendar days for current month
+            this.calendarDays = [];
+            // Implementation would generate calendar structure
+        },
+        
+        initializeCharts() {
+            // Initialize Chart.js charts
+            if (typeof Chart !== 'undefined') {
+                // Project chart
+                const projectCtx = document.getElementById('projectChart');
+                if (projectCtx) {
+                    new Chart(projectCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: this.analytics.projectData.map(p => p.name),
+                            datasets: [{
+                                data: this.analytics.projectData.map(p => p.value),
+                                backgroundColor: this.analytics.projectData.map(p => p.color)
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+                
+                // Daily chart
+                const dailyCtx = document.getElementById('dailyChart');
+                if (dailyCtx) {
+                    new Chart(dailyCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                            datasets: [{
+                                data: [8.5, 7.2, 9.1, 6.8, 8.0, 4.2, 0],
+                                backgroundColor: '#3B82F6'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    };
+}
+</script>
+{% endblock %}
