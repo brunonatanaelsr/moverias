@@ -1,0 +1,1248 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Enquetes e Pesquisas - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .polls-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .polls-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3Ccircle cx='10' cy='30' r='4'/%3E%3Ccircle cx='50' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .polls-container {
+        max-width: 1200px;
+        margin: -4rem auto 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .polls-controls {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .controls-right {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .polls-grid {
+        display: grid;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .poll-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .poll-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .poll-header {
+        padding: 2rem;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        position: relative;
+    }
+    
+    .poll-header.active {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    }
+    
+    .poll-header.closed {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    }
+    
+    .poll-header.draft {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+    
+    .poll-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .poll-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .author-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .author-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .poll-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .poll-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        background: white;
+        color: #374151;
+        transform: scale(1.05);
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+    
+    .status-closed {
+        background: rgba(156, 163, 175, 0.1);
+        color: #6b7280;
+        border: 2px solid rgba(156, 163, 175, 0.3);
+    }
+    
+    .status-draft {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 2px solid rgba(245, 158, 11, 0.3);
+    }
+    
+    .poll-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        line-height: 1.3;
+    }
+    
+    .poll-description {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #6b7280;
+        margin-bottom: 1rem;
+    }
+    
+    .poll-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .type-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .poll-content {
+        padding: 2rem;
+    }
+    
+    .poll-questions {
+        margin-bottom: 2rem;
+    }
+    
+    .question-preview {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .question-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+    
+    .question-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .option-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+    }
+    
+    .option-radio {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #d1d5db;
+        border-radius: 50%;
+        background: white;
+    }
+    
+    .option-text {
+        font-size: 0.875rem;
+        color: #374151;
+        flex: 1;
+    }
+    
+    .option-count {
+        font-size: 0.75rem;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+    }
+    
+    .poll-progress {
+        margin-bottom: 2rem;
+    }
+    
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .progress-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #10b981;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .poll-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+    
+    .poll-footer {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .poll-deadline {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .deadline-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .poll-footer-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .footer-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .footer-btn-primary {
+        background: #10b981;
+        color: white;
+    }
+    
+    .footer-btn-primary:hover {
+        background: #059669;
+    }
+    
+    .footer-btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .footer-btn-secondary:hover {
+        background: #e5e7eb;
+    }
+    
+    .floating-action {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+    }
+    
+    .fab {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: #9ca3af;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        margin-bottom: 2rem;
+        font-size: 1.125rem;
+    }
+    
+    @media (max-width: 768px) {
+        .polls-container {
+            margin: -2rem auto 0;
+            padding: 0 1rem;
+        }
+        
+        .polls-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .controls-left {
+            flex-direction: column;
+        }
+        
+        .controls-right {
+            justify-content: center;
+        }
+        
+        .poll-meta {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .poll-actions {
+            align-self: flex-start;
+        }
+        
+        .poll-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .poll-footer {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .poll-footer-actions {
+            justify-content: center;
+        }
+        
+        .floating-action {
+            bottom: 1rem;
+            right: 1rem;
+        }
+        
+        .fab {
+            width: 48px;
+            height: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="polls-header text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="header-content text-center">
+                <h1 class="text-3xl font-bold mb-2">Enquetes e Pesquisas</h1>
+                <p class="text-emerald-100">Colete feedback e opiniões da sua equipe</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <div class="polls-container">
+            <!-- Controls -->
+            <div class="polls-controls">
+                <div class="controls-left">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Buscar enquetes..." id="searchInput">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Todos os status</option>
+                        <option value="active">Ativa</option>
+                        <option value="closed">Encerrada</option>
+                        <option value="draft">Rascunho</option>
+                    </select>
+                    
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">Todos os tipos</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="opinion">Opinião</option>
+                        <option value="evaluation">Avaliação</option>
+                        <option value="survey">Pesquisa</option>
+                    </select>
+                </div>
+                
+                <div class="controls-right">
+                    <button class="btn btn-secondary" onclick="exportPolls()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar
+                    </button>
+                    
+                    <button class="btn btn-primary" onclick="createPoll()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Nova Enquete
+                    </button>
+                </div>
+            </div>
+
+            <!-- Polls Grid -->
+            <div class="polls-grid" id="pollsGrid">
+                <!-- Active Poll -->
+                <div class="poll-card" data-status="active" data-type="feedback">
+                    <div class="poll-header active">
+                        <div class="status-badge status-active">Ativa</div>
+                        <div class="poll-meta">
+                            <div class="poll-author">
+                                <div class="author-avatar">MR</div>
+                                <div class="author-info">
+                                    <div class="author-name">Maria Rodrigues</div>
+                                    <div class="poll-date">Criada há 2 dias</div>
+                                </div>
+                            </div>
+                            <div class="poll-actions">
+                                <button class="action-btn" onclick="editPoll('1')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deletePoll('1')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="poll-title">Avaliação do Ambiente de Trabalho</h2>
+                        <div class="poll-description">
+                            Queremos ouvir sua opinião sobre nosso ambiente de trabalho atual. Suas respostas nos ajudarão a melhorar ainda mais nossa cultura organizacional.
+                        </div>
+                        <div class="poll-type">
+                            <svg class="type-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                            </svg>
+                            Feedback
+                        </div>
+                    </div>
+                    
+                    <div class="poll-content">
+                        <div class="poll-progress">
+                            <div class="progress-info">
+                                <span class="progress-label">Progresso de Respostas</span>
+                                <span class="progress-value">68% (34/50)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 68%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-questions">
+                            <div class="question-preview">
+                                <div class="question-title">Como você avalia o ambiente de trabalho?</div>
+                                <div class="question-options">
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Excelente</span>
+                                        <span class="option-count">12</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Bom</span>
+                                        <span class="option-count">18</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Regular</span>
+                                        <span class="option-count">4</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Ruim</span>
+                                        <span class="option-count">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">34</div>
+                                <div class="stat-label">Respostas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">68%</div>
+                                <div class="stat-label">Taxa Resposta</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">5</div>
+                                <div class="stat-label">Questões</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Dias Restantes</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="poll-footer">
+                        <div class="poll-deadline">
+                            <svg class="deadline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Encerra em 28/07/2025</span>
+                        </div>
+                        
+                        <div class="poll-footer-actions">
+                            <button class="footer-btn footer-btn-secondary" onclick="viewResults('1')">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Ver Resultados
+                            </button>
+                            <button class="footer-btn footer-btn-primary" onclick="sharePoll('1')">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"/>
+                                </svg>
+                                Compartilhar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Closed Poll -->
+                <div class="poll-card" data-status="closed" data-type="opinion">
+                    <div class="poll-header closed">
+                        <div class="status-badge status-closed">Encerrada</div>
+                        <div class="poll-meta">
+                            <div class="poll-author">
+                                <div class="author-avatar">CS</div>
+                                <div class="author-info">
+                                    <div class="author-name">Carlos Santos</div>
+                                    <div class="poll-date">Encerrada há 1 semana</div>
+                                </div>
+                            </div>
+                            <div class="poll-actions">
+                                <button class="action-btn" onclick="duplicatePoll('2')" title="Duplicar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="archivePoll('2')" title="Arquivar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l6 6 6-6"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="poll-title">Preferência de Horário para Reuniões</h2>
+                        <div class="poll-description">
+                            Pesquisa para definir os melhores horários para reuniões de equipe, considerando a produtividade e disponibilidade de todos.
+                        </div>
+                        <div class="poll-type">
+                            <svg class="type-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Opinião
+                        </div>
+                    </div>
+                    
+                    <div class="poll-content">
+                        <div class="poll-progress">
+                            <div class="progress-info">
+                                <span class="progress-label">Respostas Coletadas</span>
+                                <span class="progress-value">100% (45/45)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-questions">
+                            <div class="question-preview">
+                                <div class="question-title">Qual o melhor horário para reuniões?</div>
+                                <div class="question-options">
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Manhã (8h-10h)</span>
+                                        <span class="option-count">28</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Meio da manhã (10h-12h)</span>
+                                        <span class="option-count">12</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Tarde (14h-16h)</span>
+                                        <span class="option-count">5</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">45</div>
+                                <div class="stat-label">Respostas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">100%</div>
+                                <div class="stat-label">Taxa Resposta</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">3</div>
+                                <div class="stat-label">Questões</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">7</div>
+                                <div class="stat-label">Dias Ativa</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="poll-footer">
+                        <div class="poll-deadline">
+                            <svg class="deadline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span>Encerrada em 18/07/2025</span>
+                        </div>
+                        
+                        <div class="poll-footer-actions">
+                            <button class="footer-btn footer-btn-primary" onclick="viewResults('2')">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Relatório Final
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Draft Poll -->
+                <div class="poll-card" data-status="draft" data-type="survey">
+                    <div class="poll-header draft">
+                        <div class="status-badge status-draft">Rascunho</div>
+                        <div class="poll-meta">
+                            <div class="poll-author">
+                                <div class="author-avatar">AS</div>
+                                <div class="author-info">
+                                    <div class="author-name">Ana Silva</div>
+                                    <div class="poll-date">Salvo há 3 horas</div>
+                                </div>
+                            </div>
+                            <div class="poll-actions">
+                                <button class="action-btn" onclick="editPoll('3')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deletePoll('3')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="poll-title">Pesquisa de Satisfação - Benefícios</h2>
+                        <div class="poll-description">
+                            Pesquisa completa sobre a satisfação dos colaboradores com o pacote de benefícios oferecido pela empresa.
+                        </div>
+                        <div class="poll-type">
+                            <svg class="type-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            Pesquisa
+                        </div>
+                    </div>
+                    
+                    <div class="poll-content">
+                        <div class="poll-progress">
+                            <div class="progress-info">
+                                <span class="progress-label">Progresso de Criação</span>
+                                <span class="progress-value">75% (6/8 questões)</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-questions">
+                            <div class="question-preview">
+                                <div class="question-title">Como você avalia nosso plano de saúde?</div>
+                                <div class="question-options">
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Muito satisfeito</span>
+                                        <span class="option-count">--</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Satisfeito</span>
+                                        <span class="option-count">--</span>
+                                    </div>
+                                    <div class="option-item">
+                                        <div class="option-radio"></div>
+                                        <span class="option-text">Insatisfeito</span>
+                                        <span class="option-count">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="poll-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Respostas</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Taxa Resposta</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">6</div>
+                                <div class="stat-label">Questões</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Dias Ativa</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="poll-footer">
+                        <div class="poll-deadline">
+                            <svg class="deadline-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            <span>Em desenvolvimento</span>
+                        </div>
+                        
+                        <div class="poll-footer-actions">
+                            <button class="footer-btn footer-btn-secondary" onclick="previewPoll('3')">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Pré-visualizar
+                            </button>
+                            <button class="footer-btn footer-btn-primary" onclick="publishPoll('3')">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                                Publicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action">
+        <button class="fab" onclick="createPoll()" title="Nova enquete">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    initializeSearch();
+    startProgressUpdates();
+});
+
+function initializeFilters() {
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    
+    statusFilter.addEventListener('change', filterPolls);
+    typeFilter.addEventListener('change', filterPolls);
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterPolls();
+        }, 300);
+    });
+}
+
+function filterPolls() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const polls = document.querySelectorAll('.poll-card');
+    let visibleCount = 0;
+    
+    polls.forEach(poll => {
+        const title = poll.querySelector('.poll-title').textContent.toLowerCase();
+        const description = poll.querySelector('.poll-description').textContent.toLowerCase();
+        const status = poll.dataset.status;
+        const type = poll.dataset.type;
+        
+        const matchesSearch = !searchTerm || title.includes(searchTerm) || description.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesType = !typeFilter || type === typeFilter;
+        
+        if (matchesSearch && matchesStatus && matchesType) {
+            poll.style.display = 'block';
+            visibleCount++;
+        } else {
+            poll.style.display = 'none';
+        }
+    });
+    
+    // Show empty state if no results
+    showEmptyStateIfNeeded(visibleCount);
+}
+
+function showEmptyStateIfNeeded(visibleCount) {
+    const grid = document.getElementById('pollsGrid');
+    let emptyState = document.getElementById('emptyState');
+    
+    if (visibleCount === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'emptyState';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8l2 2 4-4"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">Nenhuma enquete encontrada</h3>
+                <p class="empty-text">Não há enquetes que correspondam aos filtros selecionados.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Limpar Filtros
+                </button>
+            `;
+            grid.appendChild(emptyState);
+        }
+        emptyState.style.display = 'block';
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('typeFilter').value = '';
+    filterPolls();
+}
+
+function createPoll() {
+    alert('Editor de enquetes será implementado');
+    // In real app, would redirect to poll creation wizard
+}
+
+function editPoll(id) {
+    alert(`Editando enquete ${id} - funcionalidade será implementada`);
+}
+
+function deletePoll(id) {
+    if (confirm('Tem certeza que deseja excluir esta enquete?')) {
+        const card = document.querySelector(`[data-status]`);
+        card.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            card.remove();
+            filterPolls();
+        }, 300);
+    }
+}
+
+function duplicatePoll(id) {
+    alert(`Duplicando enquete ${id} - funcionalidade será implementada`);
+}
+
+function archivePoll(id) {
+    alert(`Arquivando enquete ${id} - funcionalidade será implementada`);
+}
+
+function viewResults(id) {
+    alert(`Visualizando resultados da enquete ${id} - funcionalidade será implementada`);
+}
+
+function sharePoll(id) {
+    alert(`Compartilhando enquete ${id} - funcionalidade será implementada`);
+}
+
+function previewPoll(id) {
+    alert(`Pré-visualizando enquete ${id} - funcionalidade será implementada`);
+}
+
+function publishPoll(id) {
+    if (confirm('Tem certeza que deseja publicar esta enquete?')) {
+        alert(`Publicando enquete ${id} - funcionalidade será implementada`);
+    }
+}
+
+function exportPolls() {
+    alert('Exportando enquetes...');
+    
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        polls: Array.from(document.querySelectorAll('.poll-card')).map(card => ({
+            title: card.querySelector('.poll-title').textContent,
+            author: card.querySelector('.author-name').textContent,
+            status: card.dataset.status,
+            type: card.dataset.type,
+            description: card.querySelector('.poll-description').textContent,
+            responses: card.querySelector('.stat-value').textContent
+        }))
+    };
+    
+    console.log('Export data:', exportData);
+}
+
+function startProgressUpdates() {
+    // Update progress for active polls every 15 seconds
+    setInterval(() => {
+        const activePolls = document.querySelectorAll('[data-status="active"]');
+        activePolls.forEach(poll => {
+            updatePollProgress(poll);
+        });
+    }, 15000);
+}
+
+function updatePollProgress(pollElement) {
+    // Simulate progress updates for active polls
+    const progressFill = pollElement.querySelector('.progress-fill');
+    const progressValue = pollElement.querySelector('.progress-value');
+    const responsesStat = pollElement.querySelector('.stat-value');
+    
+    if (progressFill && Math.random() < 0.3) {
+        const currentWidth = parseInt(progressFill.style.width) || 0;
+        if (currentWidth < 100) {
+            const newWidth = Math.min(currentWidth + Math.floor(Math.random() * 5) + 1, 100);
+            progressFill.style.width = newWidth + '%';
+            
+            // Update corresponding text values
+            const currentResponses = parseInt(responsesStat.textContent) || 0;
+            const newResponses = Math.min(currentResponses + 1, 50);
+            responsesStat.textContent = newResponses;
+            progressValue.textContent = `${newWidth}% (${newResponses}/50)`;
+        }
+    }
+}
+
+// Add CSS animation for fade out
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

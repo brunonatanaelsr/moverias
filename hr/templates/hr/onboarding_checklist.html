@@ -1,0 +1,1028 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checklist de Onboarding - {{ onboarding.employee.get_full_name }} - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .checklist-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .checklist-section {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 0.75rem;
+        color: #10b981;
+    }
+    
+    .section-progress {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .progress-bar {
+        width: 120px;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #10b981, #059669);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        min-width: 0;
+    }
+    
+    .checklist-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: all 0.2s ease;
+    }
+    
+    .checklist-item:last-child {
+        border-bottom: none;
+    }
+    
+    .checklist-item:hover {
+        background: #f8fafc;
+    }
+    
+    .checklist-item.completed {
+        background: #ecfdf5;
+        border-left: 4px solid #10b981;
+    }
+    
+    .checklist-item.overdue {
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+    }
+    
+    .checklist-item.in-progress {
+        background: #fefbf0;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .item-checkbox {
+        margin-right: 1rem;
+        margin-top: 0.125rem;
+        flex-shrink: 0;
+    }
+    
+    .item-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .item-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        font-size: 1rem;
+    }
+    
+    .item-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
+    }
+    
+    .item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        font-size: 0.75rem;
+    }
+    
+    .item-due-date {
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+    }
+    
+    .item-due-date.overdue {
+        color: #dc2626;
+        font-weight: 600;
+    }
+    
+    .item-priority {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .priority-high {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    
+    .priority-medium {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .priority-low {
+        background: #f0f9ff;
+        color: #0ea5e9;
+    }
+    
+    .item-assignee {
+        display: flex;
+        align-items: center;
+        color: #6b7280;
+    }
+    
+    .assignee-avatar {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+    
+    .item-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .action-btn:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .action-btn.edit:hover {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .action-btn.delete:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    
+    .action-btn.complete:hover {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .completion-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #10b981;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        background: white;
+        border-radius: 8px;
+        padding: 0.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        gap: 0.25rem;
+    }
+    
+    .filter-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .filter-tab.active {
+        background: #10b981;
+        color: white;
+    }
+    
+    .bulk-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+    
+    .bulk-actions.show {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .bulk-counter {
+        font-weight: 500;
+        color: #1f2937;
+    }
+    
+    .bulk-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .bulk-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .bulk-btn.complete {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .bulk-btn.complete:hover {
+        background: #bbf7d0;
+    }
+    
+    .bulk-btn.delete {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    
+    .bulk-btn.delete:hover {
+        background: #fecaca;
+    }
+    
+    .floating-add-btn {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .floating-add-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        color: #d1d5db;
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .quick-actions-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .quick-action-btn {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        color: #374151;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-action-btn:hover {
+        border-color: #10b981;
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+    
+    .quick-action-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.75rem;
+    }
+    
+    @media (max-width: 768px) {
+        .item-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .item-actions {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+        
+        .checklist-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .completion-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .filter-tabs {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .filter-tab {
+            flex: none;
+            min-width: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="checklist-header text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'hr:onboarding_detail' onboarding.id %}" 
+                       class="text-white hover:text-blue-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    
+                    <div>
+                        <h1 class="text-3xl font-bold">Checklist de Onboarding</h1>
+                        <p class="text-blue-100 mt-1">{{ onboarding.employee.get_full_name }} • {{ onboarding.position }}</p>
+                        <p class="text-blue-200 text-sm mt-2">
+                            Iniciado em {{ onboarding.start_date|date:"d/m/Y" }} • 
+                            {{ checklist_items.count }} itens no total
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="text-right">
+                    <div class="text-3xl font-bold">{{ overall_completion }}%</div>
+                    <div class="text-sm text-blue-100">Progresso Geral</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Completion Stats -->
+        <div class="completion-stats">
+            <div class="stat-card">
+                <div class="stat-number text-green-600">{{ completed_count }}</div>
+                <div class="stat-label">Concluídos</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #f59e0b;">
+                <div class="stat-number text-yellow-600">{{ in_progress_count }}</div>
+                <div class="stat-label">Em Andamento</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #6b7280;">
+                <div class="stat-number text-gray-600">{{ pending_count }}</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #ef4444;">
+                <div class="stat-number text-red-600">{{ overdue_count }}</div>
+                <div class="stat-label">Em Atraso</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3 class="quick-actions-title">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Ações Rápidas
+            </h3>
+            <div class="quick-actions-grid">
+                <button class="quick-action-btn" onclick="markAllCompleted('pre-arrival')">
+                    <svg class="quick-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Concluir Pré-chegada
+                </button>
+                
+                <button class="quick-action-btn" onclick="sendReminderEmail()">
+                    <svg class="quick-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Enviar Lembrete
+                </button>
+                
+                <button class="quick-action-btn" onclick="exportChecklist()">
+                    <svg class="quick-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar Lista
+                </button>
+                
+                <a href="{% url 'hr:onboarding_edit' onboarding.id %}" class="quick-action-btn">
+                    <svg class="quick-action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Editar Onboarding
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <div class="filter-tab active" data-filter="all" onclick="filterItems('all')">
+                Todos ({{ checklist_items.count }})
+            </div>
+            <div class="filter-tab" data-filter="completed" onclick="filterItems('completed')">
+                Concluídos ({{ completed_count }})
+            </div>
+            <div class="filter-tab" data-filter="pending" onclick="filterItems('pending')">
+                Pendentes ({{ pending_count }})
+            </div>
+            <div class="filter-tab" data-filter="overdue" onclick="filterItems('overdue')">
+                Em Atraso ({{ overdue_count }})
+            </div>
+            <div class="filter-tab" data-filter="today" onclick="filterItems('today')">
+                Para Hoje ({{ today_count }})
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="bulk-actions" id="bulkActions">
+            <div class="bulk-counter">
+                <span id="selectedCount">0</span> itens selecionados
+            </div>
+            <div class="bulk-buttons">
+                <button class="bulk-btn complete" onclick="bulkComplete()">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Marcar como Concluído
+                </button>
+                <button class="bulk-btn delete" onclick="bulkDelete()">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Excluir Selecionados
+                </button>
+            </div>
+        </div>
+
+        <!-- Checklist Sections -->
+        {% for section in checklist_sections %}
+        <div class="checklist-section" data-section="{{ section.slug }}">
+            <div class="section-header">
+                <h3 class="section-title">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="{{ section.icon_path }}"/>
+                    </svg>
+                    {{ section.title }}
+                </h3>
+                <div class="section-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ section.progress_percentage }}%"></div>
+                    </div>
+                    <span class="progress-text">{{ section.completed_items }}/{{ section.total_items }}</span>
+                </div>
+            </div>
+            
+            {% for item in section.items %}
+            <div class="checklist-item {% if item.is_completed %}completed{% elif item.is_overdue %}overdue{% elif item.is_in_progress %}in-progress{% endif %}" 
+                 data-item-id="{{ item.id }}" data-status="{{ item.status }}">
+                
+                <input type="checkbox" 
+                       class="item-checkbox form-checkbox h-5 w-5 text-green-600 rounded" 
+                       {% if item.is_completed %}checked{% endif %}
+                       onchange="toggleItemStatus({{ item.id }}, this.checked)">
+                
+                <div class="item-content">
+                    <h4 class="item-title">{{ item.title }}</h4>
+                    <p class="item-description">{{ item.description }}</p>
+                    
+                    <div class="item-meta">
+                        {% if item.due_date %}
+                        <div class="item-due-date {% if item.is_overdue %}overdue{% endif %}">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {% if item.is_overdue %}
+                                Atrasado desde {{ item.due_date|date:"d/m/Y" }}
+                            {% else %}
+                                Prazo: {{ item.due_date|date:"d/m/Y" }}
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if item.priority %}
+                        <span class="item-priority priority-{{ item.priority }}">
+                            {{ item.get_priority_display }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if item.assigned_to %}
+                        <div class="item-assignee">
+                            {% if item.assigned_to.photo %}
+                                <img src="{{ item.assigned_to.photo.url }}" 
+                                     alt="{{ item.assigned_to.get_full_name }}" 
+                                     class="assignee-avatar">
+                            {% else %}
+                                <div class="assignee-avatar bg-gray-300 flex items-center justify-center">
+                                    <svg class="w-3 h-3 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                            {{ item.assigned_to.get_full_name }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if item.completed_at %}
+                        <div class="text-green-600">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Concluído em {{ item.completed_at|date:"d/m/Y H:i" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="item-actions">
+                    <button class="action-btn edit" 
+                            onclick="editItem({{ item.id }})" 
+                            title="Editar item">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                        </svg>
+                    </button>
+                    
+                    {% if not item.is_completed %}
+                    <button class="action-btn complete" 
+                            onclick="markItemComplete({{ item.id }})" 
+                            title="Marcar como concluído">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                    {% endif %}
+                    
+                    <button class="action-btn delete" 
+                            onclick="deleteItem({{ item.id }})" 
+                            title="Excluir item">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum item nesta seção</h3>
+                <p class="text-gray-600">Adicione itens à lista de verificação para começar.</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% empty %}
+        <div class="empty-state bg-white rounded-lg shadow-sm p-8">
+            <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">Lista de verificação vazia</h3>
+            <p class="text-gray-600 mb-6">Configure os itens necessários para o processo de onboarding.</p>
+            <button class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors" 
+                    onclick="addFirstItem()">
+                Adicionar Primeiro Item
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Floating Add Button -->
+<button class="floating-add-btn" onclick="showAddItemModal()" title="Adicionar novo item">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+    </svg>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    // Handle checkbox selection for bulk actions
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateBulkActions();
+        });
+    });
+    
+    function updateBulkActions() {
+        const selectedItems = document.querySelectorAll('.item-checkbox:checked').length;
+        selectedCount.textContent = selectedItems;
+        
+        if (selectedItems > 0) {
+            bulkActions.classList.add('show');
+        } else {
+            bulkActions.classList.remove('show');
+        }
+    }
+    
+    // Auto-save checkbox state
+    window.toggleItemStatus = function(itemId, isCompleted) {
+        fetch(`/hr/onboarding/item/${itemId}/toggle/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                completed: isCompleted
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const item = document.querySelector(`[data-item-id="${itemId}"]`);
+                if (isCompleted) {
+                    item.classList.add('completed');
+                    item.classList.remove('overdue', 'in-progress');
+                } else {
+                    item.classList.remove('completed');
+                    // You might want to add logic here to determine new status
+                }
+                
+                // Update progress bars
+                updateProgressBars();
+                
+                // Show success feedback
+                showToast('Item atualizado com sucesso!', 'success');
+            } else {
+                showToast('Erro ao atualizar item', 'error');
+                // Revert checkbox state
+                const checkbox = item.querySelector('.item-checkbox');
+                checkbox.checked = !isCompleted;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Erro ao atualizar item', 'error');
+        });
+    };
+    
+    // Filter functionality
+    window.filterItems = function(filter) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        // Filter items
+        const items = document.querySelectorAll('.checklist-item');
+        items.forEach(item => {
+            const status = item.dataset.status;
+            let show = true;
+            
+            switch(filter) {
+                case 'completed':
+                    show = item.classList.contains('completed');
+                    break;
+                case 'pending':
+                    show = !item.classList.contains('completed') && !item.classList.contains('overdue');
+                    break;
+                case 'overdue':
+                    show = item.classList.contains('overdue');
+                    break;
+                case 'today':
+                    // This would need backend logic to determine items due today
+                    show = item.dataset.dueToday === 'true';
+                    break;
+                case 'all':
+                default:
+                    show = true;
+                    break;
+            }
+            
+            item.style.display = show ? 'flex' : 'none';
+        });
+        
+        // Hide empty sections
+        document.querySelectorAll('.checklist-section').forEach(section => {
+            const visibleItems = section.querySelectorAll('.checklist-item[style*="flex"], .checklist-item:not([style])');
+            section.style.display = visibleItems.length > 0 ? 'block' : 'none';
+        });
+    };
+    
+    // Quick actions
+    window.markAllCompleted = function(sectionSlug) {
+        if (!confirm('Tem certeza que deseja marcar todos os itens desta seção como concluídos?')) {
+            return;
+        }
+        
+        fetch(`/hr/onboarding/section/${sectionSlug}/complete-all/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showToast('Erro ao marcar itens como concluídos', 'error');
+            }
+        });
+    };
+    
+    window.sendReminderEmail = function() {
+        fetch(`/hr/onboarding/${onboardingId}/send-reminder/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Lembrete enviado com sucesso!', 'success');
+            } else {
+                showToast('Erro ao enviar lembrete', 'error');
+            }
+        });
+    };
+    
+    window.exportChecklist = function() {
+        window.open(`/hr/onboarding/${onboardingId}/export-checklist/`, '_blank');
+    };
+    
+    // Item actions
+    window.editItem = function(itemId) {
+        // This would open a modal or redirect to edit page
+        console.log('Edit item:', itemId);
+    };
+    
+    window.markItemComplete = function(itemId) {
+        const checkbox = document.querySelector(`[data-item-id="${itemId}"] .item-checkbox`);
+        checkbox.checked = true;
+        toggleItemStatus(itemId, true);
+    };
+    
+    window.deleteItem = function(itemId) {
+        if (!confirm('Tem certeza que deseja excluir este item?')) {
+            return;
+        }
+        
+        fetch(`/hr/onboarding/item/${itemId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector(`[data-item-id="${itemId}"]`).remove();
+                updateProgressBars();
+                showToast('Item excluído com sucesso!', 'success');
+            } else {
+                showToast('Erro ao excluir item', 'error');
+            }
+        });
+    };
+    
+    // Bulk actions
+    window.bulkComplete = function() {
+        const selectedItems = Array.from(document.querySelectorAll('.item-checkbox:checked'))
+            .map(cb => cb.closest('[data-item-id]').dataset.itemId);
+        
+        fetch('/hr/onboarding/items/bulk-complete/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                item_ids: selectedItems
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showToast('Erro ao marcar itens como concluídos', 'error');
+            }
+        });
+    };
+    
+    window.bulkDelete = function() {
+        if (!confirm('Tem certeza que deseja excluir os itens selecionados?')) {
+            return;
+        }
+        
+        const selectedItems = Array.from(document.querySelectorAll('.item-checkbox:checked'))
+            .map(cb => cb.closest('[data-item-id]').dataset.itemId);
+        
+        fetch('/hr/onboarding/items/bulk-delete/', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                item_ids: selectedItems
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                selectedItems.forEach(id => {
+                    document.querySelector(`[data-item-id="${id}"]`).remove();
+                });
+                updateProgressBars();
+                bulkActions.classList.remove('show');
+                showToast('Itens excluídos com sucesso!', 'success');
+            } else {
+                showToast('Erro ao excluir itens', 'error');
+            }
+        });
+    };
+    
+    // Utility functions
+    function updateProgressBars() {
+        // This would update progress bars based on current completion state
+        // Implementation depends on your specific needs
+    }
+    
+    function showToast(message, type) {
+        // Simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    window.showAddItemModal = function() {
+        // This would show a modal to add new items
+        console.log('Show add item modal');
+    };
+    
+    window.addFirstItem = function() {
+        showAddItemModal();
+    };
+});
+
+// Set onboarding ID for AJAX calls
+const onboardingId = {{ onboarding.id }};
+</script>
+{% endblock %}

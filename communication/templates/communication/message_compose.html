@@ -1,0 +1,1286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nova Mensagem - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .composer-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .composer-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12zm12-12c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .composer-container {
+        max-width: 900px;
+        margin: -4rem auto 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .composer-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .composer-form {
+        padding: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-icon {
+        width: 20px;
+        height: 20px;
+        color: #3b82f6;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+    
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .required {
+        color: #ef4444;
+    }
+    
+    .form-input {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .recipient-selector {
+        position: relative;
+    }
+    
+    .recipient-input {
+        padding-right: 3rem;
+    }
+    
+    .recipient-toggle {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .recipient-toggle:hover {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
+    .recipients-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+        margin-top: 0.25rem;
+    }
+    
+    .recipients-dropdown.show {
+        display: block;
+    }
+    
+    .dropdown-section {
+        padding: 0.75rem 0;
+    }
+    
+    .dropdown-header {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        background: #f9fafb;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .recipient-option {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .recipient-option:hover {
+        background: #f8fafc;
+    }
+    
+    .recipient-option.selected {
+        background: #eff6ff;
+        border-left: 3px solid #3b82f6;
+    }
+    
+    .recipient-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+    
+    .recipient-info {
+        flex: 1;
+    }
+    
+    .recipient-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 0.125rem;
+    }
+    
+    .recipient-role {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .selected-recipients {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: #f8fafc;
+        border-radius: 6px;
+        min-height: 40px;
+        align-items: center;
+    }
+    
+    .recipient-tag {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .remove-recipient {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+    }
+    
+    .remove-recipient:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .message-type-selector {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .type-option {
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        position: relative;
+        background: white;
+    }
+    
+    .type-option:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+        transform: translateY(-2px);
+    }
+    
+    .type-option.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .type-option.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        color: #3b82f6;
+        font-weight: bold;
+    }
+    
+    .type-icon {
+        width: 32px;
+        height: 32px;
+        background: #f3f4f6;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.75rem;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    
+    .type-option.selected .type-icon {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .type-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .type-description {
+        font-size: 0.75rem;
+        color: #6b7280;
+        line-height: 1.3;
+    }
+    
+    .message-editor {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+    
+    .editor-toolbar {
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0.75rem 1rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .toolbar-group {
+        display: flex;
+        gap: 0.25rem;
+        padding-right: 0.5rem;
+        border-right: 1px solid #e5e7eb;
+    }
+    
+    .toolbar-group:last-child {
+        border-right: none;
+    }
+    
+    .toolbar-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: none;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        color: #6b7280;
+    }
+    
+    .toolbar-btn:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .toolbar-btn.active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .message-textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 1rem;
+        border: none;
+        outline: none;
+        resize: vertical;
+        font-family: inherit;
+        font-size: 0.875rem;
+        line-height: 1.6;
+    }
+    
+    .attachment-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fafbfc;
+    }
+    
+    .attachment-area:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+    }
+    
+    .attachment-area.dragover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .attachment-icon {
+        width: 48px;
+        height: 48px;
+        background: #f3f4f6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: #6b7280;
+    }
+    
+    .attachment-text {
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    .attachment-hint {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .attached-files {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .file-preview {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 200px;
+    }
+    
+    .file-icon {
+        width: 32px;
+        height: 32px;
+        background: #3b82f6;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .file-info {
+        flex: 1;
+    }
+    
+    .file-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 0.125rem;
+    }
+    
+    .file-size {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .remove-file {
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        line-height: 1;
+    }
+    
+    .remove-file:hover {
+        background: #fecaca;
+    }
+    
+    .delivery-options {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .option-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .checkbox-input {
+        width: 16px;
+        height: 16px;
+        accent-color: #3b82f6;
+    }
+    
+    .checkbox-label {
+        font-size: 0.875rem;
+        color: #374151;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .save-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .save-indicator.saving {
+        color: #f59e0b;
+    }
+    
+    .save-indicator.saved {
+        color: #10b981;
+    }
+    
+    @media (max-width: 768px) {
+        .composer-container {
+            margin: -2rem auto 0;
+            padding: 0 1rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .message-type-selector {
+            grid-template-columns: 1fr;
+        }
+        
+        .options-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column-reverse;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="composer-header text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="header-content text-center">
+                <h1 class="text-3xl font-bold mb-2">Nova Mensagem</h1>
+                <p class="text-blue-100">Comunique-se eficientemente com sua equipe</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <div class="composer-container">
+            <div class="composer-card">
+                <form method="POST" enctype="multipart/form-data" id="messageForm" class="composer-form">
+                    {% csrf_token %}
+                    
+                    <!-- Message Type Selection -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                            Tipo de Mensagem
+                        </h3>
+                        
+                        <div class="message-type-selector">
+                            <div class="type-option selected" data-type="direct">
+                                <div class="type-icon">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Mensagem Direta</div>
+                                <div class="type-description">Comunicação individual ou em grupo pequeno</div>
+                            </div>
+                            
+                            <div class="type-option" data-type="announcement">
+                                <div class="type-icon">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Anúncio</div>
+                                <div class="type-description">Comunicado oficial para toda empresa</div>
+                            </div>
+                            
+                            <div class="type-option" data-type="newsletter">
+                                <div class="type-icon">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Newsletter</div>
+                                <div class="type-description">Boletim informativo periódico</div>
+                            </div>
+                        </div>
+                        
+                        <input type="hidden" name="message_type" id="messageType" value="direct">
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Informações Básicas
+                        </h3>
+                        
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    Assunto <span class="required">*</span>
+                                </label>
+                                <input type="text" name="subject" class="form-input" placeholder="Digite o assunto da mensagem" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Prioridade
+                                </label>
+                                <select name="priority" class="form-input">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">Alta</option>
+                                    <option value="urgent">Urgente</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Categoria
+                                </label>
+                                <select name="category" class="form-input">
+                                    <option value="">Selecione uma categoria</option>
+                                    <option value="general">Geral</option>
+                                    <option value="hr">Recursos Humanos</option>
+                                    <option value="it">Tecnologia</option>
+                                    <option value="finance">Financeiro</option>
+                                    <option value="operations">Operações</option>
+                                    <option value="marketing">Marketing</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recipients -->
+                    <div class="form-section" id="recipientsSection">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Destinatários
+                        </h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                Para <span class="required">*</span>
+                            </label>
+                            <div class="recipient-selector">
+                                <input type="text" 
+                                       class="form-input recipient-input" 
+                                       placeholder="Digite para buscar pessoas ou grupos..." 
+                                       id="recipientSearch"
+                                       autocomplete="off">
+                                <button type="button" class="recipient-toggle" onclick="toggleRecipientDropdown()">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                
+                                <div class="recipients-dropdown" id="recipientsDropdown">
+                                    <div class="dropdown-section">
+                                        <div class="dropdown-header">Pessoas</div>
+                                        {% for user in employees %}
+                                        <div class="recipient-option" data-type="user" data-id="{{ user.id }}" onclick="selectRecipient(this)">
+                                            <div class="recipient-avatar">
+                                                {{ user.first_name.0 }}{{ user.last_name.0 }}
+                                            </div>
+                                            <div class="recipient-info">
+                                                <div class="recipient-name">{{ user.get_full_name }}</div>
+                                                <div class="recipient-role">{{ user.position }} • {{ user.department.name }}</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="dropdown-section">
+                                        <div class="dropdown-header">Departamentos</div>
+                                        {% for dept in departments %}
+                                        <div class="recipient-option" data-type="department" data-id="{{ dept.id }}" onclick="selectRecipient(this)">
+                                            <div class="recipient-avatar">
+                                                {{ dept.name.0 }}
+                                            </div>
+                                            <div class="recipient-info">
+                                                <div class="recipient-name">{{ dept.name }}</div>
+                                                <div class="recipient-role">{{ dept.employees.count }} colaboradores</div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="dropdown-section">
+                                        <div class="dropdown-header">Grupos Especiais</div>
+                                        <div class="recipient-option" data-type="all" data-id="all" onclick="selectRecipient(this)">
+                                            <div class="recipient-avatar">@</div>
+                                            <div class="recipient-info">
+                                                <div class="recipient-name">Todos os Colaboradores</div>
+                                                <div class="recipient-role">Toda a empresa</div>
+                                            </div>
+                                        </div>
+                                        <div class="recipient-option" data-type="managers" data-id="managers" onclick="selectRecipient(this)">
+                                            <div class="recipient-avatar">M</div>
+                                            <div class="recipient-info">
+                                                <div class="recipient-name">Gestores</div>
+                                                <div class="recipient-role">Líderes e gerentes</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="selected-recipients" id="selectedRecipients">
+                                <span class="text-gray-500 text-sm">Selecione os destinatários...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Message Content -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Conteúdo da Mensagem
+                        </h3>
+                        
+                        <div class="message-editor">
+                            <div class="editor-toolbar">
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="formatText('bold')" title="Negrito">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="formatText('italic')" title="Itálico">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4l4 16m-4 0h8"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="formatText('underline')" title="Sublinhado">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15v2a3 3 0 01-6 0v-2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="insertList('ul')" title="Lista com Marcadores">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                                        </svg>
+                                    </button>
+                                    <button type="button" class="toolbar-btn" onclick="insertList('ol')" title="Lista Numerada">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="toolbar-group">
+                                    <button type="button" class="toolbar-btn" onclick="insertEmoji()" title="Emoji">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <textarea name="content" 
+                                      class="message-textarea" 
+                                      placeholder="Digite sua mensagem..."
+                                      required
+                                      id="messageContent"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Attachments -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            </svg>
+                            Anexos
+                        </h3>
+                        
+                        <div class="attachment-area" onclick="document.getElementById('fileInput').click()">
+                            <div class="attachment-icon">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                            </div>
+                            <div class="attachment-text">Clique para selecionar arquivos ou arraste-os aqui</div>
+                            <div class="attachment-hint">PDF, DOC, XLS, IMG até 10MB cada</div>
+                        </div>
+                        
+                        <input type="file" 
+                               id="fileInput" 
+                               name="attachments" 
+                               multiple 
+                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                               style="display: none;"
+                               onchange="handleFileSelect(this.files)">
+                        
+                        <div class="attached-files" id="attachedFiles"></div>
+                    </div>
+
+                    <!-- Delivery Options -->
+                    <div class="form-section">
+                        <h3 class="section-title">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Opções de Entrega
+                        </h3>
+                        
+                        <div class="delivery-options">
+                            <div class="options-grid">
+                                <div class="option-group">
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="sendNow" name="send_now" class="checkbox-input" checked>
+                                        <label for="sendNow" class="checkbox-label">Enviar agora</label>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="scheduleMessage" name="schedule_message" class="checkbox-input">
+                                        <label for="scheduleMessage" class="checkbox-label">Agendar envio</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="option-group">
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="emailNotification" name="email_notification" class="checkbox-input" checked>
+                                        <label for="emailNotification" class="checkbox-label">Notificação por e-mail</label>
+                                    </div>
+                                    <div class="checkbox-group">
+                                        <input type="checkbox" id="readReceipt" name="read_receipt" class="checkbox-input">
+                                        <label for="readReceipt" class="checkbox-label">Confirmação de leitura</label>
+                                    </div>
+                                </div>
+                                
+                                <div class="option-group" id="scheduleOptions" style="display: none;">
+                                    <label class="form-label">Data e hora</label>
+                                    <input type="datetime-local" name="scheduled_at" class="form-input">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <div class="save-indicator" id="saveIndicator">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Rascunho salvo
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                Salvar Rascunho
+                            </button>
+                            
+                            <button type="button" class="btn btn-success" onclick="previewMessage()">
+                                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Visualizar
+                            </button>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                                Enviar Mensagem
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedRecipients = [];
+    let attachedFiles = [];
+    
+    // Message type selection
+    document.querySelectorAll('.type-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.type-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('messageType').value = this.dataset.type;
+            
+            // Show/hide recipients section based on type
+            const recipientsSection = document.getElementById('recipientsSection');
+            if (this.dataset.type === 'announcement' || this.dataset.type === 'newsletter') {
+                recipientsSection.style.display = 'none';
+            } else {
+                recipientsSection.style.display = 'block';
+            }
+        });
+    });
+    
+    // Toggle recipient dropdown
+    window.toggleRecipientDropdown = function() {
+        const dropdown = document.getElementById('recipientsDropdown');
+        dropdown.classList.toggle('show');
+    };
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('recipientsDropdown');
+        const selector = document.querySelector('.recipient-selector');
+        
+        if (!selector.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+    
+    // Select recipient
+    window.selectRecipient = function(element) {
+        const type = element.dataset.type;
+        const id = element.dataset.id;
+        const name = element.querySelector('.recipient-name').textContent;
+        
+        // Check if already selected
+        if (selectedRecipients.find(r => r.type === type && r.id === id)) {
+            return;
+        }
+        
+        selectedRecipients.push({ type, id, name });
+        updateSelectedRecipients();
+        
+        element.classList.add('selected');
+        document.getElementById('recipientsDropdown').classList.remove('show');
+    };
+    
+    // Remove recipient
+    window.removeRecipient = function(index) {
+        selectedRecipients.splice(index, 1);
+        updateSelectedRecipients();
+        
+        // Remove selected class from dropdown option
+        const dropdown = document.getElementById('recipientsDropdown');
+        const options = dropdown.querySelectorAll('.recipient-option');
+        options.forEach(option => {
+            option.classList.remove('selected');
+        });
+        
+        // Re-add selected class for remaining recipients
+        selectedRecipients.forEach(recipient => {
+            const option = dropdown.querySelector(`[data-type="${recipient.type}"][data-id="${recipient.id}"]`);
+            if (option) {
+                option.classList.add('selected');
+            }
+        });
+    };
+    
+    function updateSelectedRecipients() {
+        const container = document.getElementById('selectedRecipients');
+        
+        if (selectedRecipients.length === 0) {
+            container.innerHTML = '<span class="text-gray-500 text-sm">Selecione os destinatários...</span>';
+            return;
+        }
+        
+        let html = '';
+        selectedRecipients.forEach((recipient, index) => {
+            html += `
+                <div class="recipient-tag">
+                    ${recipient.name}
+                    <button type="button" class="remove-recipient" onclick="removeRecipient(${index})">×</button>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    // File handling
+    window.handleFileSelect = function(files) {
+        Array.from(files).forEach(file => {
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                alert(`Arquivo "${file.name}" é muito grande. Limite de 10MB.`);
+                return;
+            }
+            
+            attachedFiles.push(file);
+        });
+        
+        updateAttachedFiles();
+    };
+    
+    function updateAttachedFiles() {
+        const container = document.getElementById('attachedFiles');
+        
+        if (attachedFiles.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        attachedFiles.forEach((file, index) => {
+            const size = formatFileSize(file.size);
+            html += `
+                <div class="file-preview">
+                    <div class="file-icon">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${size}</div>
+                    </div>
+                    <button type="button" class="remove-file" onclick="removeFile(${index})">×</button>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+    
+    window.removeFile = function(index) {
+        attachedFiles.splice(index, 1);
+        updateAttachedFiles();
+    };
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Schedule message toggle
+    document.getElementById('scheduleMessage').addEventListener('change', function() {
+        const scheduleOptions = document.getElementById('scheduleOptions');
+        const sendNow = document.getElementById('sendNow');
+        
+        if (this.checked) {
+            scheduleOptions.style.display = 'block';
+            sendNow.checked = false;
+        } else {
+            scheduleOptions.style.display = 'none';
+            sendNow.checked = true;
+        }
+    });
+    
+    document.getElementById('sendNow').addEventListener('change', function() {
+        const scheduleMessage = document.getElementById('scheduleMessage');
+        const scheduleOptions = document.getElementById('scheduleOptions');
+        
+        if (this.checked) {
+            scheduleMessage.checked = false;
+            scheduleOptions.style.display = 'none';
+        }
+    });
+    
+    // Action functions
+    window.formatText = function(command) {
+        document.execCommand(command, false, null);
+    };
+    
+    window.insertList = function(type) {
+        document.execCommand(type === 'ul' ? 'insertUnorderedList' : 'insertOrderedList', false, null);
+    };
+    
+    window.insertEmoji = function() {
+        const emojis = ['😊', '👍', '❤️', '😄', '🎉', '👏', '🔥', '💪', '✨', '🚀'];
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const textarea = document.getElementById('messageContent');
+        
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = textarea.value;
+        
+        textarea.value = text.substring(0, start) + emoji + text.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+    };
+    
+    window.saveDraft = function() {
+        const indicator = document.getElementById('saveIndicator');
+        indicator.classList.add('saving');
+        indicator.innerHTML = `
+            <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Salvando...
+        `;
+        
+        // Simulate save
+        setTimeout(() => {
+            indicator.classList.remove('saving');
+            indicator.classList.add('saved');
+            indicator.innerHTML = `
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Rascunho salvo
+            `;
+        }, 2000);
+    };
+    
+    window.previewMessage = function() {
+        // Implementation for message preview
+        alert('Visualização da mensagem será implementada');
+    };
+    
+    // Auto-save draft every 30 seconds
+    setInterval(() => {
+        const subject = document.querySelector('[name="subject"]').value;
+        const content = document.getElementById('messageContent').value;
+        
+        if (subject || content) {
+            saveDraft();
+        }
+    }, 30000);
+    
+    // Drag and drop for attachments
+    const attachmentArea = document.querySelector('.attachment-area');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        attachmentArea.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        attachmentArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        attachmentArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        attachmentArea.classList.add('dragover');
+    }
+    
+    function unhighlight() {
+        attachmentArea.classList.remove('dragover');
+    }
+    
+    attachmentArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFileSelect(files);
+    }
+});
+</script>
+{% endblock %}

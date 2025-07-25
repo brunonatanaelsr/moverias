@@ -1,0 +1,555 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Anamnese Social - {{ anamnesis.beneficiary.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.anamnesis-header {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-section {
+    margin-bottom: 2rem;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-draft {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.status-completed {
+    background-color: #D1FAE5;
+    color: #065F46;
+}
+
+.status-requires_update {
+    background-color: #FEE2E2;
+    color: #991B1B;
+}
+
+.vulnerability-item {
+    border-left: 4px solid;
+    padding: 1rem;
+    background: #F9FAFB;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1rem;
+}
+
+.vulnerability-low { border-left-color: #10B981; }
+.vulnerability-medium { border-left-color: #F59E0B; }
+.vulnerability-high { border-left-color: #F97316; }
+.vulnerability-critical { border-left-color: #DC2626; }
+
+.timeline-item {
+    position: relative;
+    padding-left: 3rem;
+    padding-bottom: 2rem;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #E5E7EB;
+}
+
+.timeline-item:last-child:before {
+    height: 2rem;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: 0.25rem;
+    top: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #8B5CF6;
+}
+
+.family-member-card {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.action-buttons {
+    position: sticky;
+    top: 1rem;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .anamnesis-header {
+        padding: 1.5rem;
+    }
+    
+    .info-card {
+        padding: 1rem;
+    }
+    
+    .timeline-item {
+        padding-left: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header da Anamnese -->
+    <div class="anamnesis-header">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-user-md mr-3"></i>
+                    Anamnese Social
+                </h1>
+                <p class="text-purple-100 text-lg">{{ anamnesis.beneficiary.full_name }}</p>
+                <p class="text-purple-200 text-sm">
+                    Criada em {{ anamnesis.created_at|date:"d/m/Y" }} por {{ anamnesis.created_by.get_full_name|default:anamnesis.created_by.username }}
+                </p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <span class="status-badge status-{{ anamnesis.status }}">
+                    {% if anamnesis.status == 'draft' %}
+                        <i class="fas fa-edit mr-2"></i>Rascunho
+                    {% elif anamnesis.status == 'completed' %}
+                        <i class="fas fa-check-circle mr-2"></i>Concluída
+                    {% elif anamnesis.status == 'requires_update' %}
+                        <i class="fas fa-exclamation-triangle mr-2"></i>Requer Atualização
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Conteúdo Principal -->
+        <div class="lg:col-span-3">
+            <!-- Dados da Beneficiária -->
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user-circle text-blue-600 mr-3"></i>
+                    Dados da Beneficiária
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Nome Completo</label>
+                        <p class="text-gray-800 font-medium">{{ anamnesis.beneficiary.full_name }}</p>
+                    </div>
+                    
+                    {% if anamnesis.beneficiary.birth_date %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Data de Nascimento</label>
+                        <p class="text-gray-800">{{ anamnesis.benefiary.birth_date|date:"d/m/Y" }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if anamnesis.beneficiary.cpf %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">CPF</label>
+                        <p class="text-gray-800">{{ anamnesis.beneficiary.cpf }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if anamnesis.beneficiary.phone %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600">Telefone</label>
+                        <p class="text-gray-800">{{ anamnesis.beneficiary.phone }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if anamnesis.beneficiary.address %}
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-600">Endereço</label>
+                        <p class="text-gray-800">{{ anamnesis.beneficiary.address }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Informações Familiares -->
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-users text-green-600 mr-3"></i>
+                    Informações Familiares
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Renda Familiar</label>
+                        {% if anamnesis.family_income %}
+                            <p class="text-2xl font-bold text-green-600">R$ {{ anamnesis.family_income|floatformat:2 }}</p>
+                        {% else %}
+                            <p class="text-gray-500 italic">Não informado</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-2">Composição Familiar</label>
+                        <p class="text-lg font-semibold text-blue-600">
+                            {{ anamnesis.family_members.count }} membro{{ anamnesis.family_members.count|pluralize:"s" }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-600 mb-2">Situação Habitacional</label>
+                    <div class="bg-gray-50 rounded p-3">
+                        <p class="text-gray-800">{{ anamnesis.housing_situation|default:"Não informado" }}</p>
+                    </div>
+                </div>
+
+                <!-- Membros da Família -->
+                {% if anamnesis.family_members.exists %}
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-800 mb-3">Membros da Família</h3>
+                    <div class="space-y-2">
+                        {% for member in anamnesis.family_members.all %}
+                        <div class="family-member-card">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-800">{{ member.name }}</h4>
+                                    <p class="text-sm text-gray-600">
+                                        {{ member.get_relationship_display }}
+                                        {% if member.age %} • {{ member.age }} anos{% endif %}
+                                        {% if member.occupation %} • {{ member.occupation }}{% endif %}
+                                    </p>
+                                </div>
+                                {% if member.income %}
+                                <div class="mt-2 sm:mt-0">
+                                    <span class="text-sm font-medium text-green-600">R$ {{ member.income|floatformat:2 }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% if member.health_conditions %}
+                            <div class="mt-2 pt-2 border-t border-blue-200">
+                                <p class="text-xs text-gray-600">
+                                    <strong>Condições de saúde:</strong> {{ member.health_conditions }}
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Rede de Apoio -->
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-hands-helping text-purple-600 mr-3"></i>
+                    Rede de Apoio Social
+                </h2>
+                
+                <div class="bg-gray-50 rounded p-4">
+                    <p class="text-gray-800 whitespace-pre-line">{{ anamnesis.support_network|default:"Não informado" }}</p>
+                </div>
+            </div>
+
+            <!-- Vulnerabilidades -->
+            {% if anamnesis.vulnerabilities.exists %}
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 mr-3"></i>
+                    Vulnerabilidades Identificadas
+                </h2>
+                
+                <div class="space-y-3">
+                    {% for vulnerability in anamnesis.vulnerabilities.all %}
+                    <div class="vulnerability-item vulnerability-{{ vulnerability.severity }}">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-medium text-gray-800">{{ vulnerability.category.name }}</h3>
+                            <span class="text-xs px-2 py-1 rounded-full 
+                                {% if vulnerability.severity == 'low' %}bg-green-100 text-green-800
+                                {% elif vulnerability.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                                {% elif vulnerability.severity == 'high' %}bg-orange-100 text-orange-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ vulnerability.get_severity_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-gray-700 text-sm mb-2">{{ vulnerability.description }}</p>
+                        
+                        {% if vulnerability.intervention_needed %}
+                        <div class="bg-white p-2 rounded text-xs">
+                            <strong>Intervenção necessária:</strong> {{ vulnerability.intervention_needed }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if vulnerability.priority_date %}
+                        <p class="text-xs text-gray-600 mt-2">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            Prazo: {{ vulnerability.priority_date|date:"d/m/Y" }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Observações -->
+            {% if anamnesis.observations %}
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-clipboard-list text-indigo-600 mr-3"></i>
+                    Observações Gerais
+                </h2>
+                
+                <div class="bg-gray-50 rounded p-4">
+                    <p class="text-gray-800 whitespace-pre-line">{{ anamnesis.observations }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Histórico de Evoluções -->
+            {% if anamnesis.evolutions.exists %}
+            <div class="info-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-history text-blue-600 mr-3"></i>
+                    Histórico de Evoluções
+                </h2>
+                
+                <div class="timeline">
+                    {% for evolution in anamnesis.evolutions.all %}
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="bg-gray-50 rounded p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-medium text-gray-800">
+                                    {{ evolution.evolution_date|date:"d/m/Y H:i" }}
+                                </h3>
+                                <span class="text-xs text-gray-600">
+                                    {{ evolution.created_by.get_full_name|default:evolution.created_by.username }}
+                                </span>
+                            </div>
+                            <p class="text-gray-700 text-sm">{{ evolution.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar com Ações -->
+        <div class="lg:col-span-1">
+            <div class="action-buttons">
+                <div class="info-card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Ações</h3>
+                    
+                    <div class="space-y-2">
+                        {% if anamnesis.status == 'draft' %}
+                        <a href="{% url 'social:edit' anamnesis.pk %}" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-center block hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar
+                        </a>
+                        {% endif %}
+                        
+                        <button type="button" onclick="openEvolutionModal()" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Adicionar Evolução
+                        </button>
+                        
+                        <a href="#" onclick="window.print()" class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-center block hover:bg-purple-700 transition-colors">
+                            <i class="fas fa-print mr-2"></i>
+                            Imprimir
+                        </a>
+                        
+                        <a href="{% url 'social:list' %}" class="w-full bg-gray-600 text-white px-4 py-2 rounded-lg text-center block hover:bg-gray-700 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Voltar à Lista
+                        </a>
+                        
+                        {% if request.user.is_superuser %}
+                        <a href="{% url 'social:delete' anamnesis.pk %}" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg text-center block hover:bg-red-700 transition-colors" onclick="return confirm('Tem certeza que deseja excluir esta anamnese?')">
+                            <i class="fas fa-trash mr-2"></i>
+                            Excluir
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Informações Técnicas -->
+                <div class="info-card">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Informações Técnicas</h3>
+                    
+                    <div class="space-y-3 text-sm">
+                        <div>
+                            <label class="font-medium text-gray-600">Status</label>
+                            <p class="text-gray-800">{{ anamnesis.get_status_display }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="font-medium text-gray-600">Criada por</label>
+                            <p class="text-gray-800">{{ anamnesis.created_by.get_full_name|default:anamnesis.created_by.username }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="font-medium text-gray-600">Data de criação</label>
+                            <p class="text-gray-800">{{ anamnesis.created_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="font-medium text-gray-600">Última atualização</label>
+                            <p class="text-gray-800">{{ anamnesis.updated_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        
+                        {% if anamnesis.signed_by_technician %}
+                        <div>
+                            <label class="font-medium text-gray-600">Assinada por</label>
+                            <p class="text-gray-800">{{ anamnesis.signed_by_technician.get_full_name|default:anamnesis.signed_by_technician.username }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div>
+                            <label class="font-medium text-gray-600">Assinatura da beneficiária</label>
+                            <p class="text-gray-800">
+                                {% if anamnesis.signed_by_beneficiary %}
+                                    <span class="text-green-600"><i class="fas fa-check mr-1"></i>Sim</span>
+                                {% else %}
+                                    <span class="text-red-600"><i class="fas fa-times mr-1"></i>Não</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="font-medium text-gray-600">Bloqueada para edição</label>
+                            <p class="text-gray-800">
+                                {% if anamnesis.locked %}
+                                    <span class="text-red-600"><i class="fas fa-lock mr-1"></i>Sim</span>
+                                {% else %}
+                                    <span class="text-green-600"><i class="fas fa-unlock mr-1"></i>Não</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Adicionar Evolução -->
+<div id="evolution-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 class="text-lg font-semibold mb-4">Adicionar Evolução</h3>
+            
+            <form id="evolution-form" method="post" action="{% url 'social:add-evolution' anamnesis.pk %}">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                        <textarea name="description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Descreva a evolução do caso..." required></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mudanças na família</label>
+                        <textarea name="changes_in_family" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Descreva mudanças na composição familiar (opcional)"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mudanças nas vulnerabilidades</label>
+                        <textarea name="changes_in_vulnerabilities" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Descreva mudanças nas vulnerabilidades (opcional)"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mudanças na rede de apoio</label>
+                        <textarea name="changes_in_support_network" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Descreva mudanças na rede de apoio (opcional)"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" onclick="closeEvolutionModal()" class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openEvolutionModal() {
+    document.getElementById('evolution-modal').classList.remove('hidden');
+}
+
+function closeEvolutionModal() {
+    document.getElementById('evolution-modal').classList.add('hidden');
+    document.getElementById('evolution-form').reset();
+}
+
+// Fechar modal clicando fora
+document.getElementById('evolution-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEvolutionModal();
+    }
+});
+
+// Submissão via AJAX
+document.getElementById('evolution-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Evolução adicionada com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao salvar evolução.');
+    });
+});
+</script>
+{% endblock %}

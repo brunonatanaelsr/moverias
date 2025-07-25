@@ -1,0 +1,1136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Inscrições - {{ certification.title }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .enrollment-header {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .enrollment-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8 8 3.6 8 8zm8-8c0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8 8 3.6 8 8z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .enrollment-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .stat-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+    }
+    
+    .management-section {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: #f8fafc;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-icon {
+        width: 24px;
+        height: 24px;
+        color: #06b6d4;
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .action-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .bulk-actions {
+        background: #fffbeb;
+        border: 1px solid #fbbf24;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin: 1.5rem 2rem;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .bulk-actions.show {
+        display: flex;
+    }
+    
+    .bulk-text {
+        color: #92400e;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .bulk-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+    }
+    
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+    }
+    
+    .btn-warning:hover {
+        background: #d97706;
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .search-controls {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+        min-width: 150px;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: #06b6d4;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+    
+    .employees-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem;
+    }
+    
+    .employee-card {
+        background: white;
+        border: 2px solid #f1f5f9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .employee-card:hover {
+        border-color: #06b6d4;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
+    }
+    
+    .employee-card.selected {
+        border-color: #06b6d4;
+        background: rgba(6, 182, 212, 0.05);
+    }
+    
+    .employee-card.enrolled {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+    
+    .employee-card.enrolled .status-indicator {
+        background: #10b981;
+    }
+    
+    .employee-checkbox {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    
+    .employee-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .employee-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    
+    .employee-details {
+        flex: 1;
+    }
+    
+    .employee-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .employee-position {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+    
+    .employee-department {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .employee-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #d1d5db;
+        margin-right: 0.5rem;
+    }
+    
+    .status-available {
+        background: #10b981;
+    }
+    
+    .status-enrolled {
+        background: #06b6d4;
+    }
+    
+    .enrollments-list {
+        padding: 2rem;
+    }
+    
+    .enrollment-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .enrollment-item:hover {
+        background: #f1f5f9;
+    }
+    
+    .enrollment-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .enrollment-employee {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex: 1;
+    }
+    
+    .enrollment-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .enrollment-info {
+        flex: 1;
+    }
+    
+    .enrollment-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .enrollment-role {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .enrollment-progress {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 200px;
+    }
+    
+    .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #06b6d4, #0891b2);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        min-width: 40px;
+        text-align: right;
+    }
+    
+    .enrollment-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-view {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .btn-view:hover {
+        background: #bfdbfe;
+    }
+    
+    .btn-message {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .btn-message:hover {
+        background: #fde68a;
+    }
+    
+    .btn-remove {
+        background: #fecaca;
+        color: #dc2626;
+    }
+    
+    .btn-remove:hover {
+        background: #fca5a5;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        color: #d1d5db;
+    }
+    
+    .floating-summary {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .floating-summary.show {
+        display: flex;
+    }
+    
+    .summary-text {
+        font-weight: 600;
+    }
+    
+    .summary-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .summary-btn {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .summary-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+        .enrollment-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .search-controls {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .employees-grid {
+            grid-template-columns: 1fr;
+            padding: 1rem;
+        }
+        
+        .enrollment-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        
+        .enrollment-progress {
+            width: 100%;
+            min-width: auto;
+        }
+        
+        .floating-summary {
+            position: relative;
+            bottom: auto;
+            right: auto;
+            margin: 1rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .summary-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="enrollment-header text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'hr:certification_detail' certification.id %}" 
+                       class="text-white hover:text-gray-200 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Gestão de Inscrições</h1>
+                        <p class="text-cyan-100">{{ certification.title }}</p>
+                    </div>
+                </div>
+                
+                <div class="text-right">
+                    <div class="text-sm text-cyan-100 mb-1">Código</div>
+                    <div class="text-xl font-bold">{{ certification.code }}</div>
+                </div>
+            </div>
+            
+            <div class="enrollment-stats">
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.total_employees }}</div>
+                    <div class="stat-label">Total Colaboradores</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.enrolled }}</div>
+                    <div class="stat-label">Inscritos</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.available }}</div>
+                    <div class="stat-label">Disponíveis</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.completion_rate }}%</div>
+                    <div class="stat-label">Taxa Conclusão</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Available Employees Section -->
+        <div class="management-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    Colaboradores Disponíveis
+                </h2>
+                
+                <div class="section-actions">
+                    <button class="btn btn-success" onclick="enrollSelected()" id="enrollBtn" style="display: none;">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Inscrever Selecionados
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bulk-actions" id="bulkActions">
+                <span class="bulk-text">
+                    <span id="selectedCount">0</span> colaboradores selecionados
+                </span>
+                <div class="bulk-buttons">
+                    <button class="summary-btn" onclick="clearSelection()">Limpar</button>
+                    <button class="summary-btn" onclick="selectAll()">Selecionar Todos</button>
+                </div>
+            </div>
+            
+            <div class="search-controls">
+                <div class="search-box">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" 
+                           class="search-input" 
+                           placeholder="Buscar colaboradores..."
+                           id="searchEmployees"
+                           onkeyup="filterEmployees()">
+                </div>
+                
+                <select class="filter-select" id="departmentFilter" onchange="filterEmployees()">
+                    <option value="">Todos os Departamentos</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select class="filter-select" id="statusFilter" onchange="filterEmployees()">
+                    <option value="">Todos os Status</option>
+                    <option value="available">Disponível</option>
+                    <option value="enrolled">Inscrito</option>
+                </select>
+            </div>
+            
+            {% if available_employees %}
+            <div class="employees-grid" id="employeesGrid">
+                {% for employee in available_employees %}
+                <div class="employee-card {% if employee.is_enrolled %}enrolled{% endif %}" 
+                     data-id="{{ employee.id }}"
+                     data-department="{{ employee.department.id }}"
+                     data-status="{% if employee.is_enrolled %}enrolled{% else %}available{% endif %}"
+                     data-name="{{ employee.get_full_name|lower }}"
+                     onclick="toggleEmployee(this)">
+                    
+                    <input type="checkbox" 
+                           class="employee-checkbox" 
+                           data-employee-id="{{ employee.id }}"
+                           {% if employee.is_enrolled %}disabled{% endif %}
+                           onchange="updateSelection()">
+                    
+                    <div class="employee-info">
+                        <div class="employee-avatar">
+                            {{ employee.first_name.0 }}{{ employee.last_name.0 }}
+                        </div>
+                        <div class="employee-details">
+                            <div class="employee-name">{{ employee.get_full_name }}</div>
+                            <div class="employee-position">{{ employee.position }}</div>
+                            <div class="employee-department">{{ employee.department.name }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="employee-meta">
+                        <span class="flex items-center">
+                            <span class="status-indicator {% if employee.is_enrolled %}status-enrolled{% else %}status-available{% endif %}"></span>
+                            {% if employee.is_enrolled %}Inscrito{% else %}Disponível{% endif %}
+                        </span>
+                        <span>{{ employee.hire_date|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Nenhum colaborador disponível</h3>
+                <p class="text-gray-600">Todos os colaboradores elegíveis já estão inscritos nesta certificação.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Current Enrollments Section -->
+        <div class="management-section">
+            <div class="section-header">
+                <h2 class="section-title">
+                    <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                    </svg>
+                    Inscrições Atuais ({{ enrollments.count }})
+                </h2>
+                
+                <div class="section-actions">
+                    <button class="btn btn-secondary" onclick="exportEnrollments()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar
+                    </button>
+                    
+                    <button class="btn btn-warning" onclick="sendReminder()" id="reminderBtn" style="display: none;">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 5v14h12v-7h-7V5H4z"/>
+                        </svg>
+                        Enviar Lembrete
+                    </button>
+                    
+                    <button class="btn btn-danger" onclick="removeSelected()" id="removeBtn" style="display: none;">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Remover Selecionados
+                    </button>
+                </div>
+            </div>
+            
+            {% if enrollments %}
+            <div class="enrollments-list">
+                {% for enrollment in enrollments %}
+                <div class="enrollment-item">
+                    <input type="checkbox" 
+                           class="enrollment-checkbox" 
+                           data-enrollment-id="{{ enrollment.id }}"
+                           onchange="updateEnrollmentSelection()">
+                    
+                    <div class="enrollment-employee">
+                        <div class="enrollment-avatar">
+                            {{ enrollment.employee.first_name.0 }}{{ enrollment.employee.last_name.0 }}
+                        </div>
+                        <div class="enrollment-info">
+                            <div class="enrollment-name">{{ enrollment.employee.get_full_name }}</div>
+                            <div class="enrollment-role">
+                                {{ enrollment.employee.position }} • {{ enrollment.employee.department.name }}
+                                <span class="text-xs text-gray-500 ml-2">
+                                    Inscrito em {{ enrollment.enrolled_at|date:"d/m/Y" }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="enrollment-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ enrollment.progress_percentage }}%"></div>
+                        </div>
+                        <div class="progress-text">{{ enrollment.progress_percentage }}%</div>
+                    </div>
+                    
+                    <div class="enrollment-actions">
+                        <button class="action-btn btn-view" 
+                                onclick="viewEnrollment({{ enrollment.id }})"
+                                title="Ver Detalhes">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                        
+                        <button class="action-btn btn-message" 
+                                onclick="messageEmployee({{ enrollment.employee.id }})"
+                                title="Enviar Mensagem">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </button>
+                        
+                        <button class="action-btn btn-remove" 
+                                onclick="removeEnrollment({{ enrollment.id }})"
+                                title="Remover Inscrição">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Nenhuma inscrição encontrada</h3>
+                <p class="text-gray-600">Esta certificação ainda não possui participantes inscritos.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Floating Summary -->
+<div class="floating-summary" id="floatingSummary">
+    <div class="summary-text">
+        <span id="summaryCount">0</span> selecionados
+    </div>
+    <div class="summary-actions">
+        <button class="summary-btn" onclick="enrollSelected()">Inscrever</button>
+        <button class="summary-btn" onclick="clearSelection()">Cancelar</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedEmployees = [];
+    let selectedEnrollments = [];
+    
+    // Toggle employee selection
+    window.toggleEmployee = function(card) {
+        if (card.classList.contains('enrolled')) return;
+        
+        const checkbox = card.querySelector('.employee-checkbox');
+        checkbox.checked = !checkbox.checked;
+        updateSelection();
+    };
+    
+    // Update employee selection
+    window.updateSelection = function() {
+        const checkboxes = document.querySelectorAll('.employee-checkbox:checked:not(:disabled)');
+        selectedEmployees = Array.from(checkboxes).map(cb => cb.dataset.employeeId);
+        
+        // Update UI
+        const count = selectedEmployees.length;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('summaryCount').textContent = count;
+        
+        const bulkActions = document.getElementById('bulkActions');
+        const floatingSummary = document.getElementById('floatingSummary');
+        const enrollBtn = document.getElementById('enrollBtn');
+        
+        if (count > 0) {
+            bulkActions.classList.add('show');
+            floatingSummary.classList.add('show');
+            enrollBtn.style.display = 'flex';
+        } else {
+            bulkActions.classList.remove('show');
+            floatingSummary.classList.remove('show');
+            enrollBtn.style.display = 'none';
+        }
+        
+        // Update card styles
+        document.querySelectorAll('.employee-card').forEach(card => {
+            const checkbox = card.querySelector('.employee-checkbox');
+            if (checkbox.checked && !checkbox.disabled) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+        });
+    };
+    
+    // Update enrollment selection
+    window.updateEnrollmentSelection = function() {
+        const checkboxes = document.querySelectorAll('.enrollment-checkbox:checked');
+        selectedEnrollments = Array.from(checkboxes).map(cb => cb.dataset.enrollmentId);
+        
+        const count = selectedEnrollments.length;
+        const reminderBtn = document.getElementById('reminderBtn');
+        const removeBtn = document.getElementById('removeBtn');
+        
+        if (count > 0) {
+            reminderBtn.style.display = 'flex';
+            removeBtn.style.display = 'flex';
+        } else {
+            reminderBtn.style.display = 'none';
+            removeBtn.style.display = 'none';
+        }
+    };
+    
+    // Clear selection
+    window.clearSelection = function() {
+        document.querySelectorAll('.employee-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        updateSelection();
+    };
+    
+    // Select all available employees
+    window.selectAll = function() {
+        document.querySelectorAll('.employee-checkbox:not(:disabled)').forEach(cb => {
+            cb.checked = true;
+        });
+        updateSelection();
+    };
+    
+    // Filter employees
+    window.filterEmployees = function() {
+        const searchTerm = document.getElementById('searchEmployees').value.toLowerCase();
+        const departmentFilter = document.getElementById('departmentFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        const cards = document.querySelectorAll('.employee-card');
+        
+        cards.forEach(card => {
+            let show = true;
+            
+            // Search filter
+            if (searchTerm && !card.dataset.name.includes(searchTerm)) {
+                show = false;
+            }
+            
+            // Department filter
+            if (departmentFilter && card.dataset.department !== departmentFilter) {
+                show = false;
+            }
+            
+            // Status filter
+            if (statusFilter && card.dataset.status !== statusFilter) {
+                show = false;
+            }
+            
+            card.style.display = show ? 'block' : 'none';
+        });
+    };
+    
+    // Enroll selected employees
+    window.enrollSelected = function() {
+        if (selectedEmployees.length === 0) {
+            alert('Selecione pelo menos um colaborador para inscrever.');
+            return;
+        }
+        
+        const confirmed = confirm(`Confirma a inscrição de ${selectedEmployees.length} colaborador(es) nesta certificação?`);
+        if (!confirmed) return;
+        
+        // Show loading state
+        const enrollBtn = document.getElementById('enrollBtn');
+        const originalText = enrollBtn.innerHTML;
+        enrollBtn.innerHTML = '<div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div> Inscrevendo...';
+        enrollBtn.disabled = true;
+        
+        // Make API call
+        fetch(`/hr/certifications/${{{ certification.id }}}/enroll/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                employee_ids: selectedEmployees
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                const message = `${data.enrolled_count} colaborador(es) inscrito(s) com sucesso!`;
+                alert(message);
+                
+                // Reload page to update the UI
+                window.location.reload();
+            } else {
+                alert('Erro ao inscrever colaboradores: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao inscrever colaboradores. Tente novamente.');
+        })
+        .finally(() => {
+            // Restore button state
+            enrollBtn.innerHTML = originalText;
+            enrollBtn.disabled = false;
+        });
+    };
+    
+    // Action functions
+    window.viewEnrollment = function(enrollmentId) {
+        window.location.href = `/hr/enrollments/${enrollmentId}/`;
+    };
+    
+    window.messageEmployee = function(employeeId) {
+        // Open messaging interface
+        window.open(`/hr/employees/${employeeId}/message/`, '_blank');
+    };
+    
+    window.removeEnrollment = function(enrollmentId) {
+        const confirmed = confirm('Confirma a remoção desta inscrição?');
+        if (!confirmed) return;
+        
+        fetch(`/hr/enrollments/${enrollmentId}/remove/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao remover inscrição: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao remover inscrição. Tente novamente.');
+        });
+    };
+    
+    window.sendReminder = function() {
+        if (selectedEnrollments.length === 0) {
+            alert('Selecione pelo menos uma inscrição para enviar lembrete.');
+            return;
+        }
+        
+        const confirmed = confirm(`Enviar lembrete para ${selectedEnrollments.length} participante(s)?`);
+        if (!confirmed) return;
+        
+        fetch(`/hr/certifications/${{{ certification.id }}}/reminder/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                enrollment_ids: selectedEnrollments
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Lembretes enviados para ${data.sent_count} participante(s)!`);
+            } else {
+                alert('Erro ao enviar lembretes: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao enviar lembretes. Tente novamente.');
+        });
+    };
+    
+    window.removeSelected = function() {
+        if (selectedEnrollments.length === 0) {
+            alert('Selecione pelo menos uma inscrição para remover.');
+            return;
+        }
+        
+        const confirmed = confirm(`Confirma a remoção de ${selectedEnrollments.length} inscrição(ões)?`);
+        if (!confirmed) return;
+        
+        fetch(`/hr/enrollments/bulk-remove/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                enrollment_ids: selectedEnrollments
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`${data.removed_count} inscrição(ões) removida(s) com sucesso!`);
+                location.reload();
+            } else {
+                alert('Erro ao remover inscrições: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao remover inscrições. Tente novamente.');
+        });
+    };
+    
+    window.exportEnrollments = function() {
+        window.open(`/hr/certifications/${{{ certification.id }}}/enrollments/export/`, '_blank');
+    };
+});
+</script>
+{% endblock %}

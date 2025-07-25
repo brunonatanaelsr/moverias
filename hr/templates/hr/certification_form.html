@@ -1,0 +1,1208 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Certificação{% else %}Nova Certificação{% endif %} - HR System
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .certification-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .form-wizard {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .wizard-nav {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .nav-steps {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+    
+    .nav-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .nav-step.active .step-number {
+        background: #f5576c;
+        color: white;
+        box-shadow: 0 0 0 4px rgba(245, 87, 108, 0.2);
+    }
+    
+    .nav-step.completed .step-number {
+        background: #10b981;
+        color: white;
+    }
+    
+    .step-connector {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        right: -50%;
+        height: 2px;
+        background: #e5e7eb;
+        z-index: 1;
+    }
+    
+    .nav-step.completed .step-connector {
+        background: #10b981;
+    }
+    
+    .nav-step:last-child .step-connector {
+        display: none;
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .nav-step.active .step-label {
+        color: #f5576c;
+        font-weight: 600;
+    }
+    
+    .wizard-content {
+        padding: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+    
+    .section-icon {
+        width: 24px;
+        height: 24px;
+        color: #f5576c;
+        margin-right: 0.75rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .field-group {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #f5576c;
+    }
+    
+    .field-group-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .field-group-icon {
+        width: 20px;
+        height: 20px;
+        color: #f5576c;
+        margin-right: 0.5rem;
+    }
+    
+    .certification-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .type-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .type-card:hover {
+        border-color: #f5576c;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 87, 108, 0.15);
+    }
+    
+    .type-card.selected {
+        border-color: #f5576c;
+        background: linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%);
+    }
+    
+    .type-icon {
+        width: 48px;
+        height: 48px;
+        background: #fef2f2;
+        border-radius: 12px;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f5576c;
+    }
+    
+    .type-card.selected .type-icon {
+        background: #f5576c;
+        color: white;
+    }
+    
+    .type-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .type-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+    
+    .skill-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    
+    .skill-tag {
+        background: #f0f9ff;
+        color: #0369a1;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    
+    .skill-tag:hover {
+        background: #0369a1;
+        color: white;
+    }
+    
+    .skill-tag.selected {
+        background: #0369a1;
+        color: white;
+        border-color: #0369a1;
+    }
+    
+    .requirements-list {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .requirement-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 6px;
+        border-left: 3px solid #f5576c;
+    }
+    
+    .requirement-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .requirement-icon {
+        width: 20px;
+        height: 20px;
+        color: #f5576c;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+    
+    .requirement-content {
+        flex: 1;
+    }
+    
+    .requirement-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .requirement-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+    
+    .progress-indicator {
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .progress-title {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .progress-percentage {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #f5576c;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #f093fb, #f5576c);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    
+    .validation-summary {
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .validation-title {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 0.5rem;
+    }
+    
+    .validation-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 0.5rem;
+    }
+    
+    .validation-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .validation-item {
+        font-size: 0.875rem;
+        color: #92400e;
+        margin-bottom: 0.25rem;
+        padding-left: 1rem;
+        position: relative;
+    }
+    
+    .validation-item::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: #fbbf24;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        border-radius: 0 0 16px 16px;
+        margin: 0 -2rem -2rem -2rem;
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
+    }
+    
+    .btn-save {
+        background: #10b981;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .btn-save:hover {
+        background: #059669;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+        margin-right: 0.5rem;
+    }
+    
+    .btn-icon-right {
+        width: 16px;
+        height: 16px;
+        margin-left: 0.5rem;
+    }
+    
+    .floating-help {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        background: #f5576c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .floating-help:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(245, 87, 108, 0.5);
+    }
+    
+    .auto-save-status {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .auto-save-status.show {
+        opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+        .nav-steps {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .step-connector {
+            display: none;
+        }
+        
+        .certification-type-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .wizard-content {
+            padding: 1rem;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .floating-help {
+            bottom: 1rem;
+            right: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="certification-header text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold mb-2">
+                    {% if form.instance.pk %}
+                        Editar Certificação
+                    {% else %}
+                        Nova Certificação
+                    {% endif %}
+                </h1>
+                <p class="text-pink-100">Configure uma nova certificação ou programa de treinamento</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Form Wizard -->
+        <div class="form-wizard">
+            <!-- Navigation -->
+            <div class="wizard-nav">
+                <div class="nav-steps">
+                    <div class="nav-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-connector"></div>
+                        <div class="step-label">Informações Básicas</div>
+                    </div>
+                    <div class="nav-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-connector"></div>
+                        <div class="step-label">Tipo e Categoria</div>
+                    </div>
+                    <div class="nav-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-connector"></div>
+                        <div class="step-label">Competências</div>
+                    </div>
+                    <div class="nav-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-connector"></div>
+                        <div class="step-label">Requisitos</div>
+                    </div>
+                    <div class="nav-step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Revisão</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Content -->
+            <form method="post" id="certificationForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Step 1: Basic Information -->
+                <div class="wizard-content step-content active" data-step="1">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <h3 class="section-title">Informações da Certificação</h3>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Identificação
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    {{ form.title|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.code|as_crispy_field }}
+                                </div>
+                                <div class="md:col-span-2">
+                                    {{ form.description|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Cronograma
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    {{ form.duration_hours|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.validity_period|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.max_participants|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Responsabilidades
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    {{ form.instructor|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.department|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Type and Category -->
+                <div class="wizard-content step-content" data-step="2" style="display: none;">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <h3 class="section-title">Tipo de Certificação</h3>
+                        </div>
+                        
+                        <div class="certification-type-grid">
+                            <div class="type-card" data-type="technical">
+                                <div class="type-icon">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Certificação Técnica</div>
+                                <div class="type-description">
+                                    Competências específicas de tecnologia, ferramentas e sistemas
+                                </div>
+                            </div>
+                            
+                            <div class="type-card" data-type="soft-skills">
+                                <div class="type-icon">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Habilidades Comportamentais</div>
+                                <div class="type-description">
+                                    Liderança, comunicação, trabalho em equipe e relacionamento interpessoal
+                                </div>
+                            </div>
+                            
+                            <div class="type-card" data-type="compliance">
+                                <div class="type-icon">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                </div>
+                                <div class="type-title">Conformidade e Segurança</div>
+                                <div class="type-description">
+                                    Regulamentações, normas de segurança e compliance organizacional
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                </svg>
+                                Categorização
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    {{ form.category|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.level|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.priority|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.is_mandatory|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Skills and Competencies -->
+                <div class="wizard-content step-content" data-step="3" style="display: none;">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                            </svg>
+                            <h3 class="section-title">Competências e Habilidades</h3>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Habilidades Técnicas
+                            </div>
+                            
+                            <div class="skill-tags">
+                                <div class="skill-tag" data-skill="javascript">JavaScript</div>
+                                <div class="skill-tag" data-skill="python">Python</div>
+                                <div class="skill-tag" data-skill="react">React</div>
+                                <div class="skill-tag" data-skill="django">Django</div>
+                                <div class="skill-tag" data-skill="sql">SQL</div>
+                                <div class="skill-tag" data-skill="docker">Docker</div>
+                                <div class="skill-tag" data-skill="aws">AWS</div>
+                                <div class="skill-tag" data-skill="git">Git</div>
+                                <div class="skill-tag" data-skill="agile">Metodologias Ágeis</div>
+                                <div class="skill-tag" data-skill="api">APIs REST</div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                Habilidades Comportamentais
+                            </div>
+                            
+                            <div class="skill-tags">
+                                <div class="skill-tag" data-skill="leadership">Liderança</div>
+                                <div class="skill-tag" data-skill="communication">Comunicação</div>
+                                <div class="skill-tag" data-skill="teamwork">Trabalho em Equipe</div>
+                                <div class="skill-tag" data-skill="problem-solving">Resolução de Problemas</div>
+                                <div class="skill-tag" data-skill="creativity">Criatividade</div>
+                                <div class="skill-tag" data-skill="adaptability">Adaptabilidade</div>
+                                <div class="skill-tag" data-skill="time-management">Gestão do Tempo</div>
+                                <div class="skill-tag" data-skill="negotiation">Negociação</div>
+                                <div class="skill-tag" data-skill="presentation">Apresentação</div>
+                                <div class="skill-tag" data-skill="mentoring">Mentoria</div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Objetivos de Aprendizagem
+                            </div>
+                            
+                            <div>
+                                {{ form.learning_objectives|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Requirements -->
+                <div class="wizard-content step-content" data-step="4" style="display: none;">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                            <h3 class="section-title">Requisitos e Critérios</h3>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                Pré-requisitos
+                            </div>
+                            
+                            <div>
+                                {{ form.prerequisites|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="requirements-list">
+                            <div class="requirement-item">
+                                <svg class="requirement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div class="requirement-content">
+                                    <div class="requirement-title">Participação Obrigatória</div>
+                                    <div class="requirement-description">
+                                        Presença mínima de 80% nas sessões de treinamento
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="requirement-item">
+                                <svg class="requirement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                </svg>
+                                <div class="requirement-content">
+                                    <div class="requirement-title">Avaliação Prática</div>
+                                    <div class="requirement-description">
+                                        Nota mínima de 7.0 na avaliação final
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="requirement-item">
+                                <svg class="requirement-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div class="requirement-content">
+                                    <div class="requirement-title">Prazo de Conclusão</div>
+                                    <div class="requirement-description">
+                                        Finalização dentro do período estabelecido
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="field-group">
+                            <div class="field-group-title">
+                                <svg class="field-group-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Critérios de Avaliação
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    {{ form.passing_score|as_crispy_field }}
+                                </div>
+                                <div>
+                                    {{ form.evaluation_method|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Review -->
+                <div class="wizard-content step-content" data-step="5" style="display: none;">
+                    <div class="form-section">
+                        <div class="section-header">
+                            <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="section-title">Revisão Final</h3>
+                        </div>
+                        
+                        <div class="progress-indicator">
+                            <div class="progress-header">
+                                <div class="progress-title">Progresso do Formulário</div>
+                                <div class="progress-percentage" id="formProgress">85%</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="validationSummary" class="validation-summary" style="display: none;">
+                            <div class="validation-title">
+                                <svg class="validation-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                                </svg>
+                                Campos que necessitam atenção
+                            </div>
+                            <ul class="validation-list" id="validationList">
+                                <!-- Validation items will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                        
+                        <div id="reviewSummary" class="space-y-6">
+                            <!-- Review content will be populated by JavaScript -->
+                        </div>
+                        
+                        <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex">
+                                <svg class="w-5 h-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                                <div class="ml-3">
+                                    <h3 class="text-sm font-medium text-blue-800">Próximos Passos</h3>
+                                    <p class="mt-1 text-sm text-blue-700">
+                                        Após criar a certificação, você poderá configurar turmas, 
+                                        definir cronogramas e enviar convites aos participantes.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <div>
+                        <button type="button" id="prevButton" class="btn-secondary" style="display: none;">
+                            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                            Anterior
+                        </button>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button type="button" id="saveButton" class="btn-save">
+                            <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                            </svg>
+                            Salvar Rascunho
+                        </button>
+                        
+                        <button type="button" id="nextButton" class="btn-primary">
+                            Próximo
+                            <svg class="btn-icon-right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Help Button -->
+<button class="floating-help" onclick="showHelp()" title="Ajuda">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+    </svg>
+</button>
+
+<!-- Auto-save Status -->
+<div id="autoSaveStatus" class="auto-save-status">
+    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    Salvo automaticamente
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentStep = 1;
+    const totalSteps = 5;
+    
+    const navSteps = document.querySelectorAll('.nav-step');
+    const stepContents = document.querySelectorAll('.step-content');
+    const nextButton = document.getElementById('nextButton');
+    const prevButton = document.getElementById('prevButton');
+    const saveButton = document.getElementById('saveButton');
+    const autoSaveStatus = document.getElementById('autoSaveStatus');
+    
+    // Step navigation
+    function showStep(step) {
+        // Hide all step contents
+        stepContents.forEach(content => {
+            content.style.display = 'none';
+            content.classList.remove('active');
+        });
+        
+        // Show current step
+        const currentContent = document.querySelector(`[data-step="${step}"]`);
+        if (currentContent) {
+            currentContent.style.display = 'block';
+            currentContent.classList.add('active');
+        }
+        
+        // Update navigation steps
+        navSteps.forEach((navStep, index) => {
+            navStep.classList.remove('active', 'completed');
+            
+            if (index + 1 < step) {
+                navStep.classList.add('completed');
+            } else if (index + 1 === step) {
+                navStep.classList.add('active');
+            }
+        });
+        
+        // Update navigation buttons
+        prevButton.style.display = step === 1 ? 'none' : 'inline-flex';
+        
+        if (step === totalSteps) {
+            nextButton.innerHTML = `
+                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Criar Certificação
+            `;
+        } else {
+            nextButton.innerHTML = `
+                Próximo
+                <svg class="btn-icon-right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            `;
+        }
+        
+        // Update review summary on last step
+        if (step === totalSteps) {
+            updateReviewSummary();
+            validateForm();
+        }
+    }
+    
+    // Navigation event listeners
+    nextButton.addEventListener('click', function() {
+        if (currentStep < totalSteps) {
+            currentStep++;
+            showStep(currentStep);
+        } else {
+            // Submit form
+            document.getElementById('certificationForm').submit();
+        }
+    });
+    
+    prevButton.addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+    
+    // Certification type selection
+    const typeCards = document.querySelectorAll('.type-card');
+    typeCards.forEach(card => {
+        card.addEventListener('click', function() {
+            typeCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            
+            // Update hidden input or form field
+            const selectedType = this.dataset.type;
+            console.log('Selected certification type:', selectedType);
+        });
+    });
+    
+    // Skill tag selection
+    const skillTags = document.querySelectorAll('.skill-tag');
+    skillTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            
+            // Collect selected skills
+            const selectedSkills = Array.from(document.querySelectorAll('.skill-tag.selected'))
+                .map(tag => tag.dataset.skill);
+            console.log('Selected skills:', selectedSkills);
+        });
+    });
+    
+    // Auto-save functionality
+    let autoSaveTimeout;
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    
+    formInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(autoSave, 3000);
+        });
+    });
+    
+    function autoSave() {
+        // Show auto-save indicator
+        autoSaveStatus.classList.add('show');
+        
+        // Hide after 2 seconds
+        setTimeout(() => {
+            autoSaveStatus.classList.remove('show');
+        }, 2000);
+        
+        console.log('Auto-saving form data...');
+    }
+    
+    // Manual save
+    saveButton.addEventListener('click', function() {
+        autoSave();
+    });
+    
+    // Form validation
+    function validateForm() {
+        const validationSummary = document.getElementById('validationSummary');
+        const validationList = document.getElementById('validationList');
+        const errors = [];
+        
+        // Check required fields
+        const title = document.querySelector('[name="title"]')?.value;
+        const code = document.querySelector('[name="code"]')?.value;
+        const instructor = document.querySelector('[name="instructor"]')?.value;
+        
+        if (!title) errors.push('Título da certificação é obrigatório');
+        if (!code) errors.push('Código da certificação é obrigatório');
+        if (!instructor) errors.push('Instrutor deve ser selecionado');
+        
+        // Check if certification type is selected
+        const selectedType = document.querySelector('.type-card.selected');
+        if (!selectedType) errors.push('Tipo de certificação deve ser selecionado');
+        
+        // Check if at least one skill is selected
+        const selectedSkills = document.querySelectorAll('.skill-tag.selected');
+        if (selectedSkills.length === 0) errors.push('Pelo menos uma habilidade deve ser selecionada');
+        
+        if (errors.length > 0) {
+            validationSummary.style.display = 'block';
+            validationList.innerHTML = errors.map(error => `<li class="validation-item">${error}</li>`).join('');
+        } else {
+            validationSummary.style.display = 'none';
+        }
+        
+        // Update progress
+        const progress = Math.max(0, Math.min(100, ((5 - errors.length) / 5) * 100));
+        const progressBar = document.querySelector('.progress-fill');
+        const progressText = document.getElementById('formProgress');
+        
+        if (progressBar) progressBar.style.width = progress + '%';
+        if (progressText) progressText.textContent = Math.round(progress) + '%';
+        
+        return errors.length === 0;
+    }
+    
+    // Update review summary
+    function updateReviewSummary() {
+        const reviewSummary = document.getElementById('reviewSummary');
+        
+        const title = document.querySelector('[name="title"]')?.value || 'Não informado';
+        const code = document.querySelector('[name="code"]')?.value || 'Não informado';
+        const instructor = document.querySelector('[name="instructor"] option:checked')?.textContent || 'Não selecionado';
+        const department = document.querySelector('[name="department"] option:checked')?.textContent || 'Não selecionado';
+        const duration = document.querySelector('[name="duration_hours"]')?.value || 'Não informado';
+        
+        const selectedType = document.querySelector('.type-card.selected')?.querySelector('.type-title')?.textContent || 'Não selecionado';
+        const selectedSkills = Array.from(document.querySelectorAll('.skill-tag.selected')).map(tag => tag.textContent);
+        
+        reviewSummary.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-3">Informações Básicas</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Título:</span> ${title}</p>
+                            <p><span class="font-medium">Código:</span> ${code}</p>
+                            <p><span class="font-medium">Instrutor:</span> ${instructor}</p>
+                            <p><span class="font-medium">Departamento:</span> ${department}</p>
+                            <p><span class="font-medium">Duração:</span> ${duration} horas</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-3">Tipo e Categoria</h4>
+                        <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">Tipo:</span> ${selectedType}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-900 mb-3">Competências Selecionadas</h4>
+                        <div class="skill-tags">
+                            ${selectedSkills.map(skill => `<span class="skill-tag selected">${skill}</span>`).join('')}
+                        </div>
+                        ${selectedSkills.length === 0 ? '<p class="text-sm text-gray-500">Nenhuma competência selecionada</p>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Help function
+    window.showHelp = function() {
+        alert('Ajuda: Use este formulário para criar uma nova certificação ou programa de treinamento. Preencha todas as etapas e revise antes de finalizar.');
+    };
+    
+    // Initialize
+    showStep(currentStep);
+});
+</script>
+{% endblock %}

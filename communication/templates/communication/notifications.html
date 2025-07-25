@@ -1,0 +1,1134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Central de Notificações - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .notifications-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .notifications-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm10 0c0-11.046 8.954-20 20-20s20 8.954 20 20-8.954 20-20 20-20-8.954-20-20z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .notifications-container {
+        max-width: 1000px;
+        margin: -4rem auto 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .notifications-controls {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 300px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    
+    .controls-right {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .notifications-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    .stat-change {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+    }
+    
+    .stat-change.positive {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .stat-change.negative {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    
+    .notifications-list {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .notifications-header-section {
+        padding: 2rem 2rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .header-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .header-btn-outline {
+        background: transparent;
+        color: #6366f1;
+        border: 1px solid #6366f1;
+    }
+    
+    .header-btn-outline:hover {
+        background: #6366f1;
+        color: white;
+    }
+    
+    .notification-item {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: all 0.2s ease;
+        position: relative;
+        cursor: pointer;
+    }
+    
+    .notification-item:hover {
+        background: #f8fafc;
+    }
+    
+    .notification-item.unread {
+        background: #f0f9ff;
+        border-left: 4px solid #6366f1;
+    }
+    
+    .notification-item.unread::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 1.75rem;
+        width: 8px;
+        height: 8px;
+        background: #6366f1;
+        border-radius: 50%;
+    }
+    
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+        margin-left: 12px;
+    }
+    
+    .notification-icon.system {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+    
+    .notification-icon.user {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .notification-icon.announcement {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .notification-icon.task {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    
+    .notification-icon.celebration {
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    }
+    
+    .notification-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .notification-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+    
+    .notification-message {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.5;
+        margin-bottom: 0.5rem;
+    }
+    
+    .notification-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .notification-time {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .notification-category {
+        background: #f3f4f6;
+        color: #6b7280;
+        padding: 0.125rem 0.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+    
+    .notification-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: all 0.2s ease;
+    }
+    
+    .notification-item:hover .notification-actions {
+        opacity: 1;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: #f3f4f6;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+    
+    .action-btn.primary {
+        background: #6366f1;
+        color: white;
+    }
+    
+    .action-btn.primary:hover {
+        background: #4f46e5;
+    }
+    
+    .load-more {
+        padding: 2rem;
+        text-align: center;
+        border-top: 1px solid #f3f4f6;
+    }
+    
+    .load-more-btn {
+        padding: 0.75rem 2rem;
+        background: transparent;
+        color: #6366f1;
+        border: 2px solid #6366f1;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .load-more-btn:hover {
+        background: #6366f1;
+        color: white;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: #9ca3af;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        margin-bottom: 2rem;
+        font-size: 1.125rem;
+    }
+    
+    .floating-action {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+    }
+    
+    .fab {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+        .notifications-container {
+            margin: -2rem auto 0;
+            padding: 0 1rem;
+        }
+        
+        .notifications-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .controls-left {
+            flex-direction: column;
+        }
+        
+        .controls-right {
+            justify-content: center;
+        }
+        
+        .notifications-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .notifications-header-section {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        
+        .header-actions {
+            justify-content: center;
+        }
+        
+        .notification-item {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .notification-icon {
+            align-self: flex-start;
+            margin-left: 0;
+        }
+        
+        .notification-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .floating-action {
+            bottom: 1rem;
+            right: 1rem;
+        }
+        
+        .fab {
+            width: 48px;
+            height: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="notifications-header text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="header-content text-center">
+                <h1 class="text-3xl font-bold mb-2">Central de Notificações</h1>
+                <p class="text-indigo-100">Mantenha-se atualizado com todas as comunicações importantes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <div class="notifications-container">
+            <!-- Controls -->
+            <div class="notifications-controls">
+                <div class="controls-left">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Buscar notificações..." id="searchInput">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Todas</option>
+                        <option value="unread">Não lidas</option>
+                        <option value="read">Lidas</option>
+                    </select>
+                    
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">Todas as categorias</option>
+                        <option value="system">Sistema</option>
+                        <option value="user">Usuário</option>
+                        <option value="announcement">Anúncios</option>
+                        <option value="task">Tarefas</option>
+                        <option value="celebration">Celebrações</option>
+                    </select>
+                </div>
+                
+                <div class="controls-right">
+                    <button class="btn btn-secondary" onclick="exportNotifications()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="notifications-stats">
+                <div class="stat-card">
+                    <div class="stat-change positive">+15%</div>
+                    <div class="stat-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 1115 0v5z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value">248</div>
+                    <div class="stat-label">Notificações Totais</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-change negative">-8%</div>
+                    <div class="stat-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5l-6.928-12a2 2 0 00-3.464 0l-6.928 12c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Não Lidas</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-change positive">+23%</div>
+                    <div class="stat-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value">95%</div>
+                    <div class="stat-label">Taxa de Leitura</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-change positive">+5%</div>
+                    <div class="stat-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <div class="stat-value">34</div>
+                    <div class="stat-label">Esta Semana</div>
+                </div>
+            </div>
+
+            <!-- Notifications List -->
+            <div class="notifications-list">
+                <div class="notifications-header-section">
+                    <h2 class="section-title">Suas Notificações</h2>
+                    <div class="header-actions">
+                        <button class="header-btn header-btn-outline" onclick="markAllAsRead()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Marcar Todas como Lidas
+                        </button>
+                    </div>
+                </div>
+
+                <div id="notificationsList">
+                    <!-- Unread System Notification -->
+                    <div class="notification-item unread" data-status="unread" data-category="system">
+                        <div class="notification-icon system">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Sistema Atualizado com Sucesso</div>
+                            <div class="notification-message">O sistema HR foi atualizado para a versão 2.1.5 com melhorias de performance e novas funcionalidades de comunicação interna.</div>
+                            <div class="notification-meta">
+                                <div class="notification-time">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Há 2 horas</span>
+                                </div>
+                                <span class="notification-category">Sistema</span>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn primary" onclick="markAsRead('1')" title="Marcar como lida">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="deleteNotification('1')" title="Excluir">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Unread User Notification -->
+                    <div class="notification-item unread" data-status="unread" data-category="user">
+                        <div class="notification-icon user">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Nova Mensagem de Maria Silva</div>
+                            <div class="notification-message">Você recebeu uma nova mensagem sobre a reunião de planejamento da próxima semana. Clique para visualizar.</div>
+                            <div class="notification-meta">
+                                <div class="notification-time">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Há 3 horas</span>
+                                </div>
+                                <span class="notification-category">Usuário</span>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn primary" onclick="markAsRead('2')" title="Marcar como lida">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="viewMessage('2')" title="Ver mensagem">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Read Announcement Notification -->
+                    <div class="notification-item" data-status="read" data-category="announcement">
+                        <div class="notification-icon announcement">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                            </svg>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Novo Anúncio: Mudança no Protocolo de Segurança</div>
+                            <div class="notification-message">Ana Silva publicou um novo anúncio sobre as mudanças nos protocolos de segurança. É obrigatória a leitura.</div>
+                            <div class="notification-meta">
+                                <div class="notification-time">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>Ontem</span>
+                                </div>
+                                <span class="notification-category">Anúncios</span>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="viewAnnouncement('3')" title="Ver anúncio">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="deleteNotification('3')" title="Excluir">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Read Task Notification -->
+                    <div class="notification-item" data-status="read" data-category="task">
+                        <div class="notification-icon task">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Tarefa Atribuída: Revisão de Documentos</div>
+                            <div class="notification-message">Carlos Santos atribuiu uma nova tarefa para você: "Revisar documentos do projeto Alpha". Prazo: 30/07/2025.</div>
+                            <div class="notification-meta">
+                                <div class="notification-time">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>2 dias atrás</span>
+                                </div>
+                                <span class="notification-category">Tarefas</span>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="viewTask('4')" title="Ver tarefa">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="deleteNotification('4')" title="Excluir">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Read Celebration Notification -->
+                    <div class="notification-item" data-status="read" data-category="celebration">
+                        <div class="notification-icon celebration">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Parabéns! Meta Trimestral Alcançada</div>
+                            <div class="notification-message">A equipe superou a meta trimestral em 15%! Como reconhecimento, todos receberão um bônus especial no próximo salário.</div>
+                            <div class="notification-meta">
+                                <div class="notification-time">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    <span>3 dias atrás</span>
+                                </div>
+                                <span class="notification-category">Celebrações</span>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="action-btn" onclick="viewCelebration('5')" title="Ver detalhes">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                            <button class="action-btn" onclick="deleteNotification('5')" title="Excluir">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Load More -->
+                <div class="load-more">
+                    <button class="load-more-btn" onclick="loadMoreNotifications()">
+                        Carregar Mais Notificações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action">
+        <button class="fab" onclick="createNotification()" title="Nova notificação">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 1115 0v5z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    initializeSearch();
+    startRealTimeUpdates();
+});
+
+function initializeFilters() {
+    const statusFilter = document.getElementById('statusFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    
+    statusFilter.addEventListener('change', filterNotifications);
+    categoryFilter.addEventListener('change', filterNotifications);
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterNotifications();
+        }, 300);
+    });
+}
+
+function filterNotifications() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    
+    const notifications = document.querySelectorAll('.notification-item');
+    let visibleCount = 0;
+    
+    notifications.forEach(notification => {
+        const title = notification.querySelector('.notification-title').textContent.toLowerCase();
+        const message = notification.querySelector('.notification-message').textContent.toLowerCase();
+        const status = notification.dataset.status;
+        const category = notification.dataset.category;
+        
+        const matchesSearch = !searchTerm || title.includes(searchTerm) || message.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+        
+        if (matchesSearch && matchesStatus && matchesCategory) {
+            notification.style.display = 'flex';
+            visibleCount++;
+        } else {
+            notification.style.display = 'none';
+        }
+    });
+    
+    // Show empty state if no results
+    showEmptyStateIfNeeded(visibleCount);
+}
+
+function showEmptyStateIfNeeded(visibleCount) {
+    const list = document.getElementById('notificationsList');
+    let emptyState = document.getElementById('emptyState');
+    
+    if (visibleCount === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'emptyState';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5v-5a7.5 7.5 0 1115 0v5z"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">Nenhuma notificação encontrada</h3>
+                <p class="empty-text">Não há notificações que correspondam aos filtros selecionados.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Limpar Filtros
+                </button>
+            `;
+            list.appendChild(emptyState);
+        }
+        emptyState.style.display = 'block';
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('categoryFilter').value = '';
+    filterNotifications();
+}
+
+function markAsRead(id) {
+    const notification = document.querySelector(`[data-category]`);
+    if (notification && notification.classList.contains('unread')) {
+        notification.classList.remove('unread');
+        notification.dataset.status = 'read';
+        
+        // Update unread count
+        updateUnreadCount(-1);
+        
+        // Remove read button
+        const readBtn = notification.querySelector('.action-btn.primary');
+        if (readBtn) {
+            readBtn.remove();
+        }
+    }
+}
+
+function markAllAsRead() {
+    const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+    const count = unreadNotifications.length;
+    
+    if (count > 0 && confirm(`Marcar ${count} notificações como lidas?`)) {
+        unreadNotifications.forEach(notification => {
+            notification.classList.remove('unread');
+            notification.dataset.status = 'read';
+            
+            const readBtn = notification.querySelector('.action-btn.primary');
+            if (readBtn) {
+                readBtn.remove();
+            }
+        });
+        
+        updateUnreadCount(-count);
+    }
+}
+
+function deleteNotification(id) {
+    if (confirm('Tem certeza que deseja excluir esta notificação?')) {
+        const notification = document.querySelector(`[data-category]`);
+        if (notification) {
+            const wasUnread = notification.classList.contains('unread');
+            
+            notification.style.animation = 'fadeOut 0.3s ease-out forwards';
+            setTimeout(() => {
+                notification.remove();
+                
+                if (wasUnread) {
+                    updateUnreadCount(-1);
+                }
+                
+                updateTotalCount(-1);
+                filterNotifications();
+            }, 300);
+        }
+    }
+}
+
+function updateUnreadCount(change) {
+    const unreadStat = document.querySelectorAll('.stat-value')[1];
+    const currentCount = parseInt(unreadStat.textContent);
+    const newCount = Math.max(0, currentCount + change);
+    unreadStat.textContent = newCount;
+}
+
+function updateTotalCount(change) {
+    const totalStat = document.querySelectorAll('.stat-value')[0];
+    const currentCount = parseInt(totalStat.textContent);
+    const newCount = Math.max(0, currentCount + change);
+    totalStat.textContent = newCount;
+}
+
+function viewMessage(id) {
+    alert(`Visualizando mensagem ${id} - funcionalidade será implementada`);
+}
+
+function viewAnnouncement(id) {
+    alert(`Visualizando anúncio ${id} - funcionalidade será implementada`);
+}
+
+function viewTask(id) {
+    alert(`Visualizando tarefa ${id} - funcionalidade será implementada`);
+}
+
+function viewCelebration(id) {
+    alert(`Visualizando celebração ${id} - funcionalidade será implementada`);
+}
+
+function createNotification() {
+    alert('Criador de notificações será implementado');
+}
+
+function loadMoreNotifications() {
+    alert('Carregando mais notificações...');
+    
+    // Simulate loading more notifications
+    setTimeout(() => {
+        alert('Mais notificações carregadas!');
+    }, 1000);
+}
+
+function exportNotifications() {
+    alert('Exportando notificações...');
+    
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        notifications: Array.from(document.querySelectorAll('.notification-item')).map(item => ({
+            title: item.querySelector('.notification-title').textContent,
+            message: item.querySelector('.notification-message').textContent,
+            category: item.dataset.category,
+            status: item.dataset.status,
+            time: item.querySelector('.notification-time span').textContent
+        }))
+    };
+    
+    console.log('Export data:', exportData);
+}
+
+function startRealTimeUpdates() {
+    // Simulate real-time notifications every 30 seconds
+    setInterval(() => {
+        if (Math.random() < 0.1) { // 10% chance
+            simulateNewNotification();
+        }
+    }, 30000);
+}
+
+function simulateNewNotification() {
+    const types = ['system', 'user', 'announcement', 'task', 'celebration'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    // Flash notification indicator
+    const fab = document.querySelector('.fab');
+    fab.style.animation = 'pulse 0.5s ease-in-out';
+    setTimeout(() => {
+        fab.style.animation = '';
+    }, 500);
+    
+    // Update unread count
+    updateUnreadCount(1);
+    updateTotalCount(1);
+}
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

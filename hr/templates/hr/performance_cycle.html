@@ -1,0 +1,1061 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Ciclos de Avaliação - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .cycle-timeline {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .timeline-track {
+        position: relative;
+        height: 80px;
+        background: #f8fafc;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .timeline-progress {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 8px;
+        transition: width 0.3s ease;
+    }
+    
+    .timeline-markers {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        z-index: 10;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .marker-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid #e5e7eb;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .marker-dot.active {
+        border-color: #3b82f6;
+        background: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+    
+    .marker-dot.completed {
+        border-color: #10b981;
+        background: #10b981;
+    }
+    
+    .marker-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        white-space: nowrap;
+        background: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .cycle-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    
+    .cycle-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .cycle-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    
+    .cycle-body {
+        padding: 1.5rem;
+    }
+    
+    .cycle-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .status-planning {
+        background: #f3f4f6;
+        color: #374151;
+    }
+    
+    .status-active {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .status-completed {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .status-cancelled {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .phase-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 1rem 0;
+    }
+    
+    .phase-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #e5e7eb;
+    }
+    
+    .phase-dot.active {
+        background: #3b82f6;
+    }
+    
+    .phase-dot.completed {
+        background: #10b981;
+    }
+    
+    .participants-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .participant-card {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .participant-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .cycle-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f9fafb;
+        border-radius: 8px;
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .cycle-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        padding: 1rem 1.5rem;
+        background: #f9fafb;
+        border-top: 1px solid #f3f4f6;
+    }
+    
+    .phase-timeline {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    
+    .phase-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .phase-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -0.5rem;
+        width: 1rem;
+        height: 2px;
+        background: #e5e7eb;
+        z-index: 1;
+    }
+    
+    .phase-step.completed::after {
+        background: #10b981;
+    }
+    
+    .phase-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        z-index: 2;
+        position: relative;
+    }
+    
+    .phase-step.active .phase-circle {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .phase-step.completed .phase-circle {
+        background: #10b981;
+        color: white;
+    }
+    
+    .phase-name {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+    
+    .phase-step.active .phase-name {
+        color: #3b82f6;
+    }
+    
+    .phase-step.completed .phase-name {
+        color: #10b981;
+    }
+    
+    .quick-actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-action-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .cycle-overview {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .notification-banner {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+        display: flex;
+        items-center;
+        gap: 1rem;
+    }
+    
+    .banner-icon {
+        flex-shrink: 0;
+        width: 24px;
+        height: 24px;
+        color: #d97706;
+    }
+    
+    @media (max-width: 768px) {
+        .timeline-markers {
+            flex-direction: column;
+            height: auto;
+            position: static;
+        }
+        
+        .timeline-marker {
+            position: static;
+            transform: none;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-track {
+            height: auto;
+            min-height: 60px;
+        }
+        
+        .phase-timeline {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .phase-step:not(:last-child)::after {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Ciclos de Avaliação</h1>
+                <p class="text-gray-600">Gerencie períodos e cronogramas de avaliação de desempenho</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="openCycleModal()" class="action-button primary">
+                    <i class="fas fa-plus mr-2"></i>
+                    Novo Ciclo
+                </button>
+                <button onclick="importCycleTemplate()" class="action-button secondary">
+                    <i class="fas fa-download mr-2"></i>
+                    Importar Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cycle Overview -->
+    <div class="cycle-overview">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_cycles }}</div>
+                <div class="text-sm opacity-90">Total de Ciclos</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.active_cycles }}</div>
+                <div class="text-sm opacity-90">Ciclos Ativos</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_participants }}</div>
+                <div class="text-sm opacity-90">Participantes</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.completion_rate }}%</div>
+                <div class="text-sm opacity-90">Taxa de Conclusão</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    {% if upcoming_deadlines %}
+        <div class="notification-banner">
+            <i class="fas fa-exclamation-triangle banner-icon"></i>
+            <div>
+                <h3 class="font-semibold text-yellow-800">Prazos Próximos</h3>
+                <p class="text-yellow-700">{{ upcoming_deadlines|length }} prazo(s) se aproximando nos próximos 7 dias.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="quick-actions-grid">
+        <div class="quick-action-card" onclick="openCycleModal()">
+            <div class="action-icon bg-blue-100 text-blue-600">
+                <i class="fas fa-plus"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Criar Novo Ciclo</h3>
+            <p class="text-gray-600 text-sm">Defina um novo período de avaliação com cronograma personalizado</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="location.href='{% url 'hr:cycle_templates' %}'">
+            <div class="action-icon bg-green-100 text-green-600">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Templates de Ciclo</h3>
+            <p class="text-gray-600 text-sm">Use templates predefinidos para criar ciclos rapidamente</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="generateCycleReport()">
+            <div class="action-icon bg-purple-100 text-purple-600">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Relatórios</h3>
+            <p class="text-gray-600 text-sm">Analise o progresso e resultados dos ciclos de avaliação</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="manageCycleSettings()">
+            <div class="action-icon bg-orange-100 text-orange-600">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Configurações</h3>
+            <p class="text-gray-600 text-sm">Configure notificações, lembretes e regras gerais</p>
+        </div>
+    </div>
+
+    <!-- Active Cycle Timeline -->
+    {% if current_cycle %}
+        <div class="cycle-timeline">
+            <div class="timeline-header">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">Ciclo Atual: {{ current_cycle.name }}</h2>
+                    <p class="text-gray-600">{{ current_cycle.start_date|date:"d/m/Y" }} - {{ current_cycle.end_date|date:"d/m/Y" }}</p>
+                </div>
+                <span class="cycle-status status-{{ current_cycle.status }}">
+                    {{ current_cycle.get_status_display }}
+                </span>
+            </div>
+            
+            <div class="timeline-track">
+                <div class="timeline-progress" style="width: {{ current_cycle.progress_percentage }}%"></div>
+                <div class="timeline-markers">
+                    {% for phase in current_cycle.phases.all %}
+                        <div class="timeline-marker" style="left: {{ phase.position_percentage }}%">
+                            <div class="marker-dot {% if phase.is_completed %}completed{% elif phase.is_active %}active{% endif %}"></div>
+                            <div class="marker-label">{{ phase.name }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="phase-timeline mt-6">
+                {% for phase in current_cycle.phases.all %}
+                    <div class="phase-step {% if phase.is_completed %}completed{% elif phase.is_active %}active{% endif %}">
+                        <div class="phase-circle">{{ forloop.counter }}</div>
+                        <div class="phase-name">{{ phase.name }}</div>
+                        <div class="text-xs text-gray-500">{{ phase.end_date|date:"d/m" }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Cycles Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {% for cycle in cycles %}
+            <div class="cycle-card">
+                <div class="cycle-header">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ cycle.name }}</h3>
+                        <span class="cycle-status status-{{ cycle.status }}">
+                            {{ cycle.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="text-sm text-gray-600 mb-3">
+                        <div class="flex justify-between">
+                            <span>Início:</span>
+                            <span>{{ cycle.start_date|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Fim:</span>
+                            <span>{{ cycle.end_date|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Duração:</span>
+                            <span>{{ cycle.duration_days }} dias</span>
+                        </div>
+                    </div>
+                    
+                    {% if cycle.description %}
+                        <p class="text-gray-700 text-sm">{{ cycle.description|truncatechars:80 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="cycle-body">
+                    <!-- Progress Indicator -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Progresso</span>
+                            <span>{{ cycle.progress_percentage }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                 style="width: {{ cycle.progress_percentage }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cycle Stats -->
+                    <div class="cycle-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">{{ cycle.total_participants }}</div>
+                            <div class="stat-label">Participantes</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ cycle.completed_reviews }}</div>
+                            <div class="stat-label">Concluídas</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">{{ cycle.pending_reviews }}</div>
+                            <div class="stat-label">Pendentes</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Phase Indicators -->
+                    <div class="phase-indicator">
+                        {% for phase in cycle.phases.all %}
+                            <div class="phase-dot {% if phase.is_completed %}completed{% elif phase.is_active %}active{% endif %}" 
+                                 title="{{ phase.name }}"></div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    {% if cycle.recent_activity %}
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <div class="text-xs text-gray-600 mb-1">Última atividade:</div>
+                            <div class="text-sm text-gray-900">{{ cycle.recent_activity.description }}</div>
+                            <div class="text-xs text-gray-500">{{ cycle.recent_activity.created_at|timesince }} atrás</div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="cycle-actions">
+                    <a href="{% url 'hr:cycle_detail' cycle.id %}" 
+                       class="action-button-sm primary">
+                        <i class="fas fa-eye mr-1"></i>
+                        Ver
+                    </a>
+                    
+                    {% if cycle.can_edit %}
+                        <a href="{% url 'hr:cycle_edit' cycle.id %}" 
+                           class="action-button-sm secondary">
+                            <i class="fas fa-edit mr-1"></i>
+                            Editar
+                        </a>
+                    {% endif %}
+                    
+                    <div class="relative">
+                        <button onclick="toggleCycleDropdown('{{ cycle.id }}')" 
+                                class="action-button-sm outline">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div id="cycle-dropdown-{{ cycle.id }}" class="dropdown-menu hidden">
+                            <a href="{% url 'hr:cycle_duplicate' cycle.id %}" class="dropdown-item">
+                                <i class="fas fa-copy mr-2"></i>
+                                Duplicar
+                            </a>
+                            <a href="{% url 'hr:cycle_export' cycle.id %}" class="dropdown-item">
+                                <i class="fas fa-download mr-2"></i>
+                                Exportar
+                            </a>
+                            {% if cycle.status == 'planning' %}
+                                <a href="{% url 'hr:cycle_activate' cycle.id %}" class="dropdown-item">
+                                    <i class="fas fa-play mr-2"></i>
+                                    Ativar
+                                </a>
+                            {% endif %}
+                            {% if cycle.status == 'active' %}
+                                <a href="{% url 'hr:cycle_pause' cycle.id %}" class="dropdown-item">
+                                    <i class="fas fa-pause mr-2"></i>
+                                    Pausar
+                                </a>
+                            {% endif %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'hr:cycle_participants' cycle.id %}" class="dropdown-item">
+                                <i class="fas fa-users mr-2"></i>
+                                Gerenciar Participantes
+                            </a>
+                            <a href="{% url 'hr:cycle_notifications' cycle.id %}" class="dropdown-item">
+                                <i class="fas fa-bell mr-2"></i>
+                                Notificações
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'hr:cycle_delete' cycle.id %}" 
+                               class="dropdown-item text-red-600"
+                               onclick="return confirm('Tem certeza que deseja excluir este ciclo?')">
+                                <i class="fas fa-trash mr-2"></i>
+                                Excluir
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full text-center py-12">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-calendar-alt text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum ciclo encontrado</h3>
+                <p class="text-gray-600 mb-6">Comece criando seu primeiro ciclo de avaliação.</p>
+                <button onclick="openCycleModal()" class="action-button primary">
+                    <i class="fas fa-plus mr-2"></i>
+                    Criar Primeiro Ciclo
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="flex justify-center mt-8">
+            <nav class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="pagination-link">Primeira</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">Anterior</a>
+                {% endif %}
+                
+                <span class="pagination-current">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">Próxima</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link">Última</a>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Cycle Creation Modal -->
+<div id="cycle-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeCycleModal()"></div>
+    <div class="modal-content max-w-2xl">
+        <div class="modal-header">
+            <h3 class="modal-title">Criar Novo Ciclo de Avaliação</h3>
+            <button onclick="closeCycleModal()" class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="cycle-form" method="post">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="form-label" for="cycle-name">Nome do Ciclo *</label>
+                        <input type="text" 
+                               id="cycle-name" 
+                               name="name" 
+                               class="form-input" 
+                               placeholder="Ex: Avaliação Anual 2024"
+                               required>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label" for="cycle-start">Data de Início *</label>
+                        <input type="date" 
+                               id="cycle-start" 
+                               name="start_date" 
+                               class="form-input" 
+                               required>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label" for="cycle-end">Data de Fim *</label>
+                        <input type="date" 
+                               id="cycle-end" 
+                               name="end_date" 
+                               class="form-input" 
+                               required>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label" for="cycle-type">Tipo de Ciclo</label>
+                        <select id="cycle-type" name="type" class="form-input">
+                            <option value="annual">Anual</option>
+                            <option value="quarterly">Trimestral</option>
+                            <option value="monthly">Mensal</option>
+                            <option value="project">Por Projeto</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label" for="cycle-template">Template</label>
+                        <select id="cycle-template" name="template" class="form-input">
+                            <option value="">Criar do zero</option>
+                            <option value="standard">Padrão</option>
+                            <option value="leadership">Liderança</option>
+                            <option value="technical">Técnico</option>
+                            <option value="sales">Vendas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="form-label" for="cycle-description">Descrição</label>
+                        <textarea id="cycle-description" 
+                                  name="description" 
+                                  class="form-input" 
+                                  rows="3"
+                                  placeholder="Descreva os objetivos e escopo deste ciclo de avaliação..."></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="form-label">Departamentos Participantes</label>
+                        <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                            {% for dept in departments %}
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           name="departments" 
+                                           value="{{ dept.id }}" 
+                                           class="form-checkbox mr-2">
+                                    <span class="text-sm">{{ dept.name }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <h4 class="font-semibold text-gray-900 mb-3">Fases do Ciclo</h4>
+                        <div id="phases-container">
+                            <div class="phase-item p-3 border border-gray-300 rounded-lg mb-3">
+                                <div class="flex justify-between items-center mb-2">
+                                    <input type="text" 
+                                           name="phases[0][name]" 
+                                           class="form-input flex-1 mr-3" 
+                                           placeholder="Nome da fase"
+                                           value="Preparação">
+                                    <button type="button" onclick="removePhase(0)" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="date" 
+                                           name="phases[0][start_date]" 
+                                           class="form-input" 
+                                           placeholder="Data início">
+                                    <input type="date" 
+                                           name="phases[0][end_date]" 
+                                           class="form-input" 
+                                           placeholder="Data fim">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addPhase()" class="action-button-sm outline">
+                            <i class="fas fa-plus mr-1"></i>
+                            Adicionar Fase
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeCycleModal()" class="action-button outline">Cancelar</button>
+            <button onclick="submitCycleForm()" class="action-button primary">
+                <i class="fas fa-save mr-2"></i>
+                Criar Ciclo
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let phaseIndex = 1;
+    
+    // Modal functions
+    function openCycleModal() {
+        document.getElementById('cycle-modal').classList.remove('hidden');
+    }
+    
+    function closeCycleModal() {
+        document.getElementById('cycle-modal').classList.add('hidden');
+        document.getElementById('cycle-form').reset();
+    }
+    
+    // Phase management
+    function addPhase() {
+        const container = document.getElementById('phases-container');
+        const phaseHtml = `
+            <div class="phase-item p-3 border border-gray-300 rounded-lg mb-3">
+                <div class="flex justify-between items-center mb-2">
+                    <input type="text" 
+                           name="phases[${phaseIndex}][name]" 
+                           class="form-input flex-1 mr-3" 
+                           placeholder="Nome da fase">
+                    <button type="button" onclick="removePhase(${phaseIndex})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="date" 
+                           name="phases[${phaseIndex}][start_date]" 
+                           class="form-input" 
+                           placeholder="Data início">
+                    <input type="date" 
+                           name="phases[${phaseIndex}][end_date]" 
+                           class="form-input" 
+                           placeholder="Data fim">
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', phaseHtml);
+        phaseIndex++;
+    }
+    
+    function removePhase(index) {
+        const phaseItem = document.querySelector(`input[name="phases[${index}][name]"]`).closest('.phase-item');
+        if (phaseItem) {
+            phaseItem.remove();
+        }
+    }
+    
+    // Form submission
+    function submitCycleForm() {
+        const form = document.getElementById('cycle-form');
+        const formData = new FormData(form);
+        
+        // Basic validation
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        
+        // Submit form
+        fetch('{% url "hr:cycle_create" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao criar ciclo: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao criar ciclo');
+        });
+    }
+    
+    // Dropdown toggle
+    function toggleCycleDropdown(cycleId) {
+        const dropdown = document.getElementById(`cycle-dropdown-${cycleId}`);
+        
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            if (menu.id !== `cycle-dropdown-${cycleId}`) {
+                menu.classList.add('hidden');
+            }
+        });
+        
+        dropdown.classList.toggle('hidden');
+    }
+    
+    // Quick actions
+    function importCycleTemplate() {
+        // Implement template import functionality
+        alert('Funcionalidade de importação de template será implementada.');
+    }
+    
+    function generateCycleReport() {
+        // Implement report generation
+        window.open('{% url "hr:cycle_reports" %}', '_blank');
+    }
+    
+    function manageCycleSettings() {
+        // Implement settings management
+        location.href = '{% url "hr:cycle_settings" %}';
+    }
+    
+    // Date validation
+    document.getElementById('cycle-start').addEventListener('change', function() {
+        const startDate = this.value;
+        const endDateField = document.getElementById('cycle-end');
+        
+        if (startDate) {
+            endDateField.min = startDate;
+            
+            // If end date is before start date, clear it
+            if (endDateField.value && endDateField.value < startDate) {
+                endDateField.value = '';
+            }
+        }
+    });
+    
+    // Template selection
+    document.getElementById('cycle-template').addEventListener('change', function() {
+        const template = this.value;
+        
+        if (template) {
+            // Load template phases
+            loadTemplatePhases(template);
+        }
+    });
+    
+    function loadTemplatePhases(template) {
+        const templates = {
+            'standard': [
+                { name: 'Preparação', duration: 7 },
+                { name: 'Auto-avaliação', duration: 14 },
+                { name: 'Avaliação do Gestor', duration: 14 },
+                { name: 'Calibração', duration: 7 },
+                { name: 'Feedback', duration: 7 }
+            ],
+            'leadership': [
+                { name: 'Preparação', duration: 7 },
+                { name: '360° Feedback', duration: 21 },
+                { name: 'Avaliação de Competências', duration: 14 },
+                { name: 'Avaliação Final', duration: 14 },
+                { name: 'Plano de Desenvolvimento', duration: 7 }
+            ],
+            'technical': [
+                { name: 'Preparação', duration: 7 },
+                { name: 'Avaliação Técnica', duration: 14 },
+                { name: 'Revisão de Projetos', duration: 14 },
+                { name: 'Avaliação de Soft Skills', duration: 7 },
+                { name: 'Feedback Final', duration: 7 }
+            ],
+            'sales': [
+                { name: 'Preparação', duration: 7 },
+                { name: 'Análise de Resultados', duration: 14 },
+                { name: 'Avaliação de Competências', duration: 14 },
+                { name: 'Revisão de Metas', duration: 7 },
+                { name: 'Plano de Ação', duration: 7 }
+            ]
+        };
+        
+        const templatePhases = templates[template];
+        if (templatePhases) {
+            // Clear existing phases
+            document.getElementById('phases-container').innerHTML = '';
+            phaseIndex = 0;
+            
+            // Add template phases
+            templatePhases.forEach((phase, index) => {
+                addPhase();
+                const nameInput = document.querySelector(`input[name="phases[${index}][name]"]`);
+                if (nameInput) {
+                    nameInput.value = phase.name;
+                }
+            });
+        }
+    }
+    
+    // Auto-calculate end date based on phases
+    function calculateCycleEndDate() {
+        const startDate = document.getElementById('cycle-start').value;
+        if (!startDate) return;
+        
+        const phases = document.querySelectorAll('input[name*="[end_date]"]');
+        let latestEndDate = startDate;
+        
+        phases.forEach(phase => {
+            if (phase.value && phase.value > latestEndDate) {
+                latestEndDate = phase.value;
+            }
+        });
+        
+        document.getElementById('cycle-end').value = latestEndDate;
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.relative')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+    });
+    
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any initialization code here
+        
+        // Auto-fill some default phases if creating first cycle
+        const cyclesCount = {{ cycles|length }};
+        if (cyclesCount === 0) {
+            // Show helpful hints for first-time users
+            console.log('First cycle - consider showing onboarding hints');
+        }
+    });
+</script>
+{% endblock %}

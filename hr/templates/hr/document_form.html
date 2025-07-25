@@ -1,0 +1,893 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Documento{% else %}Novo Documento{% endif %} - HR
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .file-drop-zone {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f9fafb;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .file-drop-zone.dragover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .file-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: #3b82f6;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header with Breadcrumb -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:document_list' %}" class="hover:text-blue-600">Documentos</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">
+                {% if form.instance.pk %}
+                    Editar Documento
+                {% else %}
+                    Novo Documento
+                {% endif %}
+            </span>
+        </nav>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-file-upload text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    {% if form.instance.pk %}
+                        Editar Documento
+                    {% else %}
+                        Carregar Novo Documento
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600">
+                    {% if form.instance.pk %}
+                        Atualize as informações do documento
+                    {% else %}
+                        Carregue um novo documento para o sistema HR
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Form -->
+        <div class="lg:col-span-2">
+            <form method="post" enctype="multipart/form-data" id="document-form">
+                {% csrf_token %}
+                
+                <!-- File Upload Section -->
+                {% if not form.instance.pk %}
+                    <div class="hr-form mb-8">
+                        <div class="hr-form-header">
+                            <h2>
+                                <i class="fas fa-cloud-upload-alt mr-2"></i>
+                                Upload do Arquivo
+                            </h2>
+                        </div>
+                        
+                        <div class="hr-form-body">
+                            <div class="file-drop-zone" 
+                                 onclick="document.getElementById('file-input').click()"
+                                 ondrop="handleDrop(event)" 
+                                 ondragover="handleDragOver(event)"
+                                 ondragleave="handleDragLeave(event)">
+                                <div id="drop-zone-content">
+                                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">Arraste o arquivo aqui</h3>
+                                    <p class="text-gray-600 mb-4">ou clique para selecionar</p>
+                                    <div class="text-sm text-gray-500">
+                                        Formatos aceitos: PDF, DOC, DOCX, JPG, PNG, GIF
+                                        <br>Tamanho máximo: 10MB
+                                    </div>
+                                </div>
+                                
+                                <div id="file-preview" class="hidden">
+                                    <div class="flex items-center justify-center space-x-4">
+                                        <div id="preview-container"></div>
+                                        <div class="text-left">
+                                            <div id="file-name" class="font-medium text-gray-900"></div>
+                                            <div id="file-size" class="text-sm text-gray-600"></div>
+                                            <div id="file-type" class="text-sm text-gray-500"></div>
+                                        </div>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="upload-progress"></div>
+                                    </div>
+                                    <button type="button" 
+                                            onclick="clearFile()" 
+                                            class="mt-3 action-button outline">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Remover Arquivo
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <input type="file" 
+                                   id="file-input" 
+                                   name="file" 
+                                   style="display: none;" 
+                                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                                   onchange="handleFileSelect(event)">
+                            
+                            {% if form.file.errors %}
+                                <div class="form-field-error mt-3">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.file.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Show current file for editing -->
+                    <div class="hr-form mb-8">
+                        <div class="hr-form-header">
+                            <h2>
+                                <i class="fas fa-file mr-2"></i>
+                                Arquivo Atual
+                            </h2>
+                        </div>
+                        
+                        <div class="hr-form-body">
+                            <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                                <div class="flex-shrink-0">
+                                    {% if form.instance.file_type == 'image' %}
+                                        <img src="{{ form.instance.file.url }}" 
+                                             alt="{{ form.instance.title }}" 
+                                             class="w-16 h-16 object-cover rounded-lg">
+                                    {% else %}
+                                        <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file text-blue-600 text-2xl"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900">{{ form.instance.title }}</h4>
+                                    <p class="text-sm text-gray-600">{{ form.instance.file_size|filesizeformat }}</p>
+                                    <p class="text-sm text-gray-500">{{ form.instance.file_extension|upper }}</p>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{{ form.instance.file.url }}" 
+                                       target="_blank" 
+                                       class="action-button-sm secondary">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                    <a href="{{ form.instance.file.url }}" 
+                                       download 
+                                       class="action-button-sm primary">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" 
+                                           id="replace-file" 
+                                           class="form-checkbox mr-2"
+                                           onchange="toggleFileReplacement()">
+                                    <span class="text-sm text-gray-700">Substituir arquivo atual</span>
+                                </label>
+                            </div>
+                            
+                            <div id="file-replacement" class="hidden mt-4">
+                                <div class="file-drop-zone" 
+                                     onclick="document.getElementById('new-file-input').click()"
+                                     ondrop="handleDrop(event)" 
+                                     ondragover="handleDragOver(event)"
+                                     ondragleave="handleDragLeave(event)">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                    <p class="text-gray-600">Selecione o novo arquivo</p>
+                                </div>
+                                
+                                <input type="file" 
+                                       id="new-file-input" 
+                                       name="new_file" 
+                                       style="display: none;" 
+                                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
+                                       onchange="handleFileSelect(event)">
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Document Information -->
+                <div class="hr-form mb-8">
+                    <div class="hr-form-header">
+                        <h2>
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Informações do Documento
+                        </h2>
+                    </div>
+                    
+                    <div class="hr-form-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.title.id_for_label }}">
+                                    Título do Documento
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.title|add_class:"form-input" }}
+                                {% if form.title.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.title.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.document_type.id_for_label }}">
+                                    Tipo de Documento
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.document_type|add_class:"form-input" }}
+                                {% if form.document_type.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.document_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.description.id_for_label }}">
+                                Descrição
+                            </label>
+                            {{ form.description|add_class:"form-input" }}
+                            {% if form.description.errors %}
+                                <div class="form-field-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Descreva brevemente o conteúdo do documento
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Assignment -->
+                <div class="hr-form mb-8">
+                    <div class="hr-form-header">
+                        <h2>
+                            <i class="fas fa-user mr-2"></i>
+                            Vinculação
+                        </h2>
+                    </div>
+                    
+                    <div class="hr-form-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.employee.id_for_label }}">
+                                    Funcionário
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                {{ form.employee|add_class:"form-input" }}
+                                {% if form.employee.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.employee.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-field-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Funcionário ao qual este documento pertence
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.department.id_for_label }}">
+                                    Departamento
+                                </label>
+                                {{ form.department|add_class:"form-input" }}
+                                {% if form.department.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.department.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-field-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Departamento relacionado (opcional)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Settings -->
+                <div class="hr-form mb-8">
+                    <div class="hr-form-header">
+                        <h2>
+                            <i class="fas fa-cogs mr-2"></i>
+                            Configurações
+                        </h2>
+                    </div>
+                    
+                    <div class="hr-form-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.expiry_date.id_for_label }}">
+                                    Data de Vencimento
+                                </label>
+                                {{ form.expiry_date|add_class:"form-input" }}
+                                {% if form.expiry_date.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.expiry_date.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-field-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Data em que o documento perde validade (opcional)
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.confidentiality_level.id_for_label }}">
+                                    Nível de Confidencialidade
+                                </label>
+                                {{ form.confidentiality_level|add_class:"form-input" }}
+                                {% if form.confidentiality_level.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.confidentiality_level.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="form-checkbox">
+                                {{ form.requires_approval }}
+                                <label for="{{ form.requires_approval.id_for_label }}" class="form-label">
+                                    Requer Aprovação
+                                </label>
+                                <div class="form-field-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Marque se o documento precisa ser aprovado antes de ficar ativo
+                                </div>
+                            </div>
+                            
+                            <div class="form-checkbox">
+                                {{ form.is_active }}
+                                <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                                    Documento Ativo
+                                </label>
+                            </div>
+                            
+                            {% if form.instance.pk %}
+                                <div class="form-checkbox">
+                                    {{ form.notify_expiry }}
+                                    <label for="{{ form.notify_expiry.id_for_label }}" class="form-label">
+                                        Notificar sobre Vencimento
+                                    </label>
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Enviar notificações quando o documento estiver próximo do vencimento
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags and Categories -->
+                <div class="hr-form mb-8">
+                    <div class="hr-form-header">
+                        <h2>
+                            <i class="fas fa-tags mr-2"></i>
+                            Categorização
+                        </h2>
+                    </div>
+                    
+                    <div class="hr-form-body">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.tags.id_for_label }}">
+                                Tags
+                            </label>
+                            {{ form.tags|add_class:"form-input" }}
+                            {% if form.tags.errors %}
+                                <div class="form-field-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.tags.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Adicione tags separadas por vírgula para facilitar a busca
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.notes.id_for_label }}">
+                                Observações Internas
+                            </label>
+                            {{ form.notes|add_class:"form-input" }}
+                            {% if form.notes.errors %}
+                                <div class="form-field-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-field-help">
+                                <i class="fas fa-info-circle"></i>
+                                Observações internas que não serão visíveis para o funcionário
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                    <div class="flex space-x-3">
+                        <a href="{% url 'hr:document_list' %}" class="action-button outline">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Cancelar
+                        </a>
+                        
+                        {% if form.instance.pk %}
+                            <button type="button" onclick="previewDocument()" class="action-button secondary">
+                                <i class="fas fa-eye mr-2"></i>
+                                Visualizar
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button type="button" onclick="saveDraft()" class="action-button secondary">
+                            <i class="fas fa-save mr-2"></i>
+                            Salvar Rascunho
+                        </button>
+                        
+                        <button type="submit" class="action-button primary" id="submit-btn">
+                            <i class="fas fa-check mr-2"></i>
+                            {% if form.instance.pk %}
+                                Atualizar Documento
+                            {% else %}
+                                Carregar Documento
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar with Help and Info -->
+        <div class="space-y-6">
+            <!-- Upload Help -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-question-circle text-blue-500 mr-2"></i>
+                    Guia de Upload
+                </h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-file-alt text-blue-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Formatos Aceitos:</p>
+                            <p>PDF, DOC, DOCX, JPG, PNG, GIF</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-weight-hanging text-green-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Tamanho Máximo:</p>
+                            <p>10MB por arquivo</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-shield-alt text-yellow-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Segurança:</p>
+                            <p>Todos os documentos são criptografados e armazenados com segurança</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Types Info -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Tipos de Documento
+                </h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-id-card text-blue-500"></i>
+                        <span class="text-gray-700">Identificação - RG, CPF, Passaporte</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-file-contract text-green-500"></i>
+                        <span class="text-gray-700">Contrato - Termos de trabalho</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-certificate text-yellow-500"></i>
+                        <span class="text-gray-700">Certificado - Diplomas, cursos</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-graduation-cap text-purple-500"></i>
+                        <span class="text-gray-700">Treinamento - Materiais de curso</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-chart-line text-red-500"></i>
+                        <span class="text-gray-700">Performance - Avaliações</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Status (for editing) -->
+            {% if form.instance.pk %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        Status Atual
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Status</span>
+                            <span class="status-badge status-{{ form.instance.status|lower }}">
+                                {{ form.instance.get_status_display|default:form.instance.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Criado em</span>
+                            <span class="text-sm font-medium">{{ form.instance.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Última atualização</span>
+                            <span class="text-sm font-medium">{{ form.instance.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        
+                        {% if form.instance.approved_by %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Aprovado por</span>
+                                <span class="text-sm font-medium">{{ form.instance.approved_by.get_full_name }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <a href="{% url 'hr:document_list' %}" class="w-full action-button outline text-left">
+                        <i class="fas fa-list mr-3"></i>
+                        Ver Todos os Documentos
+                    </a>
+                    
+                    {% if form.instance.pk %}
+                        <a href="{% url 'hr:document_detail' form.instance.pk %}" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-eye mr-3"></i>
+                            Ver Documento
+                        </a>
+                        
+                        <a href="{{ form.instance.file.url }}" 
+                           target="_blank" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-download mr-3"></i>
+                            Download
+                        </a>
+                    {% endif %}
+                    
+                    <button onclick="clearForm()" class="w-full action-button outline text-left">
+                        <i class="fas fa-eraser mr-3"></i>
+                        Limpar Formulário
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedFile = null;
+    
+    // Drag and drop functionality
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('dragover');
+    }
+    
+    function handleDragLeave(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelection(files[0]);
+        }
+    }
+    
+    function handleFileSelect(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileSelection(file);
+        }
+    }
+    
+    function handleFileSelection(file) {
+        selectedFile = file;
+        
+        // Validate file
+        if (!validateFile(file)) {
+            return;
+        }
+        
+        // Show preview
+        showFilePreview(file);
+        
+        // Auto-generate title if empty
+        const titleField = document.getElementById('{{ form.title.id_for_label }}');
+        if (!titleField.value) {
+            const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            titleField.value = fileName;
+        }
+    }
+    
+    function validateFile(file) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        const allowedTypes = ['application/pdf', 'application/msword', 
+                              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                              'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        
+        if (file.size > maxSize) {
+            alert('Arquivo muito grande. Tamanho máximo: 10MB');
+            return false;
+        }
+        
+        if (!allowedTypes.includes(file.type)) {
+            alert('Tipo de arquivo não permitido. Use: PDF, DOC, DOCX, JPG, PNG, GIF');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function showFilePreview(file) {
+        const dropZoneContent = document.getElementById('drop-zone-content');
+        const filePreview = document.getElementById('file-preview');
+        const previewContainer = document.getElementById('preview-container');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const fileType = document.getElementById('file-type');
+        
+        dropZoneContent.classList.add('hidden');
+        filePreview.classList.remove('hidden');
+        
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        fileType.textContent = file.type;
+        
+        // Show preview based on file type
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.className = 'file-preview';
+            previewContainer.innerHTML = '';
+            previewContainer.appendChild(img);
+        } else {
+            const icon = document.createElement('div');
+            icon.className = 'w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center';
+            icon.innerHTML = '<i class="fas fa-file text-blue-600 text-2xl"></i>';
+            previewContainer.innerHTML = '';
+            previewContainer.appendChild(icon);
+        }
+        
+        // Simulate upload progress
+        simulateUploadProgress();
+    }
+    
+    function simulateUploadProgress() {
+        const progressBar = document.getElementById('upload-progress');
+        let progress = 0;
+        
+        const interval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+            }
+            progressBar.style.width = progress + '%';
+        }, 200);
+    }
+    
+    function clearFile() {
+        selectedFile = null;
+        document.getElementById('file-input').value = '';
+        document.getElementById('new-file-input').value = '';
+        document.getElementById('drop-zone-content').classList.remove('hidden');
+        document.getElementById('file-preview').classList.add('hidden');
+        document.getElementById('upload-progress').style.width = '0%';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Toggle file replacement for editing
+    function toggleFileReplacement() {
+        const checkbox = document.getElementById('replace-file');
+        const replacement = document.getElementById('file-replacement');
+        
+        if (checkbox.checked) {
+            replacement.classList.remove('hidden');
+        } else {
+            replacement.classList.add('hidden');
+            clearFile();
+        }
+    }
+    
+    // Form submission
+    document.getElementById('document-form').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submit-btn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
+        submitBtn.disabled = true;
+        
+        // Validate required fields
+        {% if not form.instance.pk %}
+            if (!selectedFile && !document.getElementById('file-input').files[0]) {
+                e.preventDefault();
+                alert('Por favor, selecione um arquivo.');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                return;
+            }
+        {% endif %}
+    });
+    
+    // Auto-save draft functionality
+    function saveDraft() {
+        const formData = new FormData(document.getElementById('document-form'));
+        formData.append('save_draft', 'true');
+        
+        fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Rascunho salvo com sucesso!');
+            } else {
+                alert('Erro ao salvar rascunho: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao salvar rascunho');
+        });
+    }
+    
+    // Preview document
+    function previewDocument() {
+        {% if form.instance.pk %}
+            window.open('{% url "hr:document_detail" form.instance.pk %}', '_blank');
+        {% endif %}
+    }
+    
+    // Clear form
+    function clearForm() {
+        if (confirm('Tem certeza que deseja limpar todos os campos? Todas as alterações não salvas serão perdidas.')) {
+            document.getElementById('document-form').reset();
+            clearFile();
+        }
+    }
+    
+    // Auto-save functionality
+    let autoSaveTimeout;
+    const form = document.getElementById('document-form');
+    
+    form.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            saveDraft();
+        }, 30000); // Auto-save after 30 seconds of inactivity
+    });
+    
+    // Warn user before leaving page with unsaved changes
+    let formChanged = false;
+    form.addEventListener('input', function() {
+        formChanged = true;
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = 'Você tem alterações não salvas. Tem certeza que deseja sair?';
+        }
+    });
+    
+    // Mark form as saved when submitted
+    form.addEventListener('submit', function() {
+        formChanged = false;
+    });
+    
+    // Employee selection auto-fill department
+    document.getElementById('{{ form.employee.id_for_label }}').addEventListener('change', function() {
+        const employeeId = this.value;
+        if (employeeId) {
+            fetch(`/hr/api/employee/${employeeId}/department/`)
+            .then(response => response.json())
+            .then(data => {
+                const departmentField = document.getElementById('{{ form.department.id_for_label }}');
+                if (data.department_id && !departmentField.value) {
+                    departmentField.value = data.department_id;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    });
+</script>
+{% endblock %}

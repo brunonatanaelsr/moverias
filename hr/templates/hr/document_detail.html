@@ -1,0 +1,893 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ document.title }} - Documento - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .document-viewer {
+        height: 600px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .version-timeline {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .version-item {
+        position: relative;
+        padding-left: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    .version-item:before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e5e7eb;
+    }
+    
+    .version-item:last-child:before {
+        bottom: auto;
+        height: 1.5rem;
+    }
+    
+    .version-dot {
+        position: absolute;
+        left: 0;
+        top: 0.25rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #3b82f6;
+        border: 2px solid white;
+        box-shadow: 0 0 0 2px #e5e7eb;
+    }
+    
+    .approval-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .approval-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 120px;
+    }
+    
+    .approval-arrow {
+        font-size: 1.5rem;
+        color: #6b7280;
+        margin: 0 0.5rem;
+    }
+    
+    .comments-section {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:document_list' %}" class="hover:text-blue-600">Documentos</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">{{ document.title|truncatechars:40 }}</span>
+        </nav>
+        
+        <div class="flex justify-between items-start">
+            <div class="flex items-center space-x-6">
+                <div class="flex-shrink-0">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-{{ document.get_type_icon }} text-white text-3xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ document.title }}</h1>
+                    <div class="flex items-center space-x-4 mb-2">
+                        <span class="document-type-badge type-{{ document.type|lower }}">
+                            {{ document.get_type_display|default:document.type }}
+                        </span>
+                        <span class="status-badge status-{{ document.status|lower }}">
+                            <i class="fas fa-circle mr-1"></i>
+                            {{ document.get_status_display|default:document.status }}
+                        </span>
+                        {% if document.confidentiality_level %}
+                            <span class="confidentiality-badge level-{{ document.confidentiality_level|lower }}">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                {{ document.get_confidentiality_display|default:document.confidentiality_level }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-user mr-1"></i>
+                        <a href="{% url 'hr:employee_detail' document.employee.id %}" class="hover:text-blue-600">
+                            {{ document.employee.get_full_name }}
+                        </a>
+                        {% if document.employee.department %}
+                            • {{ document.employee.department.name }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                {% if document.can_edit %}
+                    <a href="{% url 'hr:document_edit' document.id %}" class="action-button secondary">
+                        <i class="fas fa-edit mr-2"></i>
+                        Editar
+                    </a>
+                {% endif %}
+                
+                <a href="{{ document.file.url }}" download class="action-button primary">
+                    <i class="fas fa-download mr-2"></i>
+                    Download
+                </a>
+                
+                <div class="dropdown-menu">
+                    <button class="action-button outline dropdown-trigger">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="{{ document.file.url }}" target="_blank" class="dropdown-item">
+                            <i class="fas fa-external-link-alt mr-2"></i>Abrir em Nova Aba
+                        </a>
+                        <button onclick="shareDocument()" class="dropdown-item">
+                            <i class="fas fa-share mr-2"></i>Compartilhar
+                        </button>
+                        <button onclick="printDocument()" class="dropdown-item">
+                            <i class="fas fa-print mr-2"></i>Imprimir
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        {% if document.status == 'pending' and perms.hr.can_approve_documents %}
+                            <a href="{% url 'hr:document_approve' document.id %}" class="dropdown-item text-green-600">
+                                <i class="fas fa-check mr-2"></i>Aprovar
+                            </a>
+                        {% endif %}
+                        {% if document.can_archive %}
+                            <button onclick="archiveDocument()" class="dropdown-item text-yellow-600">
+                                <i class="fas fa-archive mr-2"></i>Arquivar
+                            </button>
+                        {% endif %}
+                        {% if document.can_delete %}
+                            <button onclick="deleteDocument()" class="dropdown-item text-red-600">
+                                <i class="fas fa-trash mr-2"></i>Excluir
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert for Expiring Document -->
+    {% if document.is_expiring %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-yellow-600 mr-3"></i>
+                <div>
+                    <h3 class="text-yellow-800 font-medium">Documento próximo do vencimento</h3>
+                    <p class="text-yellow-700 text-sm">
+                        Este documento vence em {{ document.expiry_date|date:"d/m/Y" }}
+                        ({{ document.expiry_date|timeuntil }})
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% elif document.is_expired %}
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+            <div class="flex items-center">
+                <i class="fas fa-times-circle text-red-600 mr-3"></i>
+                <div>
+                    <h3 class="text-red-800 font-medium">Documento vencido</h3>
+                    <p class="text-red-700 text-sm">
+                        Este documento venceu em {{ document.expiry_date|date:"d/m/Y" }}
+                        ({{ document.expiry_date|timesince }} atrás)
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Document Viewer -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-eye mr-2"></i>
+                            Visualização do Documento
+                        </h2>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleFullscreen()" class="action-button-sm secondary">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button onclick="zoomIn()" class="action-button-sm secondary">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button onclick="zoomOut()" class="action-button-sm secondary">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="document-viewer" id="document-viewer">
+                    {% if document.file_type == 'pdf' %}
+                        <iframe src="{{ document.file.url }}" 
+                                width="100%" 
+                                height="100%" 
+                                frameborder="0">
+                            <p>Seu navegador não suporta visualização de PDF. 
+                               <a href="{{ document.file.url }}" target="_blank">Clique aqui para abrir o arquivo</a>
+                            </p>
+                        </iframe>
+                    {% elif document.file_type == 'image' %}
+                        <div class="flex items-center justify-center h-full bg-gray-100">
+                            <img src="{{ document.file.url }}" 
+                                 alt="{{ document.title }}" 
+                                 class="max-w-full max-h-full object-contain">
+                        </div>
+                    {% else %}
+                        <div class="flex flex-col items-center justify-center h-full bg-gray-50">
+                            <i class="fas fa-file text-6xl text-gray-400 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">{{ document.title }}</h3>
+                            <p class="text-gray-600 mb-4">Tipo: {{ document.file_extension|upper }}</p>
+                            <p class="text-gray-600 mb-6">Tamanho: {{ document.file_size|filesizeformat }}</p>
+                            <div class="flex space-x-3">
+                                <a href="{{ document.file.url }}" 
+                                   target="_blank" 
+                                   class="action-button primary">
+                                    <i class="fas fa-external-link-alt mr-2"></i>
+                                    Abrir Arquivo
+                                </a>
+                                <a href="{{ document.file.url }}" 
+                                   download 
+                                   class="action-button secondary">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Document Information -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Informações do Documento
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                        <p class="text-gray-900">{{ document.title }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                        <p class="text-gray-900">{{ document.get_type_display|default:document.type }}</p>
+                    </div>
+                    
+                    {% if document.description %}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <p class="text-gray-900">{{ document.description }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Funcionário</label>
+                        <p class="text-gray-900">
+                            <a href="{% url 'hr:employee_detail' document.employee.id %}" class="hover:text-blue-600">
+                                {{ document.employee.get_full_name }}
+                            </a>
+                        </p>
+                    </div>
+                    
+                    {% if document.department %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                            <p class="text-gray-900">
+                                <a href="{% url 'hr:department_detail' document.department.id %}" class="hover:text-blue-600">
+                                    {{ document.department.name }}
+                                </a>
+                            </p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data de Upload</label>
+                        <p class="text-gray-900">{{ document.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    {% if document.expiry_date %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Vencimento</label>
+                            <p class="text-gray-900 {% if document.is_expiring %}text-yellow-600{% elif document.is_expired %}text-red-600{% endif %}">
+                                {{ document.expiry_date|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tamanho do Arquivo</label>
+                        <p class="text-gray-900">{{ document.file_size|filesizeformat }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Formato</label>
+                        <p class="text-gray-900">{{ document.file_extension|upper }}</p>
+                    </div>
+                    
+                    {% if document.tags %}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in document.tags_list %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                                        {{ tag }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-comments mr-2"></i>
+                        Comentários ({{ document.comments.count }})
+                    </h2>
+                    <button onclick="toggleCommentForm()" class="action-button primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Adicionar Comentário
+                    </button>
+                </div>
+                
+                <!-- Comment Form -->
+                <div id="comment-form" class="hidden mb-6 p-4 bg-gray-50 rounded-lg">
+                    <form id="add-comment-form">
+                        {% csrf_token %}
+                        <textarea id="comment-text" 
+                                  class="form-input w-full" 
+                                  rows="3" 
+                                  placeholder="Adicione seu comentário..."></textarea>
+                        <div class="flex justify-end space-x-3 mt-3">
+                            <button type="button" onclick="toggleCommentForm()" class="action-button outline">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="action-button primary">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Comentar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Comments List -->
+                <div class="comments-section" id="comments-list">
+                    {% for comment in document.comments.all %}
+                        <div class="comment-item border-b border-gray-200 pb-4 mb-4 last:border-b-0">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    {% if comment.author.photo %}
+                                        <img src="{{ comment.author.photo.url }}" 
+                                             alt="{{ comment.author.get_full_name }}" 
+                                             class="w-8 h-8 rounded-full object-cover">
+                                    {% else %}
+                                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-gray-600 text-sm"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-medium text-gray-900">{{ comment.author.get_full_name }}</span>
+                                        <span class="text-sm text-gray-500">{{ comment.created_at|timesince }} atrás</span>
+                                    </div>
+                                    <p class="text-gray-700">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-comments text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-gray-600">Nenhum comentário ainda</p>
+                            <p class="text-gray-500 text-sm">Seja o primeiro a comentar neste documento</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <a href="{{ document.file.url }}" 
+                       target="_blank" 
+                       class="w-full action-button primary text-left">
+                        <i class="fas fa-external-link-alt mr-3"></i>
+                        Abrir em Nova Aba
+                    </a>
+                    
+                    <a href="{{ document.file.url }}" 
+                       download 
+                       class="w-full action-button secondary text-left">
+                        <i class="fas fa-download mr-3"></i>
+                        Download
+                    </a>
+                    
+                    {% if document.can_edit %}
+                        <a href="{% url 'hr:document_edit' document.id %}" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-edit mr-3"></i>
+                            Editar Documento
+                        </a>
+                    {% endif %}
+                    
+                    <button onclick="shareDocument()" 
+                            class="w-full action-button outline text-left">
+                        <i class="fas fa-share mr-3"></i>
+                        Compartilhar
+                    </button>
+                    
+                    {% if document.status == 'pending' and perms.hr.can_approve_documents %}
+                        <a href="{% url 'hr:document_approve' document.id %}" 
+                           class="w-full action-button success text-left">
+                            <i class="fas fa-check mr-3"></i>
+                            Aprovar Documento
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Document Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Status e Informações
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Status</span>
+                        <span class="status-badge status-{{ document.status|lower }}">
+                            {{ document.get_status_display|default:document.status }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Confidencialidade</span>
+                        <span class="confidentiality-badge level-{{ document.confidentiality_level|lower }}">
+                            {{ document.get_confidentiality_display|default:document.confidentiality_level }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Criado em</span>
+                        <span class="text-sm font-medium">{{ document.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Última atualização</span>
+                        <span class="text-sm font-medium">{{ document.updated_at|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    {% if document.approved_by %}
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Aprovado por</span>
+                            <span class="text-sm font-medium">{{ document.approved_by.get_full_name }}</span>
+                        </div>
+                        
+                        {% if document.approved_at %}
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Data de aprovação</span>
+                                <span class="text-sm font-medium">{{ document.approved_at|date:"d/m/Y" }}</span>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Downloads</span>
+                        <span class="text-sm font-medium">{{ document.download_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Flow -->
+            {% if document.requires_approval %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-route text-green-500 mr-2"></i>
+                        Fluxo de Aprovação
+                    </h3>
+                    
+                    <div class="approval-flow">
+                        <div class="approval-step">
+                            <div class="w-12 h-12 rounded-full {% if document.status == 'pending' %}bg-yellow-100 text-yellow-600{% else %}bg-green-100 text-green-600{% endif %} flex items-center justify-center mb-2">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <span class="text-xs text-center">Pendente</span>
+                        </div>
+                        
+                        <i class="fas fa-arrow-right approval-arrow"></i>
+                        
+                        <div class="approval-step">
+                            <div class="w-12 h-12 rounded-full {% if document.status == 'approved' %}bg-green-100 text-green-600{% else %}bg-gray-100 text-gray-400{% endif %} flex items-center justify-center mb-2">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <span class="text-xs text-center">Aprovado</span>
+                        </div>
+                        
+                        <i class="fas fa-arrow-right approval-arrow"></i>
+                        
+                        <div class="approval-step">
+                            <div class="w-12 h-12 rounded-full {% if document.is_active %}bg-blue-100 text-blue-600{% else %}bg-gray-100 text-gray-400{% endif %} flex items-center justify-center mb-2">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <span class="text-xs text-center">Ativo</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Version History -->
+            {% if document.versions.exists %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-history text-purple-500 mr-2"></i>
+                        Histórico de Versões
+                    </h3>
+                    
+                    <div class="version-timeline">
+                        {% for version in document.versions.all %}
+                            <div class="version-item">
+                                <div class="version-dot {% if forloop.first %}bg-blue-600{% else %}bg-gray-400{% endif %}"></div>
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="font-medium text-gray-900">
+                                            Versão {{ version.version_number }}
+                                            {% if forloop.first %}(Atual){% endif %}
+                                        </span>
+                                        <span class="text-sm text-gray-500">{{ version.created_at|date:"d/m/Y" }}</span>
+                                    </div>
+                                    {% if version.change_notes %}
+                                        <p class="text-sm text-gray-600 mb-2">{{ version.change_notes }}</p>
+                                    {% endif %}
+                                    <div class="flex space-x-2">
+                                        <a href="{{ version.file.url }}" 
+                                           target="_blank" 
+                                           class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fas fa-eye mr-1"></i>Ver
+                                        </a>
+                                        <a href="{{ version.file.url }}" 
+                                           download 
+                                           class="text-green-600 hover:text-green-800 text-sm">
+                                            <i class="fas fa-download mr-1"></i>Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Related Documents -->
+            {% if related_documents %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-link text-blue-500 mr-2"></i>
+                        Documentos Relacionados
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        {% for related in related_documents %}
+                            <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-{{ related.get_type_icon }} text-gray-500"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">
+                                        <a href="{% url 'hr:document_detail' related.id %}" class="hover:text-blue-600">
+                                            {{ related.title }}
+                                        </a>
+                                    </p>
+                                    <p class="text-xs text-gray-500">{{ related.get_type_display }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Compartilhar Documento</h3>
+            <button onclick="closeShareModal()" class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="space-y-4">
+                <div>
+                    <label class="form-label">E-mail do destinatário</label>
+                    <input type="email" id="share-email" class="form-input" placeholder="email@exemplo.com">
+                </div>
+                <div>
+                    <label class="form-label">Mensagem (opcional)</label>
+                    <textarea id="share-message" class="form-input" rows="3" placeholder="Adicione uma mensagem..."></textarea>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="share-link-only" class="form-checkbox mr-2">
+                    <label for="share-link-only" class="text-sm text-gray-700">Enviar apenas link (não anexar arquivo)</label>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button onclick="closeShareModal()" class="action-button outline">Cancelar</button>
+                    <button onclick="sendShare()" class="action-button primary">
+                        <i class="fas fa-share mr-2"></i>
+                        Compartilhar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Document viewer controls
+    function toggleFullscreen() {
+        const viewer = document.getElementById('document-viewer');
+        if (viewer.requestFullscreen) {
+            viewer.requestFullscreen();
+        } else if (viewer.webkitRequestFullscreen) {
+            viewer.webkitRequestFullscreen();
+        } else if (viewer.msRequestFullscreen) {
+            viewer.msRequestFullscreen();
+        }
+    }
+    
+    function zoomIn() {
+        const iframe = document.querySelector('#document-viewer iframe');
+        const img = document.querySelector('#document-viewer img');
+        
+        if (iframe) {
+            iframe.style.transform = iframe.style.transform ? 
+                iframe.style.transform.replace(/scale\([^)]*\)/, 'scale(1.2)') : 
+                'scale(1.2)';
+        } else if (img) {
+            img.style.transform = img.style.transform ? 
+                img.style.transform.replace(/scale\([^)]*\)/, 'scale(1.2)') : 
+                'scale(1.2)';
+        }
+    }
+    
+    function zoomOut() {
+        const iframe = document.querySelector('#document-viewer iframe');
+        const img = document.querySelector('#document-viewer img');
+        
+        if (iframe) {
+            iframe.style.transform = iframe.style.transform ? 
+                iframe.style.transform.replace(/scale\([^)]*\)/, 'scale(0.8)') : 
+                'scale(0.8)';
+        } else if (img) {
+            img.style.transform = img.style.transform ? 
+                img.style.transform.replace(/scale\([^)]*\)/, 'scale(0.8)') : 
+                'scale(0.8)';
+        }
+    }
+    
+    // Comments functionality
+    function toggleCommentForm() {
+        const form = document.getElementById('comment-form');
+        form.classList.toggle('hidden');
+        
+        if (!form.classList.contains('hidden')) {
+            document.getElementById('comment-text').focus();
+        }
+    }
+    
+    document.getElementById('add-comment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const commentText = document.getElementById('comment-text').value.trim();
+        if (!commentText) {
+            alert('Por favor, digite um comentário.');
+            return;
+        }
+        
+        fetch(`/hr/documents/{{ document.id }}/comment/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: commentText
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Reload to show new comment
+            } else {
+                alert('Erro ao adicionar comentário: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao adicionar comentário');
+        });
+    });
+    
+    // Share functionality
+    function shareDocument() {
+        document.getElementById('share-modal').style.display = 'flex';
+    }
+    
+    function closeShareModal() {
+        document.getElementById('share-modal').style.display = 'none';
+        document.getElementById('share-email').value = '';
+        document.getElementById('share-message').value = '';
+        document.getElementById('share-link-only').checked = false;
+    }
+    
+    function sendShare() {
+        const email = document.getElementById('share-email').value;
+        const message = document.getElementById('share-message').value;
+        const linkOnly = document.getElementById('share-link-only').checked;
+        
+        if (!email) {
+            alert('Por favor, insira um e-mail válido.');
+            return;
+        }
+        
+        fetch(`/hr/documents/{{ document.id }}/share/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: email,
+                message: message,
+                link_only: linkOnly
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Documento compartilhado com sucesso!');
+                closeShareModal();
+            } else {
+                alert('Erro ao compartilhar documento: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao compartilhar documento.');
+        });
+    }
+    
+    // Other actions
+    function printDocument() {
+        window.print();
+    }
+    
+    function archiveDocument() {
+        if (confirm('Tem certeza que deseja arquivar este documento?')) {
+            fetch(`/hr/documents/{{ document.id }}/archive/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Documento arquivado com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao arquivar documento: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao arquivar documento.');
+            });
+        }
+    }
+    
+    function deleteDocument() {
+        if (confirm('Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.')) {
+            fetch(`/hr/documents/{{ document.id }}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Documento excluído com sucesso!');
+                    window.location.href = '{% url "hr:document_list" %}';
+                } else {
+                    alert('Erro ao excluir documento.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao excluir documento.');
+            });
+        }
+    }
+    
+    // Dropdown functionality
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+        
+        if (e.target.closest('.dropdown-trigger')) {
+            e.preventDefault();
+            const dropdown = e.target.closest('.dropdown-menu').querySelector('.dropdown-content');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+    });
+    
+    // Track document view
+    fetch(`/hr/documents/{{ document.id }}/view/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    });
+    
+    // Auto-refresh for pending approval documents
+    {% if document.status == 'pending' %}
+        setInterval(function() {
+            fetch(`/hr/documents/{{ document.id }}/status/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== '{{ document.status }}') {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }, 30000); // Check every 30 seconds
+    {% endif %}
+</script>
+{% endblock %}

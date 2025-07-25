@@ -1,0 +1,884 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ department.name }} - Departamento - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:department_list' %}" class="hover:text-blue-600">Departamentos</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">{{ department.name }}</span>
+        </nav>
+        
+        <div class="flex justify-between items-start">
+            <div class="flex items-center space-x-6">
+                <div class="flex-shrink-0">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-building text-white text-3xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ department.name }}</h1>
+                    {% if department.code %}
+                        <div class="text-lg text-gray-600 mb-2">
+                            <i class="fas fa-tag mr-2"></i>{{ department.code }}
+                        </div>
+                    {% endif %}
+                    <div class="flex items-center space-x-4">
+                        <span class="status-badge status-{% if department.is_active %}active{% else %}inactive{% endif %}">
+                            <i class="fas fa-circle mr-1"></i>
+                            {% if department.is_active %}Ativo{% else %}Inativo{% endif %}
+                        </span>
+                        {% if department.manager %}
+                            <div class="text-sm text-gray-600">
+                                <i class="fas fa-user-tie mr-1"></i>
+                                Gerente: <span class="font-medium">{{ department.manager.get_full_name }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button onclick="exportDepartmentData()" class="action-button secondary">
+                    <i class="fas fa-download mr-2"></i>
+                    Exportar
+                </button>
+                <a href="{% url 'hr:department_edit' department.id %}" class="action-button primary">
+                    <i class="fas fa-edit mr-2"></i>
+                    Editar
+                </a>
+                <div class="dropdown-menu">
+                    <button class="action-button outline dropdown-trigger">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="{% url 'hr:department_duplicate' department.id %}" class="dropdown-item">
+                            <i class="fas fa-copy mr-2"></i>Duplicar Departamento
+                        </a>
+                        <a href="{% url 'hr:department_hierarchy' department.id %}" class="dropdown-item">
+                            <i class="fas fa-sitemap mr-2"></i>Ver Hierarquia
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <button onclick="toggleStatus()" class="dropdown-item">
+                            <i class="fas fa-power-off mr-2"></i>
+                            {% if department.is_active %}Desativar{% else %}Ativar{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="stats-card bg-gradient-to-r from-blue-500 to-blue-600">
+            <div class="stats-card-content">
+                <div class="stats-card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stats-card-info">
+                    <div class="stats-card-value">{{ department.employee_count|default:0 }}</div>
+                    <div class="stats-card-label">Funcionários</div>
+                </div>
+            </div>
+            <div class="stats-card-trend">
+                <i class="fas fa-arrow-up text-green-400"></i>
+                <span class="text-green-400">+2 este mês</span>
+            </div>
+        </div>
+
+        <div class="stats-card bg-gradient-to-r from-green-500 to-green-600">
+            <div class="stats-card-content">
+                <div class="stats-card-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stats-card-info">
+                    <div class="stats-card-value">{{ department.positions_count|default:0 }}</div>
+                    <div class="stats-card-label">Cargos</div>
+                </div>
+            </div>
+            <div class="stats-card-trend">
+                <i class="fas fa-minus text-gray-400"></i>
+                <span class="text-gray-400">Sem alteração</span>
+            </div>
+        </div>
+
+        <div class="stats-card bg-gradient-to-r from-yellow-500 to-yellow-600">
+            <div class="stats-card-content">
+                <div class="stats-card-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <div class="stats-card-info">
+                    <div class="stats-card-value">{{ department.budget|floatformat:0|default:"-" }}</div>
+                    <div class="stats-card-label">Orçamento</div>
+                </div>
+            </div>
+            <div class="stats-card-trend">
+                <i class="fas fa-chart-line text-blue-400"></i>
+                <span class="text-blue-400">85% utilizado</span>
+            </div>
+        </div>
+
+        <div class="stats-card bg-gradient-to-r from-purple-500 to-purple-600">
+            <div class="stats-card-content">
+                <div class="stats-card-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stats-card-info">
+                    <div class="stats-card-value">{{ department.avg_performance|floatformat:1|default:"-" }}</div>
+                    <div class="stats-card-label">Performance</div>
+                </div>
+            </div>
+            <div class="stats-card-trend">
+                <i class="fas fa-arrow-up text-green-400"></i>
+                <span class="text-green-400">+0.3 este mês</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Tabs -->
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-8" aria-label="Tabs">
+                <button onclick="showTab('overview')" 
+                        class="tab-button active" 
+                        id="overview-tab">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Visão Geral
+                </button>
+                <button onclick="showTab('employees')" 
+                        class="tab-button" 
+                        id="employees-tab">
+                    <i class="fas fa-users mr-2"></i>
+                    Funcionários ({{ department.employee_count|default:0 }})
+                </button>
+                <button onclick="showTab('positions')" 
+                        class="tab-button" 
+                        id="positions-tab">
+                    <i class="fas fa-briefcase mr-2"></i>
+                    Cargos ({{ department.positions_count|default:0 }})
+                </button>
+                <button onclick="showTab('budget')" 
+                        class="tab-button" 
+                        id="budget-tab">
+                    <i class="fas fa-dollar-sign mr-2"></i>
+                    Orçamento
+                </button>
+                <button onclick="showTab('settings')" 
+                        class="tab-button" 
+                        id="settings-tab">
+                    <i class="fas fa-cog mr-2"></i>
+                    Configurações
+                </button>
+            </nav>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview-content" class="tab-content active">
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Department Info -->
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Informações do Departamento</h3>
+                            <div class="space-y-4">
+                                {% if department.description %}
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                                        <p class="text-gray-900">{{ department.description }}</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Centro de Custo</label>
+                                        <p class="text-gray-900">{{ department.cost_center|default:"-" }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Localização</label>
+                                        <p class="text-gray-900">{{ department.location|default:"-" }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                                        <p class="text-gray-900">{{ department.phone|default:"-" }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                                        <p class="text-gray-900">{{ department.email|default:"-" }}</p>
+                                    </div>
+                                </div>
+                                
+                                {% if department.working_hours %}
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Horário de Funcionamento</label>
+                                        <p class="text-gray-900">{{ department.working_hours }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Manager Info -->
+                        {% if department.manager %}
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Gerente do Departamento</h3>
+                                <div class="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        {% if department.manager.photo %}
+                                            <img src="{{ department.manager.photo.url }}" 
+                                                 alt="{{ department.manager.get_full_name }}" 
+                                                 class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-user text-gray-600"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-medium text-gray-900">
+                                            <a href="{% url 'hr:employee_detail' department.manager.id %}" 
+                                               class="hover:text-blue-600">
+                                                {{ department.manager.get_full_name }}
+                                            </a>
+                                        </h4>
+                                        <p class="text-sm text-gray-600">{{ department.manager.position.title|default:"Gerente" }}</p>
+                                        <p class="text-xs text-gray-500">{{ department.manager.email }}</p>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <a href="{% url 'hr:employee_detail' department.manager.id %}" 
+                                           class="action-button-sm primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="mailto:{{ department.manager.email }}" 
+                                           class="action-button-sm secondary">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Charts and Metrics -->
+                    <div class="space-y-6">
+                        <!-- Employee Distribution Chart -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Distribuição por Cargo</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <canvas id="positionsChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Atividades Recentes</h3>
+                            <div class="space-y-3">
+                                {% for activity in recent_activities|slice:":5" %}
+                                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-{{ activity.icon|default:'info' }} text-blue-600 text-xs"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                                            <p class="text-xs text-gray-500">{{ activity.created_at|timesince }} atrás</p>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-sm text-gray-500 text-center py-4">Nenhuma atividade recente</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Tab -->
+        <div id="employees-content" class="tab-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Funcionários do Departamento</h3>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'hr:employee_create' %}?department={{ department.id }}" 
+                           class="action-button primary">
+                            <i class="fas fa-plus mr-2"></i>
+                            Adicionar Funcionário
+                        </a>
+                        <a href="{% url 'hr:employee_list' %}?department={{ department.id }}" 
+                           class="action-button outline">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for employee in department.employees.all|slice:":9" %}
+                        <div class="employee-card">
+                            <div class="employee-card-header">
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0">
+                                        {% if employee.photo %}
+                                            <img src="{{ employee.photo.url }}" 
+                                                 alt="{{ employee.get_full_name }}" 
+                                                 class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-user text-gray-600"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-medium text-gray-900 truncate">
+                                            <a href="{% url 'hr:employee_detail' employee.id %}" 
+                                               class="hover:text-blue-600">
+                                                {{ employee.get_full_name }}
+                                            </a>
+                                        </h4>
+                                        <p class="text-sm text-gray-600 truncate">{{ employee.position.title|default:"-" }}</p>
+                                        <p class="text-xs text-gray-500">{{ employee.employee_id }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="employee-card-body">
+                                <div class="flex justify-between items-center">
+                                    <span class="status-badge status-{{ employee.status|lower }}">
+                                        {{ employee.get_status_display|default:employee.status }}
+                                    </span>
+                                    <div class="flex space-x-1">
+                                        <a href="{% url 'hr:employee_detail' employee.id %}" 
+                                           class="action-button-sm primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="mailto:{{ employee.email }}" 
+                                           class="action-button-sm secondary">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-span-full">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h3 class="empty-state-title">Nenhum funcionário encontrado</h3>
+                                <p class="empty-state-description">
+                                    Este departamento ainda não possui funcionários cadastrados.
+                                </p>
+                                <div class="empty-state-actions">
+                                    <a href="{% url 'hr:employee_create' %}?department={{ department.id }}" 
+                                       class="action-button primary">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Adicionar Primeiro Funcionário
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Positions Tab -->
+        <div id="positions-content" class="tab-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900">Cargos do Departamento</h3>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'hr:position_create' %}?department={{ department.id }}" 
+                           class="action-button primary">
+                            <i class="fas fa-plus mr-2"></i>
+                            Criar Cargo
+                        </a>
+                        <a href="{% url 'hr:position_list' %}?department={{ department.id }}" 
+                           class="action-button outline">
+                            <i class="fas fa-external-link-alt mr-2"></i>
+                            Ver Todos
+                        </a>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    {% for position in department.positions.all %}
+                        <div class="position-card">
+                            <div class="position-card-header">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="text-lg font-medium text-gray-900">
+                                            <a href="{% url 'hr:position_detail' position.id %}" 
+                                               class="hover:text-blue-600">
+                                                {{ position.title }}
+                                            </a>
+                                        </h4>
+                                        {% if position.code %}
+                                            <p class="text-sm text-gray-600">{{ position.code }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="position-level-badge level-{{ position.level|lower }}">
+                                            {{ position.get_level_display|default:position.level }}
+                                        </span>
+                                        <span class="status-badge status-{{ position.status|lower }}">
+                                            {{ position.get_status_display|default:position.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="position-card-body">
+                                {% if position.description %}
+                                    <p class="text-gray-600 mb-4">{{ position.description|truncatewords:20 }}</p>
+                                {% endif %}
+                                
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-blue-600">{{ position.employee_count|default:0 }}</div>
+                                        <div class="text-sm text-gray-600">Funcionários</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold text-yellow-600">{{ position.open_positions|default:0 }}</div>
+                                        <div class="text-sm text-gray-600">Vagas</div>
+                                    </div>
+                                    <div class="text-center">
+                                        {% if position.salary_range_min and position.salary_range_max %}
+                                            <div class="text-sm font-bold text-green-600">
+                                                R$ {{ position.salary_range_min|floatformat:0 }}-{{ position.salary_range_max|floatformat:0 }}
+                                            </div>
+                                            <div class="text-sm text-gray-600">Faixa Salarial</div>
+                                        {% else %}
+                                            <div class="text-sm text-gray-500">-</div>
+                                            <div class="text-sm text-gray-600">Faixa Salarial</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <h3 class="empty-state-title">Nenhum cargo encontrado</h3>
+                            <p class="empty-state-description">
+                                Este departamento ainda não possui cargos cadastrados.
+                            </p>
+                            <div class="empty-state-actions">
+                                <a href="{% url 'hr:position_create' %}?department={{ department.id }}" 
+                                   class="action-button primary">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Criar Primeiro Cargo
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Tab -->
+        <div id="budget-content" class="tab-content">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-6">Gestão Orçamentária</h3>
+                
+                {% if department.budget %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Budget Overview -->
+                        <div class="space-y-6">
+                            <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6">
+                                <h4 class="text-lg font-semibold text-green-900 mb-4">Orçamento Anual</h4>
+                                <div class="text-3xl font-bold text-green-700 mb-2">
+                                    R$ {{ department.budget|floatformat:2 }}
+                                </div>
+                                <div class="text-sm text-green-600">Aprovado para {{ current_year }}</div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Utilização do Orçamento</label>
+                                    <div class="bg-gray-200 rounded-full h-3">
+                                        <div class="bg-blue-600 h-3 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-sm text-gray-600 mt-1">
+                                        <span>R$ {{ budget_used|floatformat:2|default:"0" }} utilizado</span>
+                                        <span>65%</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                                        <div class="text-xl font-bold text-blue-700">R$ {{ budget_remaining|floatformat:2|default:"0" }}</div>
+                                        <div class="text-sm text-blue-600">Disponível</div>
+                                    </div>
+                                    <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                                        <div class="text-xl font-bold text-yellow-700">R$ {{ monthly_burn|floatformat:2|default:"0" }}</div>
+                                        <div class="text-sm text-yellow-600">Gasto Mensal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Budget Chart -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">Evolução Mensal</h4>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <canvas id="budgetChart" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <h3 class="empty-state-title">Orçamento não definido</h3>
+                        <p class="empty-state-description">
+                            Este departamento ainda não possui um orçamento configurado.
+                        </p>
+                        <div class="empty-state-actions">
+                            <a href="{% url 'hr:department_edit' department.id %}" 
+                               class="action-button primary">
+                                <i class="fas fa-edit mr-2"></i>
+                                Definir Orçamento
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-content" class="tab-content">
+            <div class="p-6 space-y-8">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6">Configurações do Departamento</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Basic Settings -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Configurações Básicas</h4>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-900">Status do Departamento</label>
+                                        <p class="text-sm text-gray-600">Controla se o departamento está ativo no sistema</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" 
+                                               class="sr-only peer" 
+                                               {% if department.is_active %}checked{% endif %}
+                                               onchange="toggleDepartmentStatus()">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-900">Pode Contratar</label>
+                                        <p class="text-sm text-gray-600">Permite que o departamento contrate novos funcionários</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" 
+                                               class="sr-only peer" 
+                                               {% if department.can_hire %}checked{% endif %}
+                                               onchange="toggleHiringPermission()">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hierarchy Settings -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Hierarquia</h4>
+                            <div class="space-y-4">
+                                {% if department.parent_department %}
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700">Departamento Pai</label>
+                                        <div class="mt-1 flex items-center space-x-3">
+                                            <div class="flex-1">
+                                                <a href="{% url 'hr:department_detail' department.parent_department.id %}" 
+                                                   class="text-blue-600 hover:text-blue-800 font-medium">
+                                                    {{ department.parent_department.name }}
+                                                </a>
+                                            </div>
+                                            <a href="{% url 'hr:department_edit' department.id %}" 
+                                               class="action-button-sm secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if department.subdepartments.exists %}
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700">Subdepartamentos</label>
+                                        <div class="mt-2 space-y-2">
+                                            {% for subdept in department.subdepartments.all %}
+                                                <div class="flex items-center justify-between p-3 bg-white rounded-lg border">
+                                                    <a href="{% url 'hr:department_detail' subdept.id %}" 
+                                                       class="text-blue-600 hover:text-blue-800 font-medium">
+                                                        {{ subdept.name }}
+                                                    </a>
+                                                    <span class="text-sm text-gray-500">
+                                                        {{ subdept.employee_count|default:0 }} funcionários
+                                                    </span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Audit Information -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-md font-semibold text-gray-900 mb-4">Informações de Auditoria</h4>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <label class="font-medium text-gray-700">Criado em</label>
+                                    <p class="text-gray-900">{{ department.created_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                                <div>
+                                    <label class="font-medium text-gray-700">Última atualização</label>
+                                    <p class="text-gray-900">{{ department.updated_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                                {% if department.created_by %}
+                                    <div>
+                                        <label class="font-medium text-gray-700">Criado por</label>
+                                        <p class="text-gray-900">{{ department.created_by.get_full_name }}</p>
+                                    </div>
+                                {% endif %}
+                                {% if department.updated_by %}
+                                    <div>
+                                        <label class="font-medium text-gray-700">Atualizado por</label>
+                                        <p class="text-gray-900">{{ department.updated_by.get_full_name }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Tab functionality
+    function showTab(tabName) {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        document.getElementById(tabName + '-content').classList.add('active');
+        document.getElementById(tabName + '-tab').classList.add('active');
+    }
+    
+    // Initialize charts when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCharts();
+    });
+    
+    function initializeCharts() {
+        // Positions Chart
+        const positionsCtx = document.getElementById('positionsChart');
+        if (positionsCtx) {
+            new Chart(positionsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Júnior', 'Pleno', 'Sênior', 'Coordenador', 'Gerente'],
+                    datasets: [{
+                        data: [15, 25, 20, 8, 5],
+                        backgroundColor: [
+                            '#60A5FA',
+                            '#34D399',
+                            '#FBBF24',
+                            '#F87171',
+                            '#A78BFA'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Budget Chart
+        const budgetCtx = document.getElementById('budgetChart');
+        if (budgetCtx) {
+            new Chart(budgetCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [{
+                        label: 'Gasto Mensal',
+                        data: [45000, 52000, 48000, 61000, 55000, 67000],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+    
+    // Toggle department status
+    function toggleDepartmentStatus() {
+        const isActive = event.target.checked;
+        const action = isActive ? 'ativar' : 'desativar';
+        
+        if (confirm(`Tem certeza que deseja ${action} este departamento?`)) {
+            // AJAX call to update status
+            fetch(`/hr/departments/{{ department.id }}/toggle-status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_active: isActive })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro ao atualizar status: ' + data.error);
+                    event.target.checked = !isActive; // Revert checkbox
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao atualizar status');
+                event.target.checked = !isActive; // Revert checkbox
+            });
+        } else {
+            event.target.checked = !isActive; // Revert checkbox
+        }
+    }
+    
+    // Toggle hiring permission
+    function toggleHiringPermission() {
+        const canHire = event.target.checked;
+        
+        fetch(`/hr/departments/{{ department.id }}/toggle-hiring/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ can_hire: canHire })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Permissão de contratação atualizada!');
+            } else {
+                alert('Erro ao atualizar permissão: ' + data.error);
+                event.target.checked = !canHire; // Revert checkbox
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao atualizar permissão');
+            event.target.checked = !canHire; // Revert checkbox
+        });
+    }
+    
+    // Export department data
+    function exportDepartmentData() {
+        window.location.href = `/hr/departments/{{ department.id }}/export/`;
+    }
+    
+    // Toggle status (from dropdown)
+    function toggleStatus() {
+        const currentStatus = {{ department.is_active|yesno:"true,false" }};
+        const newStatus = !currentStatus;
+        const action = newStatus ? 'ativar' : 'desativar';
+        
+        if (confirm(`Tem certeza que deseja ${action} este departamento?`)) {
+            fetch(`/hr/departments/{{ department.id }}/toggle-status/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_active: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro ao atualizar status: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao atualizar status');
+            });
+        }
+    }
+    
+    // Dropdown functionality
+    document.addEventListener('click', function(e) {
+        // Close all dropdowns
+        document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+        
+        // Open clicked dropdown
+        if (e.target.closest('.dropdown-trigger')) {
+            e.preventDefault();
+            const dropdown = e.target.closest('.dropdown-menu').querySelector('.dropdown-content');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+    });
+</script>
+{% endblock %}

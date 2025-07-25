@@ -1,0 +1,1107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Anúncios - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .announcements-header {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .announcements-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12zm12-12c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .announcements-container {
+        max-width: 1200px;
+        margin: -4rem auto 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .announcements-controls {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+    
+    .controls-right {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .announcements-grid {
+        display: grid;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .announcement-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .announcement-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .announcement-header {
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-bottom: 1px solid #f3f4f6;
+        position: relative;
+    }
+    
+    .announcement-header.urgent {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    }
+    
+    .announcement-header.info {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    }
+    
+    .announcement-header.success {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    }
+    
+    .announcement-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .announcement-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .author-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .announcement-date {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .announcement-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    
+    .action-btn:hover {
+        background: white;
+        color: #374151;
+        transform: scale(1.05);
+    }
+    
+    .priority-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .priority-urgent {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .priority-high {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .priority-normal {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+    
+    .announcement-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .announcement-category {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .category-icon {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .announcement-content {
+        padding: 1.5rem;
+    }
+    
+    .announcement-text {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #4b5563;
+        margin-bottom: 1rem;
+    }
+    
+    .announcement-attachments {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .attachment-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        max-width: 250px;
+    }
+    
+    .attachment-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    
+    .attachment-icon {
+        width: 32px;
+        height: 32px;
+        background: #f59e0b;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+    
+    .attachment-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .attachment-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .attachment-size {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .announcement-footer {
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .announcement-stats {
+        display: flex;
+        gap: 1.5rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .stat-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .announcement-tags {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .tag {
+        background: #e5e7eb;
+        color: #374151;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .floating-action {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+    }
+    
+    .fab {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(245, 158, 11, 0.4);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        background: #f3f4f6;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: #9ca3af;
+    }
+    
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    
+    .pagination-btn {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #e5e7eb;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .pagination-btn:hover {
+        border-color: #f59e0b;
+        color: #f59e0b;
+    }
+    
+    .pagination-btn.active {
+        background: #f59e0b;
+        border-color: #f59e0b;
+        color: white;
+    }
+    
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    @media (max-width: 768px) {
+        .announcements-container {
+            margin: -2rem auto 0;
+            padding: 0 1rem;
+        }
+        
+        .announcements-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .controls-left {
+            flex-direction: column;
+        }
+        
+        .controls-right {
+            justify-content: center;
+        }
+        
+        .announcement-meta {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .announcement-actions {
+            align-self: flex-start;
+        }
+        
+        .announcement-stats {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .floating-action {
+            bottom: 1rem;
+            right: 1rem;
+        }
+        
+        .fab {
+            width: 48px;
+            height: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="announcements-header text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="header-content text-center">
+                <h1 class="text-3xl font-bold mb-2">Anúncios Corporativos</h1>
+                <p class="text-amber-100">Mantenha todos informados com comunicados oficiais</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <div class="announcements-container">
+            <!-- Controls -->
+            <div class="announcements-controls">
+                <div class="controls-left">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Buscar anúncios..." id="searchInput">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="">Todas as categorias</option>
+                        <option value="geral">Geral</option>
+                        <option value="rh">Recursos Humanos</option>
+                        <option value="ti">Tecnologia</option>
+                        <option value="financeiro">Financeiro</option>
+                        <option value="operacoes">Operações</option>
+                        <option value="marketing">Marketing</option>
+                    </select>
+                    
+                    <select class="filter-select" id="priorityFilter">
+                        <option value="">Todas as prioridades</option>
+                        <option value="urgent">Urgente</option>
+                        <option value="high">Alta</option>
+                        <option value="normal">Normal</option>
+                    </select>
+                </div>
+                
+                <div class="controls-right">
+                    <button class="btn btn-secondary" onclick="exportAnnouncements()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar
+                    </button>
+                    
+                    <a href="{% url 'communication:message_compose' %}" class="btn btn-primary">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Novo Anúncio
+                    </a>
+                </div>
+            </div>
+
+            <!-- Announcements Grid -->
+            <div class="announcements-grid" id="announcementsGrid">
+                <!-- Urgent Announcement -->
+                <div class="announcement-card" data-category="rh" data-priority="urgent">
+                    <div class="announcement-header urgent">
+                        <div class="priority-badge priority-urgent">Urgente</div>
+                        <div class="announcement-meta">
+                            <div class="announcement-author">
+                                <div class="author-avatar">AS</div>
+                                <div class="author-info">
+                                    <div class="author-name">Ana Silva</div>
+                                    <div class="announcement-date">Hoje, 09:30</div>
+                                </div>
+                            </div>
+                            <div class="announcement-actions">
+                                <button class="action-btn" onclick="editAnnouncement('1')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deleteAnnouncement('1')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="announcement-title">Mudança no Protocolo de Segurança</h2>
+                        <div class="announcement-category">
+                            <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Recursos Humanos
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-content">
+                        <div class="announcement-text">
+                            Devido aos novos protocolos de segurança implementados, todos os colaboradores devem seguir as novas diretrizes a partir de amanhã. É obrigatório o uso de crachá para acesso a todas as áreas e a validação biométrica para áreas restritas.
+                        </div>
+                        
+                        <div class="announcement-attachments">
+                            <div class="attachment-item" onclick="downloadFile('protocolo-seguranca.pdf')">
+                                <div class="attachment-icon">PDF</div>
+                                <div class="attachment-info">
+                                    <div class="attachment-name">Novo Protocolo de Segurança</div>
+                                    <div class="attachment-size">2.3 MB</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-footer">
+                        <div class="announcement-stats">
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>128 visualizações</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4"/>
+                                </svg>
+                                <span>85 confirmações</span>
+                            </div>
+                        </div>
+                        
+                        <div class="announcement-tags">
+                            <span class="tag">segurança</span>
+                            <span class="tag">protocolo</span>
+                            <span class="tag">obrigatório</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- High Priority Announcement -->
+                <div class="announcement-card" data-category="geral" data-priority="high">
+                    <div class="announcement-header">
+                        <div class="priority-badge priority-high">Alta</div>
+                        <div class="announcement-meta">
+                            <div class="announcement-author">
+                                <div class="author-avatar">CS</div>
+                                <div class="author-info">
+                                    <div class="author-name">Carlos Santos</div>
+                                    <div class="announcement-date">Ontem, 16:45</div>
+                                </div>
+                            </div>
+                            <div class="announcement-actions">
+                                <button class="action-btn" onclick="editAnnouncement('2')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deleteAnnouncement('2')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="announcement-title">Reunião Geral - Resultados Q3</h2>
+                        <div class="announcement-category">
+                            <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Geral
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-content">
+                        <div class="announcement-text">
+                            Convocamos todos os colaboradores para a reunião geral onde apresentaremos os resultados do terceiro trimestre. A reunião acontecerá na próxima sexta-feira às 14h no auditório principal. Será apresentado o desempenho de cada departamento e metas para Q4.
+                        </div>
+                        
+                        <div class="announcement-attachments">
+                            <div class="attachment-item" onclick="downloadFile('agenda-reuniao.pdf')">
+                                <div class="attachment-icon">PDF</div>
+                                <div class="attachment-info">
+                                    <div class="attachment-name">Agenda da Reunião</div>
+                                    <div class="attachment-size">1.8 MB</div>
+                                </div>
+                            </div>
+                            <div class="attachment-item" onclick="downloadFile('resultados-q3.xlsx')">
+                                <div class="attachment-icon">XLS</div>
+                                <div class="attachment-info">
+                                    <div class="attachment-name">Resultados Q3</div>
+                                    <div class="attachment-size">3.2 MB</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-footer">
+                        <div class="announcement-stats">
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>256 visualizações</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4"/>
+                                </svg>
+                                <span>192 confirmações</span>
+                            </div>
+                        </div>
+                        
+                        <div class="announcement-tags">
+                            <span class="tag">reunião</span>
+                            <span class="tag">resultados</span>
+                            <span class="tag">Q3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Normal Priority Announcement -->
+                <div class="announcement-card" data-category="ti" data-priority="normal">
+                    <div class="announcement-header info">
+                        <div class="priority-badge priority-normal">Normal</div>
+                        <div class="announcement-meta">
+                            <div class="announcement-author">
+                                <div class="author-avatar">LP</div>
+                                <div class="author-info">
+                                    <div class="author-name">Lucas Pereira</div>
+                                    <div class="announcement-date">2 dias atrás</div>
+                                </div>
+                            </div>
+                            <div class="announcement-actions">
+                                <button class="action-btn" onclick="editAnnouncement('3')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deleteAnnouncement('3')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="announcement-title">Atualização do Sistema - Manutenção Programada</h2>
+                        <div class="announcement-category">
+                            <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                            </svg>
+                            Tecnologia
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-content">
+                        <div class="announcement-text">
+                            Informamos que será realizada uma manutenção programada no sistema no próximo sábado das 02h às 06h. Durante este período, alguns serviços podem ficar indisponíveis. Recomendamos salvar todos os trabalhos antes do horário indicado.
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-footer">
+                        <div class="announcement-stats">
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>89 visualizações</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 12l2 2 4-4"/>
+                                </svg>
+                                <span>67 confirmações</span>
+                            </div>
+                        </div>
+                        
+                        <div class="announcement-tags">
+                            <span class="tag">manutenção</span>
+                            <span class="tag">sistema</span>
+                            <span class="tag">sábado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Announcement -->
+                <div class="announcement-card" data-category="rh" data-priority="normal">
+                    <div class="announcement-header success">
+                        <div class="priority-badge priority-normal">Normal</div>
+                        <div class="announcement-meta">
+                            <div class="announcement-author">
+                                <div class="author-avatar">MR</div>
+                                <div class="author-info">
+                                    <div class="author-name">Maria Rodrigues</div>
+                                    <div class="announcement-date">3 dias atrás</div>
+                                </div>
+                            </div>
+                            <div class="announcement-actions">
+                                <button class="action-btn" onclick="editAnnouncement('4')" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <button class="action-btn" onclick="deleteAnnouncement('4')" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <h2 class="announcement-title">Parabéns - Meta Trimestral Alcançada!</h2>
+                        <div class="announcement-category">
+                            <svg class="category-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Recursos Humanos
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-content">
+                        <div class="announcement-text">
+                            É com grande satisfação que informamos que nossa equipe superou a meta trimestral em 15%! Este excelente resultado é fruto do empenho e dedicação de todos. Como reconhecimento, todos os colaboradores receberão um bônus especial no próximo salário.
+                        </div>
+                    </div>
+                    
+                    <div class="announcement-footer">
+                        <div class="announcement-stats">
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                <span>345 visualizações</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                                <span>234 curtidas</span>
+                            </div>
+                        </div>
+                        
+                        <div class="announcement-tags">
+                            <span class="tag">parabéns</span>
+                            <span class="tag">meta</span>
+                            <span class="tag">bônus</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="pagination-btn" disabled>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn">2</button>
+                <button class="pagination-btn">3</button>
+                <button class="pagination-btn">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action">
+        <button class="fab" onclick="createAnnouncement()" title="Novo anúncio">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    initializeSearch();
+});
+
+function initializeFilters() {
+    const categoryFilter = document.getElementById('categoryFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
+    
+    categoryFilter.addEventListener('change', filterAnnouncements);
+    priorityFilter.addEventListener('change', filterAnnouncements);
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterAnnouncements();
+        }, 300);
+    });
+}
+
+function filterAnnouncements() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    
+    const announcements = document.querySelectorAll('.announcement-card');
+    let visibleCount = 0;
+    
+    announcements.forEach(announcement => {
+        const title = announcement.querySelector('.announcement-title').textContent.toLowerCase();
+        const content = announcement.querySelector('.announcement-text').textContent.toLowerCase();
+        const category = announcement.dataset.category;
+        const priority = announcement.dataset.priority;
+        
+        const matchesSearch = !searchTerm || title.includes(searchTerm) || content.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+        const matchesPriority = !priorityFilter || priority === priorityFilter;
+        
+        if (matchesSearch && matchesCategory && matchesPriority) {
+            announcement.style.display = 'block';
+            visibleCount++;
+        } else {
+            announcement.style.display = 'none';
+        }
+    });
+    
+    // Show empty state if no results
+    showEmptyStateIfNeeded(visibleCount);
+}
+
+function showEmptyStateIfNeeded(visibleCount) {
+    const grid = document.getElementById('announcementsGrid');
+    let emptyState = document.getElementById('emptyState');
+    
+    if (visibleCount === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'emptyState';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">Nenhum anúncio encontrado</h3>
+                <p class="empty-text">Não há anúncios que correspondam aos filtros selecionados.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Limpar Filtros
+                </button>
+            `;
+            grid.appendChild(emptyState);
+        }
+        emptyState.style.display = 'block';
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('priorityFilter').value = '';
+    filterAnnouncements();
+}
+
+function createAnnouncement() {
+    window.location.href = "{% url 'communication:message_compose' %}";
+}
+
+function editAnnouncement(id) {
+    // Navigate to edit page
+    alert(`Editar anúncio ${id} - funcionalidade será implementada`);
+}
+
+function deleteAnnouncement(id) {
+    if (confirm('Tem certeza que deseja excluir este anúncio?')) {
+        // Delete announcement
+        const card = document.querySelector(`[data-priority]`);
+        card.style.animation = 'fadeOut 0.3s ease-out forwards';
+        setTimeout(() => {
+            card.remove();
+            filterAnnouncements();
+        }, 300);
+    }
+}
+
+function downloadFile(filename) {
+    // Simulate file download
+    alert(`Baixando ${filename}...`);
+    
+    // In real application, would trigger actual download
+    const link = document.createElement('a');
+    link.href = `#${filename}`;
+    link.download = filename;
+    link.click();
+}
+
+function exportAnnouncements() {
+    // Simulate export
+    alert('Exportando anúncios...');
+    
+    // In real application, would generate and download export file
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        announcements: Array.from(document.querySelectorAll('.announcement-card')).map(card => ({
+            title: card.querySelector('.announcement-title').textContent,
+            author: card.querySelector('.author-name').textContent,
+            date: card.querySelector('.announcement-date').textContent,
+            category: card.dataset.category,
+            priority: card.dataset.priority,
+            content: card.querySelector('.announcement-text').textContent
+        }))
+    };
+    
+    console.log('Export data:', exportData);
+}
+
+// Add CSS animation for fade out
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

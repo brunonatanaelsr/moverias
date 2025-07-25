@@ -1,0 +1,476 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Editar Anamnese Social - {{ object.beneficiary.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-header {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 2rem;
+}
+
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.form-content {
+    padding: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+}
+
+.form-section h3 {
+    margin-bottom: 1rem;
+    color: #374151;
+    font-weight: 600;
+}
+
+.form-actions {
+    padding: 2rem;
+    border-top: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    border-radius: 0 0 12px 12px;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.alert-warning {
+    background-color: #FEF3C7;
+    border: 1px solid #F59E0B;
+    color: #92400E;
+}
+
+.alert-danger {
+    background-color: #FEE2E2;
+    border: 1px solid #DC2626;
+    color: #991B1B;
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        margin: 1rem;
+        border-radius: 8px;
+    }
+    
+    .form-header {
+        padding: 1.5rem;
+    }
+    
+    .form-content {
+        padding: 1.5rem;
+    }
+    
+    .form-actions {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="form-container">
+        <!-- Header -->
+        <div class="form-header">
+            <h1 class="text-2xl font-bold mb-2">
+                <i class="fas fa-edit mr-3"></i>
+                Editar Anamnese Social
+            </h1>
+            <p class="text-purple-100">{{ object.beneficiary.full_name }}</p>
+            <p class="text-purple-200 text-sm">
+                Criada em {{ object.created_at|date:"d/m/Y" }} por {{ object.created_by.get_full_name|default:object.created_by.username }}
+            </p>
+        </div>
+
+        <!-- Alertas -->
+        {% if object.locked %}
+        <div class="alert alert-warning">
+            <div class="flex items-center">
+                <i class="fas fa-lock mr-2"></i>
+                <div>
+                    <strong>Atenção!</strong> Esta anamnese está bloqueada para edição. 
+                    {% if not request.user.is_superuser %}
+                        Apenas administradores podem editá-la.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if object.status == 'completed' %}
+        <div class="alert alert-warning">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-2"></i>
+                <div>
+                    <strong>Anamnese Concluída!</strong> Esta anamnese já foi finalizada. 
+                    Edições podem afetar a integridade dos dados.
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulário -->
+        <div class="form-content">
+            <form method="post" id="edit-form">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <div class="flex">
+                        <i class="fas fa-exclamation-circle mt-1 mr-2"></i>
+                        <div>
+                            <strong>Corrija os erros abaixo:</strong>
+                            {{ form.errors }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Dados da Beneficiária -->
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-user-circle text-blue-600 mr-2"></i>
+                        Dados da Beneficiária
+                    </h3>
+                    
+                    <div class="bg-blue-50 p-3 rounded mb-4">
+                        <p class="text-sm text-blue-800">
+                            <strong>Beneficiária:</strong> {{ object.beneficiary.full_name }}<br>
+                            {% if object.beneficiary.cpf %}
+                                <strong>CPF:</strong> {{ object.beneficiary.cpf }}<br>
+                            {% endif %}
+                            {% if object.beneficiary.phone %}
+                                <strong>Telefone:</strong> {{ object.beneficiary.phone }}<br>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <!-- Campo oculto para beneficiária (não pode ser alterado) -->
+                    <input type="hidden" name="beneficiary" value="{{ object.beneficiary.pk }}">
+                </div>
+
+                <!-- Informações Familiares -->
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-users text-green-600 mr-2"></i>
+                        Informações Familiares
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="{{ form.family_income.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">{{ form.family_income.label }}</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-2 text-gray-500">R$</span>
+                                {{ form.family_income|add_class:"w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" }}
+                            </div>
+                            {% if form.family_income.errors %}
+                                <div class="text-red-600 text-sm mt-1">{{ form.family_income.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="draft" {% if object.status == 'draft' %}selected{% endif %}>Rascunho</option>
+                                <option value="completed" {% if object.status == 'completed' %}selected{% endif %}>Concluída</option>
+                                <option value="requires_update" {% if object.status == 'requires_update' %}selected{% endif %}>Requer Atualização</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <label for="{{ form.housing_situation.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">{{ form.housing_situation.label }}</label>
+                        {{ form.housing_situation|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" }}
+                        {% if form.housing_situation.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.housing_situation.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Rede de Apoio -->
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-hands-helping text-purple-600 mr-2"></i>
+                        Rede de Apoio Social
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.support_network.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">{{ form.support_network.label }}</label>
+                        {{ form.support_network|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" }}
+                        {% if form.support_network.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.support_network.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Observações -->
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-clipboard-list text-indigo-600 mr-2"></i>
+                        Observações Gerais
+                    </h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.observations.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">{{ form.observations.label }}</label>
+                        {{ form.observations|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" }}
+                        {% if form.observations.errors %}
+                            <div class="text-red-600 text-sm mt-1">{{ form.observations.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Membros da Família Existentes -->
+                {% if object.family_members.exists %}
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-people-roof text-yellow-600 mr-2"></i>
+                        Membros da Família Cadastrados
+                    </h3>
+                    
+                    <div class="space-y-2">
+                        {% for member in object.family_members.all %}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">{{ member.name }}</h4>
+                                    <p class="text-sm text-gray-600">
+                                        {{ member.get_relationship_display }}
+                                        {% if member.age %} • {{ member.age }} anos{% endif %}
+                                        {% if member.occupation %} • {{ member.occupation }}{% endif %}
+                                    </p>
+                                    {% if member.income %}
+                                    <p class="text-sm text-green-600">Renda: R$ {{ member.income|floatformat:2 }}</p>
+                                    {% endif %}
+                                </div>
+                                <button type="button" class="text-red-600 hover:text-red-800" onclick="confirmRemoveMember({{ member.pk }}, '{{ member.name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Para editar membros da família, use o sistema completo de anamnese ou entre em contato com a coordenação.
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- Vulnerabilidades Existentes -->
+                {% if object.vulnerabilities.exists %}
+                <div class="form-section">
+                    <h3 class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                        Vulnerabilidades Identificadas
+                    </h3>
+                    
+                    <div class="space-y-2">
+                        {% for vulnerability in object.vulnerabilities.all %}
+                        <div class="border-l-4 border-{% if vulnerability.severity == 'low' %}green{% elif vulnerability.severity == 'medium' %}yellow{% elif vulnerability.severity == 'high' %}orange{% else %}red{% endif %}-500 bg-gray-50 p-3 rounded-r">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">{{ vulnerability.category.name }}</h4>
+                                    <p class="text-sm text-gray-600">{{ vulnerability.description }}</p>
+                                    <span class="text-xs px-2 py-1 rounded-full 
+                                        {% if vulnerability.severity == 'low' %}bg-green-100 text-green-800
+                                        {% elif vulnerability.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                                        {% elif vulnerability.severity == 'high' %}bg-orange-100 text-orange-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ vulnerability.get_severity_display }}
+                                    </span>
+                                </div>
+                                <button type="button" class="text-red-600 hover:text-red-800" onclick="confirmRemoveVulnerability({{ vulnerability.pk }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <p class="text-xs text-gray-600 mt-2">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Para editar vulnerabilidades, use o sistema completo de anamnese ou entre em contato com a coordenação.
+                    </p>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Ações -->
+        <div class="form-actions">
+            <div class="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-4">
+                <div class="flex space-x-2">
+                    <a href="{% url 'social:detail' object.pk %}" class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar
+                    </a>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <button type="button" onclick="saveDraft()" class="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar Rascunho
+                    </button>
+                    
+                    <button type="submit" form="edit-form" class="bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition-colors">
+                        <i class="fas fa-check mr-2"></i>
+                        Salvar Alterações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function saveDraft() {
+    const form = document.getElementById('edit-form');
+    const statusField = form.querySelector('select[name="status"]');
+    const originalStatus = statusField.value;
+    
+    // Temporariamente definir como rascunho
+    statusField.value = 'draft';
+    
+    form.submit();
+}
+
+function confirmRemoveMember(memberId, memberName) {
+    if (confirm(`Tem certeza que deseja remover ${memberName} da composição familiar?`)) {
+        // Implementar remoção via AJAX
+        removeFamilyMember(memberId);
+    }
+}
+
+function confirmRemoveVulnerability(vulnerabilityId) {
+    if (confirm('Tem certeza que deseja remover esta vulnerabilidade?')) {
+        // Implementar remoção via AJAX
+        removeVulnerability(vulnerabilityId);
+    }
+}
+
+function removeFamilyMember(memberId) {
+    fetch(`/social/family-member/${memberId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao remover membro da família: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao remover membro da família.');
+    });
+}
+
+function removeVulnerability(vulnerabilityId) {
+    fetch(`/social/vulnerability/${vulnerabilityId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao remover vulnerabilidade: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao remover vulnerabilidade.');
+    });
+}
+
+// Auto-save funcionalidade
+let autoSaveTimeout;
+document.getElementById('edit-form').addEventListener('input', function() {
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(function() {
+        const formData = new FormData(document.getElementById('edit-form'));
+        formData.append('auto_save', 'true');
+        
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAutoSaveIndicator();
+            }
+        })
+        .catch(error => {
+            console.error('Erro no auto-save:', error);
+        });
+    }, 3000);
+});
+
+function showAutoSaveIndicator() {
+    // Criar indicador temporário se não existir
+    let indicator = document.getElementById('auto-save-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'auto-save-indicator';
+        indicator.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        indicator.innerHTML = '<i class="fas fa-check mr-2"></i>Salvo automaticamente';
+        document.body.appendChild(indicator);
+    }
+    
+    indicator.style.display = 'block';
+    setTimeout(() => {
+        indicator.style.display = 'none';
+    }, 2000);
+}
+
+// Confirmação antes de sair sem salvar
+window.addEventListener('beforeunload', function(e) {
+    const form = document.getElementById('edit-form');
+    const formData = new FormData(form);
+    let hasChanges = false;
+    
+    // Verificar se há mudanças não salvas
+    // (implementação simplificada)
+    for (let [key, value] of formData.entries()) {
+        if (value.trim() !== '') {
+            hasChanges = true;
+            break;
+        }
+    }
+    
+    if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+{% endblock %}

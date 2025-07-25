@@ -1,0 +1,930 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Relatórios de Certificações - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .reports-header {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .reports-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0l8 8h-8zM6 8V6h4V4H6a2 2 0 00-2 2v52a2 2 0 002 2h36a2 2 0 002-2V16h-8a2 2 0 01-2-2V6H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .metric-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+    }
+    
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+    }
+    
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .metric-change {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .metric-change.positive {
+        color: #10b981;
+    }
+    
+    .metric-change.negative {
+        color: #ef4444;
+    }
+    
+    .filters-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filters-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .filter-input {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .filter-input:focus {
+        outline: none;
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .charts-section {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .chart-period {
+        font-size: 0.875rem;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+    
+    .chart-container {
+        height: 400px;
+        position: relative;
+    }
+    
+    .chart-placeholder {
+        height: 100%;
+        background: #f8fafc;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+        border: 2px dashed #d1d5db;
+    }
+    
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .insight-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #8b5cf6;
+    }
+    
+    .insight-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .insight-icon {
+        width: 24px;
+        height: 24px;
+        color: #8b5cf6;
+    }
+    
+    .insight-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .insight-content {
+        color: #6b7280;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+    
+    .insight-value {
+        font-weight: 600;
+        color: #8b5cf6;
+    }
+    
+    .tables-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table-header {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .table-export {
+        color: #8b5cf6;
+        font-size: 0.875rem;
+        cursor: pointer;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+    
+    .table-export:hover {
+        color: #7c3aed;
+    }
+    
+    .data-table {
+        width: 100%;
+    }
+    
+    .table-row {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+        background: #f8fafc;
+    }
+    
+    .table-row:last-child {
+        border-bottom: none;
+    }
+    
+    .row-rank {
+        width: 32px;
+        height: 32px;
+        background: #8b5cf6;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-right: 1rem;
+    }
+    
+    .row-info {
+        flex: 1;
+    }
+    
+    .row-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .row-detail {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .row-value {
+        font-weight: 600;
+        color: #8b5cf6;
+        font-size: 1.125rem;
+    }
+    
+    .export-section {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .export-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .export-description {
+        color: #6b7280;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .export-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .export-option {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: white;
+    }
+    
+    .export-option:hover {
+        border-color: #8b5cf6;
+        background: rgba(139, 92, 246, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .export-icon {
+        width: 48px;
+        height: 48px;
+        background: #f3f4f6;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: #8b5cf6;
+    }
+    
+    .export-option:hover .export-icon {
+        background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .export-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .export-format {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    @media (max-width: 768px) {
+        .charts-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .tables-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .filters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-actions {
+            flex-direction: column;
+        }
+        
+        .export-options {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-container {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="reports-header text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="header-content">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <a href="{% url 'hr:certification_list' %}" 
+                           class="text-white hover:text-gray-200 transition-colors">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </a>
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2">Relatórios de Certificações</h1>
+                            <p class="text-purple-100">Analytics completos do programa de certificações</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <div class="text-sm text-purple-100 mb-1">Período</div>
+                        <div class="text-xl font-bold">{{ current_period }}</div>
+                    </div>
+                </div>
+                
+                <div class="reports-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="metric-value">{{ metrics.total_certifications }}</div>
+                        <div class="metric-label">Certificações Ativas</div>
+                        <div class="metric-change positive">+{{ metrics.certification_growth }}% este mês</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <div class="metric-value">{{ metrics.total_participants }}</div>
+                        <div class="metric-label">Participantes Ativos</div>
+                        <div class="metric-change positive">+{{ metrics.participants_growth }}% este mês</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="metric-value">{{ metrics.completion_rate }}%</div>
+                        <div class="metric-label">Taxa de Conclusão</div>
+                        <div class="metric-change positive">+{{ metrics.completion_growth }}% este mês</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="metric-value">{{ metrics.avg_completion_time }}h</div>
+                        <div class="metric-label">Tempo Médio</div>
+                        <div class="metric-change negative">-{{ metrics.time_improvement }}% este mês</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <h2 class="filters-title">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"/>
+                </svg>
+                Filtros de Análise
+            </h2>
+            
+            <form method="GET" id="filtersForm">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">Período</label>
+                        <select name="period" class="filter-input">
+                            <option value="last_30_days" {% if request.GET.period == 'last_30_days' %}selected{% endif %}>Últimos 30 dias</option>
+                            <option value="last_3_months" {% if request.GET.period == 'last_3_months' %}selected{% endif %}>Últimos 3 meses</option>
+                            <option value="last_6_months" {% if request.GET.period == 'last_6_months' %}selected{% endif %}>Últimos 6 meses</option>
+                            <option value="last_year" {% if request.GET.period == 'last_year' %}selected{% endif %}>Último ano</option>
+                            <option value="custom" {% if request.GET.period == 'custom' %}selected{% endif %}>Personalizado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Data Início</label>
+                        <input type="date" name="start_date" value="{{ request.GET.start_date }}" class="filter-input">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Data Fim</label>
+                        <input type="date" name="end_date" value="{{ request.GET.end_date }}" class="filter-input">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Departamento</label>
+                        <select name="department" class="filter-input">
+                            <option value="">Todos os Departamentos</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Tipo de Certificação</label>
+                        <select name="certification_type" class="filter-input">
+                            <option value="">Todos os Tipos</option>
+                            <option value="technical" {% if request.GET.certification_type == 'technical' %}selected{% endif %}>Técnico</option>
+                            <option value="soft-skills" {% if request.GET.certification_type == 'soft-skills' %}selected{% endif %}>Habilidades Comportamentais</option>
+                            <option value="compliance" {% if request.GET.certification_type == 'compliance' %}selected{% endif %}>Conformidade</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select name="status" class="filter-input">
+                            <option value="">Todos os Status</option>
+                            <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Concluído</option>
+                            <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>Em Progresso</option>
+                            <option value="not_started" {% if request.GET.status == 'not_started' %}selected{% endif %}>Não Iniciado</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Aplicar Filtros
+                    </button>
+                    
+                    <a href="{% url 'hr:certification_reports' %}" class="btn btn-secondary">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                        Limpar Filtros
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Progresso de Certificações ao Longo do Tempo</h3>
+                    <span class="chart-period">{{ current_period }}</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Distribuição por Tipo</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Section -->
+        <div class="insights-grid">
+            <div class="insight-card">
+                <div class="insight-header">
+                    <svg class="insight-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    <h4 class="insight-title">Crescimento de Participação</h4>
+                </div>
+                <div class="insight-content">
+                    A participação em certificações aumentou <span class="insight-value">{{ insights.participation_growth }}%</span> 
+                    no último trimestre, com destaque para certificações técnicas.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-header">
+                    <svg class="insight-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <h4 class="insight-title">Eficiência de Conclusão</h4>
+                </div>
+                <div class="insight-content">
+                    O tempo médio de conclusão diminuiu <span class="insight-value">{{ insights.time_improvement }}%</span>, 
+                    indicando maior engajamento dos participantes.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-header">
+                    <svg class="insight-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <h4 class="insight-title">Departamento Destaque</h4>
+                </div>
+                <div class="insight-content">
+                    O departamento de <span class="insight-value">{{ insights.top_department }}</span> 
+                    lidera em participação com {{ insights.top_department_percentage }}% dos colaboradores certificados.
+                </div>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-header">
+                    <svg class="insight-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                    </svg>
+                    <h4 class="insight-title">Qualidade das Avaliações</h4>
+                </div>
+                <div class="insight-content">
+                    A nota média das certificações é <span class="insight-value">{{ insights.average_score }}/10</span>, 
+                    com {{ insights.excellent_scores }}% das avaliações sendo excelentes (9+).
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Section -->
+        <div class="tables-section">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">Top Certificações</h3>
+                    <span class="table-export" onclick="exportTable('top-certifications')">Exportar</span>
+                </div>
+                <div class="data-table">
+                    {% for cert in top_certifications %}
+                    <div class="table-row">
+                        <div class="row-rank">{{ forloop.counter }}</div>
+                        <div class="row-info">
+                            <div class="row-name">{{ cert.title }}</div>
+                            <div class="row-detail">{{ cert.enrollments_count }} participantes</div>
+                        </div>
+                        <div class="row-value">{{ cert.completion_rate }}%</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">Participantes Destaque</h3>
+                    <span class="table-export" onclick="exportTable('top-participants')">Exportar</span>
+                </div>
+                <div class="data-table">
+                    {% for participant in top_participants %}
+                    <div class="table-row">
+                        <div class="row-rank">{{ forloop.counter }}</div>
+                        <div class="row-info">
+                            <div class="row-name">{{ participant.name }}</div>
+                            <div class="row-detail">{{ participant.department }}</div>
+                        </div>
+                        <div class="row-value">{{ participant.certifications_count }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="export-section">
+            <h2 class="export-title">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Exportar Relatórios
+            </h2>
+            
+            <p class="export-description">
+                Baixe relatórios detalhados em diferentes formatos para análise offline ou apresentações.
+                Os dados exportados respeitam os filtros aplicados acima.
+            </p>
+            
+            <div class="export-options">
+                <div class="export-option" onclick="exportReport('pdf')">
+                    <div class="export-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="export-name">Relatório Completo</div>
+                    <div class="export-format">PDF</div>
+                </div>
+                
+                <div class="export-option" onclick="exportReport('excel')">
+                    <div class="export-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z"/>
+                        </svg>
+                    </div>
+                    <div class="export-name">Dados para Análise</div>
+                    <div class="export-format">Excel</div>
+                </div>
+                
+                <div class="export-option" onclick="exportReport('csv')">
+                    <div class="export-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div class="export-name">Dados Brutos</div>
+                    <div class="export-format">CSV</div>
+                </div>
+                
+                <div class="export-option" onclick="exportReport('powerpoint')">
+                    <div class="export-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011-1h2a1 1 0 011 1v18a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1h2a1 1 0 011 1v3"/>
+                        </svg>
+                    </div>
+                    <div class="export-name">Apresentação</div>
+                    <div class="export-format">PowerPoint</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress Chart
+    const progressCtx = document.getElementById('progressChart');
+    if (progressCtx) {
+        new Chart(progressCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_data.progress_labels|safe }},
+                datasets: [{
+                    label: 'Certificações Concluídas',
+                    data: {{ chart_data.completed_data|safe }},
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Novas Inscrições',
+                    data: {{ chart_data.enrollment_data|safe }},
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Type Chart
+    const typeCtx = document.getElementById('typeChart');
+    if (typeCtx) {
+        new Chart(typeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ chart_data.type_labels|safe }},
+                datasets: [{
+                    data: {{ chart_data.type_data|safe }},
+                    backgroundColor: [
+                        '#8b5cf6',
+                        '#10b981',
+                        '#f59e0b',
+                        '#ef4444',
+                        '#3b82f6'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+    
+    // Export functions
+    window.exportReport = function(format) {
+        const currentUrl = new URL(window.location);
+        const params = new URLSearchParams(currentUrl.search);
+        params.set('export', format);
+        
+        window.open(`/hr/certifications/reports/export/?${params.toString()}`, '_blank');
+    };
+    
+    window.exportTable = function(table) {
+        const currentUrl = new URL(window.location);
+        const params = new URLSearchParams(currentUrl.search);
+        params.set('export_table', table);
+        
+        window.open(`/hr/certifications/reports/export-table/?${params.toString()}`, '_blank');
+    };
+    
+    // Auto-update charts every 5 minutes
+    setInterval(function() {
+        if (!document.hidden) {
+            location.reload();
+        }
+    }, 300000); // 5 minutes
+});
+</script>
+{% endblock %}

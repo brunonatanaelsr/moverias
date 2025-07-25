@@ -1,0 +1,244 @@
+<!-- Etapa 1: Dados Familiares e Socioeconômicos -->
+<div class="space-y-6">
+    <!-- Informações da Beneficiária -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-blue-800 mb-3">
+            <i class="fas fa-user-circle mr-2"></i>
+            Informações da Beneficiária
+        </h3>
+        
+        <div class="form-group">
+            <label for="{{ wizard.form.beneficiary.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ wizard.form.beneficiary.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            {{ wizard.form.beneficiary|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" }}
+            {% if wizard.form.beneficiary.help_text %}
+                <p class="form-help-text">{{ wizard.form.beneficiary.help_text }}</p>
+            {% endif %}
+            {% if wizard.form.beneficiary.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ wizard.form.beneficiary.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        {% if wizard.form.beneficiary.value %}
+            <div class="mt-3 p-3 bg-white rounded border">
+                <p class="text-sm text-gray-600">
+                    <strong>Beneficiária selecionada:</strong> {{ wizard.form.beneficiary.value }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Informações Familiares -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-green-800 mb-3">
+            <i class="fas fa-users mr-2"></i>
+            Composição e Renda Familiar
+        </h3>
+        
+        <!-- Renda Familiar -->
+        <div class="form-group mb-4">
+            <label for="{{ wizard.form.family_income.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ wizard.form.family_income.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+                <span class="absolute left-3 top-2 text-gray-500">R$</span>
+                {{ wizard.form.family_income|add_class:"w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" }}
+            </div>
+            <p class="form-help-text">
+                <i class="fas fa-info-circle mr-1"></i>
+                Informe a renda total da família (soma de todos os rendimentos mensais)
+            </p>
+            {% if wizard.form.family_income.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ wizard.form.family_income.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Situação Habitacional -->
+        <div class="form-group">
+            <label for="{{ wizard.form.housing_situation.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ wizard.form.housing_situation.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            {{ wizard.form.housing_situation|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical" }}
+            <p class="form-help-text">
+                <i class="fas fa-home mr-1"></i>
+                Descreva a situação habitacional (ex: casa própria, aluguel, cedida, financiada, etc.)
+            </p>
+            {% if wizard.form.housing_situation.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ wizard.form.housing_situation.errors }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Seção de Membros da Família (Dinâmica) -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-yellow-800 mb-3">
+            <i class="fas fa-people-roof mr-2"></i>
+            Membros da Família
+        </h3>
+        
+        <div id="family-members-container">
+            <!-- Template para membro da família -->
+            <div class="family-member-template hidden" data-member-index="0">
+                <div class="border border-gray-200 rounded-lg p-4 mb-4 bg-white">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-medium text-gray-800">Membro da Família</h4>
+                        <button type="button" class="remove-member text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                            <input type="text" name="family_member_name_0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Parentesco</label>
+                            <select name="family_member_relationship_0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Selecione...</option>
+                                <option value="spouse">Cônjuge/Companheiro(a)</option>
+                                <option value="child">Filho(a)</option>
+                                <option value="parent">Pai/Mãe</option>
+                                <option value="sibling">Irmão/Irmã</option>
+                                <option value="grandparent">Avô/Avó</option>
+                                <option value="grandchild">Neto(a)</option>
+                                <option value="other">Outro</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Idade</label>
+                            <input type="number" name="family_member_age_0" min="0" max="120" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Ocupação</label>
+                            <input type="text" name="family_member_occupation_0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Renda (R$)</label>
+                            <input type="number" name="family_member_income_0" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Escolaridade</label>
+                            <select name="family_member_education_0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Selecione...</option>
+                                <option value="none">Sem escolaridade</option>
+                                <option value="elementary_incomplete">Ensino fundamental incompleto</option>
+                                <option value="elementary_complete">Ensino fundamental completo</option>
+                                <option value="high_school_incomplete">Ensino médio incompleto</option>
+                                <option value="high_school_complete">Ensino médio completo</option>
+                                <option value="higher_education_incomplete">Ensino superior incompleto</option>
+                                <option value="higher_education_complete">Ensino superior completo</option>
+                                <option value="postgraduate">Pós-graduação</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Condições de Saúde</label>
+                        <textarea name="family_member_health_0" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" placeholder="Descreva condições de saúde relevantes (opcional)"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button type="button" id="add-family-member" class="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors">
+            <i class="fas fa-plus mr-2"></i>
+            Adicionar Membro da Família
+        </button>
+        
+        <p class="form-help-text mt-2">
+            <i class="fas fa-lightbulb mr-1"></i>
+            Adicione todos os membros que vivem na mesma residência ou que fazem parte do núcleo familiar
+        </p>
+    </div>
+
+    <!-- Dicas e Orientações -->
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-purple-800 mb-2">
+            <i class="fas fa-lightbulb mr-2"></i>
+            Dicas para o Preenchimento
+        </h3>
+        <ul class="text-sm text-purple-700 space-y-1">
+            <li>• Seja preciso nas informações de renda familiar</li>
+            <li>• Inclua todos os membros que moram na casa</li>
+            <li>• Descreva detalhadamente a situação habitacional</li>
+            <li>• Informações de saúde dos membros podem ser relevantes para o acompanhamento</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let memberCount = 0;
+    const container = document.getElementById('family-members-container');
+    const template = document.querySelector('.family-member-template');
+    const addButton = document.getElementById('add-family-member');
+
+    // Adicionar membro da família
+    addButton.addEventListener('click', function() {
+        const newMember = template.cloneNode(true);
+        newMember.classList.remove('family-member-template', 'hidden');
+        newMember.setAttribute('data-member-index', memberCount);
+        
+        // Atualizar os names dos inputs
+        const inputs = newMember.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name) {
+                input.setAttribute('name', name.replace('_0', `_${memberCount}`));
+            }
+        });
+        
+        // Adicionar evento de remoção
+        const removeBtn = newMember.querySelector('.remove-member');
+        removeBtn.addEventListener('click', function() {
+            newMember.remove();
+        });
+        
+        container.appendChild(newMember);
+        memberCount++;
+    });
+
+    // Calcular renda familiar automaticamente
+    function calculateFamilyIncome() {
+        const familyIncomeField = document.querySelector('input[name="1-family_income"]');
+        const memberIncomes = document.querySelectorAll('input[name^="family_member_income_"]');
+        
+        let total = 0;
+        memberIncomes.forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            total += value;
+        });
+        
+        if (total > 0 && (!familyIncomeField.value || familyIncomeField.value == 0)) {
+            familyIncomeField.value = total.toFixed(2);
+            familyIncomeField.style.backgroundColor = '#FEF3C7';
+            setTimeout(() => {
+                familyIncomeField.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+    
+    // Adicionar evento de cálculo automático
+    container.addEventListener('input', function(e) {
+        if (e.target.name && e.target.name.includes('family_member_income_')) {
+            calculateFamilyIncome();
+        }
+    });
+});
+</script>

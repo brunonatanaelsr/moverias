@@ -1,0 +1,1305 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}{% if performance %}Editar{% else %}Nova{% endif %} Avaliação de Desempenho - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .form-wizard {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+    
+    .wizard-step {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: #f3f4f6;
+        color: #6b7280;
+        border-radius: 8px;
+        margin: 0 0.5rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .wizard-step.active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .wizard-step.completed {
+        background: #10b981;
+        color: white;
+    }
+    
+    .wizard-step:not(:last-child)::after {
+        content: '';
+        width: 20px;
+        height: 2px;
+        background: #e5e7eb;
+        margin-left: 1rem;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+    
+    .form-section.active {
+        display: block;
+    }
+    
+    .competency-rating {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .rating-scale {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .rating-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .rating-option:hover {
+        background: #f3f4f6;
+    }
+    
+    .rating-option input[type="radio"] {
+        display: none;
+    }
+    
+    .rating-option input[type="radio"]:checked + .rating-circle {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .rating-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .rating-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-align: center;
+    }
+    
+    .goal-item {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .goal-progress {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .progress-bar {
+        flex: 1;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .comment-box {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .feedback-section {
+        border: 2px dashed #e5e7eb;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .auto-save-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .auto-save-indicator.show {
+        opacity: 1;
+    }
+    
+    .performance-preview {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .template-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .template-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .template-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .template-card.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .development-plan {
+        background: #fef7e7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .strength-weakness {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    
+    .strength-item,
+    .weakness-item {
+        background: white;
+        border-radius: 6px;
+        padding: 1rem;
+        border-left: 4px solid #10b981;
+    }
+    
+    .weakness-item {
+        border-left-color: #f59e0b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:performance_list' %}" class="hover:text-blue-600">Avaliações</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">
+                {% if performance %}Editar Avaliação{% else %}Nova Avaliação{% endif %}
+            </span>
+        </nav>
+        
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    {% if performance %}Editar Avaliação de Desempenho{% else %}Nova Avaliação de Desempenho{% endif %}
+                </h1>
+                <p class="text-gray-600">
+                    {% if performance %}
+                        Editando avaliação de {{ performance.employee.get_full_name }}
+                    {% else %}
+                        Crie uma nova avaliação de desempenho completa
+                    {% endif %}
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="saveAsDraft()" class="action-button secondary">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Rascunho
+                </button>
+                <button onclick="previewPerformance()" class="action-button outline">
+                    <i class="fas fa-eye mr-2"></i>
+                    Prévia
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-save indicator -->
+    <div id="auto-save-indicator" class="auto-save-indicator">
+        <i class="fas fa-check mr-2"></i>
+        Salvo automaticamente
+    </div>
+
+    <!-- Form Wizard -->
+    <div class="form-wizard">
+        <div class="wizard-step active" data-step="1">
+            <i class="fas fa-user mr-2"></i>
+            Informações Básicas
+        </div>
+        <div class="wizard-step" data-step="2">
+            <i class="fas fa-bullseye mr-2"></i>
+            Metas e Objetivos
+        </div>
+        <div class="wizard-step" data-step="3">
+            <i class="fas fa-star mr-2"></i>
+            Competências
+        </div>
+        <div class="wizard-step" data-step="4">
+            <i class="fas fa-comments mr-2"></i>
+            Feedback
+        </div>
+        <div class="wizard-step" data-step="5">
+            <i class="fas fa-chart-line mr-2"></i>
+            Desenvolvimento
+        </div>
+        <div class="wizard-step" data-step="6">
+            <i class="fas fa-clipboard-check mr-2"></i>
+            Revisão Final
+        </div>
+    </div>
+
+    <form method="post" id="performance-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Step 1: Basic Information -->
+        <div class="form-section active" data-section="1">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-user mr-2 text-blue-500"></i>
+                Informações Básicas
+            </h2>
+            
+            <!-- Template Selection -->
+            {% if not performance %}
+                <div class="mb-8">
+                    <label class="form-label">Selecionar Template</label>
+                    <div class="template-selector">
+                        <div class="template-card" onclick="selectTemplate('standard')">
+                            <div class="text-center">
+                                <i class="fas fa-file-alt text-2xl text-blue-500 mb-2"></i>
+                                <h3 class="font-semibold">Padrão</h3>
+                                <p class="text-sm text-gray-600">Template básico com competências gerais</p>
+                            </div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('leadership')">
+                            <div class="text-center">
+                                <i class="fas fa-users text-2xl text-purple-500 mb-2"></i>
+                                <h3 class="font-semibold">Liderança</h3>
+                                <p class="text-sm text-gray-600">Foco em habilidades de liderança</p>
+                            </div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('technical')">
+                            <div class="text-center">
+                                <i class="fas fa-code text-2xl text-green-500 mb-2"></i>
+                                <h3 class="font-semibold">Técnico</h3>
+                                <p class="text-sm text-gray-600">Para funções técnicas especializadas</p>
+                            </div>
+                        </div>
+                        <div class="template-card" onclick="selectTemplate('sales')">
+                            <div class="text-center">
+                                <i class="fas fa-chart-line text-2xl text-red-500 mb-2"></i>
+                                <h3 class="font-semibold">Vendas</h3>
+                                <p class="text-sm text-gray-600">Avaliação focada em resultados comerciais</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="template" id="selected-template" value="standard">
+                </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="form-label" for="employee">Funcionário *</label>
+                    <select name="employee" id="employee" class="form-input" required>
+                        <option value="">Selecione um funcionário</option>
+                        {% for emp in employees %}
+                            <option value="{{ emp.id }}" 
+                                    {% if performance and performance.employee_id == emp.id %}selected{% endif %}
+                                    data-department="{{ emp.department.name|default:'' }}"
+                                    data-position="{{ emp.position.title|default:'' }}">
+                                {{ emp.get_full_name }} - {{ emp.department.name|default:'Sem departamento' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label" for="reviewer">Revisor *</label>
+                    <select name="reviewer" id="reviewer" class="form-input" required>
+                        <option value="">Selecione um revisor</option>
+                        {% for rev in reviewers %}
+                            <option value="{{ rev.id }}" 
+                                    {% if performance and performance.reviewer_id == rev.id %}selected{% endif %}>
+                                {{ rev.get_full_name }} - {{ rev.department.name|default:'Sem departamento' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label" for="review_period">Período de Avaliação *</label>
+                    <select name="review_period" id="review_period" class="form-input" required>
+                        <option value="">Selecione o período</option>
+                        <option value="Q1_2024" {% if performance and performance.review_period == 'Q1_2024' %}selected{% endif %}>1º Trimestre 2024</option>
+                        <option value="Q2_2024" {% if performance and performance.review_period == 'Q2_2024' %}selected{% endif %}>2º Trimestre 2024</option>
+                        <option value="Q3_2024" {% if performance and performance.review_period == 'Q3_2024' %}selected{% endif %}>3º Trimestre 2024</option>
+                        <option value="Q4_2024" {% if performance and performance.review_period == 'Q4_2024' %}selected{% endif %}>4º Trimestre 2024</option>
+                        <option value="ANNUAL_2024" {% if performance and performance.review_period == 'ANNUAL_2024' %}selected{% endif %}>Anual 2024</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label" for="due_date">Data Limite *</label>
+                    <input type="date" 
+                           name="due_date" 
+                           id="due_date" 
+                           class="form-input" 
+                           value="{{ performance.due_date|date:'Y-m-d'|default:'' }}" 
+                           required>
+                </div>
+                
+                <div>
+                    <label class="form-label" for="cycle">Ciclo de Avaliação</label>
+                    <select name="cycle" id="cycle" class="form-input">
+                        <option value="">Selecione um ciclo</option>
+                        {% for cycle in cycles %}
+                            <option value="{{ cycle.id }}" 
+                                    {% if performance and performance.cycle_id == cycle.id %}selected{% endif %}>
+                                {{ cycle.name }} ({{ cycle.start_date|date:"d/m/Y" }} - {{ cycle.end_date|date:"d/m/Y" }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label" for="type">Tipo de Avaliação</label>
+                    <select name="type" id="type" class="form-input">
+                        <option value="annual" {% if performance and performance.type == 'annual' %}selected{% endif %}>Anual</option>
+                        <option value="quarterly" {% if performance and performance.type == 'quarterly' %}selected{% endif %}>Trimestral</option>
+                        <option value="probationary" {% if performance and performance.type == 'probationary' %}selected{% endif %}>Probatório</option>
+                        <option value="project_based" {% if performance and performance.type == 'project_based' %}selected{% endif %}>Por Projeto</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="form-label" for="description">Descrição/Contexto</label>
+                <textarea name="description" 
+                          id="description" 
+                          rows="3" 
+                          class="form-input"
+                          placeholder="Adicione contexto sobre esta avaliação...">{{ performance.description|default:'' }}</textarea>
+            </div>
+        </div>
+
+        <!-- Step 2: Goals and Objectives -->
+        <div class="form-section" data-section="2">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-bullseye mr-2 text-blue-500"></i>
+                Metas e Objetivos
+            </h2>
+            
+            <div id="goals-container">
+                <!-- Goals will be dynamically added here -->
+                <div class="goal-item" data-goal-index="0">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-semibold text-gray-900">Meta 1</h3>
+                        <button type="button" onclick="removeGoal(0)" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Descrição da Meta</label>
+                            <textarea name="goals[0][description]" 
+                                      class="form-input" 
+                                      rows="2" 
+                                      placeholder="Descreva a meta específica..."></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label">Critério de Sucesso</label>
+                            <textarea name="goals[0][criteria]" 
+                                      class="form-input" 
+                                      rows="2" 
+                                      placeholder="Como medir o sucesso desta meta..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-progress">
+                        <label class="form-label">Progresso: <span class="progress-value">0%</span></label>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <input type="range" 
+                               name="goals[0][progress]" 
+                               min="0" 
+                               max="100" 
+                               value="0" 
+                               class="form-range"
+                               onchange="updateProgress(this)">
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="form-label">Status</label>
+                        <select name="goals[0][status]" class="form-input w-auto">
+                            <option value="not_started">Não Iniciado</option>
+                            <option value="in_progress">Em Andamento</option>
+                            <option value="completed">Concluído</option>
+                            <option value="cancelled">Cancelado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="comment-box mt-4">
+                        <label class="form-label">Comentários sobre esta Meta</label>
+                        <textarea name="goals[0][comments]" 
+                                  class="form-input" 
+                                  rows="2" 
+                                  placeholder="Comentários adicionais sobre o progresso, desafios, etc."></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" onclick="addGoal()" class="action-button outline mt-4">
+                <i class="fas fa-plus mr-2"></i>
+                Adicionar Meta
+            </button>
+        </div>
+
+        <!-- Step 3: Competencies -->
+        <div class="form-section" data-section="3">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-star mr-2 text-blue-500"></i>
+                Avaliação de Competências
+            </h2>
+            
+            <div class="mb-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="font-medium text-blue-900 mb-2">Escala de Avaliação</h3>
+                    <div class="grid grid-cols-5 gap-2 text-sm">
+                        <div class="text-center">
+                            <div class="font-semibold text-red-600">1 - Insatisfatório</div>
+                            <div class="text-red-600">Abaixo das expectativas</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-semibold text-orange-600">2 - Precisa Melhorar</div>
+                            <div class="text-orange-600">Próximo das expectativas</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-semibold text-yellow-600">3 - Atende</div>
+                            <div class="text-yellow-600">Atende às expectativas</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-semibold text-green-600">4 - Supera</div>
+                            <div class="text-green-600">Supera expectativas</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="font-semibold text-blue-600">5 - Excepcional</div>
+                            <div class="text-blue-600">Muito acima das expectativas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="competencies-container">
+                <!-- Core Competencies -->
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Competências Essenciais</h3>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Comunicação</h4>
+                        <p class="text-sm text-gray-600">Capacidade de se comunicar efetivamente com colegas, clientes e stakeholders</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[communication]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Trabalho em Equipe</h4>
+                        <p class="text-sm text-gray-600">Colaboração efetiva e contribuição positiva para o ambiente de equipe</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[teamwork]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Resolução de Problemas</h4>
+                        <p class="text-sm text-gray-600">Habilidade para identificar, analisar e resolver problemas de forma eficaz</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[problem_solving]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Iniciativa</h4>
+                        <p class="text-sm text-gray-600">Proatividade e capacidade de tomar iniciativa para melhorias e soluções</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[initiative]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Adaptabilidade</h4>
+                        <p class="text-sm text-gray-600">Flexibilidade para se adaptar a mudanças e novos desafios</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[adaptability]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="competency-rating">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-1">Qualidade do Trabalho</h4>
+                        <p class="text-sm text-gray-600">Precisão, atenção aos detalhes e consistência na entrega</p>
+                    </div>
+                    <div class="rating-scale">
+                        {% for i in "12345" %}
+                            <label class="rating-option">
+                                <input type="radio" name="competencies[quality]" value="{{ i }}">
+                                <div class="rating-circle">{{ i }}</div>
+                                <div class="rating-label">
+                                    {% if i == "1" %}Insuf.{% elif i == "2" %}Melhore{% elif i == "3" %}Atende{% elif i == "4" %}Supera{% else %}Excep.{% endif %}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label class="form-label">Comentários Gerais sobre Competências</label>
+                <textarea name="competencies_comments" 
+                          class="form-input" 
+                          rows="4" 
+                          placeholder="Comentários adicionais sobre o desempenho nas competências avaliadas..."></textarea>
+            </div>
+        </div>
+
+        <!-- Step 4: Feedback -->
+        <div class="form-section" data-section="4">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-comments mr-2 text-blue-500"></i>
+                Feedback e Observações
+            </h2>
+            
+            <div class="strength-weakness">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                        Pontos Fortes
+                    </h3>
+                    <div id="strengths-container">
+                        <div class="strength-item mb-3">
+                            <input type="text" 
+                                   name="strengths[]" 
+                                   class="form-input" 
+                                   placeholder="Descreva um ponto forte específico...">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addStrength()" class="action-button-sm outline">
+                        <i class="fas fa-plus mr-1"></i>
+                        Adicionar Ponto Forte
+                    </button>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                        Áreas de Melhoria
+                    </h3>
+                    <div id="improvements-container">
+                        <div class="weakness-item mb-3">
+                            <input type="text" 
+                                   name="improvements[]" 
+                                   class="form-input" 
+                                   placeholder="Identifique uma área que precisa de desenvolvimento...">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addImprovement()" class="action-button-sm outline">
+                        <i class="fas fa-plus mr-1"></i>
+                        Adicionar Área de Melhoria
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Feedback Detalhado</h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">Principais Conquistas no Período</label>
+                        <textarea name="achievements" 
+                                  class="form-input" 
+                                  rows="4" 
+                                  placeholder="Descreva as principais conquistas e sucessos do funcionário durante este período..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Desafios Enfrentados</label>
+                        <textarea name="challenges" 
+                                  class="form-input" 
+                                  rows="4" 
+                                  placeholder="Quais foram os principais desafios e como foram abordados..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Feedback do Funcionário (Auto-avaliação)</label>
+                        <div class="feedback-section">
+                            <i class="fas fa-user-edit text-4xl text-gray-400 mb-4"></i>
+                            <h4 class="font-medium text-gray-900 mb-2">Seção para Auto-avaliação</h4>
+                            <p class="text-gray-600 mb-4">Esta seção será preenchida pelo próprio funcionário</p>
+                            <button type="button" onclick="requestSelfAssessment()" class="action-button secondary">
+                                <i class="fas fa-paper-plane mr-2"></i>
+                                Solicitar Auto-avaliação
+                            </button>
+                        </div>
+                        <textarea name="self_assessment" 
+                                  class="form-input mt-4" 
+                                  rows="4" 
+                                  placeholder="Auto-avaliação do funcionário (será preenchida pelo funcionário ou pode ser inserida aqui)..."
+                                  readonly></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Development Plan -->
+        <div class="form-section" data-section="5">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                Plano de Desenvolvimento
+            </h2>
+            
+            <div class="development-plan">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                    Recomendações de Desenvolvimento
+                </h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="form-label">Objetivos de Desenvolvimento (Próximo Período)</label>
+                        <textarea name="development_goals" 
+                                  class="form-input" 
+                                  rows="4" 
+                                  placeholder="Defina objetivos específicos de desenvolvimento para o próximo período..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Ações de Desenvolvimento Recomendadas</label>
+                        <div id="development-actions-container">
+                            <div class="flex items-center space-x-3 mb-3">
+                                <input type="text" 
+                                       name="development_actions[]" 
+                                       class="form-input flex-1" 
+                                       placeholder="Ex: Participar de treinamento em liderança">
+                                <select name="development_priorities[]" class="form-select w-32">
+                                    <option value="high">Alta</option>
+                                    <option value="medium">Média</option>
+                                    <option value="low">Baixa</option>
+                                </select>
+                                <button type="button" onclick="removeDevelopmentAction(this)" class="action-button-sm danger">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addDevelopmentAction()" class="action-button-sm outline">
+                            <i class="fas fa-plus mr-1"></i>
+                            Adicionar Ação
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="form-label">Treinamentos Recomendados</label>
+                            <textarea name="recommended_training" 
+                                      class="form-input" 
+                                      rows="4" 
+                                      placeholder="Liste treinamentos específicos que poderiam beneficiar o funcionário..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Recursos e Suporte Necessários</label>
+                            <textarea name="support_needed" 
+                                      class="form-input" 
+                                      rows="4" 
+                                      placeholder="Que recursos, ferramentas ou suporte o funcionário precisa..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Timeline de Desenvolvimento</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="form-label text-sm">30 dias</label>
+                                <textarea name="timeline_30days" 
+                                          class="form-input" 
+                                          rows="2" 
+                                          placeholder="Metas para os próximos 30 dias..."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label text-sm">90 dias</label>
+                                <textarea name="timeline_90days" 
+                                          class="form-input" 
+                                          rows="2" 
+                                          placeholder="Objetivos para 90 dias..."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label text-sm">1 ano</label>
+                                <textarea name="timeline_1year" 
+                                          class="form-input" 
+                                          rows="2" 
+                                          placeholder="Visão de longo prazo (1 ano)..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 6: Final Review -->
+        <div class="form-section" data-section="6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                <i class="fas fa-clipboard-check mr-2 text-blue-500"></i>
+                Revisão Final
+            </h2>
+            
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="form-label">Avaliação Geral *</label>
+                        <select name="overall_rating" class="form-input" required>
+                            <option value="">Selecione uma avaliação</option>
+                            <option value="1">1 - Insatisfatório</option>
+                            <option value="2">2 - Precisa Melhorar</option>
+                            <option value="3">3 - Atende às Expectativas</option>
+                            <option value="4">4 - Supera Expectativas</option>
+                            <option value="5">5 - Excepcional</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Recomendação</label>
+                        <select name="recommendation" class="form-input">
+                            <option value="">Selecione uma recomendação</option>
+                            <option value="promotion">Promoção</option>
+                            <option value="salary_increase">Aumento Salarial</option>
+                            <option value="maintain_position">Manter Posição Atual</option>
+                            <option value="development_plan">Plano de Desenvolvimento</option>
+                            <option value="performance_improvement">Plano de Melhoria</option>
+                            <option value="role_change">Mudança de Função</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Comentários Finais do Revisor</label>
+                    <textarea name="final_comments" 
+                              class="form-input" 
+                              rows="5" 
+                              placeholder="Comentários finais, resumo da avaliação e próximos passos..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="form-label">Próxima Avaliação</label>
+                    <input type="date" 
+                           name="next_review_date" 
+                           class="form-input w-auto">
+                </div>
+                
+                <!-- Performance Preview -->
+                <div class="performance-preview">
+                    <h3 class="font-semibold text-gray-900 mb-4">Prévia da Avaliação</h3>
+                    <div id="performance-summary">
+                        <!-- Summary will be populated by JavaScript -->
+                        <p class="text-gray-600">A prévia será gerada automaticamente conforme você preenche os campos.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Navigation -->
+        <div class="flex justify-between items-center pt-6 border-t border-gray-200 mt-8">
+            <div>
+                <button type="button" id="prev-btn" onclick="previousStep()" class="action-button outline" disabled>
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Anterior
+                </button>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button type="button" onclick="saveAsDraft()" class="action-button secondary">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Rascunho
+                </button>
+                
+                <button type="button" id="next-btn" onclick="nextStep()" class="action-button primary">
+                    Próximo
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+                
+                <button type="submit" id="submit-btn" class="action-button success hidden">
+                    <i class="fas fa-check mr-2"></i>
+                    Finalizar Avaliação
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentStep = 1;
+    let totalSteps = 6;
+    let goalIndex = 1;
+    let autoSaveTimeout;
+    
+    // Step navigation
+    function nextStep() {
+        if (validateCurrentStep() && currentStep < totalSteps) {
+            currentStep++;
+            updateStepDisplay();
+        }
+    }
+    
+    function previousStep() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepDisplay();
+        }
+    }
+    
+    function goToStep(step) {
+        if (step >= 1 && step <= totalSteps) {
+            currentStep = step;
+            updateStepDisplay();
+        }
+    }
+    
+    function updateStepDisplay() {
+        // Update wizard steps
+        document.querySelectorAll('.wizard-step').forEach((step, index) => {
+            const stepNum = index + 1;
+            step.classList.remove('active', 'completed');
+            
+            if (stepNum === currentStep) {
+                step.classList.add('active');
+            } else if (stepNum < currentStep) {
+                step.classList.add('completed');
+            }
+        });
+        
+        // Update form sections
+        document.querySelectorAll('.form-section').forEach((section, index) => {
+            const sectionNum = index + 1;
+            section.classList.toggle('active', sectionNum === currentStep);
+        });
+        
+        // Update navigation buttons
+        document.getElementById('prev-btn').disabled = (currentStep === 1);
+        
+        if (currentStep === totalSteps) {
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('submit-btn').classList.remove('hidden');
+        } else {
+            document.getElementById('next-btn').classList.remove('hidden');
+            document.getElementById('submit-btn').classList.add('hidden');
+        }
+    }
+    
+    // Form validation
+    function validateCurrentStep() {
+        const currentSection = document.querySelector(`.form-section[data-section="${currentStep}"]`);
+        const requiredFields = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+        
+        for (let field of requiredFields) {
+            if (!field.value.trim()) {
+                field.focus();
+                alert(`Por favor, preencha o campo obrigatório: ${field.previousElementSibling.textContent}`);
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Template selection
+    function selectTemplate(templateType) {
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        event.target.closest('.template-card').classList.add('selected');
+        document.getElementById('selected-template').value = templateType;
+        
+        // Load template-specific competencies
+        loadTemplateCompetencies(templateType);
+    }
+    
+    function loadTemplateCompetencies(templateType) {
+        // This would normally load from the backend
+        const templates = {
+            'leadership': ['Visão Estratégica', 'Desenvolvimento de Equipe', 'Tomada de Decisão'],
+            'technical': ['Conhecimento Técnico', 'Resolução de Problemas Complexos', 'Inovação'],
+            'sales': ['Relacionamento com Cliente', 'Negociação', 'Orientação para Resultados']
+        };
+        
+        // Add template-specific competencies would go here
+    }
+    
+    // Goals management
+    function addGoal() {
+        const container = document.getElementById('goals-container');
+        const goalHtml = `
+            <div class="goal-item" data-goal-index="${goalIndex}">
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-semibold text-gray-900">Meta ${goalIndex + 1}</h3>
+                    <button type="button" onclick="removeGoal(${goalIndex})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Descrição da Meta</label>
+                        <textarea name="goals[${goalIndex}][description]" class="form-input" rows="2" placeholder="Descreva a meta específica..."></textarea>
+                    </div>
+                    <div>
+                        <label class="form-label">Critério de Sucesso</label>
+                        <textarea name="goals[${goalIndex}][criteria]" class="form-input" rows="2" placeholder="Como medir o sucesso desta meta..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="goal-progress">
+                    <label class="form-label">Progresso: <span class="progress-value">0%</span></label>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <input type="range" name="goals[${goalIndex}][progress]" min="0" max="100" value="0" class="form-range" onchange="updateProgress(this)">
+                </div>
+                
+                <div class="mt-4">
+                    <label class="form-label">Status</label>
+                    <select name="goals[${goalIndex}][status]" class="form-input w-auto">
+                        <option value="not_started">Não Iniciado</option>
+                        <option value="in_progress">Em Andamento</option>
+                        <option value="completed">Concluído</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                
+                <div class="comment-box mt-4">
+                    <label class="form-label">Comentários sobre esta Meta</label>
+                    <textarea name="goals[${goalIndex}][comments]" class="form-input" rows="2" placeholder="Comentários adicionais sobre o progresso, desafios, etc."></textarea>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', goalHtml);
+        goalIndex++;
+    }
+    
+    function removeGoal(index) {
+        const goalElement = document.querySelector(`[data-goal-index="${index}"]`);
+        if (goalElement) {
+            goalElement.remove();
+        }
+    }
+    
+    function updateProgress(slider) {
+        const value = slider.value;
+        const progressFill = slider.parentElement.querySelector('.progress-fill');
+        const progressValue = slider.parentElement.querySelector('.progress-value');
+        
+        progressFill.style.width = value + '%';
+        progressValue.textContent = value + '%';
+    }
+    
+    // Feedback management
+    function addStrength() {
+        const container = document.getElementById('strengths-container');
+        const strengthHtml = `
+            <div class="strength-item mb-3">
+                <input type="text" name="strengths[]" class="form-input" placeholder="Descreva um ponto forte específico...">
+                <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 ml-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', strengthHtml);
+    }
+    
+    function addImprovement() {
+        const container = document.getElementById('improvements-container');
+        const improvementHtml = `
+            <div class="weakness-item mb-3">
+                <input type="text" name="improvements[]" class="form-input" placeholder="Identifique uma área que precisa de desenvolvimento...">
+                <button type="button" onclick="removeItem(this)" class="text-red-600 hover:text-red-800 ml-2">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', improvementHtml);
+    }
+    
+    function removeItem(button) {
+        button.parentElement.remove();
+    }
+    
+    // Development plan management
+    function addDevelopmentAction() {
+        const container = document.getElementById('development-actions-container');
+        const actionHtml = `
+            <div class="flex items-center space-x-3 mb-3">
+                <input type="text" name="development_actions[]" class="form-input flex-1" placeholder="Ex: Participar de treinamento em liderança">
+                <select name="development_priorities[]" class="form-select w-32">
+                    <option value="high">Alta</option>
+                    <option value="medium">Média</option>
+                    <option value="low">Baixa</option>
+                </select>
+                <button type="button" onclick="removeDevelopmentAction(this)" class="action-button-sm danger">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', actionHtml);
+    }
+    
+    function removeDevelopmentAction(button) {
+        button.parentElement.remove();
+    }
+    
+    // Auto-save functionality
+    function autoSave() {
+        const formData = new FormData(document.getElementById('performance-form'));
+        formData.append('auto_save', 'true');
+        
+        fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAutoSaveIndicator();
+            }
+        })
+        .catch(error => {
+            console.error('Auto-save error:', error);
+        });
+    }
+    
+    function showAutoSaveIndicator() {
+        const indicator = document.getElementById('auto-save-indicator');
+        indicator.classList.add('show');
+        setTimeout(() => {
+            indicator.classList.remove('show');
+        }, 2000);
+    }
+    
+    function saveAsDraft() {
+        const formData = new FormData(document.getElementById('performance-form'));
+        formData.append('save_draft', 'true');
+        
+        fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Rascunho salvo com sucesso!');
+            } else {
+                alert('Erro ao salvar rascunho: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao salvar rascunho');
+        });
+    }
+    
+    // Preview functionality
+    function previewPerformance() {
+        // Generate and show preview
+        generatePreview();
+    }
+    
+    function generatePreview() {
+        const formData = new FormData(document.getElementById('performance-form'));
+        const summary = document.getElementById('performance-summary');
+        
+        // This would generate a preview based on form data
+        let previewHtml = '<div class="space-y-4">';
+        
+        // Add employee info
+        const employee = document.getElementById('employee').selectedOptions[0]?.text || '';
+        if (employee) {
+            previewHtml += `<div><strong>Funcionário:</strong> ${employee}</div>`;
+        }
+        
+        // Add overall rating
+        const rating = document.querySelector('select[name="overall_rating"]').value;
+        if (rating) {
+            const ratingText = ['', 'Insatisfatório', 'Precisa Melhorar', 'Atende', 'Supera', 'Excepcional'][rating];
+            previewHtml += `<div><strong>Avaliação Geral:</strong> ${rating}/5 - ${ratingText}</div>`;
+        }
+        
+        previewHtml += '</div>';
+        
+        summary.innerHTML = previewHtml;
+    }
+    
+    // Self-assessment request
+    function requestSelfAssessment() {
+        const employeeId = document.getElementById('employee').value;
+        if (!employeeId) {
+            alert('Selecione um funcionário primeiro.');
+            return;
+        }
+        
+        // This would send a request to the employee
+        alert('Solicitação de auto-avaliação enviada para o funcionário.');
+    }
+    
+    // Form submission
+    document.getElementById('performance-form').addEventListener('submit', function(e) {
+        if (!validateCurrentStep()) {
+            e.preventDefault();
+            return;
+        }
+        
+        if (!confirm('Tem certeza que deseja finalizar esta avaliação?')) {
+            e.preventDefault();
+        }
+    });
+    
+    // Wizard step click handlers
+    document.querySelectorAll('.wizard-step').forEach((step, index) => {
+        step.addEventListener('click', () => {
+            goToStep(index + 1);
+        });
+    });
+    
+    // Auto-save on form changes
+    document.getElementById('performance-form').addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(autoSave, 5000); // Auto-save after 5 seconds
+    });
+    
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStepDisplay();
+        
+        // Update preview when form changes
+        document.getElementById('performance-form').addEventListener('change', generatePreview);
+    });
+</script>
+{% endblock %}

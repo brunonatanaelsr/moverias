@@ -1,0 +1,344 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Excluir Anamnese Social - {{ object.beneficiary.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.delete-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.delete-header {
+    background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 2rem;
+    text-align: center;
+}
+
+.delete-content {
+    padding: 2rem;
+}
+
+.delete-actions {
+    padding: 2rem;
+    border-top: 1px solid #E5E7EB;
+    background: #F9FAFB;
+    border-radius: 0 0 12px 12px;
+}
+
+.warning-box {
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .delete-container {
+        margin: 1rem;
+        border-radius: 8px;
+    }
+    
+    .delete-header {
+        padding: 1.5rem;
+    }
+    
+    .delete-content {
+        padding: 1.5rem;
+    }
+    
+    .delete-actions {
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="delete-container">
+        <!-- Header -->
+        <div class="delete-header">
+            <i class="fas fa-exclamation-triangle text-6xl mb-4 opacity-80"></i>
+            <h1 class="text-2xl font-bold mb-2">Confirmar Exclusão</h1>
+            <p class="text-red-100">Esta ação não pode ser desfeita</p>
+        </div>
+
+        <!-- Conteúdo -->
+        <div class="delete-content">
+            <!-- Aviso -->
+            <div class="warning-box">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-3 mt-1"></i>
+                    <div>
+                        <h3 class="font-semibold text-yellow-800 mb-2">Atenção!</h3>
+                        <p class="text-yellow-700 text-sm">
+                            Você está prestes a excluir permanentemente esta anamnese social. 
+                            Todos os dados relacionados, incluindo membros da família, vulnerabilidades 
+                            identificadas e histórico de evoluções serão perdidos.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações da Anamnese -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Dados da Anamnese</h3>
+                
+                <div class="space-y-2">
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Beneficiária:</span>
+                        <span class="text-gray-800">{{ object.beneficiary.full_name }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Status:</span>
+                        <span class="px-2 py-1 rounded-full text-xs
+                            {% if object.status == 'draft' %}bg-yellow-100 text-yellow-800
+                            {% elif object.status == 'completed' %}bg-green-100 text-green-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ object.get_status_display }}
+                        </span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Criada por:</span>
+                        <span class="text-gray-800">{{ object.created_by.get_full_name|default:object.created_by.username }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Data de criação:</span>
+                        <span class="text-gray-800">{{ object.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Última atualização:</span>
+                        <span class="text-gray-800">{{ object.updated_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    
+                    {% if object.family_income %}
+                    <div class="info-item">
+                        <span class="font-medium text-gray-600">Renda familiar:</span>
+                        <span class="text-gray-800">R$ {{ object.family_income|floatformat:2 }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Dados Relacionados que Serão Excluídos -->
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-4">
+                    <i class="fas fa-trash mr-2"></i>
+                    Dados que serão excluídos permanentemente:
+                </h3>
+                
+                <ul class="space-y-2 text-sm text-red-700">
+                    <li class="flex items-center">
+                        <i class="fas fa-users mr-2"></i>
+                        <span>{{ object.family_members.count }} membro{{ object.family_members.count|pluralize:"s" }} da família</span>
+                    </li>
+                    
+                    <li class="flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span>{{ object.vulnerabilities.count }} vulnerabilidade{{ object.vulnerabilities.count|pluralize:"s" }} identificada{{ object.vulnerabilities.count|pluralize:"s" }}</span>
+                    </li>
+                    
+                    <li class="flex items-center">
+                        <i class="fas fa-history mr-2"></i>
+                        <span>{{ object.evolutions.count }} evolução{{ object.evolutions.count|pluralize:"ões" }} registrada{{ object.evolutions.count|pluralize:"s" }}</span>
+                    </li>
+                    
+                    <li class="flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i>
+                        <span>Todas as observações e informações da rede de apoio</span>
+                    </li>
+                    
+                    {% if object.signed_by_beneficiary or object.signed_by_technician %}
+                    <li class="flex items-center">
+                        <i class="fas fa-signature mr-2"></i>
+                        <span>Assinaturas digitais registradas</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Confirmação de Segurança -->
+            <div class="bg-gray-100 border border-gray-300 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Confirmação de Segurança</h3>
+                
+                <p class="text-sm text-gray-700 mb-3">
+                    Para confirmar a exclusão, digite <strong>"EXCLUIR"</strong> no campo abaixo:
+                </p>
+                
+                <input type="text" 
+                       id="confirmation-input" 
+                       placeholder="Digite EXCLUIR para confirmar"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                
+                <p class="text-xs text-gray-600 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Esta verificação ajuda a prevenir exclusões acidentais.
+                </p>
+            </div>
+        </div>
+
+        <!-- Ações -->
+        <div class="delete-actions">
+            <form method="post" id="delete-form">
+                {% csrf_token %}
+                <div class="flex flex-col sm:flex-row justify-between space-y-3 sm:space-y-0 sm:space-x-4">
+                    <div class="flex space-x-2">
+                        <a href="{% url 'social:detail' object.pk %}" 
+                           class="bg-gray-600 text-white px-6 py-2 rounded-md hover:bg-gray-700 transition-colors inline-flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Cancelar
+                        </a>
+                        
+                        <a href="{% url 'social:list' %}" 
+                           class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors inline-flex items-center">
+                            <i class="fas fa-list mr-2"></i>
+                            Voltar à Lista
+                        </a>
+                    </div>
+                    
+                    <button type="submit" 
+                            id="delete-button"
+                            disabled
+                            class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed inline-flex items-center">
+                        <i class="fas fa-trash mr-2"></i>
+                        Excluir Permanentemente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação Final -->
+<div id="final-confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle text-red-600 text-4xl mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Última Confirmação</h3>
+                <p class="text-gray-600 mb-6">
+                    Tem certeza absoluta que deseja excluir esta anamnese social? 
+                    Esta ação é <strong>irreversível</strong>.
+                </p>
+                
+                <div class="flex space-x-3">
+                    <button type="button" 
+                            onclick="closeFinalModal()"
+                            class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="button" 
+                            onclick="confirmFinalDeletion()"
+                            class="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        Sim, Excluir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmationInput = document.getElementById('confirmation-input');
+    const deleteButton = document.getElementById('delete-button');
+    const deleteForm = document.getElementById('delete-form');
+    
+    // Habilitar botão apenas quando "EXCLUIR" for digitado
+    confirmationInput.addEventListener('input', function() {
+        if (this.value.toUpperCase() === 'EXCLUIR') {
+            deleteButton.disabled = false;
+            deleteButton.classList.remove('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+            deleteButton.classList.add('hover:bg-red-700');
+        } else {
+            deleteButton.disabled = true;
+            deleteButton.classList.add('disabled:bg-gray-400', 'disabled:cursor-not-allowed');
+            deleteButton.classList.remove('hover:bg-red-700');
+        }
+    });
+    
+    // Interceptar submissão do formulário
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (confirmationInput.value.toUpperCase() === 'EXCLUIR') {
+            openFinalModal();
+        } else {
+            alert('Por favor, digite "EXCLUIR" para confirmar a exclusão.');
+            confirmationInput.focus();
+        }
+    });
+});
+
+function openFinalModal() {
+    document.getElementById('final-confirmation-modal').classList.remove('hidden');
+}
+
+function closeFinalModal() {
+    document.getElementById('final-confirmation-modal').classList.add('hidden');
+}
+
+function confirmFinalDeletion() {
+    // Criar um novo formulário e submeter
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "social:delete" object.pk %}';
+    
+    // Adicionar CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    // Adicionar ao DOM e submeter
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Prevenir fechamento acidental da página
+window.addEventListener('beforeunload', function(e) {
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// Fechar modal clicando fora
+document.getElementById('final-confirmation-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFinalModal();
+    }
+});
+
+// Escape key para fechar modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFinalModal();
+    }
+});
+</script>
+{% endblock %}

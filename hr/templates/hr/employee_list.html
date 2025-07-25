@@ -1,0 +1,451 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Funcionários - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+.employee-card {
+    transition: all 0.2s ease;
+    border-left: 4px solid #e5e7eb;
+}
+
+.employee-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-left-color: #3b82f6;
+}
+
+.employee-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-active { background: #dcfce7; color: #166534; }
+.status-inactive { background: #fee2e2; color: #991b1b; }
+.status-vacation { background: #fef3c7; color: #92400e; }
+.status-medical_leave { background: #fde68a; color: #b45309; }
+.status-maternity_leave { background: #e0e7ff; color: #3730a3; }
+.status-terminated { background: #f3f4f6; color: #374151; }
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+    background: #e5e7eb;
+}
+
+.filter-chip.active {
+    background: #3b82f6;
+    color: white;
+}
+
+.department-badge {
+    background: #f0f9ff;
+    color: #0369a1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box input {
+    padding-left: 2.5rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Funcionários</h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    Gerencie os funcionários da organização
+                </p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'hr:employee_create' %}" 
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Novo Funcionário
+                </a>
+                <button id="exportBtn" 
+                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition">
+                    <i class="fas fa-download mr-2"></i>
+                    Exportar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Funcionários -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-users text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ total_employees }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Funcionários Ativos -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-user-check text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Ativos</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ active_employees }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Novos Este Mês -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-user-plus text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Novos (mês)</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ new_this_month }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Em Férias -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                            <i class="fas fa-umbrella-beach text-white text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Em Férias</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ on_vacation }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="bg-white shadow rounded-lg mb-6">
+        <div class="p-6">
+            <form method="get" id="filterForm" class="space-y-4">
+                <!-- Search Bar -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="search-box flex-1">
+                        <i class="fas fa-search"></i>
+                        <input type="text" 
+                               name="search" 
+                               value="{{ request.GET.search }}"
+                               placeholder="Buscar por nome, CPF, matrícula ou email..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                        <i class="fas fa-search mr-2"></i>
+                        Buscar
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <!-- Status Filter -->
+                    <select name="status" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="this.form.submit()">
+                        <option value="">Todos os Status</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Ativos</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inativos</option>
+                        <option value="vacation" {% if request.GET.status == 'vacation' %}selected{% endif %}>Em Férias</option>
+                        <option value="medical_leave" {% if request.GET.status == 'medical_leave' %}selected{% endif %}>Afastamento Médico</option>
+                        <option value="terminated" {% if request.GET.status == 'terminated' %}selected{% endif %}>Desligados</option>
+                    </select>
+
+                    <!-- Department Filter -->
+                    <select name="department" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="this.form.submit()">
+                        <option value="">Todos os Departamentos</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Employment Type Filter -->
+                    <select name="employment_type" 
+                            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            onchange="this.form.submit()">
+                        <option value="">Todos os Vínculos</option>
+                        <option value="clt" {% if request.GET.employment_type == 'clt' %}selected{% endif %}>CLT</option>
+                        <option value="pj" {% if request.GET.employment_type == 'pj' %}selected{% endif %}>PJ</option>
+                        <option value="volunteer" {% if request.GET.employment_type == 'volunteer' %}selected{% endif %}>Voluntário</option>
+                        <option value="intern" {% if request.GET.employment_type == 'intern' %}selected{% endif %}>Estagiário</option>
+                    </select>
+
+                    <!-- Clear Filters -->
+                    {% if request.GET %}
+                        <a href="{% url 'hr:employee_list' %}" 
+                           class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition">
+                            <i class="fas fa-times mr-1"></i>
+                            Limpar Filtros
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employees Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for employee in employees %}
+            <div class="employee-card bg-white shadow rounded-lg overflow-hidden">
+                <div class="p-6">
+                    <!-- Employee Header -->
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="flex-shrink-0">
+                            {% if employee.photo %}
+                                <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-200" 
+                                     src="{{ employee.photo.url }}" 
+                                     alt="{{ employee.full_name }}">
+                            {% else %}
+                                <div class="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-600"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-lg font-semibold text-gray-900 truncate">
+                                {{ employee.full_name }}
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                {{ employee.job_position.title }}
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <span class="employee-status status-{{ employee.employment_status }}">
+                                {{ employee.get_employment_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Employee Details -->
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-id-card w-4 mr-2"></i>
+                            <span>{{ employee.employee_number }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-envelope w-4 mr-2"></i>
+                            <span class="truncate">{{ employee.user.email }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-phone w-4 mr-2"></i>
+                            <span>{{ employee.phone }}</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-calendar w-4 mr-2"></i>
+                            <span>Admitido em {{ employee.hire_date|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Department Badge -->
+                    <div class="mb-4">
+                        <span class="department-badge">
+                            <i class="fas fa-building mr-1"></i>
+                            {{ employee.department.name }}
+                        </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'hr:employee_detail' employee.pk %}" 
+                           class="flex-1 text-center px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-md transition">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver Detalhes
+                        </a>
+                        <a href="{% url 'hr:employee_edit' employee.pk %}" 
+                           class="flex-1 text-center px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-md transition">
+                            <i class="fas fa-edit mr-1"></i>
+                            Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full">
+                <div class="text-center py-12">
+                    <i class="fas fa-users text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum funcionário encontrado</h3>
+                    <p class="text-gray-500 mb-4">
+                        {% if request.GET %}
+                            Tente ajustar os filtros de busca ou
+                            <a href="{% url 'hr:employee_list' %}" class="text-blue-600 hover:text-blue-500">limpar todos os filtros</a>.
+                        {% else %}
+                            Comece adicionando o primeiro funcionário à organização.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'hr:employee_create' %}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                        <i class="fas fa-plus mr-2"></i>
+                        Adicionar Funcionário
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="mt-8 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {% if page_obj.has_previous %}
+                    <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.department %}department={{ request.GET.department }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+                       class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:text-gray-700 rounded-md">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <span class="px-3 py-2 bg-blue-600 text-white rounded-md">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.department %}department={{ request.GET.department }}&{% endif %}page={{ num }}" 
+                           class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:text-gray-700 rounded-md">{{ num }}</a>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.department %}department={{ request.GET.department }}&{% endif %}page={{ page_obj.next_page_number }}" 
+                       class="px-3 py-2 bg-white border border-gray-300 text-gray-500 hover:text-gray-700 rounded-md">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Export Modal -->
+<div id="exportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Exportar Funcionários</h3>
+            <div class="space-y-3">
+                <button onclick="exportData('csv')" 
+                        class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
+                    <i class="fas fa-file-csv mr-2"></i>
+                    Exportar como CSV
+                </button>
+                <button onclick="exportData('pdf')" 
+                        class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
+                    <i class="fas fa-file-pdf mr-2"></i>
+                    Exportar como PDF
+                </button>
+                <button onclick="closeExportModal()" 
+                        class="w-full px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Export functionality
+document.getElementById('exportBtn').addEventListener('click', function() {
+    document.getElementById('exportModal').classList.remove('hidden');
+});
+
+function closeExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+}
+
+function exportData(format) {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', format);
+    window.location.href = '?' + params.toString();
+    closeExportModal();
+}
+
+// Auto-submit form on filter change
+document.querySelectorAll('select[name]').forEach(select => {
+    select.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// Search with debounce
+let searchTimeout;
+document.querySelector('input[name="search"]').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        if (this.value.length >= 3 || this.value.length === 0) {
+            document.getElementById('filterForm').submit();
+        }
+    }, 500);
+});
+</script>
+{% endblock %}

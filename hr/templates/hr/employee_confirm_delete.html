@@ -1,0 +1,587 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Exclusão - {{ employee.full_name }}{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<link href="{% static 'css/hr-employee-detail.css' %}" rel="stylesheet">
+<style>
+.danger-zone {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid #f87171;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.warning-card {
+    background: #fffbeb;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.impact-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+}
+
+.verification-input {
+    background: #fff1f2;
+    border: 2px solid #fca5a5;
+    padding: 0.75rem;
+    border-radius: 8px;
+    width: 100%;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
+.verification-input:focus {
+    outline: none;
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.verification-input.valid {
+    background: #f0fdf4;
+    border-color: #22c55e;
+}
+
+.delete-button {
+    background: #dc2626;
+    color: white;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.delete-button.enabled {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.delete-button.enabled:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.employee-summary {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header with Breadcrumb -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:employee_list' %}" class="hover:text-blue-600">Funcionários</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <a href="{% url 'hr:employee_detail' employee.pk %}" class="hover:text-blue-600">{{ employee.full_name }}</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">Confirmar Exclusão</span>
+        </nav>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Confirmar Exclusão do Funcionário</h1>
+                <p class="text-gray-600">Esta ação é irreversível e afetará dados relacionados</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Employee Summary -->
+            <div class="employee-summary">
+                <div class="flex items-center space-x-4 mb-4">
+                    {% if employee.photo %}
+                        <img src="{{ employee.photo.url }}" 
+                             alt="{{ employee.full_name }}" 
+                             class="w-16 h-16 rounded-full object-cover border-2 border-gray-200">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xl border-2 border-gray-200">
+                            {{ employee.get_initials }}
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">{{ employee.full_name }}</h2>
+                        <p class="text-gray-600">{{ employee.position.title }}</p>
+                        <p class="text-sm text-gray-500">{{ employee.department.name }} • ID: {{ employee.employee_id }}</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-900">{{ employee.years_at_company }}</div>
+                        <div class="text-xs text-gray-500">Anos na Empresa</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-900">{{ employee.performance_reviews.count }}</div>
+                        <div class="text-xs text-gray-500">Avaliações</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-900">{{ employee.training_records.count }}</div>
+                        <div class="text-xs text-gray-500">Treinamentos</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-900">{{ employee.hrdocument_set.count }}</div>
+                        <div class="text-xs text-gray-500">Documentos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="danger-zone">
+                <div class="flex items-center space-x-3 mb-4">
+                    <i class="fas fa-skull-crossbones text-red-600 text-2xl"></i>
+                    <h2 class="text-2xl font-bold text-red-800">Zona de Perigo</h2>
+                </div>
+                
+                <p class="text-red-700 mb-4 font-medium">
+                    Você está prestes a excluir permanentemente este funcionário do sistema. 
+                    Esta ação não pode ser desfeita e afetará dados em múltiplas seções do sistema.
+                </p>
+
+                <!-- Warning Cards -->
+                <div class="space-y-4">
+                    <div class="warning-card">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-database text-orange-500 mt-1"></i>
+                            <div>
+                                <h3 class="font-semibold text-orange-800">Dados Permanentemente Perdidos</h3>
+                                <p class="text-sm text-orange-700 mt-1">
+                                    Todos os dados pessoais, profissionais e histórico do funcionário serão removidos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-card">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-link text-orange-500 mt-1"></i>
+                            <div>
+                                <h3 class="font-semibold text-orange-800">Referências Quebradas</h3>
+                                <p class="text-sm text-orange-700 mt-1">
+                                    Referências a este funcionário em outros registros ficarão inválidas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="warning-card">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-chart-line text-orange-500 mt-1"></i>
+                            <div>
+                                <h3 class="font-semibold text-orange-800">Impacto nos Relatórios</h3>
+                                <p class="text-sm text-orange-700 mt-1">
+                                    Relatórios históricos e estatísticas serão afetados pela remoção destes dados.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Impact Analysis -->
+            <div class="impact-list">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i>
+                    Análise de Impacto
+                </h3>
+                
+                <div class="space-y-3">
+                    {% if employee.performance_reviews.count > 0 %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-star text-blue-500 mr-2"></i>
+                            Avaliações de Performance
+                        </span>
+                        <span class="text-sm font-medium text-red-600">{{ employee.performance_reviews.count }} serão excluídas</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if employee.training_records.count > 0 %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-graduation-cap text-purple-500 mr-2"></i>
+                            Registros de Treinamento
+                        </span>
+                        <span class="text-sm font-medium text-red-600">{{ employee.training_records.count }} serão excluídos</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if employee.hrdocument_set.count > 0 %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-file-alt text-green-500 mr-2"></i>
+                            Documentos Anexados
+                        </span>
+                        <span class="text-sm font-medium text-red-600">{{ employee.hrdocument_set.count }} serão excluídos</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if employee.goals.count > 0 %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-target text-orange-500 mr-2"></i>
+                            Metas e Objetivos
+                        </span>
+                        <span class="text-sm font-medium text-red-600">{{ employee.goals.count }} serão excluídas</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if employee.feedback_received.count > 0 %}
+                    <div class="flex items-center justify-between py-2 border-b border-gray-200">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-comments text-blue-500 mr-2"></i>
+                            Feedbacks Recebidos
+                        </span>
+                        <span class="text-sm font-medium text-red-600">{{ employee.feedback_received.count }} serão excluídos</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between py-2">
+                        <span class="text-sm text-gray-700">
+                            <i class="fas fa-user text-gray-500 mr-2"></i>
+                            Dados Pessoais e Profissionais
+                        </span>
+                        <span class="text-sm font-medium text-red-600">Completamente removidos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Section -->
+            <div class="bg-white border-2 border-red-200 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-red-800 mb-4">
+                    <i class="fas fa-shield-alt text-red-600 mr-2"></i>
+                    Verificação de Segurança
+                </h3>
+                
+                <p class="text-gray-700 mb-4">
+                    Para confirmar a exclusão, digite o nome completo do funcionário exatamente como aparece abaixo:
+                </p>
+                
+                <div class="bg-gray-100 rounded-lg p-3 mb-4 font-mono text-lg text-center border-2 border-dashed border-gray-300">
+                    {{ employee.full_name }}
+                </div>
+                
+                <input type="text" 
+                       id="verification-input" 
+                       class="verification-input" 
+                       placeholder="Digite o nome completo para confirmar..."
+                       autocomplete="off"
+                       spellcheck="false">
+                
+                <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-info-circle text-blue-500 mt-1"></i>
+                        <div class="text-sm text-blue-800">
+                            <p class="font-medium mb-1">Alternativa Recomendada:</p>
+                            <p>Considere <strong>desativar</strong> o funcionário ao invés de excluí-lo. 
+                               Isso preservará os dados históricos e permitirá reativação futura se necessário.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Stats -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumo dos Dados</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Tempo na empresa</span>
+                        <span class="text-sm font-medium">{{ employee.years_at_company }} anos</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Status atual</span>
+                        <span class="status-badge status-{{ employee.status }}">
+                            {{ employee.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Última atualização</span>
+                        <span class="text-sm font-medium">{{ employee.updated_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Cadastrado por</span>
+                        <span class="text-sm font-medium">{{ employee.created_by|default:"Sistema" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alternative Actions -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Ações Alternativas</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'hr:employee_form' employee.pk %}" 
+                       class="w-full btn-outline text-left">
+                        <i class="fas fa-edit mr-3"></i>
+                        Editar Funcionário
+                    </a>
+                    
+                    <button onclick="deactivateEmployee()" 
+                            class="w-full btn-outline text-left">
+                        <i class="fas fa-user-times mr-3"></i>
+                        Desativar Funcionário
+                    </button>
+                    
+                    <button onclick="archiveEmployee()" 
+                            class="w-full btn-outline text-left">
+                        <i class="fas fa-archive mr-3"></i>
+                        Arquivar Funcionário
+                    </button>
+                    
+                    <a href="{% url 'hr:employee_detail' employee.pk %}" 
+                       class="w-full btn-outline text-left">
+                        <i class="fas fa-arrow-left mr-3"></i>
+                        Voltar ao Perfil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Emergency Contact -->
+            {% if employee.emergency_contact_name %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h4 class="font-semibold text-yellow-800 mb-2">
+                    <i class="fas fa-phone text-yellow-600 mr-2"></i>
+                    Contato de Emergência
+                </h4>
+                <div class="text-sm text-yellow-700">
+                    <p class="font-medium">{{ employee.emergency_contact_name }}</p>
+                    {% if employee.emergency_contact_phone %}
+                        <p>{{ employee.emergency_contact_phone }}</p>
+                    {% endif %}
+                    {% if employee.emergency_contact_relationship %}
+                        <p class="text-xs">{{ employee.emergency_contact_relationship }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex justify-between items-center">
+        <div class="flex space-x-4">
+            <a href="{% url 'hr:employee_detail' employee.pk %}" 
+               class="action-button outline">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Cancelar
+            </a>
+            
+            <button onclick="deactivateEmployee()" 
+                    class="action-button secondary">
+                <i class="fas fa-user-times mr-2"></i>
+                Desativar ao Invés
+            </button>
+        </div>
+        
+        <form method="post" id="delete-form" class="inline">
+            {% csrf_token %}
+            <button type="submit" 
+                    id="delete-button" 
+                    class="delete-button"
+                    disabled>
+                <i class="fas fa-trash-alt mr-2"></i>
+                Confirmar Exclusão Permanente
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div id="final-confirmation-modal" class="hr-modal">
+    <div class="hr-modal-content">
+        <div class="hr-modal-header">
+            <h3 class="hr-modal-title text-red-600">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Confirmação Final
+            </h3>
+        </div>
+        <div class="py-4">
+            <p class="text-gray-700 mb-4">
+                Você tem <strong>absoluta certeza</strong> que deseja excluir permanentemente 
+                <strong>{{ employee.full_name }}</strong> do sistema?
+            </p>
+            
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <div class="flex items-start space-x-3">
+                    <i class="fas fa-exclamation-triangle text-red-500 mt-1"></i>
+                    <div class="text-sm text-red-800">
+                        <p class="font-semibold mb-1">Esta ação é IRREVERSÍVEL!</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Todos os dados serão permanentemente perdidos</li>
+                            <li>Não será possível recuperar as informações</li>
+                            <li>Relatórios históricos serão afetados</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-sm text-gray-600">
+                Digite "CONFIRMAR EXCLUSÃO" para prosseguir:
+            </p>
+            <input type="text" 
+                   id="final-confirmation-input" 
+                   class="verification-input mt-2" 
+                   placeholder="Digite CONFIRMAR EXCLUSÃO">
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeModal('final-confirmation-modal')" 
+                    class="action-button outline">
+                Cancelar
+            </button>
+            <button id="final-delete-button" 
+                    class="delete-button" 
+                    disabled>
+                <i class="fas fa-trash-alt mr-2"></i>
+                Excluir Permanentemente
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const employeeName = "{{ employee.full_name }}";
+    const verificationInput = document.getElementById('verification-input');
+    const deleteButton = document.getElementById('delete-button');
+    const deleteForm = document.getElementById('delete-form');
+    
+    // Verification input handler
+    verificationInput.addEventListener('input', function() {
+        const inputValue = this.value.trim();
+        const isValid = inputValue === employeeName;
+        
+        if (isValid) {
+            this.classList.add('valid');
+            deleteButton.classList.add('enabled');
+            deleteButton.disabled = false;
+        } else {
+            this.classList.remove('valid');
+            deleteButton.classList.remove('enabled');
+            deleteButton.disabled = true;
+        }
+    });
+    
+    // Prevent form submission unless verified
+    deleteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (verificationInput.value.trim() === employeeName) {
+            // Show final confirmation modal
+            document.getElementById('final-confirmation-modal').classList.add('active');
+        } else {
+            alert('Por favor, digite o nome completo do funcionário para confirmar.');
+        }
+    });
+    
+    // Final confirmation logic
+    const finalInput = document.getElementById('final-confirmation-input');
+    const finalButton = document.getElementById('final-delete-button');
+    
+    finalInput.addEventListener('input', function() {
+        const isValid = this.value.trim() === 'CONFIRMAR EXCLUSÃO';
+        
+        if (isValid) {
+            this.classList.add('valid');
+            finalButton.classList.add('enabled');
+            finalButton.disabled = false;
+        } else {
+            this.classList.remove('valid');
+            finalButton.classList.remove('enabled');
+            finalButton.disabled = true;
+        }
+    });
+    
+    finalButton.addEventListener('click', function() {
+        if (finalInput.value.trim() === 'CONFIRMAR EXCLUSÃO') {
+            // Submit the actual form
+            deleteForm.submit();
+        }
+    });
+    
+    // Alternative actions
+    function deactivateEmployee() {
+        if (confirm('Desativar funcionário ao invés de excluir? Esta é uma opção mais segura que preserva os dados.')) {
+            fetch(`/hr/employee/{{ employee.pk }}/deactivate/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Funcionário desativado com sucesso!');
+                    window.location.href = '{% url "hr:employee_detail" employee.pk %}';
+                } else {
+                    alert('Erro ao desativar funcionário: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao desativar funcionário');
+            });
+        }
+    }
+    
+    function archiveEmployee() {
+        if (confirm('Arquivar funcionário? Os dados serão preservados mas o funcionário ficará inativo.')) {
+            alert('Funcionalidade de arquivamento será implementada');
+        }
+    }
+    
+    // Modal management
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+    
+    // Close modals on outside click
+    document.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.hr-modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+    
+    // Warn user before leaving page
+    window.addEventListener('beforeunload', function(e) {
+        const input = verificationInput.value.trim();
+        if (input && input !== employeeName) {
+            e.preventDefault();
+            e.returnValue = 'Você tem alterações não salvas. Tem certeza que deseja sair?';
+        }
+    });
+</script>
+{% endblock %}

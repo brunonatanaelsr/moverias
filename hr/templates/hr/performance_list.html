@@ -1,0 +1,839 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Avaliações de Desempenho - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .performance-stats {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .performance-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .performance-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+    }
+    
+    .performance-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+    
+    .status-draft { 
+        background: #f3f4f6; 
+        color: #374151; 
+    }
+    
+    .status-in-progress { 
+        background: #fef3c7; 
+        color: #d97706; 
+    }
+    
+    .status-pending-review { 
+        background: #dbeafe; 
+        color: #2563eb; 
+    }
+    
+    .status-completed { 
+        background: #d1fae5; 
+        color: #059669; 
+    }
+    
+    .status-overdue { 
+        background: #fee2e2; 
+        color: #dc2626; 
+    }
+    
+    .rating-display {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .rating-star {
+        width: 1rem;
+        height: 1rem;
+        color: #fbbf24;
+    }
+    
+    .rating-star.empty {
+        color: #e5e7eb;
+    }
+    
+    .performance-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        background: #e5e7eb;
+        border-radius: 50%;
+    }
+    
+    .timeline-item.completed::before {
+        background: #10b981;
+    }
+    
+    .timeline-item.current::before {
+        background: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: -1.75rem;
+        top: 1rem;
+        width: 2px;
+        height: calc(100% - 0.5rem);
+        background: #e5e7eb;
+    }
+    
+    .cycle-progress {
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .cycle-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .performance-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.5rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .quick-action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .quick-action-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .quick-action-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .bulk-actions {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Avaliações de Desempenho</h1>
+                <p class="text-gray-600">Gerencie e acompanhe avaliações de desempenho dos funcionários</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'hr:performance_cycle' %}" class="action-button secondary">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Ciclos de Avaliação
+                </a>
+                <a href="{% url 'hr:performance_form' %}" class="action-button primary">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nova Avaliação
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Stats -->
+    <div class="performance-stats">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.total_reviews }}</div>
+                <div class="text-sm opacity-90">Total de Avaliações</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.pending_reviews }}</div>
+                <div class="text-sm opacity-90">Pendentes</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.completed_reviews }}</div>
+                <div class="text-sm opacity-90">Concluídas</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold mb-2">{{ stats.average_rating|floatformat:1 }}</div>
+                <div class="text-sm opacity-90">Nota Média</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-action-grid">
+        <div class="quick-action-card" onclick="location.href='{% url 'hr:performance_form' %}'">
+            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-plus text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1">Nova Avaliação</h3>
+            <p class="text-sm text-gray-600">Criar uma nova avaliação de desempenho</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="location.href='{% url 'hr:performance_cycle' %}'">
+            <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-calendar-alt text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1">Ciclos de Avaliação</h3>
+            <p class="text-sm text-gray-600">Gerenciar períodos e cronogramas</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="generateReports()">
+            <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-chart-bar text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1">Relatórios</h3>
+            <p class="text-sm text-gray-600">Gerar relatórios de desempenho</p>
+        </div>
+        
+        <div class="quick-action-card" onclick="location.href='{% url 'hr:performance_templates' %}'">
+            <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas fa-file-alt text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1">Templates</h3>
+            <p class="text-sm text-gray-600">Modelos de avaliação</p>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Avaliações em Andamento</h3>
+                <i class="fas fa-clock text-blue-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-2">{{ metrics.in_progress }}</div>
+            <div class="text-sm text-gray-600">
+                <span class="text-green-600">+{{ metrics.in_progress_change }}%</span>
+                vs. mês anterior
+            </div>
+        </div>
+        
+        <div class="metric-card border-l-green-500">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Taxa de Conclusão</h3>
+                <i class="fas fa-check-circle text-green-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-2">{{ metrics.completion_rate }}%</div>
+            <div class="text-sm text-gray-600">
+                <span class="text-green-600">+{{ metrics.completion_change }}%</span>
+                vs. mês anterior
+            </div>
+        </div>
+        
+        <div class="metric-card border-l-purple-500">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Nota Média Geral</h3>
+                <i class="fas fa-star text-purple-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-2">{{ metrics.average_score|floatformat:1 }}</div>
+            <div class="rating-display">
+                {% for i in "12345" %}
+                    <i class="fas fa-star rating-star {% if i|add:0 <= metrics.average_score %}text-yellow-400{% else %}text-gray-300{% endif %}"></i>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="metric-card border-l-red-500">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-semibold text-gray-900">Avaliações Atrasadas</h3>
+                <i class="fas fa-exclamation-triangle text-red-500"></i>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-2">{{ metrics.overdue }}</div>
+            <div class="text-sm text-gray-600">
+                <span class="text-red-600">{{ metrics.overdue_change }}%</span>
+                necessitam atenção
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="performance-filters">
+        <div class="flex-1">
+            <div class="relative">
+                <input type="text" 
+                       id="search-input" 
+                       placeholder="Buscar por funcionário, departamento ou posição..." 
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+        </div>
+        
+        <select id="status-filter" class="form-select">
+            <option value="">Todos os Status</option>
+            <option value="draft">Rascunho</option>
+            <option value="in_progress">Em Andamento</option>
+            <option value="pending_review">Aguardando Revisão</option>
+            <option value="completed">Concluída</option>
+            <option value="overdue">Atrasada</option>
+        </select>
+        
+        <select id="department-filter" class="form-select">
+            <option value="">Todos os Departamentos</option>
+            {% for dept in departments %}
+                <option value="{{ dept.id }}">{{ dept.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <select id="cycle-filter" class="form-select">
+            <option value="">Todos os Ciclos</option>
+            {% for cycle in cycles %}
+                <option value="{{ cycle.id }}">{{ cycle.name }}</option>
+            {% endfor %}
+        </select>
+        
+        <button onclick="clearFilters()" class="action-button outline">
+            <i class="fas fa-times mr-2"></i>
+            Limpar
+        </button>
+    </div>
+
+    <!-- Bulk Actions (Hidden by default) -->
+    <div id="bulk-actions" class="bulk-actions hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-sm text-gray-600">
+                    <span id="selected-count">0</span> avaliação(ões) selecionada(s)
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="bulkAction('send_reminder')" class="action-button-sm secondary">
+                    <i class="fas fa-bell mr-1"></i>
+                    Enviar Lembrete
+                </button>
+                <button onclick="bulkAction('export')" class="action-button-sm outline">
+                    <i class="fas fa-download mr-1"></i>
+                    Exportar
+                </button>
+                <button onclick="bulkAction('delete')" class="action-button-sm danger">
+                    <i class="fas fa-trash mr-1"></i>
+                    Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Reviews Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="performance-grid">
+        {% for review in reviews %}
+            <div class="performance-card bg-white" data-review-id="{{ review.id }}">
+                <div class="p-6">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" 
+                                   class="review-checkbox" 
+                                   value="{{ review.id }}"
+                                   onchange="updateBulkActions()">
+                            {% if review.employee.photo %}
+                                <img src="{{ review.employee.photo.url }}" 
+                                     alt="{{ review.employee.get_full_name }}" 
+                                     class="w-12 h-12 rounded-full object-cover">
+                            {% else %}
+                                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-600"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ review.employee.get_full_name }}</h3>
+                                <p class="text-sm text-gray-600">{{ review.employee.department.name|default:"-" }}</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end space-y-2">
+                            <span class="performance-status status-{{ review.status }}">
+                                {{ review.get_status_display }}
+                            </span>
+                            {% if review.overall_rating %}
+                                <div class="rating-display">
+                                    {% for i in "12345" %}
+                                        <i class="fas fa-star rating-star {% if i|add:0 <= review.overall_rating %}text-yellow-400{% else %}text-gray-300{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Review Info -->
+                    <div class="space-y-3 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Período:</span>
+                            <span class="font-medium">{{ review.review_period }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Revisor:</span>
+                            <span class="font-medium">{{ review.reviewer.get_full_name|default:"-" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Data Limite:</span>
+                            <span class="font-medium {% if review.is_overdue %}text-red-600{% endif %}">
+                                {{ review.due_date|date:"d/m/Y" }}
+                            </span>
+                        </div>
+                        
+                        {% if review.cycle %}
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Ciclo:</span>
+                                <span class="font-medium">{{ review.cycle.name }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Progresso</span>
+                            <span>{{ review.completion_percentage }}%</span>
+                        </div>
+                        <div class="cycle-progress">
+                            <div class="cycle-progress-bar" style="width: {{ review.completion_percentage }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Key Metrics -->
+                    {% if review.goals_achieved or review.competencies_avg %}
+                        <div class="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                            {% if review.goals_achieved %}
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-green-600">{{ review.goals_achieved }}%</div>
+                                    <div class="text-xs text-gray-600">Metas Atingidas</div>
+                                </div>
+                            {% endif %}
+                            {% if review.competencies_avg %}
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-blue-600">{{ review.competencies_avg|floatformat:1 }}</div>
+                                    <div class="text-xs text-gray-600">Competências</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Last Update -->
+                    <div class="text-xs text-gray-500 mb-4">
+                        Última atualização: {{ review.updated_at|timesince }} atrás
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex space-x-2">
+                        <a href="{% url 'hr:performance_detail' review.id %}" 
+                           class="flex-1 action-button primary text-center">
+                            <i class="fas fa-eye mr-2"></i>
+                            Visualizar
+                        </a>
+                        
+                        {% if review.can_edit %}
+                            <a href="{% url 'hr:performance_form' review.id %}" 
+                               class="flex-1 action-button secondary text-center">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar
+                            </a>
+                        {% endif %}
+                        
+                        <div class="relative">
+                            <button onclick="toggleDropdown('{{ review.id }}')" 
+                                    class="action-button outline p-2">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div id="dropdown-{{ review.id }}" class="dropdown-menu hidden">
+                                <a href="{% url 'hr:performance_duplicate' review.id %}" class="dropdown-item">
+                                    <i class="fas fa-copy mr-2"></i>
+                                    Duplicar
+                                </a>
+                                <a href="{% url 'hr:performance_export' review.id %}" class="dropdown-item">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Exportar PDF
+                                </a>
+                                {% if review.status == 'draft' %}
+                                    <a href="{% url 'hr:performance_send' review.id %}" class="dropdown-item">
+                                        <i class="fas fa-paper-plane mr-2"></i>
+                                        Enviar para Revisão
+                                    </a>
+                                {% endif %}
+                                <div class="dropdown-divider"></div>
+                                <a href="{% url 'hr:performance_delete' review.id %}" 
+                                   class="dropdown-item text-red-600"
+                                   onclick="return confirm('Tem certeza que deseja excluir esta avaliação?')">
+                                    <i class="fas fa-trash mr-2"></i>
+                                    Excluir
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full">
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-line text-gray-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhuma avaliação encontrada</h3>
+                    <p class="text-gray-600 mb-6">Comece criando sua primeira avaliação de desempenho.</p>
+                    <a href="{% url 'hr:performance_form' %}" class="action-button primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Criar Primeira Avaliação
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Load More -->
+    {% if has_more %}
+        <div class="text-center mt-8">
+            <button onclick="loadMore()" class="action-button outline" id="load-more-btn">
+                <i class="fas fa-spinner fa-spin mr-2 hidden" id="load-more-spinner"></i>
+                Carregar Mais
+            </button>
+        </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <div class="flex justify-center mt-8">
+            <nav class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1" class="pagination-link">Primeira</a>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="pagination-link">Anterior</a>
+                {% endif %}
+                
+                <span class="pagination-current">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="pagination-link">Próxima</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-link">Última</a>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Performance Analytics Modal -->
+<div id="analytics-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeModal('analytics-modal')"></div>
+    <div class="modal-content max-w-4xl">
+        <div class="modal-header">
+            <h3 class="modal-title">Analytics de Desempenho</h3>
+            <button onclick="closeModal('analytics-modal')" class="modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <canvas id="performance-chart" width="400" height="200"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let selectedReviews = [];
+    
+    // Update bulk actions visibility
+    function updateBulkActions() {
+        const checkboxes = document.querySelectorAll('.review-checkbox:checked');
+        const bulkActions = document.getElementById('bulk-actions');
+        const selectedCount = document.getElementById('selected-count');
+        
+        selectedReviews = Array.from(checkboxes).map(cb => cb.value);
+        selectedCount.textContent = selectedReviews.length;
+        
+        if (selectedReviews.length > 0) {
+            bulkActions.classList.remove('hidden');
+        } else {
+            bulkActions.classList.add('hidden');
+        }
+    }
+    
+    // Bulk actions
+    function bulkAction(action) {
+        if (selectedReviews.length === 0) {
+            alert('Selecione pelo menos uma avaliação.');
+            return;
+        }
+        
+        let confirmMessage = '';
+        switch (action) {
+            case 'send_reminder':
+                confirmMessage = `Enviar lembrete para ${selectedReviews.length} avaliação(ões)?`;
+                break;
+            case 'export':
+                confirmMessage = `Exportar ${selectedReviews.length} avaliação(ões)?`;
+                break;
+            case 'delete':
+                confirmMessage = `Excluir ${selectedReviews.length} avaliação(ões)? Esta ação não pode ser desfeita.`;
+                break;
+        }
+        
+        if (confirm(confirmMessage)) {
+            // Send AJAX request
+            fetch(`{% url 'hr:performance_bulk_action' %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    action: action,
+                    review_ids: selectedReviews
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erro: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao executar ação em lote');
+            });
+        }
+    }
+    
+    // Filter functionality
+    function applyFilters() {
+        const search = document.getElementById('search-input').value;
+        const status = document.getElementById('status-filter').value;
+        const department = document.getElementById('department-filter').value;
+        const cycle = document.getElementById('cycle-filter').value;
+        
+        const url = new URL(window.location);
+        url.searchParams.set('search', search);
+        url.searchParams.set('status', status);
+        url.searchParams.set('department', department);
+        url.searchParams.set('cycle', cycle);
+        
+        window.location.href = url.toString();
+    }
+    
+    function clearFilters() {
+        document.getElementById('search-input').value = '';
+        document.getElementById('status-filter').value = '';
+        document.getElementById('department-filter').value = '';
+        document.getElementById('cycle-filter').value = '';
+        
+        const url = new URL(window.location);
+        url.search = '';
+        window.location.href = url.toString();
+    }
+    
+    // Dropdown toggle
+    function toggleDropdown(reviewId) {
+        const dropdown = document.getElementById(`dropdown-${reviewId}`);
+        
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            if (menu.id !== `dropdown-${reviewId}`) {
+                menu.classList.add('hidden');
+            }
+        });
+        
+        dropdown.classList.toggle('hidden');
+    }
+    
+    // Load more functionality
+    let currentPage = 1;
+    
+    function loadMore() {
+        const btn = document.getElementById('load-more-btn');
+        const spinner = document.getElementById('load-more-spinner');
+        
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        
+        currentPage++;
+        
+        fetch(`?page=${currentPage}&ajax=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    document.getElementById('performance-grid').insertAdjacentHTML('beforeend', data.html);
+                }
+                
+                if (!data.has_more) {
+                    btn.style.display = 'none';
+                }
+                
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            });
+    }
+    
+    // Generate reports
+    function generateReports() {
+        // Show analytics modal
+        document.getElementById('analytics-modal').classList.remove('hidden');
+        
+        // Create performance chart
+        const ctx = document.getElementById('performance-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                datasets: [{
+                    label: 'Avaliações Concluídas',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.1
+                }, {
+                    label: 'Nota Média',
+                    data: [4.2, 4.5, 4.1, 4.3, 4.6, 4.4],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.1,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        min: 0,
+                        max: 5
+                    }
+                }
+            }
+        });
+    }
+    
+    // Modal functions
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.relative')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+    });
+    
+    // Filter on input change
+    document.getElementById('search-input').addEventListener('input', debounce(applyFilters, 500));
+    document.getElementById('status-filter').addEventListener('change', applyFilters);
+    document.getElementById('department-filter').addEventListener('change', applyFilters);
+    document.getElementById('cycle-filter').addEventListener('change', applyFilters);
+    
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up any initial state
+        updateBulkActions();
+    });
+</script>
+{% endblock %}

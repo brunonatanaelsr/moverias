@@ -1,0 +1,1025 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Newsletters - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .newsletters-header {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .newsletters-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M20 20c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12zm12-12c0-6.627-5.373-12-12-12s-12 5.373-12 12 5.373 12 12 12 12-5.373 12-12z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .newsletters-container {
+        max-width: 1200px;
+        margin: -4rem auto 0;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .newsletters-controls {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex: 1;
+    }
+    
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    
+    .filter-select:focus {
+        outline: none;
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+    
+    .controls-right {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    .btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .btn-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .newsletters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .newsletter-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .newsletter-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+    
+    .newsletter-cover {
+        height: 200px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .newsletter-cover.monthly {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    .newsletter-cover.weekly {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .newsletter-cover.special {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .cover-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .newsletter-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        z-index: 3;
+    }
+    
+    .status-published {
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+    }
+    
+    .status-draft {
+        background: rgba(156, 163, 175, 0.9);
+        color: white;
+    }
+    
+    .status-scheduled {
+        background: rgba(245, 158, 11, 0.9);
+        color: white;
+    }
+    
+    .newsletter-content {
+        padding: 2rem;
+    }
+    
+    .newsletter-header {
+        margin-bottom: 1.5rem;
+    }
+    
+    .newsletter-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .newsletter-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .newsletter-type {
+        background: #ede9fe;
+        color: #7c3aed;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .newsletter-date {
+        font-size: 0.875rem;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .newsletter-description {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .newsletter-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+    
+    .newsletter-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .action-btn {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+    
+    .action-btn-primary {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+    }
+    
+    .action-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    .action-btn-secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    
+    .action-btn-secondary:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+    
+    .action-icon {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .floating-action {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 1000;
+    }
+    
+    .fab {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .fab:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(139, 92, 246, 0.4);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        grid-column: 1 / -1;
+    }
+    
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: #f3f4f6;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: #9ca3af;
+    }
+    
+    .empty-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-text {
+        color: #6b7280;
+        margin-bottom: 2rem;
+        font-size: 1.125rem;
+    }
+    
+    .templates-section {
+        margin-top: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .template-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+    
+    .template-card:hover {
+        border-color: #8b5cf6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.15);
+    }
+    
+    .template-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin: 0 auto 1rem;
+    }
+    
+    .template-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .template-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+    
+    @media (max-width: 768px) {
+        .newsletters-container {
+            margin: -2rem auto 0;
+            padding: 0 1rem;
+        }
+        
+        .newsletters-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .controls-left {
+            flex-direction: column;
+        }
+        
+        .controls-right {
+            justify-content: center;
+        }
+        
+        .newsletters-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .newsletter-actions {
+            flex-direction: column;
+        }
+        
+        .template-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .floating-action {
+            bottom: 1rem;
+            right: 1rem;
+        }
+        
+        .fab {
+            width: 48px;
+            height: 48px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="newsletters-header text-white py-16">
+        <div class="container mx-auto px-4">
+            <div class="header-content text-center">
+                <h1 class="text-3xl font-bold mb-2">Newsletters Corporativas</h1>
+                <p class="text-purple-100">Mantenha sua equipe informada com boletins periódicos</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-8">
+        <div class="newsletters-container">
+            <!-- Controls -->
+            <div class="newsletters-controls">
+                <div class="controls-left">
+                    <div class="search-box">
+                        <input type="text" class="search-input" placeholder="Buscar newsletters..." id="searchInput">
+                        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    
+                    <select class="filter-select" id="statusFilter">
+                        <option value="">Todos os status</option>
+                        <option value="published">Publicado</option>
+                        <option value="draft">Rascunho</option>
+                        <option value="scheduled">Agendado</option>
+                    </select>
+                    
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">Todos os tipos</option>
+                        <option value="monthly">Mensal</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="special">Especial</option>
+                    </select>
+                </div>
+                
+                <div class="controls-right">
+                    <button class="btn btn-secondary" onclick="exportNewsletters()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Exportar
+                    </button>
+                    
+                    <button class="btn btn-primary" onclick="createNewsletter()">
+                        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Nova Newsletter
+                    </button>
+                </div>
+            </div>
+
+            <!-- Newsletters Grid -->
+            <div class="newsletters-grid" id="newslettersGrid">
+                <!-- Published Monthly Newsletter -->
+                <div class="newsletter-card" data-status="published" data-type="monthly">
+                    <div class="newsletter-cover monthly">
+                        <div class="cover-pattern"></div>
+                        <div class="newsletter-icon">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                            </svg>
+                        </div>
+                        <div class="status-badge status-published">Publicado</div>
+                    </div>
+                    
+                    <div class="newsletter-content">
+                        <div class="newsletter-header">
+                            <h3 class="newsletter-title">Boletim Mensal - Julho 2025</h3>
+                            <div class="newsletter-meta">
+                                <span class="newsletter-type">Mensal</span>
+                                <div class="newsletter-date">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Publicado em 20/07/2025
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-description">
+                            Destacamos os principais acontecimentos do mês, incluindo novos projetos, conquistas da equipe, atualizações de políticas internas e eventos corporativos programados para agosto.
+                        </div>
+                        
+                        <div class="newsletter-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">245</div>
+                                <div class="stat-label">Enviados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">92%</div>
+                                <div class="stat-label">Taxa Abertura</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">34</div>
+                                <div class="stat-label">Cliques</div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-actions">
+                            <button class="action-btn action-btn-primary" onclick="viewNewsletter('1')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Visualizar
+                            </button>
+                            <button class="action-btn action-btn-secondary" onclick="editNewsletter('1')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduled Weekly Newsletter -->
+                <div class="newsletter-card" data-status="scheduled" data-type="weekly">
+                    <div class="newsletter-cover weekly">
+                        <div class="cover-pattern"></div>
+                        <div class="newsletter-icon">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="status-badge status-scheduled">Agendado</div>
+                    </div>
+                    
+                    <div class="newsletter-content">
+                        <div class="newsletter-header">
+                            <h3 class="newsletter-title">Resumo Semanal - Semana 30</h3>
+                            <div class="newsletter-meta">
+                                <span class="newsletter-type">Semanal</span>
+                                <div class="newsletter-date">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Agendado para 28/07/2025
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-description">
+                            Resumo das principais atividades da semana, progressos em projetos ativos, próximas reuniões importantes e lembretes para toda a equipe sobre deadlines e eventos.
+                        </div>
+                        
+                        <div class="newsletter-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Enviados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Taxa Abertura</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Cliques</div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-actions">
+                            <button class="action-btn action-btn-primary" onclick="viewNewsletter('2')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Visualizar
+                            </button>
+                            <button class="action-btn action-btn-secondary" onclick="editNewsletter('2')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Draft Special Newsletter -->
+                <div class="newsletter-card" data-status="draft" data-type="special">
+                    <div class="newsletter-cover special">
+                        <div class="cover-pattern"></div>
+                        <div class="newsletter-icon">
+                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                        <div class="status-badge status-draft">Rascunho</div>
+                    </div>
+                    
+                    <div class="newsletter-content">
+                        <div class="newsletter-header">
+                            <h3 class="newsletter-title">Edição Especial - Aniversário da Empresa</h3>
+                            <div class="newsletter-meta">
+                                <span class="newsletter-type">Especial</span>
+                                <div class="newsletter-date">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Em desenvolvimento
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-description">
+                            Edição comemorativa celebrando os 10 anos da empresa, com retrospectiva histórica, depoimentos de colaboradores, conquistas alcançadas e planos futuros para a próxima década.
+                        </div>
+                        
+                        <div class="newsletter-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Enviados</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Taxa Abertura</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">--</div>
+                                <div class="stat-label">Cliques</div>
+                            </div>
+                        </div>
+                        
+                        <div class="newsletter-actions">
+                            <button class="action-btn action-btn-primary" onclick="viewNewsletter('3')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                                Visualizar
+                            </button>
+                            <button class="action-btn action-btn-secondary" onclick="editNewsletter('3')">
+                                <svg class="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Continuar Editando
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Section -->
+            <div class="templates-section">
+                <h2 class="section-title">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+                    </svg>
+                    Templates Disponíveis
+                </h2>
+                
+                <div class="template-grid">
+                    <div class="template-card" onclick="createFromTemplate('corporate')">
+                        <div class="template-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        <div class="template-name">Newsletter Corporativa</div>
+                        <div class="template-description">Template profissional com seções para notícias, atualizações e comunicados oficiais</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="createFromTemplate('weekly')">
+                        <div class="template-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div class="template-name">Resumo Semanal</div>
+                        <div class="template-description">Formato otimizado para atualizações semanais rápidas e informativas</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="createFromTemplate('celebration')">
+                        <div class="template-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                        <div class="template-name">Celebração & Eventos</div>
+                        <div class="template-description">Template festivo para aniversários, conquistas e eventos especiais</div>
+                    </div>
+                    
+                    <div class="template-card" onclick="createFromTemplate('custom')">
+                        <div class="template-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                            </svg>
+                        </div>
+                        <div class="template-name">Template Personalizado</div>
+                        <div class="template-description">Comece do zero com um editor completo e personalize totalmente o design</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-action">
+        <button class="fab" onclick="createNewsletter()" title="Nova newsletter">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    initializeSearch();
+});
+
+function initializeFilters() {
+    const statusFilter = document.getElementById('statusFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    
+    statusFilter.addEventListener('change', filterNewsletters);
+    typeFilter.addEventListener('change', filterNewsletters);
+}
+
+function initializeSearch() {
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            filterNewsletters();
+        }, 300);
+    });
+}
+
+function filterNewsletters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
+    
+    const newsletters = document.querySelectorAll('.newsletter-card');
+    let visibleCount = 0;
+    
+    newsletters.forEach(newsletter => {
+        const title = newsletter.querySelector('.newsletter-title').textContent.toLowerCase();
+        const description = newsletter.querySelector('.newsletter-description').textContent.toLowerCase();
+        const status = newsletter.dataset.status;
+        const type = newsletter.dataset.type;
+        
+        const matchesSearch = !searchTerm || title.includes(searchTerm) || description.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesType = !typeFilter || type === typeFilter;
+        
+        if (matchesSearch && matchesStatus && matchesType) {
+            newsletter.style.display = 'block';
+            visibleCount++;
+        } else {
+            newsletter.style.display = 'none';
+        }
+    });
+    
+    // Show empty state if no results
+    showEmptyStateIfNeeded(visibleCount);
+}
+
+function showEmptyStateIfNeeded(visibleCount) {
+    const grid = document.getElementById('newslettersGrid');
+    let emptyState = document.getElementById('emptyState');
+    
+    if (visibleCount === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.id = 'emptyState';
+            emptyState.className = 'empty-state';
+            emptyState.innerHTML = `
+                <div class="empty-icon">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                    </svg>
+                </div>
+                <h3 class="empty-title">Nenhuma newsletter encontrada</h3>
+                <p class="empty-text">Não há newsletters que correspondam aos filtros selecionados.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Limpar Filtros
+                </button>
+            `;
+            grid.appendChild(emptyState);
+        }
+        emptyState.style.display = 'block';
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('typeFilter').value = '';
+    filterNewsletters();
+}
+
+function createNewsletter() {
+    // Show template selection or redirect to editor
+    alert('Seleção de template para nova newsletter será implementada');
+}
+
+function createFromTemplate(templateType) {
+    // Create newsletter from specific template
+    alert(`Criando newsletter a partir do template: ${templateType}`);
+    // In real app, would redirect to editor with template pre-loaded
+}
+
+function viewNewsletter(id) {
+    // Open newsletter in read-only view
+    alert(`Visualizando newsletter ${id} - funcionalidade será implementada`);
+}
+
+function editNewsletter(id) {
+    // Open newsletter in edit mode
+    alert(`Editando newsletter ${id} - funcionalidade será implementada`);
+}
+
+function exportNewsletters() {
+    // Export newsletters data
+    alert('Exportando newsletters...');
+    
+    const exportData = {
+        timestamp: new Date().toISOString(),
+        newsletters: Array.from(document.querySelectorAll('.newsletter-card')).map(card => ({
+            title: card.querySelector('.newsletter-title').textContent,
+            status: card.dataset.status,
+            type: card.dataset.type,
+            description: card.querySelector('.newsletter-description').textContent,
+            stats: {
+                sent: card.querySelector('.stat-item:nth-child(1) .stat-value').textContent,
+                openRate: card.querySelector('.stat-item:nth-child(2) .stat-value').textContent,
+                clicks: card.querySelector('.stat-item:nth-child(3) .stat-value').textContent
+            }
+        }))
+    };
+    
+    console.log('Export data:', exportData);
+}
+
+// Auto-refresh newsletter stats every 30 seconds for published newsletters
+setInterval(() => {
+    const publishedNewsletters = document.querySelectorAll('[data-status="published"]');
+    publishedNewsletters.forEach(newsletter => {
+        // In real app, would fetch updated stats from server
+        updateNewsletterStats(newsletter);
+    });
+}, 30000);
+
+function updateNewsletterStats(newsletterElement) {
+    // Simulate stats update
+    const statValues = newsletterElement.querySelectorAll('.stat-value');
+    
+    // Small random variations to simulate real-time updates
+    statValues.forEach((stat, index) => {
+        if (stat.textContent !== '--') {
+            const currentValue = parseInt(stat.textContent.replace(/\D/g, '')) || 0;
+            let newValue = currentValue;
+            
+            switch(index) {
+                case 0: // Sent (shouldn't change much)
+                    break;
+                case 1: // Open rate (small increases)
+                    if (Math.random() < 0.1) {
+                        const rate = parseInt(stat.textContent.replace('%', ''));
+                        if (rate < 98) {
+                            stat.textContent = (rate + 1) + '%';
+                        }
+                    }
+                    break;
+                case 2: // Clicks (can increase)
+                    if (Math.random() < 0.15) {
+                        stat.textContent = (currentValue + 1);
+                    }
+                    break;
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

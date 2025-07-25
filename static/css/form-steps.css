@@ -1,0 +1,694 @@
+/* Estilos específicos para formulários do módulo social */
+
+/* ==========================================
+   FORM STEPS STYLES
+   ========================================== */
+
+.form-steps-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+    color: white;
+    position: relative;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+    z-index: 2;
+    position: relative;
+}
+
+.step-item.active .step-number,
+.step-item.completed .step-number {
+    border-color: white;
+    background: white;
+    color: #8B5CF6;
+}
+
+.step-item.completed .step-number {
+    background: #10B981;
+    border-color: #10B981;
+    color: white;
+}
+
+.step-title {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+}
+
+.step-item.active .step-title,
+.step-item.completed .step-title {
+    color: white;
+    font-weight: 600;
+}
+
+/* ==========================================
+   FORM SECTIONS
+   ========================================== */
+
+.form-section {
+    padding: 2rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.form-section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #F3F4F6;
+}
+
+.form-section-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.form-section-icon.blue {
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+}
+
+.form-section-icon.green {
+    background: linear-gradient(135deg, #10B981, #047857);
+}
+
+.form-section-icon.yellow {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+}
+
+.form-section-icon.purple {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+}
+
+.form-section-icon.red {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+}
+
+.form-section-title {
+    flex: 1;
+}
+
+.form-section-title h3 {
+    margin: 0;
+    color: #1F2937;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.form-section-title p {
+    margin: 0.25rem 0 0 0;
+    color: #6B7280;
+    font-size: 0.875rem;
+}
+
+/* ==========================================
+   FORM FIELDS
+   ========================================== */
+
+.form-field {
+    margin-bottom: 1.5rem;
+}
+
+.form-field-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-field-label .required {
+    color: #EF4444;
+    margin-left: 0.25rem;
+}
+
+.form-field-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.form-field-input:focus {
+    outline: none;
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-field-input:hover {
+    border-color: #9CA3AF;
+}
+
+.form-field-input.error {
+    border-color: #EF4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-field-help {
+    display: flex;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+    color: #6B7280;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.form-field-help i {
+    margin-right: 0.5rem;
+    margin-top: 0.1rem;
+    color: #8B5CF6;
+    flex-shrink: 0;
+}
+
+.form-field-error {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+    color: #EF4444;
+    font-size: 0.8rem;
+}
+
+.form-field-error i {
+    margin-right: 0.5rem;
+}
+
+/* ==========================================
+   DYNAMIC FORM COMPONENTS
+   ========================================== */
+
+.dynamic-form-container {
+    border: 2px dashed #D1D5DB;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #FAFAFA;
+    transition: all 0.2s ease;
+}
+
+.dynamic-form-container:hover {
+    border-color: #8B5CF6;
+    background: #F8FAFC;
+}
+
+.dynamic-form-item {
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: white;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.dynamic-form-item:hover {
+    border-color: #8B5CF6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+}
+
+.dynamic-form-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.dynamic-form-item-title {
+    font-weight: 600;
+    color: #1F2937;
+}
+
+.dynamic-form-item-remove {
+    background: none;
+    border: none;
+    color: #EF4444;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.dynamic-form-item-remove:hover {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.add-dynamic-item {
+    width: 100%;
+    padding: 1rem;
+    border: 2px dashed #D1D5DB;
+    border-radius: 8px;
+    background: none;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.add-dynamic-item:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+    background: #F8FAFC;
+}
+
+.add-dynamic-item i {
+    margin-right: 0.5rem;
+}
+
+/* ==========================================
+   VULNERABILITY INDICATORS
+   ========================================== */
+
+.vulnerability-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.vulnerability-low {
+    background: #10B981;
+}
+
+.vulnerability-medium {
+    background: #F59E0B;
+}
+
+.vulnerability-high {
+    background: #F97316;
+}
+
+.vulnerability-critical {
+    background: #EF4444;
+}
+
+.vulnerability-card {
+    border-left: 4px solid;
+    padding: 1rem;
+    background: #F9FAFB;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease;
+}
+
+.vulnerability-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.vulnerability-card.low {
+    border-left-color: #10B981;
+}
+
+.vulnerability-card.medium {
+    border-left-color: #F59E0B;
+}
+
+.vulnerability-card.high {
+    border-left-color: #F97316;
+}
+
+.vulnerability-card.critical {
+    border-left-color: #EF4444;
+}
+
+/* ==========================================
+   FORM NAVIGATION
+   ========================================== */
+
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-top: 1px solid #E5E7EB;
+    background: #F9FAFB;
+}
+
+.form-nav-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-nav-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.form-nav-button i {
+    margin-right: 0.5rem;
+}
+
+.form-nav-button:last-child i {
+    margin-left: 0.5rem;
+    margin-right: 0;
+}
+
+.form-nav-button.primary {
+    background: #8B5CF6;
+    color: white;
+}
+
+.form-nav-button.primary:hover {
+    background: #7C3AED;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.form-nav-button.secondary {
+    background: #6B7280;
+    color: white;
+}
+
+.form-nav-button.secondary:hover {
+    background: #4B5563;
+}
+
+.form-nav-button.success {
+    background: #10B981;
+    color: white;
+}
+
+.form-nav-button.success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.form-nav-button:disabled {
+    background: #D1D5DB;
+    color: #9CA3AF;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ==========================================
+   CHECKBOXES AND RADIO BUTTONS
+   ========================================== */
+
+.form-checkbox,
+.form-radio {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.form-checkbox input,
+.form-radio input {
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+    width: 18px;
+    height: 18px;
+    accent-color: #8B5CF6;
+    flex-shrink: 0;
+}
+
+.form-checkbox label,
+.form-radio label {
+    font-weight: normal;
+    color: #374151;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    cursor: pointer;
+    margin: 0;
+}
+
+/* ==========================================
+   PROGRESS BARS
+   ========================================== */
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #E5E7EB;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.progress-fill.blue {
+    background: #3B82F6;
+}
+
+.progress-fill.green {
+    background: #10B981;
+}
+
+.progress-fill.yellow {
+    background: #F59E0B;
+}
+
+.progress-fill.red {
+    background: #EF4444;
+}
+
+.progress-fill.purple {
+    background: #8B5CF6;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
+
+@media (max-width: 768px) {
+    .step-indicator {
+        padding: 1.5rem 1rem;
+    }
+    
+    .step-title {
+        font-size: 0.75rem;
+    }
+    
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.875rem;
+    }
+    
+    .form-section {
+        padding: 1.5rem 1rem;
+    }
+    
+    .form-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .form-section-icon {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .form-navigation {
+        padding: 1.5rem 1rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .form-nav-group {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .form-nav-button {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .dynamic-form-item {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .step-indicator {
+        padding: 1rem;
+    }
+    
+    .step-title {
+        display: none;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .form-section-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .form-section-title h3 {
+        font-size: 1.1rem;
+    }
+}
+
+/* ==========================================
+   ANIMATIONS
+   ========================================== */
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.dynamic-form-item {
+    animation: slideInRight 0.3s ease-out;
+}
+
+.step-number {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   PRINT STYLES
+   ========================================== */
+
+@media print {
+    .form-navigation,
+    .dynamic-form-item-remove,
+    .add-dynamic-item {
+        display: none !important;
+    }
+    
+    .form-steps-container {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .step-indicator {
+        background: #8B5CF6 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .form-section {
+        break-inside: avoid;
+        border-bottom: 1px solid #000;
+    }
+    
+    .dynamic-form-item {
+        break-inside: avoid;
+        border: 1px solid #000;
+        margin-bottom: 0.5rem;
+    }
+    
+    .vulnerability-card {
+        break-inside: avoid;
+        border: 1px solid #000;
+        border-left: 4px solid #000;
+    }
+}

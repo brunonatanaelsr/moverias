@@ -1,0 +1,572 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Departamento{% else %}Novo Departamento{% endif %} - HR
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header with Breadcrumb -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:department_list' %}" class="hover:text-blue-600">Departamentos</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">
+                {% if form.instance.pk %}
+                    Editar Departamento
+                {% else %}
+                    Novo Departamento
+                {% endif %}
+            </span>
+        </nav>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    {% if form.instance.pk %}
+                        Editar Departamento
+                    {% else %}
+                        Novo Departamento
+                    {% endif %}
+                </h1>
+                <p class="text-gray-600">
+                    {% if form.instance.pk %}
+                        Atualize as informações do departamento
+                    {% else %}
+                        Adicione um novo departamento à organização
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Form -->
+        <div class="lg:col-span-2">
+            <div class="hr-form">
+                <div class="hr-form-header">
+                    <h2>
+                        <i class="fas fa-building mr-2"></i>
+                        Informações do Departamento
+                    </h2>
+                </div>
+                
+                <div class="hr-form-body">
+                    <form method="post" enctype="multipart/form-data" id="department-form">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information Section -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                Informações Básicas
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.name.id_for_label }}">
+                                        Nome do Departamento
+                                        <span class="text-red-500">*</span>
+                                    </label>
+                                    {{ form.name|add_class:"form-input" }}
+                                    {% if form.name.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.name.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.code.id_for_label }}">
+                                        Código do Departamento
+                                    </label>
+                                    {{ form.code|add_class:"form-input" }}
+                                    {% if form.code.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.code.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Código único para identificação (ex: TI, RH, FIN)
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="{{ form.description.id_for_label }}">
+                                    Descrição
+                                </label>
+                                {{ form.description|add_class:"form-input" }}
+                                {% if form.description.errors %}
+                                    <div class="form-field-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        {{ form.description.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-field-help">
+                                    <i class="fas fa-info-circle"></i>
+                                    Descreva as responsabilidades e objetivos do departamento
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Management Section -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                <i class="fas fa-user-tie text-green-500 mr-2"></i>
+                                Gestão
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.manager.id_for_label }}">
+                                        Gerente do Departamento
+                                    </label>
+                                    {{ form.manager|add_class:"form-input" }}
+                                    {% if form.manager.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.manager.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Funcionário responsável pela gestão do departamento
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.parent_department.id_for_label }}">
+                                        Departamento Pai
+                                    </label>
+                                    {{ form.parent_department|add_class:"form-input" }}
+                                    {% if form.parent_department.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.parent_department.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Departamento ao qual este está subordinado (opcional)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Section -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                <i class="fas fa-dollar-sign text-yellow-500 mr-2"></i>
+                                Informações Financeiras
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.budget.id_for_label }}">
+                                        Orçamento Anual
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">R$</span>
+                                        {{ form.budget|add_class:"form-input pl-8" }}
+                                    </div>
+                                    {% if form.budget.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.budget.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Orçamento aprovado para o departamento (opcional)
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.cost_center.id_for_label }}">
+                                        Centro de Custo
+                                    </label>
+                                    {{ form.cost_center|add_class:"form-input" }}
+                                    {% if form.cost_center.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.cost_center.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Código do centro de custo para controle financeiro
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact & Location Section -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                                Localização e Contato
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.location.id_for_label }}">
+                                        Localização
+                                    </label>
+                                    {{ form.location|add_class:"form-input" }}
+                                    {% if form.location.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.location.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Endereço físico ou localização do departamento
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.phone.id_for_label }}">
+                                        Telefone
+                                    </label>
+                                    {{ form.phone|add_class:"form-input" }}
+                                    {% if form.phone.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.phone.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                                        E-mail do Departamento
+                                    </label>
+                                    {{ form.email|add_class:"form-input" }}
+                                    {% if form.email.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.email.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.website.id_for_label }}">
+                                        Website/Portal
+                                    </label>
+                                    {{ form.website|add_class:"form-input" }}
+                                    {% if form.website.errors %}
+                                        <div class="form-field-error">
+                                            <i class="fas fa-exclamation-circle"></i>
+                                            {{ form.website.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Settings -->
+                        <div class="mb-8">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                <i class="fas fa-cogs text-purple-500 mr-2"></i>
+                                Configurações Adicionais
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="form-checkbox">
+                                    {{ form.is_active }}
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-label">
+                                        Departamento Ativo
+                                    </label>
+                                </div>
+                                
+                                {% if form.instance.pk %}
+                                    <div class="form-checkbox">
+                                        {{ form.can_hire }}
+                                        <label for="{{ form.can_hire.id_for_label }}" class="form-label">
+                                            Pode contratar funcionários
+                                        </label>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="form-group">
+                                    <label class="form-label" for="{{ form.working_hours.id_for_label }}">
+                                        Horário de Funcionamento
+                                    </label>
+                                    {{ form.working_hours|add_class:"form-input" }}
+                                    <div class="form-field-help">
+                                        <i class="fas fa-info-circle"></i>
+                                        Ex: Segunda a Sexta, 8h às 18h
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                            <div class="flex space-x-3">
+                                <a href="{% url 'hr:department_list' %}" class="action-button outline">
+                                    <i class="fas fa-arrow-left mr-2"></i>
+                                    Cancelar
+                                </a>
+                                
+                                {% if form.instance.pk %}
+                                    <button type="button" onclick="previewChanges()" class="action-button secondary">
+                                        <i class="fas fa-eye mr-2"></i>
+                                        Visualizar
+                                    </button>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex space-x-3">
+                                <button type="button" onclick="saveDraft()" class="action-button secondary">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Salvar Rascunho
+                                </button>
+                                
+                                <button type="submit" class="action-button primary">
+                                    <i class="fas fa-check mr-2"></i>
+                                    {% if form.instance.pk %}
+                                        Atualizar Departamento
+                                    {% else %}
+                                        Criar Departamento
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar with Help and Preview -->
+        <div class="space-y-6">
+            <!-- Help Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-question-circle text-blue-500 mr-2"></i>
+                    Ajuda
+                </h3>
+                <div class="space-y-4 text-sm text-gray-600">
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Dica:</p>
+                            <p>Um nome claro e descritivo facilita a organização e localização do departamento.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-user-tie text-green-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Gerente:</p>
+                            <p>O gerente será responsável pelas aprovações e gestão dos funcionários do departamento.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-3">
+                        <i class="fas fa-dollar-sign text-yellow-500 mt-1"></i>
+                        <div>
+                            <p class="font-medium text-gray-900">Orçamento:</p>
+                            <p>Defina o orçamento anual para controle de gastos e planejamento financeiro.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Status (for editing) -->
+            {% if form.instance.pk %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        Status Atual
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Funcionários</span>
+                            <span class="text-sm font-medium">{{ form.instance.employee_count|default:0 }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Status</span>
+                            <span class="status-badge {% if form.instance.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                {% if form.instance.is_active %}Ativo{% else %}Inativo{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Criado em</span>
+                            <span class="text-sm font-medium">{{ form.instance.created_at|date:"d/m/Y" }}</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-600">Última atualização</span>
+                            <span class="text-sm font-medium">{{ form.instance.updated_at|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <a href="{% url 'hr:department_list' %}" class="w-full action-button outline text-left">
+                        <i class="fas fa-list mr-3"></i>
+                        Ver Todos os Departamentos
+                    </a>
+                    
+                    {% if form.instance.pk %}
+                        <a href="{% url 'hr:employee_list' %}?department={{ form.instance.pk }}" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-users mr-3"></i>
+                            Ver Funcionários
+                        </a>
+                        
+                        <a href="{% url 'hr:department_detail' form.instance.pk %}" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-eye mr-3"></i>
+                            Ver Detalhes
+                        </a>
+                    {% endif %}
+                    
+                    <button onclick="clearForm()" class="w-full action-button outline text-left">
+                        <i class="fas fa-eraser mr-3"></i>
+                        Limpar Formulário
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation and enhancement
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('department-form');
+        const nameField = document.getElementById('{{ form.name.id_for_label }}');
+        const codeField = document.getElementById('{{ form.code.id_for_label }}');
+        
+        // Auto-generate code from name
+        if (nameField && codeField && !codeField.value) {
+            nameField.addEventListener('input', function() {
+                const name = this.value.trim();
+                if (name) {
+                    // Generate code from first letters of words
+                    const words = name.split(' ');
+                    let code = '';
+                    words.forEach(word => {
+                        if (word.length > 0) {
+                            code += word.charAt(0).toUpperCase();
+                        }
+                    });
+                    codeField.value = code.substring(0, 5); // Max 5 characters
+                }
+            });
+        }
+        
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Salvando...';
+            submitBtn.disabled = true;
+            
+            // Submit form
+            setTimeout(() => {
+                form.submit();
+            }, 500);
+        });
+    });
+    
+    // Utility functions
+    function saveDraft() {
+        const formData = new FormData(document.getElementById('department-form'));
+        formData.append('save_draft', 'true');
+        
+        fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Rascunho salvo com sucesso!');
+            } else {
+                alert('Erro ao salvar rascunho: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao salvar rascunho');
+        });
+    }
+    
+    function previewChanges() {
+        const formData = new FormData(document.getElementById('department-form'));
+        // Implementation for preview functionality
+        alert('Funcionalidade de preview será implementada');
+    }
+    
+    function clearForm() {
+        if (confirm('Tem certeza que deseja limpar todos os campos? Todas as alterações não salvas serão perdidas.')) {
+            document.getElementById('department-form').reset();
+        }
+    }
+    
+    // Auto-save functionality
+    let autoSaveTimeout;
+    const form = document.getElementById('department-form');
+    
+    form.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            saveDraft();
+        }, 30000); // Auto-save after 30 seconds of inactivity
+    });
+    
+    // Warn user before leaving page with unsaved changes
+    let formChanged = false;
+    form.addEventListener('input', function() {
+        formChanged = true;
+    });
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = 'Você tem alterações não salvas. Tem certeza que deseja sair?';
+        }
+    });
+    
+    // Mark form as saved when submitted
+    form.addEventListener('submit', function() {
+        formChanged = false;
+    });
+</script>
+{% endblock %}

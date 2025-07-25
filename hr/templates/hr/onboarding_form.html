@@ -1,0 +1,1016 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Onboarding{% else %}Novo Onboarding{% endif %} - HR System
+{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .onboarding-wizard {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .step-indicator {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+    
+    .step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+    
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin: 0 auto 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .step.active .step-circle {
+        background: #10b981;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    
+    .step.completed .step-circle {
+        background: #059669;
+    }
+    
+    .step.pending .step-circle {
+        background: #6b7280;
+    }
+    
+    .step-line {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        right: -50%;
+        height: 2px;
+        background: #e5e7eb;
+        z-index: -1;
+    }
+    
+    .step.completed .step-line {
+        background: #10b981;
+    }
+    
+    .step:last-child .step-line {
+        display: none;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #10b981;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .section-icon {
+        width: 24px;
+        height: 24px;
+        margin-right: 0.75rem;
+        color: #10b981;
+    }
+    
+    .checklist-item {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s ease;
+    }
+    
+    .checklist-item:hover {
+        border-color: #10b981;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);
+    }
+    
+    .checklist-item.completed {
+        background: #ecfdf5;
+        border-color: #10b981;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0.25rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #10b981;
+    }
+    
+    .timeline-line {
+        position: absolute;
+        left: 5px;
+        top: 12px;
+        bottom: -1.5rem;
+        width: 2px;
+        background: #e5e7eb;
+    }
+    
+    .timeline-item:last-child .timeline-line {
+        display: none;
+    }
+    
+    .mentor-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .mentor-card:hover {
+        border-color: #10b981;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+    }
+    
+    .mentor-card.selected {
+        border-color: #10b981;
+        background: #ecfdf5;
+    }
+    
+    .mentor-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        border: 3px solid #e5e7eb;
+    }
+    
+    .mentor-card.selected .mentor-avatar {
+        border-color: #10b981;
+    }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+        transition: stroke-dashoffset 0.35s;
+        transform-origin: 50% 50%;
+    }
+    
+    .auto-save-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .auto-save-indicator.show {
+        opacity: 1;
+    }
+    
+    .department-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .department-tech {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .department-design {
+        background: #fce7f3;
+        color: #be185d;
+    }
+    
+    .department-marketing {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .department-sales {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+    
+    .priority-high {
+        color: #dc2626;
+        background: #fef2f2;
+        border-color: #fecaca;
+    }
+    
+    .priority-medium {
+        color: #d97706;
+        background: #fffbeb;
+        border-color: #fed7aa;
+    }
+    
+    .priority-low {
+        color: #16a34a;
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="onboarding-wizard text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold mb-2">
+                    {% if form.instance.pk %}
+                        Editar Processo de Onboarding
+                    {% else %}
+                        Novo Processo de Onboarding
+                    {% endif %}
+                </h1>
+                <p class="text-blue-100">Configure o processo de integração para o novo colaborador</p>
+            </div>
+            
+            <!-- Step Indicator -->
+            <div class="step-indicator mt-8">
+                <div class="step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-line"></div>
+                    <span class="text-sm">Informações Básicas</span>
+                </div>
+                <div class="step pending" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-line"></div>
+                    <span class="text-sm">Documentação</span>
+                </div>
+                <div class="step pending" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-line"></div>
+                    <span class="text-sm">Cronograma</span>
+                </div>
+                <div class="step pending" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-line"></div>
+                    <span class="text-sm">Mentoria</span>
+                </div>
+                <div class="step pending" data-step="5">
+                    <div class="step-circle">5</div>
+                    <div class="step-line"></div>
+                    <span class="text-sm">Recursos</span>
+                </div>
+                <div class="step pending" data-step="6">
+                    <div class="step-circle">6</div>
+                    <span class="text-sm">Revisão</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Content -->
+    <div class="container mx-auto px-4 py-8">
+        <form method="post" id="onboardingForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Step 1: Basic Information -->
+            <div class="form-step active" data-step="1">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        Informações do Colaborador
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            {{ form.employee|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.position|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.department|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.start_date|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.manager|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.onboarding_type|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Descrição e Objetivos
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            {{ form.description|as_crispy_field }}
+                        </div>
+                        <div>
+                            {{ form.objectives|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Documentation -->
+            <div class="form-step" data-step="2" style="display: none;">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Documentos Obrigatórios
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="required_docs" value="contract">
+                                <span class="ml-3 text-gray-700">Contrato de Trabalho</span>
+                                <span class="ml-auto text-sm text-red-600">Obrigatório</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="required_docs" value="id_copy">
+                                <span class="ml-3 text-gray-700">Cópia do RG e CPF</span>
+                                <span class="ml-auto text-sm text-red-600">Obrigatório</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="required_docs" value="bank_details">
+                                <span class="ml-3 text-gray-700">Dados Bancários</span>
+                                <span class="ml-auto text-sm text-red-600">Obrigatório</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="required_docs" value="emergency_contact">
+                                <span class="ml-3 text-gray-700">Contato de Emergência</span>
+                                <span class="ml-auto text-sm text-red-600">Obrigatório</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                        </svg>
+                        Recursos e Acessos
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="access_resources" value="email_account">
+                                <span class="ml-3 text-gray-700">Conta de E-mail Corporativo</span>
+                                <span class="ml-auto text-sm text-orange-600">1º Dia</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="access_resources" value="system_access">
+                                <span class="ml-3 text-gray-700">Acesso aos Sistemas</span>
+                                <span class="ml-auto text-sm text-orange-600">1º Dia</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="access_resources" value="workspace">
+                                <span class="ml-3 text-gray-700">Estação de Trabalho</span>
+                                <span class="ml-auto text-sm text-orange-600">1º Dia</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="access_resources" value="welcome_kit">
+                                <span class="ml-3 text-gray-700">Kit de Boas-vindas</span>
+                                <span class="ml-auto text-sm text-blue-600">Opcional</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Timeline -->
+            <div class="form-step" data-step="3" style="display: none;">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Cronograma de Atividades
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duração Total</label>
+                            <select class="form-select w-full" name="duration">
+                                <option value="1">1 Semana</option>
+                                <option value="2" selected>2 Semanas</option>
+                                <option value="4">1 Mês</option>
+                                <option value="8">2 Meses</option>
+                                <option value="12">3 Meses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Primeiro Check-in</label>
+                            <input type="date" class="form-input w-full" name="first_checkin">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Avaliação Final</label>
+                            <input type="date" class="form-input w-full" name="final_evaluation">
+                        </div>
+                    </div>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4 class="font-semibold text-gray-900">Primeiro Dia</h4>
+                                <p class="text-gray-600 text-sm">Apresentação, tour pela empresa, configuração de acesso</p>
+                                <div class="flex flex-wrap mt-2">
+                                    <span class="department-badge department-tech">Configuração Técnica</span>
+                                    <span class="department-badge department-design">Tour Empresarial</span>
+                                </div>
+                            </div>
+                            <div class="timeline-line"></div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4 class="font-semibold text-gray-900">Primeira Semana</h4>
+                                <p class="text-gray-600 text-sm">Treinamentos básicos, apresentação da equipe, primeiros projetos</p>
+                                <div class="flex flex-wrap mt-2">
+                                    <span class="department-badge department-marketing">Treinamentos</span>
+                                    <span class="department-badge department-sales">Integração Social</span>
+                                </div>
+                            </div>
+                            <div class="timeline-line"></div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4 class="font-semibold text-gray-900">Segundo Semana</h4>
+                                <p class="text-gray-600 text-sm">Projetos práticos, feedback inicial, ajustes necessários</p>
+                                <div class="flex flex-wrap mt-2">
+                                    <span class="department-badge department-tech">Projetos Práticos</span>
+                                </div>
+                            </div>
+                            <div class="timeline-line"></div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h4 class="font-semibold text-gray-900">Primeiro Mês</h4>
+                                <p class="text-gray-600 text-sm">Avaliação de desempenho, definição de objetivos, planejamento futuro</p>
+                                <div class="flex flex-wrap mt-2">
+                                    <span class="department-badge department-design">Avaliação</span>
+                                    <span class="department-badge department-marketing">Planejamento</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Mentorship -->
+            <div class="form-step" data-step="4" style="display: none;">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        Programa de Mentoria
+                    </h3>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                   name="enable_mentorship" id="enableMentorship">
+                            <span class="ml-3 text-gray-700 font-medium">Incluir programa de mentoria</span>
+                        </label>
+                    </div>
+                    
+                    <div id="mentorshipOptions" style="display: none;">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            <div class="mentor-card" data-mentor-id="1">
+                                <img src="https://via.placeholder.com/80" alt="Ana Silva" class="mentor-avatar">
+                                <h4 class="font-semibold text-gray-900">Ana Silva</h4>
+                                <p class="text-sm text-gray-600">Gerente de Desenvolvimento</p>
+                                <div class="mt-2">
+                                    <span class="department-badge department-tech">Tecnologia</span>
+                                </div>
+                                <div class="mt-3 text-xs text-gray-500">
+                                    <p>5 anos de experiência</p>
+                                    <p>3 mentorados ativos</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mentor-card" data-mentor-id="2">
+                                <img src="https://via.placeholder.com/80" alt="Carlos Santos" class="mentor-avatar">
+                                <h4 class="font-semibold text-gray-900">Carlos Santos</h4>
+                                <p class="text-sm text-gray-600">Diretor de Design</p>
+                                <div class="mt-2">
+                                    <span class="department-badge department-design">Design</span>
+                                </div>
+                                <div class="mt-3 text-xs text-gray-500">
+                                    <p>8 anos de experiência</p>
+                                    <p>2 mentorados ativos</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mentor-card" data-mentor-id="3">
+                                <img src="https://via.placeholder.com/80" alt="Maria Costa" class="mentor-avatar">
+                                <h4 class="font-semibold text-gray-900">Maria Costa</h4>
+                                <p class="text-sm text-gray-600">Coordenadora de Marketing</p>
+                                <div class="mt-2">
+                                    <span class="department-badge department-marketing">Marketing</span>
+                                </div>
+                                <div class="mt-3 text-xs text-gray-500">
+                                    <p>6 anos de experiência</p>
+                                    <p>1 mentorado ativo</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Frequência de Reuniões</label>
+                                <select class="form-select w-full" name="mentorship_frequency">
+                                    <option value="daily">Diária</option>
+                                    <option value="weekly" selected>Semanal</option>
+                                    <option value="biweekly">Quinzenal</option>
+                                    <option value="monthly">Mensal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Duração das Sessões</label>
+                                <select class="form-select w-full" name="session_duration">
+                                    <option value="30">30 minutos</option>
+                                    <option value="60" selected>1 hora</option>
+                                    <option value="90">1h 30min</option>
+                                    <option value="120">2 horas</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Resources -->
+            <div class="form-step" data-step="5" style="display: none;">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        Recursos de Aprendizagem
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="checklist-item priority-high">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="company_handbook">
+                                <span class="ml-3 text-gray-700">Manual da Empresa</span>
+                                <span class="ml-auto text-sm font-medium">Alta Prioridade</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item priority-high">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="safety_training">
+                                <span class="ml-3 text-gray-700">Treinamento de Segurança</span>
+                                <span class="ml-auto text-sm font-medium">Alta Prioridade</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item priority-medium">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="role_specific">
+                                <span class="ml-3 text-gray-700">Treinamento Específico da Função</span>
+                                <span class="ml-auto text-sm font-medium">Média Prioridade</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item priority-medium">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="software_training">
+                                <span class="ml-3 text-gray-700">Treinamento em Software</span>
+                                <span class="ml-auto text-sm font-medium">Média Prioridade</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item priority-low">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="company_culture">
+                                <span class="ml-3 text-gray-700">Cultura Organizacional</span>
+                                <span class="ml-auto text-sm font-medium">Baixa Prioridade</span>
+                            </label>
+                        </div>
+                        
+                        <div class="checklist-item priority-low">
+                            <label class="flex items-center">
+                                <input type="checkbox" class="form-checkbox h-5 w-5 text-green-600 rounded" 
+                                       name="learning_resources" value="networking">
+                                <span class="ml-3 text-gray-700">Sessões de Networking</span>
+                                <span class="ml-auto text-sm font-medium">Baixa Prioridade</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        Métricas de Sucesso
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Meta de Conclusão dos Treinamentos</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="range" min="70" max="100" value="90" class="flex-1" name="training_completion_target">
+                                <span class="text-sm font-medium text-gray-700 min-w-0">90%</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Meta de Satisfação</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="range" min="1" max="5" value="4" class="flex-1" name="satisfaction_target">
+                                <span class="text-sm font-medium text-gray-700 min-w-0">4/5</span>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prazo para Produtividade Total</label>
+                            <select class="form-select w-full" name="productivity_timeline">
+                                <option value="1">1 Semana</option>
+                                <option value="2">2 Semanas</option>
+                                <option value="4" selected>1 Mês</option>
+                                <option value="8">2 Meses</option>
+                                <option value="12">3 Meses</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Frequência de Check-ins</label>
+                            <select class="form-select w-full" name="checkin_frequency">
+                                <option value="daily">Diário</option>
+                                <option value="weekly" selected>Semanal</option>
+                                <option value="biweekly">Quinzenal</option>
+                                <option value="monthly">Mensal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Review -->
+            <div class="form-step" data-step="6" style="display: none;">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Revisão Final
+                    </h3>
+                    
+                    <div id="reviewSummary" class="space-y-6">
+                        <!-- Summary will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <div class="flex">
+                            <svg class="w-5 h-5 text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Importante</h3>
+                                <p class="mt-1 text-sm text-yellow-700">
+                                    Verifique todos os dados antes de finalizar. Após a criação, alguns campos não poderão ser alterados.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex justify-between items-center mt-8">
+                <button type="button" id="prevBtn" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors" style="display: none;">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Anterior
+                </button>
+                
+                <div class="flex space-x-4">
+                    <button type="button" id="saveBtn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        Salvar Rascunho
+                    </button>
+                    
+                    <button type="button" id="nextBtn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        Próximo
+                        <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Auto-save Indicator -->
+<div id="autoSaveIndicator" class="auto-save-indicator">
+    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    </svg>
+    Salvo automaticamente
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentStep = 1;
+    const totalSteps = 6;
+    
+    const steps = document.querySelectorAll('.step');
+    const formSteps = document.querySelectorAll('.form-step');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const autoSaveIndicator = document.getElementById('autoSaveIndicator');
+    
+    // Step navigation
+    function showStep(step) {
+        // Hide all form steps
+        formSteps.forEach(formStep => {
+            formStep.style.display = 'none';
+        });
+        
+        // Show current step
+        const targetStep = document.querySelector(`[data-step="${step}"]`);
+        if (targetStep) {
+            targetStep.style.display = 'block';
+        }
+        
+        // Update step indicators
+        steps.forEach((stepEl, index) => {
+            stepEl.classList.remove('active', 'completed', 'pending');
+            
+            if (index + 1 < step) {
+                stepEl.classList.add('completed');
+            } else if (index + 1 === step) {
+                stepEl.classList.add('active');
+            } else {
+                stepEl.classList.add('pending');
+            }
+        });
+        
+        // Update navigation buttons
+        prevBtn.style.display = step === 1 ? 'none' : 'block';
+        
+        if (step === totalSteps) {
+            nextBtn.textContent = 'Finalizar Onboarding';
+            nextBtn.innerHTML = `
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Finalizar Onboarding
+            `;
+        } else {
+            nextBtn.innerHTML = `
+                Próximo
+                <svg class="w-5 h-5 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            `;
+        }
+        
+        // Update review summary on last step
+        if (step === totalSteps) {
+            updateReviewSummary();
+        }
+    }
+    
+    // Navigation event listeners
+    nextBtn.addEventListener('click', function() {
+        if (currentStep < totalSteps) {
+            currentStep++;
+            showStep(currentStep);
+        } else {
+            // Submit form
+            document.getElementById('onboardingForm').submit();
+        }
+    });
+    
+    prevBtn.addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+    
+    // Mentorship toggle
+    const enableMentorship = document.getElementById('enableMentorship');
+    const mentorshipOptions = document.getElementById('mentorshipOptions');
+    
+    enableMentorship.addEventListener('change', function() {
+        mentorshipOptions.style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Mentor selection
+    const mentorCards = document.querySelectorAll('.mentor-card');
+    mentorCards.forEach(card => {
+        card.addEventListener('click', function() {
+            mentorCards.forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+    
+    // Range input updates
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    rangeInputs.forEach(input => {
+        const updateValue = () => {
+            const value = input.value;
+            const span = input.nextElementSibling;
+            if (span) {
+                if (input.name === 'training_completion_target') {
+                    span.textContent = value + '%';
+                } else if (input.name === 'satisfaction_target') {
+                    span.textContent = value + '/5';
+                }
+            }
+        };
+        
+        input.addEventListener('input', updateValue);
+        updateValue();
+    });
+    
+    // Auto-save functionality
+    let autoSaveTimeout;
+    const formInputs = document.querySelectorAll('input, select, textarea');
+    
+    formInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(autoSave, 2000);
+        });
+    });
+    
+    function autoSave() {
+        // Show indicator
+        autoSaveIndicator.classList.add('show');
+        
+        // Hide after 2 seconds
+        setTimeout(() => {
+            autoSaveIndicator.classList.remove('show');
+        }, 2000);
+    }
+    
+    // Manual save
+    saveBtn.addEventListener('click', function() {
+        autoSave();
+    });
+    
+    // Update review summary
+    function updateReviewSummary() {
+        const reviewSummary = document.getElementById('reviewSummary');
+        
+        const employee = document.querySelector('[name="employee"] option:checked')?.textContent || 'Não selecionado';
+        const position = document.querySelector('[name="position"]')?.value || 'Não informado';
+        const department = document.querySelector('[name="department"] option:checked')?.textContent || 'Não selecionado';
+        const startDate = document.querySelector('[name="start_date"]')?.value || 'Não informado';
+        const duration = document.querySelector('[name="duration"] option:checked')?.textContent || 'Não selecionado';
+        
+        const requiredDocs = document.querySelectorAll('[name="required_docs"]:checked').length;
+        const accessResources = document.querySelectorAll('[name="access_resources"]:checked').length;
+        const learningResources = document.querySelectorAll('[name="learning_resources"]:checked').length;
+        
+        const mentorshipEnabled = document.getElementById('enableMentorship').checked;
+        const selectedMentor = document.querySelector('.mentor-card.selected h4')?.textContent || 'Nenhum selecionado';
+        
+        reviewSummary.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-900">Informações Básicas</h4>
+                    <div class="space-y-2 text-sm">
+                        <p><span class="font-medium">Colaborador:</span> ${employee}</p>
+                        <p><span class="font-medium">Cargo:</span> ${position}</p>
+                        <p><span class="font-medium">Departamento:</span> ${department}</p>
+                        <p><span class="font-medium">Data de Início:</span> ${startDate}</p>
+                        <p><span class="font-medium">Duração:</span> ${duration}</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-900">Recursos Configurados</h4>
+                    <div class="space-y-2 text-sm">
+                        <p><span class="font-medium">Documentos Obrigatórios:</span> ${requiredDocs} selecionados</p>
+                        <p><span class="font-medium">Recursos de Acesso:</span> ${accessResources} selecionados</p>
+                        <p><span class="font-medium">Recursos de Aprendizagem:</span> ${learningResources} selecionados</p>
+                        <p><span class="font-medium">Mentoria:</span> ${mentorshipEnabled ? 'Habilitada' : 'Desabilitada'}</p>
+                        ${mentorshipEnabled ? `<p><span class="font-medium">Mentor:</span> ${selectedMentor}</p>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Initialize
+    showStep(currentStep);
+});
+</script>
+{% endblock %}

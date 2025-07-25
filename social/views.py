@@ -5,12 +5,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import CreateView, UpdateView, DetailView, ListView, DeleteView
+from django.views.generic import CreateView, UpdateView, DetailView, ListView, DeleteView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.core.cache import cache
 from django.conf import settings
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Count
 from django.http import JsonResponse
 from formtools.wizard.views import SessionWizardView
 from core.unified_permissions import (
@@ -347,3 +347,50 @@ class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
         
         messages.success(request, f'Anamnese social de {self.object.beneficiary.full_name} excluída com sucesso!')
         return redirect(success_url)
+
+
+class SocialDashboardView(LoginRequiredMixin, TechnicianRequiredMixin, TemplateView):
+    """Dashboard analítico do módulo social"""
+    
+    template_name = 'social/anamnesis_dashboard.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Cache dos dados do dashboard
+        cache_key = "social_dashboard_data"
+        dashboard_data = cache.get(cache_key)
+        
+        if dashboard_data is None:
+            # Estatísticas básicas
+            anamneses = SocialAnamnesis.objects.all()
+            
+            dashboard_data = {
+                'total_anamneses': anamneses.count(),
+                'completed_count': anamneses.filter(status='completed').count(),
+                'draft_count': anamneses.filter(status='draft').count(),
+                'update_required_count': anamneses.filter(status='requires_update').count(),
+                'total_vulnerabilities': IdentifiedVulnerability.objects.count(),
+                'total_beneficiaries_attended': anamneses.values('beneficiary').distinct().count(),
+                
+                # Vulnerabilidades por categoria
+                'vulnerability_stats': VulnerabilityCategory.objects.annotate(
+                    count=Count('identified_vulnerabilities')
+                ).order_by('-count')[:5],
+                
+                # Atividades recentes (últimas 10)
+                'recent_activities': SocialAnamnesisEvolution.objects.select_related(
+                    'anamnesis__beneficiary', 'created_by'
+                ).order_by('-created_at')[:10],
+                
+                # Anamneses recentes
+                'recent_anamneses': anamneses.select_related(
+                    'beneficiary', 'created_by'
+                ).order_by('-created_at')[:5]
+            }
+            
+            # Cache por 15 minutos
+            cache.set(cache_key, dashboard_data, 900)
+        
+        context.update(dashboard_data)
+        return context

@@ -1,0 +1,901 @@
+{% extends 'layouts/base.html' %}
+{% load static crispy_forms_tags %}
+
+{% block title %}Aprovar Documento - {{ document.title }} - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .approval-preview {
+        height: 400px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .approval-checklist {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .checklist-item:hover {
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .approval-decision {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .approval-decision.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .approval-decision.approve.selected {
+        border-color: #10b981;
+        background: #ecfdf5;
+    }
+    
+    .approval-decision.reject.selected {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+    
+    .signature-pad {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        cursor: crosshair;
+    }
+    
+    .approval-flow-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+    
+    .flow-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 100px;
+    }
+    
+    .flow-arrow {
+        font-size: 1.5rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-4">
+            <a href="{% url 'hr:document_list' %}" class="hover:text-blue-600">Documentos</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <a href="{% url 'hr:document_detail' document.id %}" class="hover:text-blue-600">{{ document.title|truncatechars:30 }}</a>
+            <i class="fas fa-chevron-right text-xs"></i>
+            <span class="text-gray-900 font-medium">Aprovação</span>
+        </nav>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex-shrink-0">
+                <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-clipboard-check text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Aprovação de Documento</h1>
+                <p class="text-gray-600">Revise e tome uma decisão sobre o documento enviado</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert for Pending Approval -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+        <div class="flex items-center">
+            <i class="fas fa-clock text-yellow-600 mr-3"></i>
+            <div>
+                <h3 class="text-yellow-800 font-medium">Documento aguardando aprovação</h3>
+                <p class="text-yellow-700 text-sm">
+                    Este documento foi enviado em {{ document.created_at|date:"d/m/Y H:i" }} e requer sua aprovação.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Document Information -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Informações do Documento
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                        <p class="text-gray-900 font-medium">{{ document.title }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                        <span class="document-type-badge type-{{ document.type|lower }}">
+                            {{ document.get_type_display|default:document.type }}
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Funcionário</label>
+                        <div class="flex items-center space-x-3">
+                            {% if document.employee.photo %}
+                                <img src="{{ document.employee.photo.url }}" 
+                                     alt="{{ document.employee.get_full_name }}" 
+                                     class="w-8 h-8 rounded-full object-cover">
+                            {% else %}
+                                <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-600 text-sm"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-gray-900 font-medium">{{ document.employee.get_full_name }}</p>
+                                <p class="text-sm text-gray-600">{{ document.employee.department.name|default:"-" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data de Envio</label>
+                        <p class="text-gray-900">{{ document.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    
+                    {% if document.description %}
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                            <p class="text-gray-900">{{ document.description }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tamanho do Arquivo</label>
+                        <p class="text-gray-900">{{ document.file_size|filesizeformat }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Formato</label>
+                        <p class="text-gray-900">{{ document.file_extension|upper }}</p>
+                    </div>
+                    
+                    {% if document.expiry_date %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data de Vencimento</label>
+                            <p class="text-gray-900">{{ document.expiry_date|date:"d/m/Y" }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Confidencialidade</label>
+                        <span class="confidentiality-badge level-{{ document.confidentiality_level|lower }}">
+                            {{ document.get_confidentiality_display|default:document.confidentiality_level }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Preview -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-eye mr-2"></i>
+                        Prévia do Documento
+                    </h2>
+                    <div class="flex space-x-2">
+                        <a href="{{ document.file.url }}" 
+                           target="_blank" 
+                           class="action-button-sm secondary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        <a href="{{ document.file.url }}" 
+                           download 
+                           class="action-button-sm primary">
+                            <i class="fas fa-download"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="approval-preview" id="document-preview">
+                    {% if document.file_type == 'pdf' %}
+                        <iframe src="{{ document.file.url }}" 
+                                width="100%" 
+                                height="100%" 
+                                frameborder="0">
+                            <p>Seu navegador não suporta visualização de PDF. 
+                               <a href="{{ document.file.url }}" target="_blank">Clique aqui para abrir o arquivo</a>
+                            </p>
+                        </iframe>
+                    {% elif document.file_type == 'image' %}
+                        <div class="flex items-center justify-center h-full bg-gray-100">
+                            <img src="{{ document.file.url }}" 
+                                 alt="{{ document.title }}" 
+                                 class="max-w-full max-h-full object-contain">
+                        </div>
+                    {% else %}
+                        <div class="flex flex-col items-center justify-center h-full bg-gray-50">
+                            <i class="fas fa-file text-6xl text-gray-400 mb-4"></i>
+                            <h3 class="text-lg font-medium text-gray-900 mb-2">{{ document.title }}</h3>
+                            <p class="text-gray-600 mb-4">Tipo: {{ document.file_extension|upper }}</p>
+                            <p class="text-gray-600 mb-6">Tamanho: {{ document.file_size|filesizeformat }}</p>
+                            <div class="flex space-x-3">
+                                <a href="{{ document.file.url }}" 
+                                   target="_blank" 
+                                   class="action-button primary">
+                                    <i class="fas fa-external-link-alt mr-2"></i>
+                                    Abrir Arquivo
+                                </a>
+                                <a href="{{ document.file.url }}" 
+                                   download 
+                                   class="action-button secondary">
+                                    <i class="fas fa-download mr-2"></i>
+                                    Download
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Approval Decision Form -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-clipboard-check mr-2"></i>
+                    Decisão de Aprovação
+                </h2>
+                
+                <form method="post" id="approval-form">
+                    {% csrf_token %}
+                    
+                    <!-- Decision Selection -->
+                    <div class="mb-8">
+                        <label class="block text-sm font-medium text-gray-700 mb-4">Sua Decisão</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="approval-decision approve" onclick="selectDecision('approve')">
+                                <div class="flex items-center">
+                                    <input type="radio" 
+                                           name="decision" 
+                                           value="approve" 
+                                           id="decision-approve" 
+                                           class="form-radio text-green-600 mr-3">
+                                    <div>
+                                        <div class="flex items-center mb-2">
+                                            <i class="fas fa-check-circle text-green-600 text-xl mr-2"></i>
+                                            <h3 class="text-lg font-medium text-gray-900">Aprovar</h3>
+                                        </div>
+                                        <p class="text-sm text-gray-600">
+                                            O documento está correto e pode ser ativado no sistema.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="approval-decision reject" onclick="selectDecision('reject')">
+                                <div class="flex items-center">
+                                    <input type="radio" 
+                                           name="decision" 
+                                           value="reject" 
+                                           id="decision-reject" 
+                                           class="form-radio text-red-600 mr-3">
+                                    <div>
+                                        <div class="flex items-center mb-2">
+                                            <i class="fas fa-times-circle text-red-600 text-xl mr-2"></i>
+                                            <h3 class="text-lg font-medium text-gray-900">Rejeitar</h3>
+                                        </div>
+                                        <p class="text-sm text-gray-600">
+                                            O documento possui problemas e precisa ser corrigido.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comments/Feedback -->
+                    <div class="mb-8">
+                        <label class="form-label" for="approval-comments">
+                            Comentários da Aprovação
+                            <span id="comments-required" class="text-red-500" style="display: none;">*</span>
+                        </label>
+                        <textarea name="comments" 
+                                  id="approval-comments" 
+                                  rows="4" 
+                                  class="form-input"
+                                  placeholder="Adicione seus comentários sobre a decisão..."></textarea>
+                        <div class="form-field-help">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="comments-help">
+                                Comentários são opcionais para aprovação, mas obrigatórios para rejeição.
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Additional Options -->
+                    <div class="mb-8" id="additional-options" style="display: none;">
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Opções Adicionais</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="form-checkbox">
+                                <input type="checkbox" 
+                                       name="notify_employee" 
+                                       id="notify-employee" 
+                                       checked>
+                                <label for="notify-employee" class="form-label">
+                                    Notificar funcionário sobre a decisão
+                                </label>
+                            </div>
+                            
+                            <div class="form-checkbox" id="set-expiry-option" style="display: none;">
+                                <input type="checkbox" 
+                                       name="set_expiry" 
+                                       id="set-expiry"
+                                       onchange="toggleExpiryDate()">
+                                <label for="set-expiry" class="form-label">
+                                    Definir data de vencimento
+                                </label>
+                            </div>
+                            
+                            <div id="expiry-date-field" class="hidden">
+                                <label class="form-label" for="expiry-date">Data de Vencimento</label>
+                                <input type="date" 
+                                       name="expiry_date" 
+                                       id="expiry-date" 
+                                       class="form-input w-auto">
+                            </div>
+                            
+                            <div class="form-checkbox" id="require-resubmission" style="display: none;">
+                                <input type="checkbox" 
+                                       name="require_resubmission" 
+                                       id="require-resubmission">
+                                <label for="require-resubmission" class="form-label">
+                                    Solicitar reenvio do documento corrigido
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Digital Signature -->
+                    <div class="mb-8">
+                        <h3 class="text-md font-semibold text-gray-900 mb-4">Assinatura Digital</h3>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="mb-4">
+                                <label class="form-label" for="signature-type">Tipo de Assinatura</label>
+                                <select name="signature_type" id="signature-type" class="form-input" onchange="toggleSignatureMethod()">
+                                    <option value="electronic">Assinatura Eletrônica</option>
+                                    <option value="drawn">Assinatura Desenhada</option>
+                                    <option value="text">Assinatura de Texto</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Electronic Signature (default) -->
+                            <div id="electronic-signature">
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-certificate text-blue-600 mr-3"></i>
+                                        <div>
+                                            <p class="font-medium text-blue-900">Assinatura Eletrônica</p>
+                                            <p class="text-sm text-blue-700">
+                                                Sua aprovação será registrada com seu nome de usuário e timestamp.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Drawn Signature -->
+                            <div id="drawn-signature" class="hidden">
+                                <label class="form-label">Desenhe sua assinatura</label>
+                                <canvas id="signature-canvas" 
+                                        class="signature-pad" 
+                                        width="400" 
+                                        height="150">
+                                    Seu navegador não suporta canvas.
+                                </canvas>
+                                <div class="flex space-x-3 mt-3">
+                                    <button type="button" onclick="clearSignature()" class="action-button outline">
+                                        <i class="fas fa-eraser mr-2"></i>
+                                        Limpar
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Text Signature -->
+                            <div id="text-signature" class="hidden">
+                                <label class="form-label" for="signature-text">Digite sua assinatura</label>
+                                <input type="text" 
+                                       name="signature_text" 
+                                       id="signature-text" 
+                                       class="form-input" 
+                                       placeholder="Digite seu nome completo">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+                        <div class="flex space-x-3">
+                            <a href="{% url 'hr:document_detail' document.id %}" class="action-button outline">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Voltar ao Documento
+                            </a>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button type="button" onclick="saveDraft()" class="action-button secondary">
+                                <i class="fas fa-save mr-2"></i>
+                                Salvar Rascunho
+                            </button>
+                            
+                            <button type="submit" class="action-button primary" id="submit-btn">
+                                <i class="fas fa-clipboard-check mr-2"></i>
+                                Confirmar Decisão
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Approval Checklist -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-clipboard-list text-blue-500 mr-2"></i>
+                    Lista de Verificação
+                </h3>
+                
+                <div class="approval-checklist">
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-legible">
+                        <label for="check-legible" class="text-sm text-gray-700">
+                            Documento é legível e bem formatado
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-complete">
+                        <label for="check-complete" class="text-sm text-gray-700">
+                            Todas as informações necessárias estão presentes
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-authentic">
+                        <label for="check-authentic" class="text-sm text-gray-700">
+                            Documento parece autêntico e não modificado
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-relevant">
+                        <label for="check-relevant" class="text-sm text-gray-700">
+                            Documento é relevante para o funcionário/cargo
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-current">
+                        <label for="check-current" class="text-sm text-gray-700">
+                            Documento está dentro da validade
+                        </label>
+                    </div>
+                    
+                    <div class="checklist-item">
+                        <input type="checkbox" class="form-checkbox mr-3" id="check-policy">
+                        <label for="check-policy" class="text-sm text-gray-700">
+                            Atende às políticas da empresa
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p class="text-sm text-blue-700">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        Use esta lista para garantir uma revisão completa antes de tomar sua decisão.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Approval Flow -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-route text-green-500 mr-2"></i>
+                    Fluxo de Aprovação
+                </h3>
+                
+                <div class="approval-flow-visual">
+                    <div class="flow-step">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-2">
+                            <i class="fas fa-upload"></i>
+                        </div>
+                        <span class="text-xs text-center">Enviado</span>
+                    </div>
+                    
+                    <i class="fas fa-arrow-right flow-arrow"></i>
+                    
+                    <div class="flow-step">
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mb-2">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <span class="text-xs text-center">Revisão</span>
+                    </div>
+                    
+                    <i class="fas fa-arrow-right flow-arrow"></i>
+                    
+                    <div class="flow-step">
+                        <div class="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center mb-2">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="text-xs text-center">Aprovado</span>
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-600 text-center mt-4">
+                    Você está na etapa de <strong>Revisão</strong>
+                </div>
+            </div>
+
+            <!-- Document History -->
+            {% if document.approval_history.exists %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-history text-purple-500 mr-2"></i>
+                        Histórico de Aprovações
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        {% for approval in document.approval_history.all %}
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="font-medium text-gray-900">{{ approval.approver.get_full_name }}</span>
+                                    <span class="status-badge status-{{ approval.decision|lower }}">
+                                        {{ approval.get_decision_display }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mb-1">{{ approval.comments|default:"Sem comentários" }}</p>
+                                <p class="text-xs text-gray-500">{{ approval.created_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <a href="{{ document.file.url }}" 
+                       target="_blank" 
+                       class="w-full action-button secondary text-left">
+                        <i class="fas fa-external-link-alt mr-3"></i>
+                        Abrir em Nova Aba
+                    </a>
+                    
+                    <a href="{{ document.file.url }}" 
+                       download 
+                       class="w-full action-button outline text-left">
+                        <i class="fas fa-download mr-3"></i>
+                        Download
+                    </a>
+                    
+                    <a href="{% url 'hr:employee_detail' document.employee.id %}" 
+                       class="w-full action-button outline text-left">
+                        <i class="fas fa-user mr-3"></i>
+                        Ver Funcionário
+                    </a>
+                    
+                    <button onclick="contactEmployee()" 
+                            class="w-full action-button outline text-left">
+                        <i class="fas fa-envelope mr-3"></i>
+                        Contatar Funcionário
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let signaturePad = null;
+    
+    // Decision selection
+    function selectDecision(decision) {
+        // Remove previous selections
+        document.querySelectorAll('.approval-decision').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Select current decision
+        const decisionElement = document.querySelector(`.approval-decision.${decision}`);
+        decisionElement.classList.add('selected');
+        
+        // Check the radio button
+        document.getElementById(`decision-${decision}`).checked = true;
+        
+        // Show/hide additional options and update UI
+        const additionalOptions = document.getElementById('additional-options');
+        const commentsRequired = document.getElementById('comments-required');
+        const commentsHelp = document.getElementById('comments-help');
+        const requireResubmission = document.getElementById('require-resubmission');
+        const setExpiryOption = document.getElementById('set-expiry-option');
+        
+        if (decision === 'approve') {
+            additionalOptions.style.display = 'block';
+            commentsRequired.style.display = 'none';
+            commentsHelp.textContent = 'Comentários são opcionais para aprovação.';
+            requireResubmission.style.display = 'none';
+            setExpiryOption.style.display = 'block';
+            
+            // Update form validation
+            document.getElementById('approval-comments').required = false;
+        } else if (decision === 'reject') {
+            additionalOptions.style.display = 'block';
+            commentsRequired.style.display = 'inline';
+            commentsHelp.textContent = 'Comentários são obrigatórios para rejeição. Explique os motivos.';
+            requireResubmission.style.display = 'block';
+            setExpiryOption.style.display = 'none';
+            
+            // Update form validation
+            document.getElementById('approval-comments').required = true;
+        }
+    }
+    
+    // Toggle expiry date field
+    function toggleExpiryDate() {
+        const checkbox = document.getElementById('set-expiry');
+        const field = document.getElementById('expiry-date-field');
+        
+        if (checkbox.checked) {
+            field.classList.remove('hidden');
+            document.getElementById('expiry-date').required = true;
+        } else {
+            field.classList.add('hidden');
+            document.getElementById('expiry-date').required = false;
+        }
+    }
+    
+    // Signature methods
+    function toggleSignatureMethod() {
+        const signatureType = document.getElementById('signature-type').value;
+        
+        // Hide all signature methods
+        document.getElementById('electronic-signature').classList.add('hidden');
+        document.getElementById('drawn-signature').classList.add('hidden');
+        document.getElementById('text-signature').classList.add('hidden');
+        
+        // Show selected method
+        document.getElementById(`${signatureType}-signature`).classList.remove('hidden');
+        
+        // Initialize signature pad if drawn signature is selected
+        if (signatureType === 'drawn') {
+            initializeSignaturePad();
+        }
+    }
+    
+    function initializeSignaturePad() {
+        const canvas = document.getElementById('signature-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', handleTouch);
+        canvas.addEventListener('touchmove', handleTouch);
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            draw(e);
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+        
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                ctx.beginPath();
+            }
+        }
+        
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                            e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            canvas.dispatchEvent(mouseEvent);
+        }
+    }
+    
+    function clearSignature() {
+        const canvas = document.getElementById('signature-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Form submission
+    document.getElementById('approval-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate decision is selected
+        const decision = document.querySelector('input[name="decision"]:checked');
+        if (!decision) {
+            alert('Por favor, selecione uma decisão (Aprovar ou Rejeitar).');
+            return;
+        }
+        
+        // Validate comments for rejection
+        if (decision.value === 'reject') {
+            const comments = document.getElementById('approval-comments').value.trim();
+            if (!comments) {
+                alert('Comentários são obrigatórios para rejeição.');
+                document.getElementById('approval-comments').focus();
+                return;
+            }
+        }
+        
+        // Validate signature
+        const signatureType = document.getElementById('signature-type').value;
+        if (signatureType === 'drawn') {
+            const canvas = document.getElementById('signature-canvas');
+            const isEmpty = !canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0);
+            if (isEmpty) {
+                alert('Por favor, desenhe sua assinatura.');
+                return;
+            }
+            
+            // Convert canvas to base64
+            const signatureData = canvas.toDataURL();
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'signature_data';
+            input.value = signatureData;
+            this.appendChild(input);
+        } else if (signatureType === 'text') {
+            const signatureText = document.getElementById('signature-text').value.trim();
+            if (!signatureText) {
+                alert('Por favor, digite sua assinatura.');
+                return;
+            }
+        }
+        
+        // Show loading state
+        const submitBtn = document.getElementById('submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processando...';
+        submitBtn.disabled = true;
+        
+        // Confirm action
+        const actionText = decision.value === 'approve' ? 'aprovar' : 'rejeitar';
+        if (confirm(`Tem certeza que deseja ${actionText} este documento?`)) {
+            this.submit();
+        } else {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Save draft
+    function saveDraft() {
+        const formData = new FormData(document.getElementById('approval-form'));
+        formData.append('save_draft', 'true');
+        
+        fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Rascunho salvo com sucesso!');
+            } else {
+                alert('Erro ao salvar rascunho: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao salvar rascunho');
+        });
+    }
+    
+    // Contact employee
+    function contactEmployee() {
+        const email = '{{ document.employee.email }}';
+        const subject = `Sobre seu documento: {{ document.title|escapejs }}`;
+        const body = `Olá {{ document.employee.get_full_name|escapejs }},\n\nEntrei em contato sobre o documento "${document.title|escapejs}" que você enviou.\n\nAtenciosamente,\n{{ user.get_full_name|escapejs }}`;
+        
+        window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+    
+    // Auto-save functionality
+    let autoSaveTimeout;
+    const form = document.getElementById('approval-form');
+    
+    form.addEventListener('input', function() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            saveDraft();
+        }, 30000); // Auto-save after 30 seconds of inactivity
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default signature type
+        toggleSignatureMethod();
+        
+        // Load any saved draft
+        const savedDecision = localStorage.getItem('approval_decision_{{ document.id }}');
+        if (savedDecision) {
+            selectDecision(savedDecision);
+        }
+    });
+    
+    // Save decision selection to localStorage
+    document.querySelectorAll('input[name="decision"]').forEach(input => {
+        input.addEventListener('change', function() {
+            localStorage.setItem('approval_decision_{{ document.id }}', this.value);
+        });
+    });
+    
+    // Clear localStorage on successful submission
+    form.addEventListener('submit', function() {
+        localStorage.removeItem('approval_decision_{{ document.id }}');
+    });
+</script>
+{% endblock %}

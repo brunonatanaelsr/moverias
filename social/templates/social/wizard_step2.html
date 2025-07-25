@@ -1,0 +1,311 @@
+<!-- Etapa 2: Rede de Apoio Social -->
+<div class="space-y-6">
+    <!-- Rede de Apoio Principal -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold text-green-800 mb-3">
+            <i class="fas fa-hands-helping mr-2"></i>
+            Rede de Apoio Social
+        </h3>
+        
+        <div class="form-group">
+            <label for="{{ wizard.form.support_network.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                {{ wizard.form.support_network.label }}
+                <span class="text-red-500">*</span>
+            </label>
+            {{ wizard.form.support_network|add_class:"w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-vertical" }}
+            <p class="form-help-text">
+                <i class="fas fa-info-circle mr-1"></i>
+                Descreva pessoas, grupos ou instituições que apoiam a beneficiária (família, amigos, igreja, serviços públicos, etc.)
+            </p>
+            {% if wizard.form.support_network.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ wizard.form.support_network.errors }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Categorias de Rede de Apoio -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Apoio Familiar -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-md font-semibold text-blue-800 mb-3">
+                <i class="fas fa-home mr-2"></i>
+                Apoio Familiar
+            </h4>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Membros da família que oferecem apoio</label>
+                    <textarea name="family_support" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" placeholder="Ex: mãe, irmã, cunhada..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de apoio oferecido</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="family_support_type" value="emotional" class="mr-2 text-purple-600">
+                            <span class="text-sm">Apoio emocional</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="family_support_type" value="financial" class="mr-2 text-purple-600">
+                            <span class="text-sm">Apoio financeiro</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="family_support_type" value="practical" class="mr-2 text-purple-600">
+                            <span class="text-sm">Apoio prático (cuidado dos filhos, transporte, etc.)</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="family_support_type" value="housing" class="mr-2 text-purple-600">
+                            <span class="text-sm">Apoio habitacional</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apoio Comunitário -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h4 class="text-md font-semibold text-yellow-800 mb-3">
+                <i class="fas fa-users mr-2"></i>
+                Apoio Comunitário
+            </h4>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Organizações ou grupos</label>
+                    <textarea name="community_support" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" placeholder="Ex: igreja, associação de moradores, ONGs..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Frequência de participação</label>
+                    <select name="community_frequency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="">Selecione...</option>
+                        <option value="daily">Diariamente</option>
+                        <option value="weekly">Semanalmente</option>
+                        <option value="monthly">Mensalmente</option>
+                        <option value="occasionally">Ocasionalmente</option>
+                        <option value="rarely">Raramente</option>
+                        <option value="never">Nunca</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Serviços Públicos -->
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-purple-800 mb-3">
+            <i class="fas fa-building mr-2"></i>
+            Acesso a Serviços Públicos
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Serviços de Saúde -->
+            <div>
+                <h5 class="font-medium text-gray-800 mb-2">Saúde</h5>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="health_services" value="basic_health_unit" class="mr-2 text-purple-600">
+                        <span class="text-sm">Unidade Básica de Saúde (UBS)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="health_services" value="family_health_strategy" class="mr-2 text-purple-600">
+                        <span class="text-sm">Estratégia Saúde da Família (ESF)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="health_services" value="specialized_services" class="mr-2 text-purple-600">
+                        <span class="text-sm">Serviços especializados</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="health_services" value="mental_health" class="mr-2 text-purple-600">
+                        <span class="text-sm">CAPS/Saúde Mental</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Serviços de Assistência Social -->
+            <div>
+                <h5 class="font-medium text-gray-800 mb-2">Assistência Social</h5>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="social_services" value="cras" class="mr-2 text-purple-600">
+                        <span class="text-sm">CRAS</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="social_services" value="creas" class="mr-2 text-purple-600">
+                        <span class="text-sm">CREAS</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="social_services" value="bolsa_familia" class="mr-2 text-purple-600">
+                        <span class="text-sm">Programa Bolsa Família</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="social_services" value="bpc" class="mr-2 text-purple-600">
+                        <span class="text-sm">BPC (Benefício de Prestação Continuada)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Educação -->
+            <div>
+                <h5 class="font-medium text-gray-800 mb-2">Educação</h5>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="education_services" value="public_school" class="mr-2 text-purple-600">
+                        <span class="text-sm">Escola pública</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="education_services" value="daycare" class="mr-2 text-purple-600">
+                        <span class="text-sm">Creche</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="education_services" value="adult_education" class="mr-2 text-purple-600">
+                        <span class="text-sm">EJA (Educação de Jovens e Adultos)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="education_services" value="professional_courses" class="mr-2 text-purple-600">
+                        <span class="text-sm">Cursos profissionalizantes</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Outros Serviços -->
+            <div>
+                <h5 class="font-medium text-gray-800 mb-2">Outros</h5>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="other_services" value="legal_aid" class="mr-2 text-purple-600">
+                        <span class="text-sm">Defensoria Pública</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="other_services" value="specialized_court" class="mr-2 text-purple-600">
+                        <span class="text-sm">Juizado Especial</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="other_services" value="womens_police" class="mr-2 text-purple-600">
+                        <span class="text-sm">Delegacia da Mulher</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="other_services" value="employment_center" class="mr-2 text-purple-600">
+                        <span class="text-sm">Centro de Emprego</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avaliação da Rede de Apoio -->
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h4 class="text-lg font-semibold text-red-800 mb-3">
+            <i class="fas fa-chart-line mr-2"></i>
+            Avaliação da Rede de Apoio
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Qualidade do apoio recebido</label>
+                <select name="support_quality" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <option value="">Selecione...</option>
+                    <option value="excellent">Excelente</option>
+                    <option value="good">Boa</option>
+                    <option value="regular">Regular</option>
+                    <option value="poor">Ruim</option>
+                    <option value="very_poor">Muito ruim</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Necessidades não atendidas</label>
+                <select name="unmet_needs" multiple class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" size="4">
+                    <option value="emotional_support">Apoio emocional</option>
+                    <option value="financial_support">Apoio financeiro</option>
+                    <option value="childcare">Cuidado com as crianças</option>
+                    <option value="transportation">Transporte</option>
+                    <option value="housing">Moradia</option>
+                    <option value="healthcare">Cuidados de saúde</option>
+                    <option value="education">Educação/Capacitação</option>
+                    <option value="employment">Oportunidades de trabalho</option>
+                </select>
+                <p class="form-help-text">Mantenha Ctrl pressionado para selecionar múltiplas opções</p>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Observações sobre a rede de apoio</label>
+            <textarea name="support_observations" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 resize-vertical" placeholder="Descreva observações relevantes sobre a rede de apoio da beneficiária..."></textarea>
+        </div>
+    </div>
+
+    <!-- Dicas e Orientações -->
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-purple-800 mb-2">
+            <i class="fas fa-lightbulb mr-2"></i>
+            Dicas para o Preenchimento
+        </h3>
+        <ul class="text-sm text-purple-700 space-y-1">
+            <li>• Identifique todas as fontes de apoio, formais e informais</li>
+            <li>• Avalie a qualidade e disponibilidade do apoio</li>
+            <li>• Observe lacunas na rede de apoio que precisam ser fortalecidas</li>
+            <li>• Considere potenciais recursos que podem ser ativados</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Atualizar automaticamente o campo de rede de apoio baseado nas seleções
+    function updateSupportNetwork() {
+        const supportNetworkField = document.querySelector('textarea[name="2-support_network"]');
+        if (!supportNetworkField.value.trim()) {
+            let supportText = '';
+            
+            // Apoio familiar
+            const familySupport = document.querySelector('textarea[name="family_support"]').value;
+            if (familySupport.trim()) {
+                supportText += 'APOIO FAMILIAR:\n' + familySupport + '\n\n';
+            }
+            
+            // Apoio comunitário
+            const communitySupport = document.querySelector('textarea[name="community_support"]').value;
+            if (communitySupport.trim()) {
+                supportText += 'APOIO COMUNITÁRIO:\n' + communitySupport + '\n\n';
+            }
+            
+            // Serviços públicos
+            const services = [];
+            document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                services.push(cb.parentElement.textContent.trim());
+            });
+            
+            if (services.length > 0) {
+                supportText += 'SERVIÇOS PÚBLICOS ACESSADOS:\n' + services.join(', ') + '\n\n';
+            }
+            
+            if (supportText) {
+                supportNetworkField.value = supportText;
+                supportNetworkField.style.backgroundColor = '#FEF3C7';
+                setTimeout(() => {
+                    supportNetworkField.style.backgroundColor = '';
+                }, 2000);
+            }
+        }
+    }
+    
+    // Adicionar listeners para atualização automática
+    document.addEventListener('input', updateSupportNetwork);
+    document.addEventListener('change', updateSupportNetwork);
+    
+    // Validação específica desta etapa
+    const form = document.getElementById('wizard-form');
+    form.addEventListener('submit', function(e) {
+        const supportNetwork = document.querySelector('textarea[name="2-support_network"]').value;
+        
+        if (!supportNetwork.trim()) {
+            e.preventDefault();
+            alert('Por favor, descreva a rede de apoio social da beneficiária.');
+            document.querySelector('textarea[name="2-support_network"]').focus();
+        }
+    });
+});
+</script>

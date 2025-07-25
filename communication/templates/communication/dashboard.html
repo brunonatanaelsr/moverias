@@ -1,0 +1,920 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Central de Comunicação - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .communication-header {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .communication-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20zm20 0c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    
+    .header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .communication-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .actions-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .action-card {
+        background: linear-gradient(135deg, #fef7ff 0%, #faf5ff 100%);
+        border: 1px solid #e879f9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.2);
+        border-color: #ec4899;
+    }
+    
+    .action-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-bottom: 1rem;
+    }
+    
+    .action-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .action-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .activity-header {
+        background: #f8fafc;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .activity-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .view-all {
+        color: #ec4899;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    
+    .view-all:hover {
+        color: #be185d;
+    }
+    
+    .activity-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        transition: background-color 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: #f8fafc;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    .activity-content {
+        flex: 1;
+    }
+    
+    .activity-message {
+        color: #1f2937;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 0.5rem;
+    }
+    
+    .activity-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .activity-time {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    .activity-type {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        background: #fef7ff;
+        border-radius: 12px;
+        color: #ec4899;
+        font-weight: 500;
+    }
+    
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .notifications-panel {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .panel-header {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        color: white;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .panel-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .notification-count {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .notifications-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    
+    .notification-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .notification-item:hover {
+        background: #fef7ff;
+    }
+    
+    .notification-item.unread {
+        background: #fefcff;
+        border-left: 3px solid #ec4899;
+    }
+    
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .notification-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #fef7ff;
+        color: #ec4899;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .notification-text {
+        flex: 1;
+    }
+    
+    .notification-message {
+        font-size: 0.875rem;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+        line-height: 1.4;
+    }
+    
+    .notification-time {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .online-users {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .users-list {
+        padding: 1rem;
+        max-height: 250px;
+        overflow-y: auto;
+    }
+    
+    .user-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    
+    .user-item:hover {
+        background: #f8fafc;
+    }
+    
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 0.875rem;
+        position: relative;
+    }
+    
+    .online-indicator {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 12px;
+        height: 12px;
+        background: #10b981;
+        border: 2px solid white;
+        border-radius: 50%;
+    }
+    
+    .user-info {
+        flex: 1;
+    }
+    
+    .user-name {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #1f2937;
+        margin-bottom: 0.125rem;
+    }
+    
+    .user-status {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .floating-composer {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .floating-composer:hover {
+        transform: scale(1.1);
+        box-shadow: 0 12px 35px rgba(236, 72, 153, 0.5);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1.5rem;
+        color: #d1d5db;
+    }
+    
+    @media (max-width: 1024px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            order: -1;
+        }
+        
+        .actions-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .communication-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .actions-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .floating-composer {
+            bottom: 1rem;
+            right: 1rem;
+            width: 56px;
+            height: 56px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Header -->
+    <div class="communication-header text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="header-content">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h1 class="text-3xl font-bold mb-2">Central de Comunicação</h1>
+                        <p class="text-pink-100">Mantenha-se conectado com sua equipe</p>
+                    </div>
+                    
+                    <div class="text-right">
+                        <div class="text-sm text-pink-100 mb-1">Última atualização</div>
+                        <div class="text-xl font-bold">{{ last_update|date:"H:i" }}</div>
+                    </div>
+                </div>
+                
+                <div class="communication-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-number">{{ stats.total_messages }}</div>
+                        <div class="stat-label">Mensagens Hoje</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-number">{{ stats.active_announcements }}</div>
+                        <div class="stat-label">Anúncios Ativos</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 1h11l5 5v11a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-number">{{ stats.unread_notifications }}</div>
+                        <div class="stat-label">Não Lidas</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-number">{{ stats.online_users }}</div>
+                        <div class="stat-label">Online Agora</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h2 class="actions-title">
+                <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                Ações Rápidas
+            </h2>
+            
+            <div class="actions-grid">
+                <a href="{% url 'communication:message_compose' %}" class="action-card">
+                    <div class="action-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                    </div>
+                    <div class="action-title">Nova Mensagem</div>
+                    <div class="action-description">Envie uma mensagem direta para colegas ou grupos</div>
+                </a>
+                
+                <a href="{% url 'communication:announcement_create' %}" class="action-card">
+                    <div class="action-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                        </svg>
+                    </div>
+                    <div class="action-title">Criar Anúncio</div>
+                    <div class="action-description">Publique comunicados importantes para toda empresa</div>
+                </a>
+                
+                <a href="{% url 'communication:poll_create' %}" class="action-card">
+                    <div class="action-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="action-title">Nova Enquete</div>
+                    <div class="action-description">Colete feedback da equipe com enquetes personalizadas</div>
+                </a>
+                
+                <a href="{% url 'communication:newsletter_create' %}" class="action-card">
+                    <div class="action-icon">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                        </svg>
+                    </div>
+                    <div class="action-title">Newsletter</div>
+                    <div class="action-description">Crie boletins informativos periódicos</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+            <div class="main-content">
+                <!-- Recent Activity -->
+                <div class="recent-activity">
+                    <div class="activity-header">
+                        <h3 class="activity-title">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            Atividade Recente
+                        </h3>
+                        <a href="{% url 'communication:activity_feed' %}" class="view-all">Ver Todas</a>
+                    </div>
+                    
+                    {% if recent_activities %}
+                    <div class="activity-list">
+                        {% for activity in recent_activities %}
+                        <div class="activity-item">
+                            <div class="activity-avatar">
+                                {{ activity.user.first_name.0 }}{{ activity.user.last_name.0 }}
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-message">
+                                    <strong>{{ activity.user.get_full_name }}</strong> {{ activity.message }}
+                                </div>
+                                <div class="activity-meta">
+                                    <div class="activity-time">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        {{ activity.created_at|timesince }} atrás
+                                    </div>
+                                    <div class="activity-type">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                        </svg>
+                                        {{ activity.get_type_display }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Nenhuma atividade recente</h3>
+                        <p class="text-gray-600">Quando houver comunicações, elas aparecerão aqui.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Notifications Panel -->
+                <div class="notifications-panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 1h11l5 5v11a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/>
+                            </svg>
+                            Notificações
+                        </h3>
+                        {% if unread_notifications_count > 0 %}
+                        <span class="notification-count">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if notifications %}
+                    <div class="notifications-list">
+                        {% for notification in notifications %}
+                        <div class="notification-item {% if not notification.read %}unread{% endif %}" 
+                             onclick="markAsRead({{ notification.id }})">
+                            <div class="notification-content">
+                                <div class="notification-icon">
+                                    {% if notification.type == 'message' %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                    </svg>
+                                    {% elif notification.type == 'announcement' %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                                    </svg>
+                                    {% else %}
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="notification-text">
+                                    <div class="notification-message">{{ notification.message }}</div>
+                                    <div class="notification-time">{{ notification.created_at|timesince }} atrás</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p class="text-gray-600 text-sm">Nenhuma notificação</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Online Users -->
+                <div class="online-users">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                            Online ({{ online_users.count }})
+                        </h3>
+                    </div>
+                    
+                    {% if online_users %}
+                    <div class="users-list">
+                        {% for user in online_users %}
+                        <div class="user-item" onclick="startChat({{ user.id }})">
+                            <div class="user-avatar">
+                                {{ user.first_name.0 }}{{ user.last_name.0 }}
+                                <div class="online-indicator"></div>
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">{{ user.get_full_name }}</div>
+                                <div class="user-status">{{ user.position }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p class="text-gray-600 text-sm">Nenhum usuário online</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Compose Button -->
+<button class="floating-composer" onclick="openComposer()" title="Nova Mensagem">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+    </svg>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark notification as read
+    window.markAsRead = function(notificationId) {
+        fetch(`/communication/notifications/${notificationId}/read/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const notification = document.querySelector(`[onclick="markAsRead(${notificationId})"]`);
+                if (notification) {
+                    notification.classList.remove('unread');
+                    
+                    // Update notification count
+                    const countBadge = document.querySelector('.notification-count');
+                    if (countBadge) {
+                        const currentCount = parseInt(countBadge.textContent);
+                        if (currentCount > 1) {
+                            countBadge.textContent = currentCount - 1;
+                        } else {
+                            countBadge.remove();
+                        }
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error marking notification as read:', error);
+        });
+    };
+    
+    // Start chat with user
+    window.startChat = function(userId) {
+        window.location.href = `/communication/chat/${userId}/`;
+    };
+    
+    // Open message composer
+    window.openComposer = function() {
+        window.location.href = '/communication/compose/';
+    };
+    
+    // Auto-refresh data every 30 seconds
+    setInterval(function() {
+        if (!document.hidden) {
+            // Update stats
+            fetch('/communication/api/stats/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update stat numbers
+                const statNumbers = document.querySelectorAll('.stat-number');
+                if (statNumbers[0]) statNumbers[0].textContent = data.total_messages;
+                if (statNumbers[1]) statNumbers[1].textContent = data.active_announcements;
+                if (statNumbers[2]) statNumbers[2].textContent = data.unread_notifications;
+                if (statNumbers[3]) statNumbers[3].textContent = data.online_users;
+            })
+            .catch(error => {
+                console.error('Error updating stats:', error);
+            });
+            
+            // Update notifications
+            fetch('/communication/api/notifications/', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateNotificationsList(data.notifications);
+            })
+            .catch(error => {
+                console.error('Error updating notifications:', error);
+            });
+        }
+    }, 30000); // 30 seconds
+    
+    function updateNotificationsList(notifications) {
+        const notificationsList = document.querySelector('.notifications-list');
+        if (!notificationsList) return;
+        
+        if (notifications.length === 0) {
+            notificationsList.innerHTML = '<div class="empty-state"><p class="text-gray-600 text-sm">Nenhuma notificação</p></div>';
+            return;
+        }
+        
+        let html = '';
+        notifications.forEach(notification => {
+            const unreadClass = notification.read ? '' : 'unread';
+            const iconType = notification.type === 'message' ? 'message' : 
+                            notification.type === 'announcement' ? 'announcement' : 'info';
+            
+            let iconSvg = '';
+            if (iconType === 'message') {
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>';
+            } else if (iconType === 'announcement') {
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>';
+            } else {
+                iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            }
+            
+            html += `
+                <div class="notification-item ${unreadClass}" onclick="markAsRead(${notification.id})">
+                    <div class="notification-content">
+                        <div class="notification-icon">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                ${iconSvg}
+                            </svg>
+                        </div>
+                        <div class="notification-text">
+                            <div class="notification-message">${notification.message}</div>
+                            <div class="notification-time">${notification.time_ago}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        notificationsList.innerHTML = html;
+    }
+    
+    // Animate stats on load
+    const statNumbers = document.querySelectorAll('.stat-number');
+    statNumbers.forEach((stat, index) => {
+        const finalValue = parseInt(stat.textContent);
+        let currentValue = 0;
+        const increment = finalValue / 20;
+        
+        const counter = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                stat.textContent = finalValue;
+                clearInterval(counter);
+            } else {
+                stat.textContent = Math.floor(currentValue);
+            }
+        }, 100);
+    });
+});
+</script>
+{% endblock %}

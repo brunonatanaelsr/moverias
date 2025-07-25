@@ -1,0 +1,1266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard de Onboarding - HR System{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-styles.css' %}" rel="stylesheet">
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+    
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        background: #f0fdf4;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #16a34a;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1f2937;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-trend {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .trend-up {
+        color: #16a34a;
+    }
+    
+    .trend-down {
+        color: #dc2626;
+    }
+    
+    .trend-neutral {
+        color: #6b7280;
+    }
+    
+    .onboarding-table {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .table-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .search-box {
+        position: relative;
+    }
+    
+    .search-input {
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        width: 250px;
+        transition: all 0.2s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+    }
+    
+    .filter-select {
+        padding: 0.5rem 2rem 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        min-width: 140px;
+    }
+    
+    .add-btn {
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .add-btn:hover {
+        background: #059669;
+    }
+    
+    .table-content {
+        overflow-x: auto;
+    }
+    
+    .onboarding-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .onboarding-table th {
+        background: #f8fafc;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .onboarding-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+    
+    .onboarding-table tr:hover {
+        background: #f8fafc;
+    }
+    
+    .onboarding-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .employee-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .employee-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+    
+    .employee-details h4 {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .employee-details p {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-in-progress {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-completed {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .status-overdue {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .status-on-hold {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+    
+    .progress-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+    }
+    
+    .progress-circle svg {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-circle-bg {
+        fill: none;
+        stroke: #f3f4f6;
+        stroke-width: 8;
+    }
+    
+    .progress-circle-fill {
+        fill: none;
+        stroke: #3b82f6;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.5s ease;
+    }
+    
+    .progress-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .checklist-item:hover {
+        background: #f9fafb;
+    }
+    
+    .checklist-item.completed {
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+    }
+    
+    .checklist-item.overdue {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+    
+    .timeline-container {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #e5e7eb;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #e5e7eb;
+    }
+    
+    .timeline-item.completed::before {
+        background: #10b981;
+        box-shadow: 0 0 0 2px #10b981;
+    }
+    
+    .timeline-item.current::before {
+        background: #3b82f6;
+        box-shadow: 0 0 0 2px #3b82f6;
+        animation: pulse 2s infinite;
+    }
+    
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: -1.75rem;
+        top: 1rem;
+        width: 2px;
+        height: calc(100% - 0.5rem);
+        background: #e5e7eb;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.5;
+        }
+    }
+    
+    .buddy-card {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .buddy-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        margin-right: 1rem;
+    }
+    
+    .task-priority {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .priority-high {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+    
+    .priority-medium {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .priority-low {
+        background: #f0f9ff;
+        color: #0ea5e9;
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3b82f6;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .stat-change {
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    .stat-change.positive {
+        color: #059669;
+    }
+    
+    .stat-change.negative {
+        color: #dc2626;
+    }
+    
+    .recent-activity {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: start;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .activity-item:hover {
+        background: #f9fafb;
+    }
+    
+    .activity-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .activity-icon.new-hire {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+    
+    .activity-icon.task-completed {
+        background: #d1fae5;
+        color: #059669;
+    }
+    
+    .activity-icon.document-uploaded {
+        background: #fef3c7;
+        color: #d97706;
+    }
+    
+    .activity-icon.meeting-scheduled {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+    
+    .floating-add-button {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 56px;
+        height: 56px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+    
+    .floating-add-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+    }
+    
+    .filter-tabs {
+        display: flex;
+        background: white;
+        border-radius: 8px;
+        padding: 0.25rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .filter-tab {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        color: #6b7280;
+    }
+    
+    .filter-tab.active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    .employee-onboarding-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .document-checklist {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .checklist-progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+    
+    .mentor-assignment {
+        background: #fef7e7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .next-action {
+        background: #eff6ff;
+        border: 1px solid #3b82f6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Hero Section -->
+    <div class="onboarding-hero">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold mb-2">Sistema de Onboarding</h1>
+                <p class="text-lg opacity-90">Integração eficiente de novos funcionários</p>
+                <p class="opacity-75">Acompanhe o progresso e garanta uma experiência excepcional</p>
+            </div>
+            <div class="text-right">
+                <div class="text-sm opacity-75">Funcionários Ativos no Onboarding</div>
+                <div class="text-4xl font-bold">{{ active_onboardings_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_onboardings }}</div>
+            <div class="stat-label">Total de Onboardings</div>
+            <div class="stat-change positive">+{{ stats.onboardings_change }}% este mês</div>
+        </div>
+        
+        <div class="stat-card" style="border-left-color: #10b981;">
+            <div class="stat-number">{{ stats.completion_rate }}%</div>
+            <div class="stat-label">Taxa de Conclusão</div>
+            <div class="stat-change positive">+{{ stats.completion_change }}% vs anterior</div>
+        </div>
+        
+        <div class="stat-card" style="border-left-color: #f59e0b;">
+            <div class="stat-number">{{ stats.average_duration }}</div>
+            <div class="stat-label">Duração Média (dias)</div>
+            <div class="stat-change negative">{{ stats.duration_change }} dias</div>
+        </div>
+        
+        <div class="stat-card" style="border-left-color: #8b5cf6;">
+            <div class="stat-number">{{ stats.satisfaction_score|floatformat:1 }}</div>
+            <div class="stat-label">Satisfação Média</div>
+            <div class="stat-change positive">+{{ stats.satisfaction_change }}% satisfação</div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <div class="filter-tab active" data-filter="all" onclick="filterOnboardings('all')">
+            Todos ({{ onboardings.count }})
+        </div>
+        <div class="filter-tab" data-filter="pending" onclick="filterOnboardings('pending')">
+            Pendentes ({{ pending_count }})
+        </div>
+        <div class="filter-tab" data-filter="in_progress" onclick="filterOnboardings('in_progress')">
+            Em Andamento ({{ in_progress_count }})
+        </div>
+        <div class="filter-tab" data-filter="completed" onclick="filterOnboardings('completed')">
+            Concluídos ({{ completed_count }})
+        </div>
+        <div class="filter-tab" data-filter="overdue" onclick="filterOnboardings('overdue')">
+            Atrasados ({{ overdue_count }})
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        <!-- Main Content -->
+        <div class="xl:col-span-3">
+            <!-- Onboarding Cards -->
+            <div class="employee-onboarding-grid" id="onboarding-grid">
+                {% for onboarding in onboardings %}
+                    <div class="onboarding-card" 
+                         data-status="{{ onboarding.status }}" 
+                         data-onboarding-id="{{ onboarding.id }}">
+                        
+                        <!-- Card Header -->
+                        <div class="p-6 border-b border-gray-100">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    {% if onboarding.employee.photo %}
+                                        <img src="{{ onboarding.employee.photo.url }}" 
+                                             alt="{{ onboarding.employee.get_full_name }}" 
+                                             class="w-12 h-12 rounded-full object-cover">
+                                    {% else %}
+                                        <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-gray-600"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <h3 class="font-semibold text-gray-900">{{ onboarding.employee.get_full_name }}</h3>
+                                        <p class="text-sm text-gray-600">{{ onboarding.employee.department.name|default:"Sem departamento" }}</p>
+                                        <p class="text-xs text-gray-500">{{ onboarding.employee.position.title|default:"Sem cargo" }}</p>
+                                    </div>
+                                </div>
+                                <span class="onboarding-status status-{{ onboarding.status }}">
+                                    {{ onboarding.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <!-- Progress Circle -->
+                            <div class="progress-circle">
+                                <svg width="120" height="120">
+                                    <circle class="progress-circle-bg" cx="60" cy="60" r="54"/>
+                                    <circle class="progress-circle-fill" 
+                                            cx="60" cy="60" r="54"
+                                            stroke-dasharray="{{ onboarding.progress_percentage|mul:3.39 }} 339.29"/>
+                                </svg>
+                                <div class="progress-text">
+                                    <div class="text-2xl font-bold text-gray-900">{{ onboarding.progress_percentage }}%</div>
+                                    <div class="text-sm text-gray-600">Concluído</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Card Body -->
+                        <div class="p-6">
+                            <!-- Key Dates -->
+                            <div class="space-y-2 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Data de Início:</span>
+                                    <span class="font-medium">{{ onboarding.start_date|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Primeiro Dia:</span>
+                                    <span class="font-medium">{{ onboarding.employee.hire_date|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Previsão Conclusão:</span>
+                                    <span class="font-medium {% if onboarding.is_overdue %}text-red-600{% endif %}">
+                                        {{ onboarding.expected_completion|date:"d/m/Y" }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Document Checklist -->
+                            <div class="document-checklist">
+                                <div class="checklist-progress">
+                                    <span>Documentos</span>
+                                    <span>{{ onboarding.documents_completed }}/{{ onboarding.documents_total }}</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ onboarding.documents_percentage }}%"></div>
+                                </div>
+                                <div class="space-y-1">
+                                    {% for doc in onboarding.required_documents.all|slice:":3" %}
+                                        <div class="checklist-item {% if doc.is_completed %}completed{% elif doc.is_overdue %}overdue{% endif %}">
+                                            <input type="checkbox" 
+                                                   class="form-checkbox mr-3" 
+                                                   {% if doc.is_completed %}checked{% endif %}
+                                                   disabled>
+                                            <span class="flex-1 text-sm">{{ doc.name }}</span>
+                                            {% if doc.is_overdue %}
+                                                <i class="fas fa-exclamation-triangle text-red-500 text-xs"></i>
+                                            {% elif doc.is_completed %}
+                                                <i class="fas fa-check text-green-500 text-xs"></i>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                    {% if onboarding.required_documents.count > 3 %}
+                                        <div class="text-xs text-gray-500 text-center mt-2">
+                                            +{{ onboarding.required_documents.count|add:"-3" }} mais documentos
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Mentor Assignment -->
+                            {% if onboarding.mentor %}
+                                <div class="mentor-assignment">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-user-tie text-yellow-600 mr-2"></i>
+                                        <div>
+                                            <div class="font-medium text-yellow-900">Mentor Designado</div>
+                                            <div class="text-sm text-yellow-800">{{ onboarding.mentor.get_full_name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Next Action -->
+                            {% if onboarding.next_action %}
+                                <div class="next-action">
+                                    <div class="flex items-start">
+                                        <i class="fas fa-arrow-right text-blue-600 mt-1 mr-2"></i>
+                                        <div>
+                                            <div class="font-medium text-blue-900">Próxima Ação</div>
+                                            <div class="text-sm text-blue-800">{{ onboarding.next_action.title }}</div>
+                                            <div class="text-xs text-blue-700">
+                                                Prazo: {{ onboarding.next_action.due_date|date:"d/m/Y" }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Card Footer -->
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                            <div class="flex justify-between items-center">
+                                <div class="text-xs text-gray-500">
+                                    Atualizado {{ onboarding.updated_at|timesince }} atrás
+                                </div>
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'hr:onboarding_detail' onboarding.id %}" 
+                                       class="action-button-sm primary">
+                                        <i class="fas fa-eye mr-1"></i>
+                                        Ver
+                                    </a>
+                                    
+                                    {% if onboarding.can_edit %}
+                                        <a href="{% url 'hr:onboarding_edit' onboarding.id %}" 
+                                           class="action-button-sm secondary">
+                                            <i class="fas fa-edit mr-1"></i>
+                                            Editar
+                                        </a>
+                                    {% endif %}
+                                    
+                                    <div class="relative">
+                                        <button onclick="toggleOnboardingMenu('{{ onboarding.id }}')" 
+                                                class="action-button-sm outline">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <div id="menu-{{ onboarding.id }}" class="dropdown-menu hidden">
+                                            <a href="{% url 'hr:onboarding_checklist' onboarding.id %}" class="dropdown-item">
+                                                <i class="fas fa-tasks mr-2"></i>
+                                                Ver Checklist
+                                            </a>
+                                            <a href="{% url 'hr:onboarding_schedule' onboarding.id %}" class="dropdown-item">
+                                                <i class="fas fa-calendar mr-2"></i>
+                                                Cronograma
+                                            </a>
+                                            <a href="{% url 'hr:onboarding_documents' onboarding.id %}" class="dropdown-item">
+                                                <i class="fas fa-file-alt mr-2"></i>
+                                                Documentos
+                                            </a>
+                                            <div class="dropdown-divider"></div>
+                                            <a href="{% url 'hr:onboarding_feedback' onboarding.id %}" class="dropdown-item">
+                                                <i class="fas fa-comment mr-2"></i>
+                                                Feedback
+                                            </a>
+                                            <a href="{% url 'hr:onboarding_extend' onboarding.id %}" class="dropdown-item">
+                                                <i class="fas fa-clock mr-2"></i>
+                                                Estender Prazo
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-span-full text-center py-12">
+                        <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-plus text-gray-400 text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Nenhum onboarding encontrado</h3>
+                        <p class="text-gray-600 mb-6">Comece criando um processo de integração para novos funcionários.</p>
+                        <a href="{% url 'hr:onboarding_create' %}" class="action-button primary">
+                            <i class="fas fa-plus mr-2"></i>
+                            Criar Primeiro Onboarding
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Load More -->
+            {% if has_more %}
+                <div class="text-center mt-8">
+                    <button onclick="loadMoreOnboardings()" class="action-button outline" id="load-more-btn">
+                        <i class="fas fa-spinner fa-spin mr-2 hidden" id="load-more-spinner"></i>
+                        Carregar Mais
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <a href="{% url 'hr:onboarding_create' %}" 
+                       class="w-full action-button primary text-left">
+                        <i class="fas fa-plus mr-3"></i>
+                        Novo Onboarding
+                    </a>
+                    
+                    <a href="{% url 'hr:onboarding_templates' %}" 
+                       class="w-full action-button secondary text-left">
+                        <i class="fas fa-file-alt mr-3"></i>
+                        Templates
+                    </a>
+                    
+                    <a href="{% url 'hr:onboarding_bulk_create' %}" 
+                       class="w-full action-button outline text-left">
+                        <i class="fas fa-users mr-3"></i>
+                        Criação em Lote
+                    </a>
+                    
+                    <button onclick="generateOnboardingReport()" 
+                            class="w-full action-button outline text-left">
+                        <i class="fas fa-chart-bar mr-3"></i>
+                        Relatórios
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-clock text-blue-500 mr-2"></i>
+                    Atividade Recente
+                </h3>
+                <div class="recent-activity">
+                    {% for activity in recent_activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon {{ activity.type }}">
+                                <i class="fas {{ activity.icon }}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                                <p class="text-xs text-gray-500">
+                                    {{ activity.created_at|timesince }} atrás
+                                    {% if activity.user %} • {{ activity.user.get_full_name }}{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4 text-gray-500">
+                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                            <p class="text-sm">Nenhuma atividade recente</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Upcoming Deadlines -->
+            {% if upcoming_deadlines %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                        Prazos Próximos
+                    </h3>
+                    <div class="space-y-3">
+                        {% for deadline in upcoming_deadlines %}
+                            <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <p class="font-medium text-red-900">{{ deadline.employee.get_full_name }}</p>
+                                        <p class="text-sm text-red-800">{{ deadline.task_name }}</p>
+                                    </div>
+                                    <span class="text-xs text-red-600 font-medium">
+                                        {{ deadline.due_date|timeuntil }}
+                                    </span>
+                                </div>
+                                <div class="mt-2">
+                                    <a href="{% url 'hr:onboarding_detail' deadline.onboarding_id %}" 
+                                       class="text-xs text-red-700 hover:text-red-900">
+                                        Ver detalhes →
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Success Stories -->
+            {% if success_stories %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                        Sucessos Recentes
+                    </h3>
+                    <div class="space-y-3">
+                        {% for story in success_stories %}
+                            <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    {% if story.employee.photo %}
+                                        <img src="{{ story.employee.photo.url }}" 
+                                             alt="{{ story.employee.get_full_name }}" 
+                                             class="w-8 h-8 rounded-full object-cover">
+                                    {% else %}
+                                        <div class="w-8 h-8 bg-green-300 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-green-600 text-xs"></i>
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex-1">
+                                        <p class="font-medium text-green-900 text-sm">{{ story.employee.get_full_name }}</p>
+                                        <p class="text-xs text-green-800">Concluiu onboarding em {{ story.completion_days }} dias</p>
+                                        <p class="text-xs text-green-700">Satisfação: {{ story.satisfaction_score }}/5</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Performance Metrics -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-chart-line text-purple-500 mr-2"></i>
+                    Métricas do Mês
+                </h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">Tempo Médio</span>
+                        <span class="font-bold text-gray-900">{{ monthly_metrics.avg_duration }} dias</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">Taxa de Sucesso</span>
+                        <span class="font-bold text-green-600">{{ monthly_metrics.success_rate }}%</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">Satisfação Média</span>
+                        <span class="font-bold text-blue-600">{{ monthly_metrics.avg_satisfaction }}/5</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 text-sm">Retenção 90 dias</span>
+                        <span class="font-bold text-purple-600">{{ monthly_metrics.retention_rate }}%</span>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-gray-200">
+                        <button onclick="viewDetailedMetrics()" 
+                                class="text-sm text-blue-600 hover:text-blue-800">
+                            Ver métricas detalhadas →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Add Button -->
+<button class="floating-add-button" onclick="location.href='{% url 'hr:onboarding_create' %}'" title="Novo Onboarding">
+    <i class="fas fa-plus text-xl"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentFilter = 'all';
+    let currentPage = 1;
+    
+    // Filter onboardings
+    function filterOnboardings(filter) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        // Filter cards
+        const cards = document.querySelectorAll('[data-onboarding-id]');
+        cards.forEach(card => {
+            const status = card.dataset.status;
+            
+            if (filter === 'all' || status === filter) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        currentFilter = filter;
+    }
+    
+    // Toggle onboarding menu
+    function toggleOnboardingMenu(onboardingId) {
+        const menu = document.getElementById(`menu-${onboardingId}`);
+        
+        // Close all other menus
+        document.querySelectorAll('.dropdown-menu').forEach(dropdown => {
+            if (dropdown.id !== `menu-${onboardingId}`) {
+                dropdown.classList.add('hidden');
+            }
+        });
+        
+        menu.classList.toggle('hidden');
+    }
+    
+    // Load more onboardings
+    function loadMoreOnboardings() {
+        const btn = document.getElementById('load-more-btn');
+        const spinner = document.getElementById('load-more-spinner');
+        
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        
+        currentPage++;
+        
+        fetch(`?page=${currentPage}&filter=${currentFilter}&ajax=1`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    document.getElementById('onboarding-grid').insertAdjacentHTML('beforeend', data.html);
+                }
+                
+                if (!data.has_more) {
+                    btn.style.display = 'none';
+                }
+                
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+            });
+    }
+    
+    // Generate onboarding report
+    function generateOnboardingReport() {
+        // Open report modal or redirect
+        window.open('{% url "hr:onboarding_reports" %}', '_blank');
+    }
+    
+    // View detailed metrics
+    function viewDetailedMetrics() {
+        location.href = '{% url "hr:onboarding_analytics" %}';
+    }
+    
+    // Animate progress circles on page load
+    function animateProgressCircles() {
+        const circles = document.querySelectorAll('.progress-circle-fill');
+        
+        circles.forEach(circle => {
+            const dashArray = circle.getAttribute('stroke-dasharray');
+            circle.setAttribute('stroke-dasharray', '0 339.29');
+            
+            setTimeout(() => {
+                circle.setAttribute('stroke-dasharray', dashArray);
+            }, 300);
+        });
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.relative')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.add('hidden');
+            });
+        }
+    });
+    
+    // Real-time updates (if WebSocket is available)
+    function initializeRealTimeUpdates() {
+        // This would connect to WebSocket for real-time updates
+        // For now, we'll use polling every 30 seconds
+        setInterval(() => {
+            updateOnboardingCounts();
+        }, 30000);
+    }
+    
+    function updateOnboardingCounts() {
+        fetch('{% url "hr:onboarding_counts" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Update filter tab counts
+                document.querySelector('[data-filter="all"]').textContent = `Todos (${data.all})`;
+                document.querySelector('[data-filter="pending"]').textContent = `Pendentes (${data.pending})`;
+                document.querySelector('[data-filter="in_progress"]').textContent = `Em Andamento (${data.in_progress})`;
+                document.querySelector('[data-filter="completed"]').textContent = `Concluídos (${data.completed})`;
+                document.querySelector('[data-filter="overdue"]').textContent = `Atrasados (${data.overdue})`;
+            })
+            .catch(error => {
+                console.error('Error updating counts:', error);
+            });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Ctrl/Cmd + N = New onboarding
+        if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+            event.preventDefault();
+            location.href = '{% url "hr:onboarding_create" %}';
+        }
+        
+        // Ctrl/Cmd + R = Refresh/Reports
+        if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+            event.preventDefault();
+            generateOnboardingReport();
+        }
+    });
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        animateProgressCircles();
+        initializeRealTimeUpdates();
+        
+        // Set up tooltips for progress circles
+        document.querySelectorAll('.progress-circle').forEach(circle => {
+            const percentage = circle.querySelector('.progress-text .text-2xl').textContent;
+            circle.title = `${percentage} do onboarding concluído`;
+        });
+    });
+    
+    // Search functionality
+    let searchTimeout;
+    function setupSearch() {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filterBySearch(this.value);
+                }, 300);
+            });
+        }
+    }
+    
+    function filterBySearch(query) {
+        const cards = document.querySelectorAll('[data-onboarding-id]');
+        const searchTerm = query.toLowerCase();
+        
+        cards.forEach(card => {
+            const employeeName = card.querySelector('h3').textContent.toLowerCase();
+            const department = card.querySelector('.text-sm.text-gray-600').textContent.toLowerCase();
+            
+            if (employeeName.includes(searchTerm) || department.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

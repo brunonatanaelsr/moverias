@@ -1,0 +1,1042 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ performance.employee.get_full_name }} - Avaliação de Desempenho - HR{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/hr-module.css' %}" rel="stylesheet">
+<style>
+    .performance-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .rating-visual {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin: 0.5rem 0;
+    }
+    
+    .rating-star {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: #fbbf24;
+    }
+    
+    .rating-star.empty {
+        color: #e5e7eb;
+    }
+    
+    .competency-radar {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+        fill: transparent;
+        stroke: #e5e7eb;
+        stroke-width: 8;
+    }
+    
+    .progress-ring-fill {
+        fill: transparent;
+        stroke: #3b82f6;
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.3s ease;
+    }
+    
+    .goal-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #3b82f6;
+        margin-bottom: 1rem;
+    }
+    
+    .goal-progress-bar {
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .goal-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #10b981);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .comment-bubble {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem;
+        margin: 1rem 0;
+        position: relative;
+    }
+    
+    .comment-bubble::before {
+        content: '';
+        position: absolute;
+        top: 1rem;
+        left: -8px;
+        width: 0;
+        height: 0;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        border-right: 8px solid #e2e8f0;
+    }
+    
+    .competency-meter {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .competency-meter:hover {
+        background: #f9fafb;
+    }
+    
+    .meter-bar {
+        flex: 1;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .meter-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+    
+    .meter-fill.level-1 { background: #ef4444; }
+    .meter-fill.level-2 { background: #f97316; }
+    .meter-fill.level-3 { background: #eab308; }
+    .meter-fill.level-4 { background: #22c55e; }
+    .meter-fill.level-5 { background: #3b82f6; }
+    
+    .development-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+    
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        background: #3b82f6;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #3b82f6;
+    }
+    
+    .timeline-item:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        left: -1.75rem;
+        top: 1rem;
+        width: 2px;
+        height: calc(100% - 0.5rem);
+        background: #e5e7eb;
+    }
+    
+    .action-timeline {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .signature-section {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        margin-top: 2rem;
+    }
+    
+    .signature-present {
+        border-color: #10b981;
+        background: #ecfdf5;
+    }
+    
+    .export-options {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    .floating-actions {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        z-index: 1000;
+    }
+    
+    .fab-button {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .fab-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .performance-summary-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .metric-circle {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        margin: 0 auto;
+    }
+    
+    .metric-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .feedback-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .strength-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: #ecfdf5;
+        color: #059669;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        margin: 0.25rem;
+    }
+    
+    .improvement-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        background: #fef3c7;
+        color: #d97706;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        margin: 0.25rem;
+    }
+    
+    @media print {
+        .export-options,
+        .floating-actions,
+        .no-print {
+            display: none !important;
+        }
+        
+        .performance-header {
+            background: #667eea !important;
+            -webkit-print-color-adjust: exact;
+        }
+        
+        body {
+            font-size: 12px;
+        }
+        
+        .hr-container {
+            max-width: none;
+            padding: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hr-container">
+    <!-- Export Options -->
+    <div class="export-options no-print">
+        <div class="flex space-x-2">
+            <button onclick="exportPDF()" class="action-button-sm primary">
+                <i class="fas fa-file-pdf mr-1"></i>
+                PDF
+            </button>
+            <button onclick="window.print()" class="action-button-sm secondary">
+                <i class="fas fa-print mr-1"></i>
+                Imprimir
+            </button>
+            <button onclick="sharePerformance()" class="action-button-sm outline">
+                <i class="fas fa-share mr-1"></i>
+                Compartilhar
+            </button>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="performance-header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                {% if performance.employee.photo %}
+                    <img src="{{ performance.employee.photo.url }}" 
+                         alt="{{ performance.employee.get_full_name }}" 
+                         class="w-20 h-20 rounded-full object-cover border-4 border-white">
+                {% else %}
+                    <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-white text-2xl"></i>
+                    </div>
+                {% endif %}
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">{{ performance.employee.get_full_name }}</h1>
+                    <p class="text-lg opacity-90">{{ performance.employee.department.name|default:"Sem departamento" }}</p>
+                    <p class="opacity-75">{{ performance.employee.position.title|default:"Sem cargo definido" }}</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-sm opacity-75">Período de Avaliação</div>
+                <div class="text-xl font-semibold">{{ performance.get_review_period_display }}</div>
+                <div class="text-sm opacity-75 mt-2">Revisor: {{ performance.reviewer.get_full_name }}</div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+            <div class="text-center">
+                <div class="text-2xl font-bold">{{ performance.overall_rating|default:"--" }}/5</div>
+                <div class="text-sm opacity-90">Avaliação Geral</div>
+                {% if performance.overall_rating %}
+                    <div class="rating-visual justify-center mt-2">
+                        {% for i in "12345" %}
+                            <i class="fas fa-star rating-star {% if i|add:0 <= performance.overall_rating %}text-yellow-300{% else %}text-white text-opacity-30{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold">{{ performance.goals_completed|default:"0" }}/{{ performance.total_goals|default:"0" }}</div>
+                <div class="text-sm opacity-90">Metas Concluídas</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold">{{ performance.competencies_avg|floatformat:1|default:"--" }}</div>
+                <div class="text-sm opacity-90">Média Competências</div>
+            </div>
+            <div class="text-center">
+                <div class="text-2xl font-bold text-green-300">{{ performance.get_status_display }}</div>
+                <div class="text-sm opacity-90">Status</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-600 mb-6 no-print">
+        <a href="{% url 'hr:performance_list' %}" class="hover:text-blue-600">Avaliações</a>
+        <i class="fas fa-chevron-right text-xs"></i>
+        <span class="text-gray-900 font-medium">{{ performance.employee.get_full_name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Performance Summary -->
+            <div class="performance-summary-card">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-chart-pie mr-2 text-blue-500"></i>
+                    Resumo de Desempenho
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Overall Rating Circle -->
+                    <div class="text-center">
+                        <div class="metric-circle">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-circle" 
+                                        cx="60" cy="60" r="54"></circle>
+                                <circle class="progress-ring-fill" 
+                                        cx="60" cy="60" r="54"
+                                        style="stroke-dasharray: {{ performance.overall_rating|mul:67.858|default:0 }} 339.29"></circle>
+                            </svg>
+                            <div class="metric-text">
+                                <div class="text-2xl font-bold text-gray-900">{{ performance.overall_rating|default:"-" }}</div>
+                                <div class="text-sm text-gray-600">de 5</div>
+                            </div>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mt-2">Avaliação Geral</h3>
+                    </div>
+                    
+                    <!-- Goals Progress -->
+                    <div class="text-center">
+                        <div class="metric-circle">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-circle" 
+                                        cx="60" cy="60" r="54"></circle>
+                                <circle class="progress-ring-fill" 
+                                        cx="60" cy="60" r="54"
+                                        style="stroke: #10b981; stroke-dasharray: {{ performance.goals_percentage|default:0|mul:3.39 }} 339.29"></circle>
+                            </svg>
+                            <div class="metric-text">
+                                <div class="text-2xl font-bold text-gray-900">{{ performance.goals_percentage|default:0 }}%</div>
+                                <div class="text-sm text-gray-600">Metas</div>
+                            </div>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mt-2">Progresso das Metas</h3>
+                    </div>
+                    
+                    <!-- Competencies Average -->
+                    <div class="text-center">
+                        <div class="metric-circle">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-circle" 
+                                        cx="60" cy="60" r="54"></circle>
+                                <circle class="progress-ring-fill" 
+                                        cx="60" cy="60" r="54"
+                                        style="stroke: #8b5cf6; stroke-dasharray: {{ performance.competencies_avg|mul:67.858|default:0 }} 339.29"></circle>
+                            </svg>
+                            <div class="metric-text">
+                                <div class="text-2xl font-bold text-gray-900">{{ performance.competencies_avg|floatformat:1|default:"-" }}</div>
+                                <div class="text-sm text-gray-600">de 5</div>
+                            </div>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mt-2">Competências</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals Section -->
+            <div class="feedback-section">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-bullseye mr-2 text-blue-500"></i>
+                    Metas e Objetivos
+                </h2>
+                
+                {% for goal in performance.goals.all %}
+                    <div class="goal-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-semibold text-gray-900">{{ goal.title }}</h3>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                {% if goal.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif goal.status == 'in_progress' %}bg-blue-100 text-blue-800
+                                {% elif goal.status == 'not_started' %}bg-gray-100 text-gray-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ goal.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-gray-700 mb-3">{{ goal.description }}</p>
+                        
+                        {% if goal.success_criteria %}
+                            <div class="mb-3">
+                                <h4 class="font-medium text-gray-900 mb-1">Critério de Sucesso:</h4>
+                                <p class="text-gray-700 text-sm">{{ goal.success_criteria }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span>Progresso</span>
+                                <span>{{ goal.progress|default:0 }}%</span>
+                            </div>
+                            <div class="goal-progress-bar">
+                                <div class="goal-progress-fill" style="width: {{ goal.progress|default:0 }}%"></div>
+                            </div>
+                        </div>
+                        
+                        {% if goal.comments %}
+                            <div class="comment-bubble">
+                                <p class="text-gray-700 text-sm">{{ goal.comments }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-bullseye text-4xl mb-4"></i>
+                        <p>Nenhuma meta foi definida para esta avaliação.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Competencies Section -->
+            <div class="feedback-section">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-star mr-2 text-blue-500"></i>
+                    Avaliação de Competências
+                </h2>
+                
+                {% for competency in performance.competencies.all %}
+                    <div class="competency-meter">
+                        <div class="w-48">
+                            <h3 class="font-medium text-gray-900">{{ competency.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ competency.description|truncatechars:60 }}</p>
+                        </div>
+                        <div class="meter-bar">
+                            <div class="meter-fill level-{{ competency.rating }}" 
+                                 style="width: {{ competency.rating|mul:20 }}%"></div>
+                        </div>
+                        <div class="w-20 text-center">
+                            <span class="text-lg font-bold text-gray-900">{{ competency.rating }}</span>
+                            <span class="text-sm text-gray-600">/5</span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-star text-4xl mb-4"></i>
+                        <p>Nenhuma competência foi avaliada.</p>
+                    </div>
+                {% endfor %}
+                
+                {% if performance.competencies_comments %}
+                    <div class="comment-bubble mt-6">
+                        <h4 class="font-medium text-gray-900 mb-2">Comentários sobre Competências:</h4>
+                        <p class="text-gray-700">{{ performance.competencies_comments }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Feedback Section -->
+            <div class="feedback-section">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                    <i class="fas fa-comments mr-2 text-blue-500"></i>
+                    Feedback e Observações
+                </h2>
+                
+                <!-- Strengths -->
+                {% if performance.strengths %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                            Pontos Fortes
+                        </h3>
+                        <div class="flex flex-wrap">
+                            {% for strength in performance.strengths %}
+                                <span class="strength-tag">
+                                    <i class="fas fa-check mr-2"></i>
+                                    {{ strength }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Areas for Improvement -->
+                {% if performance.improvements %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            Áreas de Melhoria
+                        </h3>
+                        <div class="flex flex-wrap">
+                            {% for improvement in performance.improvements %}
+                                <span class="improvement-tag">
+                                    <i class="fas fa-arrow-up mr-2"></i>
+                                    {{ improvement }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Achievements -->
+                {% if performance.achievements %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Principais Conquistas</h3>
+                        <div class="comment-bubble">
+                            <p class="text-gray-700">{{ performance.achievements }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Challenges -->
+                {% if performance.challenges %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Desafios Enfrentados</h3>
+                        <div class="comment-bubble">
+                            <p class="text-gray-700">{{ performance.challenges }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Self Assessment -->
+                {% if performance.self_assessment %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+                            <i class="fas fa-user-edit text-purple-500 mr-2"></i>
+                            Auto-avaliação
+                        </h3>
+                        <div class="comment-bubble" style="background: #faf5ff; border-color: #c084fc;">
+                            <p class="text-gray-700">{{ performance.self_assessment }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Development Plan -->
+            {% if performance.development_goals or performance.development_actions %}
+                <div class="feedback-section">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                        <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                        Plano de Desenvolvimento
+                    </h2>
+                    
+                    {% if performance.development_goals %}
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Objetivos de Desenvolvimento</h3>
+                            <div class="comment-bubble">
+                                <p class="text-gray-700">{{ performance.development_goals }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if performance.development_actions %}
+                        <div class="mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">Ações Recomendadas</h3>
+                            <div class="development-timeline">
+                                {% for action in performance.development_actions %}
+                                    <div class="timeline-item">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex-1">
+                                                <h4 class="font-medium text-gray-900">{{ action.title }}</h4>
+                                                <p class="text-gray-600 text-sm mt-1">{{ action.description }}</p>
+                                            </div>
+                                            <span class="px-2 py-1 text-xs font-semibold rounded
+                                                {% if action.priority == 'high' %}bg-red-100 text-red-800
+                                                {% elif action.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                                {{ action.get_priority_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Timeline -->
+                    {% if performance.timeline_30days or performance.timeline_90days or performance.timeline_1year %}
+                        <div class="action-timeline">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-calendar-alt mr-2"></i>
+                                Timeline de Desenvolvimento
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {% if performance.timeline_30days %}
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 mb-2">30 dias</h4>
+                                        <p class="text-gray-700 text-sm">{{ performance.timeline_30days }}</p>
+                                    </div>
+                                {% endif %}
+                                {% if performance.timeline_90days %}
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 mb-2">90 dias</h4>
+                                        <p class="text-gray-700 text-sm">{{ performance.timeline_90days }}</p>
+                                    </div>
+                                {% endif %}
+                                {% if performance.timeline_1year %}
+                                    <div>
+                                        <h4 class="font-medium text-gray-900 mb-2">1 ano</h4>
+                                        <p class="text-gray-700 text-sm">{{ performance.timeline_1year }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <!-- Final Comments -->
+            {% if performance.final_comments %}
+                <div class="feedback-section">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-6">
+                        <i class="fas fa-clipboard-check mr-2 text-blue-500"></i>
+                        Comentários Finais do Revisor
+                    </h2>
+                    <div class="comment-bubble">
+                        <p class="text-gray-700">{{ performance.final_comments }}</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Signatures -->
+            <div class="signature-section {% if performance.reviewer_signature or performance.employee_signature %}signature-present{% endif %}">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assinaturas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="text-center">
+                        {% if performance.reviewer_signature %}
+                            {% if performance.reviewer_signature_type == 'drawn' %}
+                                <img src="{{ performance.reviewer_signature }}" 
+                                     alt="Assinatura do Revisor" 
+                                     class="mx-auto mb-2" 
+                                     style="max-height: 60px;">
+                            {% else %}
+                                <div class="text-2xl font-script text-gray-700 mb-2">
+                                    {{ performance.reviewer_signature }}
+                                </div>
+                            {% endif %}
+                            <div class="border-t border-gray-300 pt-2">
+                                <p class="font-medium">{{ performance.reviewer.get_full_name }}</p>
+                                <p class="text-sm text-gray-600">Revisor</p>
+                                <p class="text-xs text-gray-500">{{ performance.reviewed_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        {% else %}
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8">
+                                <i class="fas fa-signature text-gray-400 text-2xl mb-2"></i>
+                                <p class="text-gray-500">Aguardando assinatura do revisor</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center">
+                        {% if performance.employee_signature %}
+                            {% if performance.employee_signature_type == 'drawn' %}
+                                <img src="{{ performance.employee_signature }}" 
+                                     alt="Assinatura do Funcionário" 
+                                     class="mx-auto mb-2" 
+                                     style="max-height: 60px;">
+                            {% else %}
+                                <div class="text-2xl font-script text-gray-700 mb-2">
+                                    {{ performance.employee_signature }}
+                                </div>
+                            {% endif %}
+                            <div class="border-t border-gray-300 pt-2">
+                                <p class="font-medium">{{ performance.employee.get_full_name }}</p>
+                                <p class="text-sm text-gray-600">Funcionário</p>
+                                <p class="text-xs text-gray-500">{{ performance.employee_signed_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        {% else %}
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8">
+                                <i class="fas fa-signature text-gray-400 text-2xl mb-2"></i>
+                                <p class="text-gray-500">Aguardando assinatura do funcionário</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Quick Info -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                    Informações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Tipo:</span>
+                        <span class="font-medium">{{ performance.get_type_display }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Data Limite:</span>
+                        <span class="font-medium {% if performance.is_overdue %}text-red-600{% endif %}">
+                            {{ performance.due_date|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Criado em:</span>
+                        <span class="font-medium">{{ performance.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Atualizado:</span>
+                        <span class="font-medium">{{ performance.updated_at|date:"d/m/Y" }}</span>
+                    </div>
+                    {% if performance.cycle %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Ciclo:</span>
+                            <span class="font-medium">{{ performance.cycle.name }}</span>
+                        </div>
+                    {% endif %}
+                    {% if performance.next_review_date %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Próxima:</span>
+                            <span class="font-medium">{{ performance.next_review_date|date:"d/m/Y" }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Progress Overview -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-chart-bar text-green-500 mr-2"></i>
+                    Visão Geral do Progresso
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Completude da Avaliação</span>
+                            <span>{{ performance.completion_percentage|default:0 }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" 
+                                 style="width: {{ performance.completion_percentage|default:0 }}%"></div>
+                        </div>
+                    </div>
+                    
+                    {% if performance.goals.exists %}
+                        <div>
+                            <div class="flex justify-between text-sm text-gray-600 mb-1">
+                                <span>Metas Concluídas</span>
+                                <span>{{ performance.goals_completed }}/{{ performance.total_goals }}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full" 
+                                     style="width: {{ performance.goals_percentage|default:0 }}%"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action History -->
+            {% if performance.action_history.exists %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-history text-purple-500 mr-2"></i>
+                        Histórico de Ações
+                    </h3>
+                    <div class="space-y-3 max-h-64 overflow-y-auto">
+                        {% for action in performance.action_history.all %}
+                            <div class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                                <div class="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm text-gray-900">{{ action.description }}</p>
+                                    <p class="text-xs text-gray-500">
+                                        {{ action.created_at|date:"d/m/Y H:i" }} - {{ action.user.get_full_name }}
+                                    </p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-lg p-6 no-print">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                    Ações Rápidas
+                </h3>
+                <div class="space-y-3">
+                    {% if performance.can_edit %}
+                        <a href="{% url 'hr:performance_form' performance.id %}" 
+                           class="w-full action-button primary text-left">
+                            <i class="fas fa-edit mr-3"></i>
+                            Editar Avaliação
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'hr:performance_duplicate' performance.id %}" 
+                       class="w-full action-button secondary text-left">
+                        <i class="fas fa-copy mr-3"></i>
+                        Duplicar
+                    </a>
+                    
+                    {% if performance.status == 'draft' %}
+                        <a href="{% url 'hr:performance_send' performance.id %}" 
+                           class="w-full action-button outline text-left">
+                            <i class="fas fa-paper-plane mr-3"></i>
+                            Enviar para Revisão
+                        </a>
+                    {% endif %}
+                    
+                    <button onclick="requestSignature()" 
+                            class="w-full action-button outline text-left">
+                        <i class="fas fa-signature mr-3"></i>
+                        Solicitar Assinatura
+                    </button>
+                    
+                    <a href="{% url 'hr:employee_detail' performance.employee.id %}" 
+                       class="w-full action-button outline text-left">
+                        <i class="fas fa-user mr-3"></i>
+                        Ver Funcionário
+                    </a>
+                </div>
+            </div>
+
+            <!-- Recommendation -->
+            {% if performance.recommendation %}
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        <i class="fas fa-thumbs-up text-green-500 mr-2"></i>
+                        Recomendação
+                    </h3>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-award text-green-500 text-2xl mb-2"></i>
+                        <p class="font-semibold text-green-800">{{ performance.get_recommendation_display }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div class="floating-actions no-print">
+        <button onclick="window.print()" class="fab-button" title="Imprimir">
+            <i class="fas fa-print"></i>
+        </button>
+        <button onclick="exportPDF()" class="fab-button" title="Exportar PDF">
+            <i class="fas fa-file-pdf"></i>
+        </button>
+        <button onclick="sharePerformance()" class="fab-button" title="Compartilhar">
+            <i class="fas fa-share"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Export to PDF
+    function exportPDF() {
+        // Hide print-only elements
+        document.querySelectorAll('.no-print').forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        // Trigger print (which can be saved as PDF)
+        window.print();
+        
+        // Restore elements after print dialog closes
+        setTimeout(() => {
+            document.querySelectorAll('.no-print').forEach(el => {
+                el.style.display = '';
+            });
+        }, 1000);
+    }
+    
+    // Share performance review
+    function sharePerformance() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Avaliação de Desempenho - {{ performance.employee.get_full_name }}',
+                text: 'Avaliação de desempenho do período {{ performance.get_review_period_display }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link copiado para a área de transferência!');
+            });
+        }
+    }
+    
+    // Request signature
+    function requestSignature() {
+        const employeeId = {{ performance.employee.id }};
+        const performanceId = {{ performance.id }};
+        
+        if (confirm('Enviar solicitação de assinatura para {{ performance.employee.get_full_name }}?')) {
+            fetch(`{% url 'hr:performance_request_signature' performance.id %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Solicitação de assinatura enviada com sucesso!');
+                } else {
+                    alert('Erro ao enviar solicitação: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao enviar solicitação de assinatura');
+            });
+        }
+    }
+    
+    // Animate progress circles on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate progress rings
+        const rings = document.querySelectorAll('.progress-ring-fill');
+        rings.forEach(ring => {
+            const dashArray = ring.style.strokeDasharray;
+            ring.style.strokeDasharray = '0 339.29';
+            
+            setTimeout(() => {
+                ring.style.strokeDasharray = dashArray;
+            }, 500);
+        });
+        
+        // Animate progress bars
+        const bars = document.querySelectorAll('.goal-progress-fill, .meter-fill');
+        bars.forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 300);
+        });
+    });
+    
+    // Print optimizations
+    window.addEventListener('beforeprint', function() {
+        // Expand any collapsed sections for printing
+        document.querySelectorAll('.collapse').forEach(el => {
+            el.classList.add('show');
+        });
+    });
+    
+    window.addEventListener('afterprint', function() {
+        // Restore collapsed sections after printing
+        document.querySelectorAll('.collapse').forEach(el => {
+            if (!el.classList.contains('show-default')) {
+                el.classList.remove('show');
+            }
+        });
+    });
+</script>
+{% endblock %}
