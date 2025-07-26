@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Certificado - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-edit text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Editar Certificado</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="certificate-form">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Formulário -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Informações do Certificado</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Informações básicas -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Beneficiária *</label>
+                                {{ form.member }}
+                                {% if form.member.errors %}
+                                    <div class="text-danger small">{{ form.member.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Template *</label>
+                                {{ form.template }}
+                                {% if form.template.errors %}
+                                    <div class="text-danger small">{{ form.template.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Título *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Descrição</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Datas -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Conclusão *</label>
+                                {{ form.completion_date }}
+                                {% if form.completion_date.errors %}
+                                    <div class="text-danger small">{{ form.completion_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Expiração</label>
+                                {{ form.expiry_date }}
+                                {% if form.expiry_date.errors %}
+                                    <div class="text-danger small">{{ form.expiry_date.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">Deixe em branco se não expira</small>
+                            </div>
+                        </div>
+
+                        <!-- Detalhes adicionais -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Carga Horária</label>
+                                {{ form.hours_completed }}
+                                {% if form.hours_completed.errors %}
+                                    <div class="text-danger small">{{ form.hours_completed.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Nota</label>
+                                {{ form.grade }}
+                                {% if form.grade.errors %}
+                                    <div class="text-danger small">{{ form.grade.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Instrutor</label>
+                                {{ form.instructor }}
+                                {% if form.instructor.errors %}
+                                    <div class="text-danger small">{{ form.instructor.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Observações -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Observações</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewCertificate()">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview/Sidebar -->
+            <div class="col-lg-4">
+                <!-- Preview do Certificado -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Preview do Certificado</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="certificate-preview" class="text-center">
+                            <div class="certificate-mini-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; min-height: 200px; font-size: 12px; position: relative;">
+                                <!-- Background decorativo -->
+                                <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;"></div>
+                                
+                                <!-- Logo -->
+                                <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; position: relative; z-index: 1;">MOVE MARIAS</div>
+                                
+                                <!-- Título -->
+                                <h4 style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #fff;">
+                                    CERTIFICADO
+                                </h4>
+                                
+                                <!-- Nome -->
+                                <div id="preview-member-name" style="font-size: 14px; font-weight: bold; margin: 15px 0; color: #fff;">
+                                    {% if certificate.member %}{{ certificate.member.get_full_name }}{% endif %}
+                                </div>
+                                
+                                <!-- Título do certificado -->
+                                <div id="preview-title" style="font-size: 11px; margin-bottom: 15px;">
+                                    {{ certificate.title|default:"Título do Certificado" }}
+                                </div>
+                                
+                                <!-- Data -->
+                                <div id="preview-date" style="font-size: 10px; margin-top: 10px;">
+                                    {{ certificate.completion_date|date:"d/m/Y"|default:"__/__/____" }}
+                                </div>
+                            </div>
+                            <p class="text-muted small mt-2">Preview simplificado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Template -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Template Selecionado</h6>
+                    </div>
+                    <div class="card-body" id="template-info">
+                        {% if certificate.template %}
+                            <div class="mb-2">
+                                <strong>{{ certificate.template.name }}</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Tipo:</small>
+                                <div>{{ certificate.template.get_type_display }}</div>
+                            </div>
+                            {% if certificate.template.description %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Descrição:</small>
+                                    <div class="small">{{ certificate.template.description }}</div>
+                                </div>
+                            {% endif %}
+                            {% if certificate.template.default_hours %}
+                                <div class="mb-2">
+                                    <small class="text-muted">Carga horária padrão:</small>
+                                    <div>{{ certificate.template.default_hours }}h</div>
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">Selecione um template para ver as informações</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Códigos de Verificação -->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Verificação</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Código de Verificação</small>
+                            <div>
+                                <code>{{ certificate.verification_code }}</code>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Data de Criação</small>
+                            <div>{{ certificate.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Última Atualização</small>
+                            <div>{{ certificate.updated_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview do Certificado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="full-preview" class="text-center">
+                    <!-- Preview completo será carregado aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualizar preview em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('certificate-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', updatePreview);
+        input.addEventListener('input', updatePreview);
+    });
+    
+    // Atualizar informações do template quando selecionado
+    const templateSelect = document.getElementById('id_template');
+    if (templateSelect) {
+        templateSelect.addEventListener('change', updateTemplateInfo);
+    }
+});
+
+function updatePreview() {
+    const memberSelect = document.getElementById('id_member');
+    const titleInput = document.getElementById('id_title');
+    const dateInput = document.getElementById('id_completion_date');
+    
+    // Atualizar nome da beneficiária
+    const previewName = document.getElementById('preview-member-name');
+    if (memberSelect && previewName) {
+        const selectedOption = memberSelect.options[memberSelect.selectedIndex];
+        previewName.textContent = selectedOption.text || 'Nome da Beneficiária';
+    }
+    
+    // Atualizar título
+    const previewTitle = document.getElementById('preview-title');
+    if (titleInput && previewTitle) {
+        previewTitle.textContent = titleInput.value || 'Título do Certificado';
+    }
+    
+    // Atualizar data
+    const previewDate = document.getElementById('preview-date');
+    if (dateInput && previewDate) {
+        if (dateInput.value) {
+            const date = new Date(dateInput.value);
+            previewDate.textContent = date.toLocaleDateString('pt-BR');
+        } else {
+            previewDate.textContent = '__/__/____';
+        }
+    }
+}
+
+function updateTemplateInfo() {
+    const templateSelect = document.getElementById('id_template');
+    const templateInfo = document.getElementById('template-info');
+    
+    if (templateSelect.value) {
+        // Fazer requisição AJAX para buscar informações do template
+        fetch(`/certificates/template-info/${templateSelect.value}/`)
+            .then(response => response.json())
+            .then(data => {
+                templateInfo.innerHTML = `
+                    <div class="mb-2">
+                        <strong>${data.name}</strong>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Tipo:</small>
+                        <div>${data.type_display}</div>
+                    </div>
+                    ${data.description ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Descrição:</small>
+                            <div class="small">${data.description}</div>
+                        </div>
+                    ` : ''}
+                    ${data.default_hours ? `
+                        <div class="mb-2">
+                            <small class="text-muted">Carga horária padrão:</small>
+                            <div>${data.default_hours}h</div>
+                        </div>
+                    ` : ''}
+                `;
+                
+                // Preencher carga horária automaticamente se não estiver preenchida
+                const hoursInput = document.getElementById('id_hours_completed');
+                if (data.default_hours && (!hoursInput.value || hoursInput.value == '0')) {
+                    hoursInput.value = data.default_hours;
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar informações do template:', error);
+            });
+    } else {
+        templateInfo.innerHTML = '<p class="text-muted">Selecione um template para ver as informações</p>';
+    }
+}
+
+function previewCertificate() {
+    // Coletar dados do formulário
+    const formData = new FormData(document.getElementById('certificate-form'));
+    
+    // Fazer requisição para preview
+    fetch('{% url "certificates:preview" certificate.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('full-preview').innerHTML = html;
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Erro ao gerar preview:', error);
+        alert('Erro ao gerar preview do certificado');
+    });
+}
+
+// Validação do formulário
+document.getElementById('certificate-form').addEventListener('submit', function(e) {
+    const requiredFields = ['id_member', 'id_template', 'id_title', 'id_completion_date'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            hasErrors = true;
+        } else {
+            field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+});
+</script>
+
+<style>
+.certificate-mini-preview {
+    transform: scale(0.8);
+    transform-origin: center;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+#previewModal .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

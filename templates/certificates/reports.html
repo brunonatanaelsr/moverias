@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Relatórios de Certificados - Move Marias{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.metric-card {
+    transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+
+.export-buttons .btn {
+    margin: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-chart-bar text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Relatórios de Certificados</h6>
+                        </div>
+                        <div class="export-buttons">
+                            <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
+                                <i class="fas fa-file-excel me-2"></i>Excel
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf me-2"></i>PDF
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="printReport()">
+                                <i class="fas fa-print me-2"></i>Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3" id="filter-form">
+                        <div class="col-md-3">
+                            <label class="form-label">Período</label>
+                            <select class="form-select" name="period" onchange="updateDateRange()">
+                                <option value="last_month" {% if request.GET.period == 'last_month' %}selected{% endif %}>Último mês</option>
+                                <option value="last_3_months" {% if request.GET.period == 'last_3_months' %}selected{% endif %}>Últimos 3 meses</option>
+                                <option value="last_6_months" {% if request.GET.period == 'last_6_months' %}selected{% endif %}>Últimos 6 meses</option>
+                                <option value="last_year" {% if request.GET.period == 'last_year' %}selected{% endif %}>Último ano</option>
+                                <option value="custom" {% if request.GET.period == 'custom' %}selected{% endif %}>Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" id="date-from-container" style="display: {% if request.GET.period == 'custom' %}block{% else %}none{% endif %};">
+                            <label class="form-label">Data Inicial</label>
+                            <input type="date" class="form-control" name="date_from" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-2" id="date-to-container" style="display: {% if request.GET.period == 'custom' %}block{% else %}none{% endif %};">
+                            <label class="form-label">Data Final</label>
+                            <input type="date" class="form-control" name="date_to" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="certificate_type">
+                                <option value="">Todos os tipos</option>
+                                <option value="course" {% if request.GET.certificate_type == 'course' %}selected{% endif %}>Curso</option>
+                                <option value="workshop" {% if request.GET.certificate_type == 'workshop' %}selected{% endif %}>Workshop</option>
+                                <option value="participation" {% if request.GET.certificate_type == 'participation' %}selected{% endif %}>Participação</option>
+                                <option value="achievement" {% if request.GET.certificate_type == 'achievement' %}selected{% endif %}>Conquista</option>
+                                <option value="completion" {% if request.GET.certificate_type == 'completion' %}selected{% endif %}>Conclusão</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status">
+                                <option value="">Todos</option>
+                                <option value="generated" {% if request.GET.status == 'generated' %}selected{% endif %}>Gerados</option>
+                                <option value="delivered" {% if request.GET.status == 'delivered' %}selected{% endif %}>Entregues</option>
+                                <option value="expired" {% if request.GET.status == 'expired' %}selected{% endif %}>Expirados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Principais -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card metric-card stats-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-white-50 small">Total de Certificados</div>
+                            <div class="h3 mb-0 text-white">{{ stats.total_certificates }}</div>
+                            <div class="text-white-50 small">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                +{{ stats.certificates_this_month }} este mês
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-certificate text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card metric-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Beneficiárias Certificadas</div>
+                            <div class="h3 mb-0">{{ stats.unique_members }}</div>
+                            <div class="text-success small">
+                                <i class="fas fa-users me-1"></i>
+                                {{ stats.members_percentage }}% do total
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-success bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-users text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card metric-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Templates Ativos</div>
+                            <div class="h3 mb-0">{{ stats.active_templates }}</div>
+                            <div class="text-info small">
+                                <i class="fas fa-file-alt me-1"></i>
+                                {{ stats.templates_used }} em uso
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-info bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-file-alt text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card metric-card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Carga Horária Total</div>
+                            <div class="h3 mb-0">{{ stats.total_hours }}h</div>
+                            <div class="text-warning small">
+                                <i class="fas fa-clock me-1"></i>
+                                Média: {{ stats.average_hours }}h por certificado
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-warning bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row mb-4">
+        <!-- Certificados por Mês -->
+        <div class="col-lg-8 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Certificados por Mês</h6>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <input type="radio" class="btn-check" name="chart-period" id="chart-6months" value="6" checked>
+                            <label class="btn btn-outline-primary" for="chart-6months">6M</label>
+                            
+                            <input type="radio" class="btn-check" name="chart-period" id="chart-12months" value="12">
+                            <label class="btn btn-outline-primary" for="chart-12months">1A</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribuição por Tipo -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header pb-0">
+                    <h6 class="mb-0">Distribuição por Tipo</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 10 Beneficiárias e Templates -->
+    <div class="row mb-4">
+        <!-- Top Beneficiárias -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6 class="mb-0">Top 10 Beneficiárias</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Beneficiária</th>
+                                    <th class="text-center">Certificados</th>
+                                    <th class="text-center">Horas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for member_stat in top_members %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if member_stat.member.photo %}
+                                                    <img src="{{ member_stat.member.photo.url }}" 
+                                                         alt="{{ member_stat.member.get_full_name }}" 
+                                                         class="rounded-circle me-2" 
+                                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="avatar avatar-sm bg-gradient-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                        <span class="text-white text-xs">{{ member_stat.member.first_name.0 }}{{ member_stat.member.last_name.0 }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                {{ member_stat.member.get_full_name }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ member_stat.certificate_count }}</span>
+                                        </td>
+                                        <td class="text-center">{{ member_stat.total_hours }}h</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Nenhum dado disponível</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Templates -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6 class="mb-0">Templates Mais Utilizados</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Template</th>
+                                    <th class="text-center">Tipo</th>
+                                    <th class="text-center">Uso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for template_stat in top_templates %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="icon icon-sm shadow border-radius-md bg-gradient-primary text-center me-2 d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-file-alt text-white text-xs opacity-10"></i>
+                                                </div>
+                                                {{ template_stat.template.name }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-info">{{ template_stat.template.get_type_display }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-success">{{ template_stat.usage_count }}</span>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Nenhum dado disponível</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Certificados Recentes</h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleFullTable()">
+                                <i class="fas fa-expand me-2"></i>Ver Todos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="certificates-table">
+                            <thead>
+                                <tr>
+                                    <th>Beneficiária</th>
+                                    <th>Certificado</th>
+                                    <th>Template</th>
+                                    <th>Data</th>
+                                    <th>Horas</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for certificate in recent_certificates %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if certificate.member.photo %}
+                                                    <img src="{{ certificate.member.photo.url }}" 
+                                                         alt="{{ certificate.member.get_full_name }}" 
+                                                         class="rounded-circle me-2" 
+                                                         style="width: 24px; height: 24px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="avatar avatar-xs bg-gradient-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                        <span class="text-white" style="font-size: 10px;">{{ certificate.member.first_name.0 }}{{ certificate.member.last_name.0 }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="font-weight-bold">{{ certificate.member.get_full_name }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ certificate.title|truncatechars:30 }}</td>
+                                        <td>{{ certificate.template.name|truncatechars:20 }}</td>
+                                        <td>{{ certificate.completion_date|date:"d/m/Y" }}</td>
+                                        <td>{{ certificate.hours_completed|default:"-" }}h</td>
+                                        <td>
+                                            {% if certificate.status == 'generated' %}
+                                                <span class="badge bg-success">Gerado</span>
+                                            {% elif certificate.status == 'delivered' %}
+                                                <span class="badge bg-info">Entregue</span>
+                                            {% elif certificate.status == 'expired' %}
+                                                <span class="badge bg-danger">Expirado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-certificate fa-2x mb-3"></i>
+                                            <p>Nenhum certificado encontrado no período selecionado</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Dados dos gráficos (normalmente vindos do backend)
+const monthlyData = {{ monthly_data|safe }};
+const typeData = {{ type_data|safe }};
+
+// Configurar gráfico mensal
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyChart = new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyData.labels,
+        datasets: [{
+            label: 'Certificados Gerados',
+            data: monthlyData.data,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+// Configurar gráfico de tipos
+const typeCtx = document.getElementById('typeChart').getContext('2d');
+const typeChart = new Chart(typeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: typeData.labels,
+        datasets: [{
+            data: typeData.data,
+            backgroundColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#f5576c',
+                '#4facfe'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Funções
+function updateDateRange() {
+    const period = document.querySelector('select[name="period"]').value;
+    const dateFromContainer = document.getElementById('date-from-container');
+    const dateToContainer = document.getElementById('date-to-container');
+    
+    if (period === 'custom') {
+        dateFromContainer.style.display = 'block';
+        dateToContainer.style.display = 'block';
+    } else {
+        dateFromContainer.style.display = 'none';
+        dateToContainer.style.display = 'none';
+    }
+}
+
+function exportToExcel() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'excel');
+    window.location.href = '?' + params.toString();
+}
+
+function exportToPDF() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'pdf');
+    window.location.href = '?' + params.toString();
+}
+
+function printReport() {
+    window.print();
+}
+
+function toggleFullTable() {
+    const params = new URLSearchParams(window.location.search);
+    params.set('show_all', 'true');
+    window.location.href = '?' + params.toString();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form quando filtros mudarem
+    const filterForm = document.getElementById('filter-form');
+    const selects = filterForm.querySelectorAll('select');
+    const inputs = filterForm.querySelectorAll('input[type="date"]');
+    
+    [...selects, ...inputs].forEach(element => {
+        element.addEventListener('change', function() {
+            if (this.name !== 'period' || this.value !== 'custom') {
+                filterForm.submit();
+            }
+        });
+    });
+    
+    // Listener para mudança do período do gráfico
+    document.querySelectorAll('input[name="chart-period"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Aqui você atualizaria os dados do gráfico
+            // Em produção, faria uma requisição AJAX
+            console.log('Período do gráfico alterado para:', this.value);
+        });
+    });
+});
+</script>
+
+<style>
+@media print {
+    .btn, .export-buttons, nav, .card-header .btn-group {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+    }
+    
+    .row {
+        break-inside: avoid;
+    }
+    
+    .chart-container {
+        height: 200px !important;
+    }
+}
+
+.avatar-xs {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #67748e;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+</style>
+{% endblock %}
+{% endblock %}

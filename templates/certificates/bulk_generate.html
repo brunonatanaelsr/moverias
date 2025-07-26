@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Gerar Certificados em Lote - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-layer-group text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Gerar Certificados em Lote</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="bulk-form">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Configurações -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Configurações do Lote</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Template e Configurações Básicas -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Template *</label>
+                                {{ form.template }}
+                                {% if form.template.errors %}
+                                    <div class="text-danger small">{{ form.template.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Conclusão *</label>
+                                {{ form.completion_date }}
+                                {% if form.completion_date.errors %}
+                                    <div class="text-danger small">{{ form.completion_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Título Base *</label>
+                                {{ form.title_base }}
+                                {% if form.title_base.errors %}
+                                    <div class="text-danger small">{{ form.title_base.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Será usado como base para todos os certificados
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Descrição</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Configurações Opcionais -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Carga Horária</label>
+                                {{ form.hours_completed }}
+                                {% if form.hours_completed.errors %}
+                                    <div class="text-danger small">{{ form.hours_completed.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Instrutor</label>
+                                {{ form.instructor }}
+                                {% if form.instructor.errors %}
+                                    <div class="text-danger small">{{ form.instructor.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Data de Expiração</label>
+                                {{ form.expiry_date }}
+                                {% if form.expiry_date.errors %}
+                                    <div class="text-danger small">{{ form.expiry_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Observações</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seleção de Beneficiárias -->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Beneficiárias</h6>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                                    <i class="fas fa-check-square me-2"></i>Selecionar Todas
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                                    <i class="fas fa-square me-2"></i>Desmarcar Todas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Filtros de Beneficiárias -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="member-search" placeholder="Buscar por nome..." onkeyup="filterMembers()">
+                            </div>
+                            <div class="col-md-6">
+                                <select class="form-select" id="member-filter" onchange="filterMembers()">
+                                    <option value="">Todos os grupos</option>
+                                    {% for group in member_groups %}
+                                        <option value="{{ group }}">{{ group }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Beneficiárias -->
+                        <div class="members-grid" style="max-height: 400px; overflow-y: auto;">
+                            <div class="row" id="members-list">
+                                {% for member in members %}
+                                    <div class="col-md-6 col-lg-4 mb-2 member-item" 
+                                         data-name="{{ member.get_full_name|lower }}" 
+                                         data-group="{{ member.group|default:'sem-grupo'|lower }}">
+                                        <div class="form-check">
+                                            <input class="form-check-input member-checkbox" 
+                                                   type="checkbox" 
+                                                   name="members" 
+                                                   value="{{ member.id }}" 
+                                                   id="member-{{ member.id }}">
+                                            <label class="form-check-label d-flex align-items-center" for="member-{{ member.id }}">
+                                                {% if member.photo %}
+                                                    <img src="{{ member.photo.url }}" 
+                                                         alt="{{ member.get_full_name }}" 
+                                                         class="rounded-circle me-2" 
+                                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="avatar avatar-sm bg-gradient-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                        <span class="text-white text-xs">{{ member.first_name.0 }}{{ member.last_name.0 }}</span>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="font-weight-bold">{{ member.get_full_name }}</div>
+                                                    {% if member.group %}
+                                                        <small class="text-muted">{{ member.group }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="col-12 text-center text-muted py-4">
+                                        <i class="fas fa-users fa-2x mb-3"></i>
+                                        <p>Nenhuma beneficiária encontrada</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Contador de Selecionadas -->
+                        <div class="border-top pt-3 mt-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong id="selected-count">0</strong> beneficiárias selecionadas
+                                </div>
+                                <div>
+                                    <span class="text-muted">Total: {{ members.count }} beneficiárias</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'certificates:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewBatch()">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </button>
+                                <button type="submit" class="btn btn-success" id="generate-btn" disabled>
+                                    <i class="fas fa-magic me-2"></i>Gerar Certificados
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Preview e Informações -->
+            <div class="col-lg-4">
+                <!-- Preview do Template -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Preview do Certificado</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="certificate-preview" class="text-center">
+                            <div class="certificate-mini-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; min-height: 200px; font-size: 12px; position: relative;">
+                                <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;"></div>
+                                <div style="font-size: 14px; font-weight: bold; margin-bottom: 15px; position: relative; z-index: 1;">MOVE MARIAS</div>
+                                <h4 style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: #fff;">CERTIFICADO</h4>
+                                <div id="preview-member-name" style="font-size: 14px; font-weight: bold; margin: 15px 0; color: #fff;">Nome da Beneficiária</div>
+                                <div id="preview-title" style="font-size: 11px; margin-bottom: 15px;">Título do Certificado</div>
+                                <div id="preview-date" style="font-size: 10px; margin-top: 10px;">__/__/____</div>
+                            </div>
+                            <p class="text-muted small mt-2">Preview será atualizado conforme configurações</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo da Geração -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Resumo da Geração</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Template Selecionado</small>
+                            <div id="selected-template">Nenhum template selecionado</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Beneficiárias</small>
+                            <div><span id="summary-selected-count">0</span> selecionadas</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Data de Conclusão</small>
+                            <div id="summary-completion-date">Não definida</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Carga Horária</small>
+                            <div id="summary-hours">Não definida</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Lotes -->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Últimas Gerações em Lote</h6>
+                    </div>
+                    <div class="card-body">
+                        {% for batch in recent_batches %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-layer-group text-success text-xs opacity-10"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="font-weight-bold">{{ batch.certificates_count }} certificados</div>
+                                    <small class="text-muted">{{ batch.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="text-muted small">Nenhuma geração anterior</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview dos Certificados</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="batch-preview-content">
+                    <!-- Preview será carregado aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="generateFromPreview()">
+                    <i class="fas fa-magic me-2"></i>Gerar Certificados
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Progresso -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Gerando Certificados</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <div id="progress-message">Iniciando geração...</div>
+                <div class="progress mt-3">
+                    <div class="progress-bar" role="progressbar" style="width: 0%" id="progress-bar"></div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-muted" id="progress-details">0 de 0 certificados processados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualizar contador de selecionadas
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+    const count = checkboxes.length;
+    
+    document.getElementById('selected-count').textContent = count;
+    document.getElementById('summary-selected-count').textContent = count;
+    
+    // Habilitar/desabilitar botão de gerar
+    const generateBtn = document.getElementById('generate-btn');
+    generateBtn.disabled = count === 0;
+}
+
+function selectAll() {
+    const visibleCheckboxes = document.querySelectorAll('.member-item:not([style*="display: none"]) .member-checkbox');
+    visibleCheckboxes.forEach(checkbox => checkbox.checked = true);
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.member-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    updateSelectedCount();
+}
+
+function filterMembers() {
+    const searchTerm = document.getElementById('member-search').value.toLowerCase();
+    const groupFilter = document.getElementById('member-filter').value.toLowerCase();
+    const members = document.querySelectorAll('.member-item');
+    
+    members.forEach(member => {
+        const name = member.dataset.name;
+        const group = member.dataset.group;
+        
+        const nameMatch = !searchTerm || name.includes(searchTerm);
+        const groupMatch = !groupFilter || group === groupFilter;
+        
+        member.style.display = nameMatch && groupMatch ? 'block' : 'none';
+    });
+    
+    updateSelectedCount();
+}
+
+// Atualizar preview em tempo real
+function updatePreview() {
+    const titleInput = document.getElementById('id_title_base');
+    const dateInput = document.getElementById('id_completion_date');
+    const templateSelect = document.getElementById('id_template');
+    
+    // Atualizar título
+    const previewTitle = document.getElementById('preview-title');
+    if (titleInput && previewTitle) {
+        previewTitle.textContent = titleInput.value || 'Título do Certificado';
+    }
+    
+    // Atualizar data
+    const previewDate = document.getElementById('preview-date');
+    if (dateInput && previewDate) {
+        if (dateInput.value) {
+            const date = new Date(dateInput.value);
+            previewDate.textContent = date.toLocaleDateString('pt-BR');
+        } else {
+            previewDate.textContent = '__/__/____';
+        }
+    }
+    
+    // Atualizar resumo
+    updateSummary();
+}
+
+function updateSummary() {
+    const templateSelect = document.getElementById('id_template');
+    const dateInput = document.getElementById('id_completion_date');
+    const hoursInput = document.getElementById('id_hours_completed');
+    
+    // Template
+    const selectedTemplate = document.getElementById('selected-template');
+    if (templateSelect && selectedTemplate) {
+        const selectedOption = templateSelect.options[templateSelect.selectedIndex];
+        selectedTemplate.textContent = selectedOption.text || 'Nenhum template selecionado';
+    }
+    
+    // Data
+    const summaryDate = document.getElementById('summary-completion-date');
+    if (dateInput && summaryDate) {
+        if (dateInput.value) {
+            const date = new Date(dateInput.value);
+            summaryDate.textContent = date.toLocaleDateString('pt-BR');
+        } else {
+            summaryDate.textContent = 'Não definida';
+        }
+    }
+    
+    // Horas
+    const summaryHours = document.getElementById('summary-hours');
+    if (hoursInput && summaryHours) {
+        summaryHours.textContent = hoursInput.value ? hoursInput.value + ' horas' : 'Não definida';
+    }
+}
+
+function previewBatch() {
+    const form = document.getElementById('bulk-form');
+    const formData = new FormData(form);
+    
+    // Verificar se há beneficiárias selecionadas
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    if (selectedMembers.length === 0) {
+        alert('Selecione pelo menos uma beneficiária para visualizar o preview.');
+        return;
+    }
+    
+    fetch('{% url "certificates:bulk_preview" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('batch-preview-content').innerHTML = html;
+        const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+        modal.show();
+    })
+    .catch(error => {
+        console.error('Erro ao gerar preview:', error);
+        alert('Erro ao gerar preview dos certificados');
+    });
+}
+
+function generateFromPreview() {
+    const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+    previewModal.hide();
+    document.getElementById('bulk-form').submit();
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('bulk-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', updatePreview);
+        input.addEventListener('input', updatePreview);
+    });
+    
+    // Listener para checkboxes de membros
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    memberCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    // Inicializar contadores
+    updateSelectedCount();
+    updatePreview();
+});
+
+// Submissão do formulário com modal de progresso
+document.getElementById('bulk-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const selectedMembers = document.querySelectorAll('.member-checkbox:checked');
+    if (selectedMembers.length === 0) {
+        alert('Selecione pelo menos uma beneficiária para gerar os certificados.');
+        return;
+    }
+    
+    // Mostrar modal de progresso
+    const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+    progressModal.show();
+    
+    // Simular progresso (em produção, usar WebSocket ou polling)
+    simulateProgress(selectedMembers.length);
+    
+    // Submeter formulário real
+    setTimeout(() => {
+        this.submit();
+    }, 100);
+});
+
+function simulateProgress(totalCertificates) {
+    let processed = 0;
+    const progressBar = document.getElementById('progress-bar');
+    const progressMessage = document.getElementById('progress-message');
+    const progressDetails = document.getElementById('progress-details');
+    
+    const interval = setInterval(() => {
+        processed += Math.floor(Math.random() * 3) + 1;
+        if (processed > totalCertificates) processed = totalCertificates;
+        
+        const percentage = (processed / totalCertificates) * 100;
+        progressBar.style.width = percentage + '%';
+        progressDetails.textContent = `${processed} de ${totalCertificates} certificados processados`;
+        
+        if (processed < totalCertificates / 3) {
+            progressMessage.textContent = 'Validando dados...';
+        } else if (processed < totalCertificates * 2/3) {
+            progressMessage.textContent = 'Gerando certificados...';
+        } else if (processed < totalCertificates) {
+            progressMessage.textContent = 'Criando arquivos PDF...';
+        } else {
+            progressMessage.textContent = 'Finalizando processo...';
+            clearInterval(interval);
+        }
+    }, 500);
+}
+</script>
+
+<style>
+.certificate-mini-preview {
+    transform: scale(0.9);
+    transform-origin: center;
+}
+
+.members-grid {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.member-item {
+    transition: opacity 0.3s ease;
+}
+
+.form-check-label {
+    cursor: pointer;
+    width: 100%;
+}
+
+.form-check-label:hover {
+    background-color: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.avatar {
+    font-size: 12px;
+}
+
+#member-search, #member-filter {
+    border-radius: 8px;
+}
+
+.progress {
+    border-radius: 10px;
+    height: 8px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+</style>
+{% endblock %}

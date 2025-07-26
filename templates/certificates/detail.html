@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block title %}{{ certificate.title }} - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-certificate text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Detalhes do Certificado</h6>
+                        </div>
+                        <div class="ms-auto">
+                            {% if certificate.pdf_file %}
+                                <a href="{{ certificate.pdf_file.url }}" class="btn btn-success btn-sm me-2" target="_blank">
+                                    <i class="fas fa-download me-2"></i>Download PDF
+                                </a>
+                            {% endif %}
+                            <button class="btn btn-info btn-sm me-2" onclick="shareCertificate()">
+                                <i class="fas fa-share me-2"></i>Compartilhar
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="printCertificate()">
+                                <i class="fas fa-print me-2"></i>Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Visualização do Certificado -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Preview do Certificado -->
+                    <div class="certificate-preview mb-4" id="certificate-preview">
+                        {% if certificate.pdf_file %}
+                            <div class="text-center">
+                                <iframe src="{{ certificate.pdf_file.url }}" 
+                                        width="100%" 
+                                        height="600px" 
+                                        style="border: 1px solid #ddd; border-radius: 8px;">
+                                </iframe>
+                            </div>
+                        {% else %}
+                            <!-- Preview HTML do certificado -->
+                            <div class="certificate-html-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 60px; border-radius: 15px; color: white; text-align: center; min-height: 400px; position: relative;">
+                                <!-- Background decorativo -->
+                                <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 10px;"></div>
+                                
+                                <!-- Logo -->
+                                {% if certificate.template.logo %}
+                                    <img src="{{ certificate.template.logo.url }}" alt="Logo" style="max-height: 80px; margin-bottom: 30px;">
+                                {% else %}
+                                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 30px;">MOVE MARIAS</div>
+                                {% endif %}
+                                
+                                <!-- Título -->
+                                <h1 style="font-size: 36px; font-weight: bold; margin-bottom: 20px; color: #fff;">
+                                    CERTIFICADO
+                                </h1>
+                                <h2 style="font-size: 24px; margin-bottom: 30px; color: rgba(255,255,255,0.9);">
+                                    {{ certificate.get_type_display|upper }}
+                                </h2>
+                                
+                                <!-- Texto principal -->
+                                <div style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                                    <p>Certificamos que</p>
+                                    <h3 style="font-size: 28px; font-weight: bold; margin: 20px 0; color: #fff;">
+                                        {{ certificate.member.get_full_name }}
+                                    </h3>
+                                    <p>{{ certificate.description }}</p>
+                                    {% if certificate.hours_completed %}
+                                        <p style="margin-top: 20px;">
+                                            <strong>Carga Horária:</strong> {{ certificate.hours_completed }} horas
+                                        </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Data e assinatura -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 40px; padding: 0 40px;">
+                                    <div>
+                                        <p style="margin: 0; font-size: 14px;">Data de Conclusão:</p>
+                                        <p style="margin: 5px 0 0 0; font-weight: bold;">{{ certificate.completion_date|date:"d/m/Y" }}</p>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        {% if certificate.template.signature_image %}
+                                            <img src="{{ certificate.template.signature_image.url }}" alt="Assinatura" style="max-height: 60px; margin-bottom: 10px;">
+                                        {% endif %}
+                                        <div style="border-top: 2px solid rgba(255,255,255,0.7); padding-top: 10px; min-width: 200px;">
+                                            <p style="margin: 0; font-size: 14px;">
+                                                {% if certificate.instructor %}
+                                                    {{ certificate.instructor }}
+                                                {% else %}
+                                                    Coordenação Move Marias
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Código de verificação -->
+                                <div style="position: absolute; bottom: 20px; right: 30px; font-size: 12px; opacity: 0.8;">
+                                    Código: {{ certificate.verification_code }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ações rápidas -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-center">
+                            {% if not certificate.pdf_file and user_permissions.can_generate_certificates %}
+                                <button class="btn btn-primary me-2" onclick="generatePDF()">
+                                    <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                                </button>
+                            {% endif %}
+                            <button class="btn btn-outline-primary me-2" onclick="shareCertificate()">
+                                <i class="fas fa-share me-2"></i>Compartilhar
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="printCertificate()">
+                                <i class="fas fa-print me-2"></i>Imprimir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Certificado -->
+        <div class="col-lg-4">
+            <!-- Detalhes -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Informações do Certificado</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Beneficiária</small>
+                        <div>{{ certificate.member.get_full_name }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Título</small>
+                        <div>{{ certificate.title }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Tipo</small>
+                        <div>{{ certificate.template.get_type_display }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Status</small>
+                        <div>
+                            {% if certificate.status == 'generated' %}
+                                <span class="badge bg-success">Gerado</span>
+                            {% elif certificate.status == 'pending' %}
+                                <span class="badge bg-warning">Pendente</span>
+                            {% elif certificate.status == 'delivered' %}
+                                <span class="badge bg-info">Entregue</span>
+                            {% elif certificate.status == 'expired' %}
+                                <span class="badge bg-danger">Expirado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Data de Emissão</small>
+                        <div>{{ certificate.issue_date|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Data de Conclusão</small>
+                        <div>{{ certificate.completion_date|date:"d/m/Y" }}</div>
+                    </div>
+                    {% if certificate.hours_completed %}
+                        <div class="mb-3">
+                            <small class="text-muted">Carga Horária</small>
+                            <div>{{ certificate.hours_completed }} horas</div>
+                        </div>
+                    {% endif %}
+                    {% if certificate.grade %}
+                        <div class="mb-3">
+                            <small class="text-muted">Nota</small>
+                            <div>{{ certificate.grade }}</div>
+                        </div>
+                    {% endif %}
+                    {% if certificate.instructor %}
+                        <div class="mb-3">
+                            <small class="text-muted">Instrutor</small>
+                            <div>{{ certificate.instructor }}</div>
+                        </div>
+                    {% endif %}
+                    {% if certificate.expiry_date %}
+                        <div class="mb-3">
+                            <small class="text-muted">Data de Expiração</small>
+                            <div>{{ certificate.expiry_date|date:"d/m/Y" }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Verificação -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Verificação</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Código de Verificação</small>
+                        <div class="d-flex align-items-center">
+                            <code class="me-2">{{ certificate.verification_code }}</code>
+                            <button class="btn btn-sm btn-outline-primary" onclick="copyVerificationCode()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Link de Verificação</small>
+                        <div>
+                            <input type="text" class="form-control form-control-sm" 
+                                   id="verification-link" 
+                                   value="{{ request.build_absolute_uri }}/certificates/verify/{{ certificate.verification_code }}/" 
+                                   readonly>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary mt-2 w-100" onclick="copyVerificationLink()">
+                            <i class="fas fa-copy me-2"></i>Copiar Link
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Status de Validade</small>
+                        <div>
+                            {% if certificate.is_valid %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>Válido
+                                </span>
+                            {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Expirado
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>QR Code</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div id="qrcode" class="mb-3"></div>
+                    <p class="text-muted small">
+                        Escaneie para verificar a autenticidade do certificado
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<script>
+// Gerar QR Code
+document.addEventListener('DOMContentLoaded', function() {
+    const verificationUrl = '{{ request.build_absolute_uri }}/certificates/verify/{{ certificate.verification_code }}/';
+    QRCode.toCanvas(document.getElementById('qrcode'), verificationUrl, {
+        width: 200,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    });
+});
+
+function generatePDF() {
+    const certificateId = '{{ certificate.id }}';
+    
+    fetch(`/certificates/generate-pdf/${certificateId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('PDF gerado com sucesso!');
+            location.reload();
+        } else {
+            alert('Erro ao gerar PDF: ' + data.error);
+        }
+    });
+}
+
+function shareCertificate() {
+    const url = '{{ request.build_absolute_uri }}/certificates/verify/{{ certificate.verification_code }}/';
+    const title = '{{ certificate.title }} - {{ certificate.member.get_full_name }}';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            text: 'Verificar certificado Move Marias',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link do certificado copiado para área de transferência!');
+        });
+    }
+}
+
+function printCertificate() {
+    window.print();
+}
+
+function copyVerificationCode() {
+    const code = '{{ certificate.verification_code }}';
+    navigator.clipboard.writeText(code).then(() => {
+        alert('Código de verificação copiado!');
+    });
+}
+
+function copyVerificationLink() {
+    const link = document.getElementById('verification-link');
+    link.select();
+    document.execCommand('copy');
+    alert('Link de verificação copiado!');
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .col-lg-4 {
+        display: none !important;
+    }
+    
+    .col-lg-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .certificate-html-preview {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+.certificate-preview iframe {
+    max-width: 100%;
+}
+
+#qrcode canvas {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

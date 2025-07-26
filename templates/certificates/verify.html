@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verificar Certificado - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.verification-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verification-card {
+    max-width: 600px;
+    width: 100%;
+}
+
+.certificate-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    min-height: 300px;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.certificate-display::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+}
+
+.verification-success {
+    border-left: 4px solid #28a745;
+    background-color: #d4edda;
+}
+
+.verification-error {
+    border-left: 4px solid #dc3545;
+    background-color: #f8d7da;
+}
+
+.verification-form {
+    background: #f8f9fa;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.code-input {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    text-align: center;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+}
+
+.qr-scanner {
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verification-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="verification-card">
+                    {% if certificate %}
+                        <!-- Certificado Válido -->
+                        <div class="card verification-success mb-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0 text-success">Certificado Verificado</h5>
+                                        <p class="mb-0 text-muted">Este certificado é válido e autêntico</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Exibição do Certificado -->
+                        <div class="certificate-display">
+                            {% if certificate.template.logo %}
+                                <img src="{{ certificate.template.logo.url }}" alt="Logo" style="max-height: 60px; margin-bottom: 20px;">
+                            {% else %}
+                                <div style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">MOVE MARIAS</div>
+                            {% endif %}
+                            
+                            <h2 style="font-size: 28px; font-weight: bold; margin-bottom: 15px;">CERTIFICADO</h2>
+                            <h3 style="font-size: 18px; margin-bottom: 25px; opacity: 0.9;">{{ certificate.template.get_type_display|upper }}</h3>
+                            
+                            <div style="font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                                <p>Certificamos que</p>
+                                <h4 style="font-size: 24px; font-weight: bold; margin: 15px 0;">
+                                    {{ certificate.member.get_full_name }}
+                                </h4>
+                                <p>{{ certificate.description }}</p>
+                                {% if certificate.hours_completed %}
+                                    <p style="margin-top: 15px;">
+                                        <strong>Carga Horária:</strong> {{ certificate.hours_completed }} horas
+                                    </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 30px;">
+                                <div>
+                                    <p style="margin: 0; font-size: 12px;">Data de Conclusão:</p>
+                                    <p style="margin: 5px 0 0 0; font-weight: bold;">{{ certificate.completion_date|date:"d/m/Y" }}</p>
+                                </div>
+                                <div style="text-align: center;">
+                                    {% if certificate.template.signature_image %}
+                                        <img src="{{ certificate.template.signature_image.url }}" alt="Assinatura" style="max-height: 40px; margin-bottom: 10px;">
+                                    {% endif %}
+                                    <div style="border-top: 1px solid rgba(255,255,255,0.7); padding-top: 8px; min-width: 150px;">
+                                        <p style="margin: 0; font-size: 12px;">
+                                            {% if certificate.instructor %}
+                                                {{ certificate.instructor }}
+                                            {% else %}
+                                                Coordenação Move Marias
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalhes da Verificação -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Detalhes da Verificação</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <small class="text-muted">Código de Verificação</small>
+                                            <div><code>{{ certificate.verification_code }}</code></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted">Data de Emissão</small>
+                                            <div>{{ certificate.issue_date|date:"d/m/Y H:i" }}</div>
+                                        </div>
+                                        {% if certificate.expiry_date %}
+                                            <div class="mb-3">
+                                                <small class="text-muted">Data de Expiração</small>
+                                                <div>{{ certificate.expiry_date|date:"d/m/Y" }}</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <small class="text-muted">Status</small>
+                                            <div>
+                                                {% if certificate.status == 'generated' %}
+                                                    <span class="badge bg-success">Válido</span>
+                                                {% elif certificate.status == 'delivered' %}
+                                                    <span class="badge bg-info">Entregue</span>
+                                                {% elif certificate.status == 'expired' %}
+                                                    <span class="badge bg-danger">Expirado</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted">Instituição</small>
+                                            <div>Move Marias</div>
+                                        </div>
+                                        {% if certificate.grade %}
+                                            <div class="mb-3">
+                                                <small class="text-muted">Nota</small>
+                                                <div>{{ certificate.grade }}</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Ações -->
+                                <div class="border-top pt-3 mt-3">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        {% if certificate.pdf_file %}
+                                            <a href="{{ certificate.pdf_file.url }}" class="btn btn-primary" target="_blank">
+                                                <i class="fas fa-download me-2"></i>Download PDF
+                                            </a>
+                                        {% endif %}
+                                        <button class="btn btn-outline-primary" onclick="printCertificate()">
+                                            <i class="fas fa-print me-2"></i>Imprimir
+                                        </button>
+                                        <button class="btn btn-outline-secondary" onclick="shareCertificate()">
+                                            <i class="fas fa-share me-2"></i>Compartilhar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    {% elif error_message %}
+                        <!-- Certificado Inválido -->
+                        <div class="card verification-error mb-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="fas fa-times-circle text-danger fa-2x me-3"></i>
+                                    <div>
+                                        <h5 class="mb-0 text-danger">Certificado Não Encontrado</h5>
+                                        <p class="mb-0 text-muted">{{ error_message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulário de Nova Verificação -->
+                        <div class="verification-form">
+                            <h5 class="mb-4">Verificar Outro Certificado</h5>
+                            <form method="get" action="{% url 'certificates:verify_form' %}">
+                                <div class="mb-3">
+                                    <label class="form-label">Código de Verificação</label>
+                                    <input type="text" 
+                                           class="form-control code-input" 
+                                           name="code" 
+                                           placeholder="Digite o código..."
+                                           maxlength="8"
+                                           required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Verificar Certificado
+                                </button>
+                            </form>
+                        </div>
+
+                    {% else %}
+                        <!-- Formulário de Verificação -->
+                        <div class="card">
+                            <div class="card-header text-center">
+                                <div class="icon icon-shape icon-lg bg-gradient-primary shadow text-center border-radius-lg">
+                                    <i class="fas fa-certificate opacity-10" aria-hidden="true"></i>
+                                </div>
+                                <h4 class="mt-3 mb-0">Verificar Certificado</h4>
+                                <p class="text-muted">Digite o código de verificação do certificado</p>
+                            </div>
+                            <div class="card-body">
+                                <form method="get">
+                                    <div class="mb-4">
+                                        <label class="form-label">Código de Verificação</label>
+                                        <input type="text" 
+                                               class="form-control code-input" 
+                                               name="code" 
+                                               placeholder="Digite o código..."
+                                               maxlength="8"
+                                               value="{{ request.GET.code }}"
+                                               required>
+                                        <small class="form-text text-muted">
+                                            Digite o código de 8 caracteres encontrado no certificado
+                                        </small>
+                                    </div>
+                                    <div class="text-center">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-search me-2"></i>Verificar Certificado
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Scanner QR Code -->
+                                <div class="qr-scanner mt-4">
+                                    <h6 class="text-muted">Ou escaneie o QR Code</h6>
+                                    <button type="button" class="btn btn-outline-primary" onclick="startQRScanner()">
+                                        <i class="fas fa-qrcode me-2"></i>Escanear QR Code
+                                    </button>
+                                    <div id="qr-reader" style="display: none; margin-top: 20px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Informações sobre Verificação -->
+                        <div class="card mt-4">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    Como Verificar um Certificado
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4 text-center mb-3">
+                                        <i class="fas fa-search fa-2x text-primary mb-2"></i>
+                                        <h6>1. Encontre o Código</h6>
+                                        <p class="text-muted small">Localize o código de verificação no certificado</p>
+                                    </div>
+                                    <div class="col-md-4 text-center mb-3">
+                                        <i class="fas fa-keyboard fa-2x text-primary mb-2"></i>
+                                        <h6>2. Digite o Código</h6>
+                                        <p class="text-muted small">Insira o código de 8 caracteres no campo acima</p>
+                                    </div>
+                                    <div class="col-md-4 text-center mb-3">
+                                        <i class="fas fa-check-circle fa-2x text-primary mb-2"></i>
+                                        <h6>3. Confirme a Autenticidade</h6>
+                                        <p class="text-muted small">Veja os detalhes do certificado verificado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Botão Voltar -->
+                    <div class="text-center mt-4">
+                        <a href="{% url 'certificates:verify_form' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Verificar Outro Certificado
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QR Code Scanner -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script>
+let html5QrcodeScanner;
+
+function startQRScanner() {
+    const qrReaderDiv = document.getElementById('qr-reader');
+    
+    if (qrReaderDiv.style.display === 'none') {
+        qrReaderDiv.style.display = 'block';
+        
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "qr-reader",
+            { 
+                fps: 10, 
+                qrbox: {width: 250, height: 250},
+                aspectRatio: 1.0
+            },
+            false
+        );
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+    } else {
+        stopQRScanner();
+    }
+}
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Extrair código da URL se necessário
+    let code = decodedText;
+    const urlMatch = decodedText.match(/\/certificates\/verify\/([A-Z0-9]{8})\//);
+    if (urlMatch) {
+        code = urlMatch[1];
+    }
+    
+    // Preencher o campo de código
+    document.querySelector('input[name="code"]').value = code;
+    
+    // Parar o scanner
+    stopQRScanner();
+    
+    // Submeter o formulário
+    document.querySelector('form').submit();
+}
+
+function onScanError(errorMessage) {
+    // Ignorar erros de scan contínuo
+}
+
+function stopQRScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        document.getElementById('qr-reader').style.display = 'none';
+    }
+}
+
+function printCertificate() {
+    window.print();
+}
+
+function shareCertificate() {
+    const url = window.location.href;
+    const title = '{{ certificate.title|default:"Certificado Move Marias" }}';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            text: 'Verificar certificado Move Marias',
+            url: url
+        });
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link do certificado copiado para área de transferência!');
+        });
+    }
+}
+
+// Auto-focus no campo de código
+document.addEventListener('DOMContentLoaded', function() {
+    const codeInput = document.querySelector('input[name="code"]');
+    if (codeInput && !codeInput.value) {
+        codeInput.focus();
+    }
+    
+    // Formatar código enquanto digita
+    if (codeInput) {
+        codeInput.addEventListener('input', function(e) {
+            let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (value.length > 8) {
+                value = value.substring(0, 8);
+            }
+            e.target.value = value;
+        });
+    }
+});
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .verification-form, .qr-scanner {
+        display: none !important;
+    }
+    
+    .certificate-display {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+.code-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+#qr-reader {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+{% endblock %}
