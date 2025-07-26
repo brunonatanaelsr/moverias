@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Comunicados - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="ni ni-notification-70 text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Comunicados</h6>
+                        </div>
+                        <div class="ms-auto">
+                            <a href="{% url 'communication:create_announcement' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Novo Comunicado
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-3">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Categoria</label>
+                            <select name="category" class="form-select">
+                                <option value="">Todas as categorias</option>
+                                {% for value, label in categories %}
+                                    <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Prioridade</label>
+                            <select name="priority" class="form-select">
+                                <option value="">Todas as prioridades</option>
+                                {% for value, label in priorities %}
+                                    <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar</label>
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Buscar por título ou conteúdo..." 
+                                   value="{{ current_search|default:'' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Comunicados -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if page_obj %}
+                        {% for announcement in page_obj %}
+                            <div class="border-bottom py-3 {% if not forloop.last %}mb-3{% endif %}">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-3">
+                                                {% if announcement.priority == 'high' %}
+                                                    <span class="badge bg-danger">Alta</span>
+                                                {% elif announcement.priority == 'medium' %}
+                                                    <span class="badge bg-warning">Média</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Baixa</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'communication:announcement_detail' announcement.id %}" 
+                                                       class="text-decoration-none">
+                                                        {{ announcement.title }}
+                                                    </a>
+                                                </h6>
+                                                {% if announcement.summary %}
+                                                    <p class="text-muted mb-1 small">{{ announcement.summary|truncatewords:20 }}</p>
+                                                {% endif %}
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    <span class="me-3">{{ announcement.author.get_full_name|default:announcement.author.username }}</span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    <span class="me-3">{{ announcement.publish_date|date:"d/m/Y H:i" }}</span>
+                                                    {% if announcement.category %}
+                                                        <i class="fas fa-tag me-1"></i>
+                                                        <span>{{ announcement.get_category_display }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="d-flex align-items-center justify-content-end">
+                                            {% if request.user in announcement.read_by.all %}
+                                                <span class="badge bg-success me-2">
+                                                    <i class="fas fa-check me-1"></i>Lido
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary me-2">
+                                                    <i class="fas fa-envelope me-1"></i>Não lido
+                                                </span>
+                                            {% endif %}
+                                            <a href="{% url 'communication:announcement_detail' announcement.id %}" 
+                                               class="btn btn-primary btn-sm">
+                                                Ver Detalhes
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Paginação -->
+                        {% if page_obj.has_other_pages %}
+                            <div class="d-flex justify-content-center mt-4">
+                                <nav aria-label="Navegação de páginas">
+                                    <ul class="pagination">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}">
+                                                    <i class="fas fa-angle-double-left"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}">
+                                                    <i class="fas fa-angle-left"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}">
+                                                    <i class="fas fa-angle-right"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}{% if current_search %}&search={{ current_search }}{% endif %}">
+                                                    <i class="fas fa-angle-double-right"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Nenhum comunicado encontrado</h6>
+                            <p class="text-muted">Não há comunicados disponíveis no momento.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

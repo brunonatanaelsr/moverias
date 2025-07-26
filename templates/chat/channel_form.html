@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Criar Canal - Move Marias{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<style>
+.channel-form {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+.form-checkbox {
+    margin-right: 0.5rem;
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="channel-form">
+        <div class="form-header">
+            <h1 class="form-title">
+                <i class="fas fa-hashtag"></i>
+                {{ title }}
+            </h1>
+            <p class="form-subtitle">
+                Crie um novo canal para organizar conversas por tópico
+            </p>
+        </div>
+
+        <form method="post" class="channel-form-content">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}" class="form-label">
+                    Nome do Canal *
+                </label>
+                {{ form.name }}
+                {% if form.name.help_text %}
+                    <div class="form-help">{{ form.name.help_text }}</div>
+                {% endif %}
+                {% if form.name.errors %}
+                    <div class="form-errors">
+                        {% for error in form.name.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="form-label">
+                    Descrição
+                </label>
+                {{ form.description }}
+                {% if form.description.help_text %}
+                    <div class="form-help">{{ form.description.help_text }}</div>
+                {% endif %}
+                {% if form.description.errors %}
+                    <div class="form-errors">
+                        {% for error in form.description.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if form.channel_type %}
+            <div class="form-group">
+                <label for="{{ form.channel_type.id_for_label }}" class="form-label">
+                    Tipo do Canal
+                </label>
+                {{ form.channel_type }}
+                {% if form.channel_type.help_text %}
+                    <div class="form-help">{{ form.channel_type.help_text }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if form.is_private %}
+            <div class="form-group">
+                <label class="form-checkbox-label">
+                    {{ form.is_private }}
+                    Canal Privado
+                </label>
+                <div class="form-help">
+                    Canais privados só podem ser acessados por membros convidados
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <a href="{% url 'chat:home' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    {% if channel %}Atualizar Canal{% else %}Criar Canal{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus no primeiro campo
+    const firstInput = document.querySelector('.form-input');
+    if (firstInput) {
+        firstInput.focus();
+    }
+
+    // Validação em tempo real
+    const nameInput = document.querySelector('#id_name');
+    if (nameInput) {
+        nameInput.addEventListener('input', function() {
+            // Remover caracteres especiais e converter para lowercase
+            let value = this.value.toLowerCase();
+            value = value.replace(/[^a-z0-9-_]/g, '');
+            this.value = value;
+        });
+    }
+
+    // Preview do nome do canal
+    const namePreview = document.createElement('div');
+    namePreview.className = 'channel-name-preview';
+    namePreview.style.cssText = `
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        background: #f3f4f6;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        color: #6b7280;
+    `;
+    
+    if (nameInput) {
+        nameInput.parentNode.appendChild(namePreview);
+        
+        function updatePreview() {
+            const value = nameInput.value;
+            if (value) {
+                namePreview.innerHTML = `<i class="fas fa-hashtag"></i> ${value}`;
+                namePreview.style.display = 'block';
+            } else {
+                namePreview.style.display = 'none';
+            }
+        }
+        
+        nameInput.addEventListener('input', updatePreview);
+        updatePreview();
+    }
+});
+</script>
+{% endblock %}

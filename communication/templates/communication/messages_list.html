@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Mensagens - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="ni ni-email-83 text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Mensagens</h6>
+                        </div>
+                        <div class="ms-auto">
+                            <a href="{% url 'communication:create_message' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Nova Mensagem
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" id="typeFilter">
+                                <option value="all" {% if current_type == 'all' %}selected{% endif %}>
+                                    Todos os tipos
+                                </option>
+                                <option value="received" {% if current_type == 'received' %}selected{% endif %}>
+                                    Recebidas
+                                </option>
+                                <option value="sent" {% if current_type == 'sent' %}selected{% endif %}>
+                                    Enviadas
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="statusFilter">
+                                <option value="all" {% if current_status == 'all' %}selected{% endif %}>
+                                    Todos os status
+                                </option>
+                                <option value="unread" {% if current_status == 'unread' %}selected{% endif %}>
+                                    Não lidas
+                                </option>
+                                <option value="read" {% if current_status == 'read' %}selected{% endif %}>
+                                    Lidas
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Buscar mensagens...">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100" onclick="applyFilters()">
+                                <i class="fas fa-search me-2"></i>Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Mensagens -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if page_obj %}
+                        {% for message in page_obj %}
+                            <div class="border-bottom py-3 {% if not forloop.last %}mb-3{% endif %} message-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-3">
+                                                <div class="icon icon-shape icon-xs bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-envelope fa-xs"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'communication:message_detail' message.id %}" 
+                                                       class="text-decoration-none">
+                                                        {{ message.subject|default:"Sem assunto" }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted mb-1 small">
+                                                    {{ message.content|truncatewords:15|striptags }}
+                                                </p>
+                                                <div class="d-flex align-items-center text-muted small">
+                                                    <i class="fas fa-user me-1"></i>
+                                                    <span class="me-3">{{ message.author.get_full_name|default:message.author.username }}</span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    <span class="me-3">{{ message.created_at|date:"d/m/Y H:i" }}</span>
+                                                    {% if message.message_type %}
+                                                        <i class="fas fa-tag me-1"></i>
+                                                        <span>{{ message.get_message_type_display }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="d-flex align-items-center justify-content-end">
+                                            {% if message.priority == 'high' %}
+                                                <span class="badge bg-danger me-2">
+                                                    <i class="fas fa-exclamation me-1"></i>Alta
+                                                </span>
+                                            {% elif message.priority == 'medium' %}
+                                                <span class="badge bg-warning me-2">
+                                                    <i class="fas fa-minus me-1"></i>Média
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success me-2">
+                                                    <i class="fas fa-check me-1"></i>Baixa
+                                                </span>
+                                            {% endif %}
+                                            
+                                            {% if message.is_active %}
+                                                <span class="badge bg-primary me-2">Ativa</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary me-2">Inativa</span>
+                                            {% endif %}
+                                            
+                                            <a href="{% url 'communication:message_detail' message.id %}" 
+                                               class="btn btn-primary btn-sm">
+                                                Ver Detalhes
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Paginação -->
+                        {% if page_obj.has_other_pages %}
+                            <div class="d-flex justify-content-center mt-4">
+                                <nav aria-label="Navegação de páginas">
+                                    <ul class="pagination">
+                                        {% if page_obj.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1">
+                                                    <i class="fas fa-angle-double-left"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                                    <i class="fas fa-angle-left"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
+                                        {% for num in page_obj.paginator.page_range %}
+                                            {% if page_obj.number == num %}
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ num }}</span>
+                                                </li>
+                                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                                <li class="page-item">
+                                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if page_obj.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                                    <i class="fas fa-angle-right"></i>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                                    <i class="fas fa-angle-double-right"></i>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Nenhuma mensagem encontrada</h6>
+                            <p class="text-muted">Não há mensagens disponíveis no momento.</p>
+                            <a href="{% url 'communication:create_message' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Criar Nova Mensagem
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyFilters() {
+    const type = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const search = document.getElementById('searchInput').value;
+    
+    const params = new URLSearchParams();
+    if (type && type !== 'all') params.append('type', type);
+    if (status && status !== 'all') params.append('status', status);
+    if (search) params.append('search', search);
+    
+    window.location.href = window.location.pathname + '?' + params.toString();
+}
+
+// Permitir busca com Enter
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        applyFilters();
+    }
+});
+</script>
+{% endblock %}

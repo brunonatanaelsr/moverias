@@ -22,61 +22,92 @@ ChatRoomMembership = ChatChannelMembership
 @login_required
 def chat_home(request):
     """Página principal do chat"""
-    # Salas do usuário
-    user_rooms = ChatRoom.objects.filter(
+    # Canais do usuário (channels)
+    user_channels = ChatChannel.objects.filter(
         members=request.user, 
-        is_active=True
+        is_active=True,
+        channel_type='channel'
     ).annotate(
         last_message_time=Max('messages__created_at')
     ).order_by('-last_message_time')
     
-    # Unread messages count instead of notifications
-    unread_count = 0
-    for room in user_rooms:
-        unread_count += room.messages.filter(
-            created_at__gt=timezone.now() - timezone.timedelta(hours=24),
-            is_deleted=False
-        ).exclude(sender=request.user).count()
+    # Conversas diretas (DMs)
+    user_dms = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        channel_type='direct'
+    ).annotate(
+        last_message_time=Max('messages__created_at')
+    ).order_by('-last_message_time')
     
-    # Sala selecionada (primeira da lista ou especificada)
-    selected_room = None
-    if user_rooms.exists():
-        room_id = request.GET.get('room')
-        if room_id:
-            selected_room = user_rooms.filter(id=room_id).first()
-        if not selected_room:
-            selected_room = user_rooms.first()
+    # Canal selecionado (primeiro da lista ou especificado)
+    selected_channel = None
+    channel_id = request.GET.get('channel')
     
-    # Mensagens da sala selecionada
+    if channel_id:
+        # Buscar canal específico
+        all_channels = user_channels.union(user_dms)
+        selected_channel = all_channels.filter(id=channel_id).first()
+    
+    if not selected_channel:
+        # Selecionar primeiro canal disponível
+        if user_channels.exists():
+            selected_channel = user_channels.first()
+        elif user_dms.exists():
+            selected_channel = user_dms.first()
+    
+    # Mensagens do canal selecionado
     messages_list = []
-    if selected_room:
-        messages_list = selected_room.messages.filter(
+    if selected_channel:
+        messages_list = selected_channel.messages.filter(
             is_deleted=False
-        ).order_by('created_at')
+        ).select_related('sender').order_by('created_at')
         
         # Marcar como lida
-        membership = ChatRoomMembership.objects.get(
-            user=request.user,
-            room=selected_room
-        )
-        membership.mark_as_read()
+        try:
+            membership = ChatChannelMembership.objects.get(
+                user=request.user,
+                channel=selected_channel
+            )
+            membership.mark_as_read()
+        except ChatChannelMembership.DoesNotExist:
+            pass
     
-    # Usuários online (simplificado)
+    # Contagem de mensagens não lidas
+    unread_count = 0
+    all_user_channels = user_channels.union(user_dms)
+    for channel in all_user_channels:
+        try:
+            membership = ChatChannelMembership.objects.get(
+                user=request.user,
+                channel=channel
+            )
+            unread_count += channel.messages.filter(
+                created_at__gt=membership.last_read_at or timezone.now() - timezone.timedelta(days=1),
+                is_deleted=False
+            ).exclude(sender=request.user).count()
+        except ChatChannelMembership.DoesNotExist:
+            continue
+    
+    # Usuários online
     online_users = User.objects.filter(
         is_active=True,
         last_login__gte=timezone.now() - timezone.timedelta(minutes=15)
-    ).exclude(id=request.user.id)[:10]
+    ).exclude(id=request.user.id)[:20]
     
     context = {
-        'user_rooms': user_rooms,
-        'selected_room': selected_room,
+        'user_channels': user_channels,
+        'user_dms': user_dms,
+        'selected_channel': selected_channel,
         'messages': messages_list,
         'unread_count': unread_count,
         'online_users': online_users,
         'message_form': ChatMessageForm(),
+        'current_user_id': request.user.id,
+        'current_channel_id': selected_channel.id if selected_channel else None,
     }
     
-    return render(request, 'chat/home.html', context)
+    return render(request, 'chat/chat_home.html', context)
 
 
 @login_required
@@ -370,3 +401,215 @@ def get_messages(request, room_id):
         })
     
     return JsonResponse({'success': True, 'messages': messages_data})
+
+
+@login_required
+def channel_create(request):
+    """Criar novo canal de chat"""
+    if request.method == 'POST':
+        form = ChatRoomForm(request.POST)
+        if form.is_valid():
+            channel = form.save(commit=False)
+            channel.created_by = request.user
+            channel.channel_type = 'channel'
+            channel.save()
+            
+            # Adicionar criador como membro e admin
+            ChatChannelMembership.objects.create(
+                user=request.user,
+                channel=channel,
+                role='admin'
+            )
+            
+            messages.success(request, 'Canal criado com sucesso!')
+            return redirect('chat:home') + f'?channel={channel.id}'
+    else:
+        form = ChatRoomForm()
+    
+    return render(request, 'chat/channel_form.html', {'form': form, 'title': 'Criar Canal'})
+
+
+@login_required
+def channel_detail(request, channel_id):
+    """Detalhes do canal de chat"""
+    channel = get_object_or_404(ChatChannel, id=channel_id)
+    
+    # Verificar se o usuário é membro do canal
+    if not channel.members.filter(id=request.user.id).exists():
+        messages.error(request, 'Você não tem acesso a este canal.')
+        return redirect('chat:home')
+    
+    return redirect('chat:home') + f'?channel={channel_id}'
+
+
+@login_required
+def channel_edit(request, channel_id):
+    """Editar canal de chat"""
+    channel = get_object_or_404(ChatChannel, id=channel_id)
+    
+    # Verificar se o usuário pode editar (admin ou criador)
+    membership = ChatChannelMembership.objects.filter(
+        user=request.user,
+        channel=channel
+    ).first()
+    
+    if not membership or (membership.role not in ['admin', 'moderator'] and channel.created_by != request.user):
+        messages.error(request, 'Você não tem permissão para editar este canal.')
+        return redirect('chat:home') + f'?channel={channel_id}'
+    
+    if request.method == 'POST':
+        form = ChatRoomForm(request.POST, instance=channel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Canal atualizado com sucesso!')
+            return redirect('chat:home') + f'?channel={channel_id}'
+    else:
+        form = ChatRoomForm(instance=channel)
+    
+    return render(request, 'chat/channel_form.html', {
+        'form': form, 
+        'title': 'Editar Canal',
+        'channel': channel
+    })
+
+
+@login_required
+def channel_members(request, channel_id):
+    """Gerenciar membros do canal"""
+    channel = get_object_or_404(ChatChannel, id=channel_id)
+    
+    # Verificar permissão
+    membership = ChatChannelMembership.objects.filter(
+        user=request.user,
+        channel=channel
+    ).first()
+    
+    if not membership:
+        messages.error(request, 'Você não tem acesso a este canal.')
+        return redirect('chat:home')
+    
+    members = channel.members.all()
+    
+    context = {
+        'channel': channel,
+        'members': members,
+        'user_membership': membership,
+        'can_manage': membership.role in ['admin', 'moderator'] or channel.created_by == request.user
+    }
+    
+    return render(request, 'chat/channel_members.html', context)
+
+
+@login_required
+def dm_list(request):
+    """Lista de conversas diretas"""
+    dm_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        channel_type='direct'
+    ).annotate(
+        last_message_time=Max('messages__created_at')
+    ).order_by('-last_message_time')
+    
+    return redirect('chat:home')
+
+
+@login_required
+def dm_conversation(request, user_id):
+    """Conversa direta com usuário específico"""
+    other_user = get_object_or_404(User, id=user_id)
+    
+    # Buscar ou criar canal DM
+    dm_channel = ChatChannel.objects.filter(
+        channel_type='direct',
+        members__in=[request.user, other_user]
+    ).annotate(
+        member_count=Count('members')
+    ).filter(member_count=2).first()
+    
+    if not dm_channel:
+        # Criar novo canal DM
+        dm_channel = ChatChannel.objects.create(
+            name=f"{request.user.get_full_name()} & {other_user.get_full_name()}",
+            channel_type='direct',
+            created_by=request.user
+        )
+        dm_channel.members.add(request.user, other_user)
+        
+        # Criar memberships
+        ChatChannelMembership.objects.create(
+            user=request.user,
+            channel=dm_channel,
+            role='member'
+        )
+        ChatChannelMembership.objects.create(
+            user=other_user,
+            channel=dm_channel,
+            role='member'
+        )
+    
+    return redirect('chat:home') + f'?channel={dm_channel.id}'
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def toggle_reaction(request, message_id):
+    """Alternar reação na mensagem"""
+    try:
+        data = json.loads(request.body)
+        emoji = data.get('emoji')
+        
+        if not emoji:
+            return JsonResponse({'success': False, 'message': 'Emoji não fornecido'})
+        
+        message = get_object_or_404(ChatMessage, id=message_id)
+        
+        # Verificar acesso ao canal
+        if not message.channel.members.filter(id=request.user.id).exists():
+            return JsonResponse({'success': False, 'message': 'Acesso negado'})
+        
+        # Importar modelo de reação
+        from .models import ChatReaction
+        
+        # Verificar se já existe reação
+        existing_reaction = ChatReaction.objects.filter(
+            message=message,
+            user=request.user,
+            emoji=emoji
+        ).first()
+        
+        if existing_reaction:
+            # Remover reação
+            existing_reaction.delete()
+            action = 'removed'
+        else:
+            # Adicionar reação
+            ChatReaction.objects.create(
+                message=message,
+                user=request.user,
+                emoji=emoji
+            )
+            action = 'added'
+        
+        # Contar reações atualizadas
+        reactions = ChatReaction.objects.filter(message=message)
+        reactions_data = {}
+        
+        for reaction in reactions:
+            if reaction.emoji not in reactions_data:
+                reactions_data[reaction.emoji] = {
+                    'count': 0,
+                    'users': []
+                }
+            reactions_data[reaction.emoji]['count'] += 1
+            reactions_data[reaction.emoji]['users'].append(reaction.user.id)
+        
+        return JsonResponse({
+            'success': True,
+            'action': action,
+            'reactions': reactions_data
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

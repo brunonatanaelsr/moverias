@@ -1,0 +1,540 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ channel.name }} - Membros - Move Marias{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<style>
+.members-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.members-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.members-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.channel-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.125rem;
+}
+
+.members-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.members-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.member-item:hover {
+    background: #f3f4f6;
+}
+
+.member-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.member-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.member-info {
+    flex: 1;
+}
+
+.member-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.member-role {
+    font-size: 0.875rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.role-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-admin {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.role-moderator {
+    background: #ddd6fe;
+    color: #5b21b6;
+}
+
+.role-member {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.member-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-online {
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.status-offline {
+    background: #6b7280;
+}
+
+.member-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.member-action-btn {
+    padding: 0.5rem;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.member-action-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.member-action-btn.danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="members-container">
+        <div class="members-header">
+            <div class="members-title">
+                <div class="channel-icon">
+                    <i class="fas fa-hashtag"></i>
+                </div>
+                <div>
+                    <h1>{{ channel.name }}</h1>
+                    <p style="font-size: 0.875rem; color: #6b7280; font-weight: normal; margin: 0.25rem 0 0 0;">
+                        {{ members.count }} membro{{ members.count|pluralize }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="members-actions">
+                {% if can_manage %}
+                <button class="btn btn-primary" onclick="showInviteModal()">
+                    <i class="fas fa-user-plus"></i>
+                    Convidar
+                </button>
+                {% endif %}
+                
+                <a href="{% url 'chat:home' %}?channel={{ channel.id }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Voltar ao Chat
+                </a>
+            </div>
+        </div>
+
+        {% if members %}
+        <div class="members-list">
+            {% for member in members %}
+            <div class="member-item">
+                <div class="member-avatar">
+                    {% if member.profile.avatar %}
+                        <img src="{{ member.profile.avatar.url }}" alt="{{ member.get_full_name }}">
+                    {% else %}
+                        {{ member.get_full_name|slice:":1"|upper }}{{ member.last_name|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+
+                <div class="member-info">
+                    <div class="member-name">{{ member.get_full_name }}</div>
+                    <div class="member-role">
+                        {% with membership=member.chatchannelmembership_set.all|first %}
+                        <span class="role-badge role-{{ membership.role }}">
+                            {% if membership.role == 'admin' %}
+                                <i class="fas fa-crown"></i> Admin
+                            {% elif membership.role == 'moderator' %}
+                                <i class="fas fa-shield-alt"></i> Moderador
+                            {% else %}
+                                <i class="fas fa-user"></i> Membro
+                            {% endif %}
+                        </span>
+                        {% endwith %}
+                        
+                        <span class="member-status">
+                            <div class="status-indicator {% if member.is_online %}status-online{% else %}status-offline{% endif %}"></div>
+                            {% if member.is_online %}Online{% else %}Offline{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                {% if can_manage and member != request.user %}
+                <div class="member-actions">
+                    <button class="member-action-btn" 
+                            onclick="showMemberOptions('{{ member.id }}')"
+                            title="Opções do membro">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    
+                    {% if user_membership.role == 'admin' %}
+                    <button class="member-action-btn danger" 
+                            onclick="removeMember('{{ member.id }}')"
+                            title="Remover membro">
+                        <i class="fas fa-user-times"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>Nenhum membro encontrado</h3>
+            <p>Convide pessoas para participar deste canal.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Convite -->
+<div id="inviteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Convidar Membros</h3>
+            <button class="modal-close" onclick="hideInviteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="userSearch">Buscar usuários:</label>
+                <input type="text" id="userSearch" class="form-input" 
+                       placeholder="Digite o nome do usuário...">
+            </div>
+            
+            <div id="searchResults" class="search-results">
+                <!-- Resultados da busca aparecerão aqui -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="hideInviteModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="sendInvites()">Enviar Convites</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedUsers = [];
+
+function showInviteModal() {
+    document.getElementById('inviteModal').style.display = 'flex';
+    document.getElementById('userSearch').focus();
+}
+
+function hideInviteModal() {
+    document.getElementById('inviteModal').style.display = 'none';
+    selectedUsers = [];
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('userSearch').value = '';
+}
+
+function showMemberOptions(memberId) {
+    // Implementar menu de opções do membro
+    console.log('Mostrar opções para membro:', memberId);
+}
+
+function removeMember(memberId) {
+    if (confirm('Tem certeza que deseja remover este membro do canal?')) {
+        // Implementar remoção do membro
+        console.log('Remover membro:', memberId);
+    }
+}
+
+function sendInvites() {
+    if (selectedUsers.length === 0) {
+        alert('Selecione pelo menos um usuário para convidar.');
+        return;
+    }
+    
+    // Implementar envio de convites
+    console.log('Enviar convites para:', selectedUsers);
+    hideInviteModal();
+}
+
+// Busca de usuários
+document.getElementById('userSearch').addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        document.getElementById('searchResults').innerHTML = '';
+        return;
+    }
+    
+    // Simular busca de usuários (implementar com AJAX)
+    setTimeout(() => {
+        const mockResults = [
+            { id: 1, name: 'Maria Silva', email: 'maria@example.com' },
+            { id: 2, name: 'Ana Santos', email: 'ana@example.com' },
+        ];
+        
+        const resultsHTML = mockResults.map(user => `
+            <div class="search-result-item">
+                <div class="user-info">
+                    <div class="user-avatar">${user.name.slice(0, 1)}</div>
+                    <div>
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="selectUser(${user.id}, '${user.name}')">
+                    Selecionar
+                </button>
+            </div>
+        `).join('');
+        
+        document.getElementById('searchResults').innerHTML = resultsHTML;
+    }, 300);
+});
+
+function selectUser(userId, userName) {
+    if (!selectedUsers.find(u => u.id === userId)) {
+        selectedUsers.push({ id: userId, name: userName });
+        console.log('Usuário selecionado:', userName);
+    }
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('inviteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideInviteModal();
+    }
+});
+</script>
+
+<style>
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.search-results {
+    margin-top: 1rem;
+}
+
+.search-result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: #8b5cf6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.user-email {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

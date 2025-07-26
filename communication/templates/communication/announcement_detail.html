@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}{{ announcement.title }} - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'communication:announcements_list' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="ni ni-notification-70 text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Detalhes do Comunicado</h6>
+                        </div>
+                        {% if can_edit %}
+                            <div class="ms-auto">
+                                <a href="{% url 'communication:edit_announcement' announcement.id %}" 
+                                   class="btn btn-primary btn-sm me-2">
+                                    <i class="fas fa-edit me-2"></i>Editar
+                                </a>
+                                <a href="{% url 'communication:delete_announcement' announcement.id %}" 
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Tem certeza que deseja excluir este comunicado?')">
+                                    <i class="fas fa-trash me-2"></i>Excluir
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo do Comunicado -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Cabeçalho do Comunicado -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="me-3">
+                                {% if announcement.priority == 'high' %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Alta Prioridade
+                                    </span>
+                                {% elif announcement.priority == 'medium' %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Média Prioridade
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-info-circle me-1"></i>Baixa Prioridade
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h4 class="mb-2">{{ announcement.title }}</h4>
+                                {% if announcement.summary %}
+                                    <p class="text-muted mb-3 fs-5">{{ announcement.summary }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Metadados -->
+                        <div class="row text-muted small mb-4">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-user me-2"></i>
+                                    <strong>Autor:</strong>&nbsp;
+                                    <span>{{ announcement.author.get_full_name|default:announcement.author.username }}</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    <strong>Publicado em:</strong>&nbsp;
+                                    <span>{{ announcement.publish_date|date:"d/m/Y H:i" }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                {% if announcement.category %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-tag me-2"></i>
+                                        <strong>Categoria:</strong>&nbsp;
+                                        <span>{{ announcement.get_category_display }}</span>
+                                    </div>
+                                {% endif %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-eye me-2"></i>
+                                    <strong>Visualizações:</strong>&nbsp;
+                                    <span>{{ announcement.read_by.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conteúdo Principal -->
+                    <div class="content-area">
+                        <div class="mb-4">
+                            {{ announcement.content|linebreaks }}
+                        </div>
+
+                        {% if announcement.attachment %}
+                            <div class="mb-4">
+                                <h6>Anexo:</h6>
+                                <div class="border rounded p-3 bg-light">
+                                    <i class="fas fa-paperclip me-2"></i>
+                                    <a href="{{ announcement.attachment.url }}" 
+                                       target="_blank" 
+                                       class="text-decoration-none">
+                                        Ver Anexo
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                {% if request.user in announcement.read_by.all %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check me-1"></i>Você já leu este comunicado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-envelope me-1"></i>Marcado como lido automaticamente
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary btn-sm me-2" 
+                                        onclick="shareAnnouncement()">
+                                    <i class="fas fa-share me-1"></i>Compartilhar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        onclick="printAnnouncement()">
+                                    <i class="fas fa-print me-1"></i>Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Informações Adicionais -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Informações</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Data de Criação</small>
+                        <div>{{ announcement.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% if announcement.updated_at != announcement.created_at %}
+                        <div class="mb-3">
+                            <small class="text-muted">Última Atualização</small>
+                            <div>{{ announcement.updated_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <small class="text-muted">Status</small>
+                        <div>
+                            {% if announcement.is_published %}
+                                <span class="badge bg-success">Publicado</span>
+                            {% else %}
+                                <span class="badge bg-warning">Rascunho</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if announcement.expiry_date %}
+                        <div class="mb-3">
+                            <small class="text-muted">Expira em</small>
+                            <div>{{ announcement.expiry_date|date:"d/m/Y H:i" }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Comunicados Relacionados -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Outros Comunicados</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Comunicados recentes na mesma categoria</p>
+                    <div class="text-center py-3">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted small">Nenhum comunicado relacionado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function shareAnnouncement() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ announcement.title|escapejs }}',
+            text: '{{ announcement.summary|default:announcement.title|escapejs }}',
+            url: window.location.href,
+        });
+    } else {
+        // Fallback para navegadores que não suportam Web Share API
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Link copiado para a área de transferência!');
+        });
+    }
+}
+
+function printAnnouncement() {
+    window.print();
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, nav, .sidebar {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .content-area {
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+}
+</style>
+{% endblock %}

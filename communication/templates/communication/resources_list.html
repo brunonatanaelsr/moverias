@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Recursos de Aprendizado - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="ni ni-books text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Recursos de Aprendizado</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-3">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <select class="form-select" disabled>
+                                <option>Todas as categorias</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" disabled>
+                                <option>Todos os tipos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Buscar recursos..." disabled>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100" disabled>
+                                <i class="fas fa-search me-2"></i>Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Recursos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h6 class="text-muted">Biblioteca de Recursos em Desenvolvimento</h6>
+                        <p class="text-muted">Esta funcionalidade será implementada em breve.</p>
+                        
+                        <div class="row justify-content-center mt-4">
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                                <h6 class="card-title">Documentos PDF</h6>
+                                                <p class="card-text small">Manuais, guias e documentação técnica</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-video fa-2x text-info mb-2"></i>
+                                                <h6 class="card-title">Vídeos</h6>
+                                                <p class="card-text small">Tutoriais e apresentações em vídeo</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-link fa-2x text-success mb-2"></i>
+                                                <h6 class="card-title">Links Úteis</h6>
+                                                <p class="card-text small">Recursos externos e referências</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card bg-light h-100">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-graduation-cap fa-2x text-warning mb-2"></i>
+                                                <h6 class="card-title">Cursos</h6>
+                                                <p class="card-text small">Cursos online e materiais de treinamento</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h6 class="text-white">Funcionalidades Planejadas</h6>
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <i class="fas fa-search fa-lg mb-2"></i>
+                                            <p class="small mb-0">Busca Avançada</p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <i class="fas fa-bookmark fa-lg mb-2"></i>
+                                            <p class="small mb-0">Favoritos</p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <i class="fas fa-download fa-lg mb-2"></i>
+                                            <p class="small mb-0">Downloads</p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <i class="fas fa-star fa-lg mb-2"></i>
+                                            <p class="small mb-0">Avaliações</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if page_obj %}
+                        <!-- Lista de recursos seria exibida aqui -->
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

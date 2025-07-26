@@ -8,18 +8,30 @@ urlpatterns = [
     # Chat principal
     path('', views.chat_home, name='home'),
     
-    # Salas
-    path('rooms/', views.chat_home, name='room_list'),
-    path('rooms/create/', views.room_create, name='room_create'),
-    path('rooms/<uuid:room_id>/', views.room_detail, name='room_detail'),
-    path('rooms/<uuid:room_id>/edit/', views.room_edit, name='room_edit'),
-    path('rooms/<uuid:room_id>/members/', views.room_members, name='room_members'),
+    # Canais (channels)
+    path('channels/', views.chat_home, name='channel_list'),
+    path('channels/create/', views.channel_create, name='channel_create'),
+    path('channels/<uuid:channel_id>/', views.channel_detail, name='channel_detail'),
+    path('channels/<uuid:channel_id>/edit/', views.channel_edit, name='channel_edit'),
+    path('channels/<uuid:channel_id>/members/', views.channel_members, name='channel_members'),
+    
+    # Mensagens diretas (DMs)
+    path('dm/', views.dm_list, name='dm_list'),
+    path('dm/<int:user_id>/', views.dm_conversation, name='dm_conversation'),
     
     # Mensagens
-    path('rooms/<uuid:room_id>/send/', views.send_message, name='send_message'),
+    path('send/', views.send_message, name='send_message'),
+    path('channels/<uuid:channel_id>/send/', views.send_message, name='send_channel_message'),
     
     # API/AJAX
-    path('api/rooms/<uuid:room_id>/messages/', views.get_messages, name='get_messages'),
+    path('api/channels/<uuid:channel_id>/messages/', views.get_messages, name='get_messages'),
+    path('api/messages/', views.get_messages, name='get_all_messages'),
+    
+    # Reações
+    path('api/messages/<uuid:message_id>/react/', views.toggle_reaction, name='toggle_reaction'),
+    
+    # Busca
+    path('search/', views.search_messages, name='search'),
     
     # Notificações
     path('notifications/', views.notifications, name='notifications'),

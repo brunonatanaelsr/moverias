@@ -1,56 +1,54 @@
+# ===================================
+# MÓDULO DE COMUNICAÇÃO - URLs INTEGRADAS
+# ===================================
+
 from django.urls import path, include
-from . import views
+from . import views_simple
 
 app_name = 'communication'
 
 urlpatterns = [
     # Dashboard
-    path('', views.dashboard, name='dashboard'),
+    path('', views_simple.communication_dashboard, name='dashboard'),
     
-    # Announcements
-    path('announcements/', views.announcement_list, name='announcement_list'),
-    path('announcements/create/', views.announcement_create, name='announcement_create'),
-    path('announcements/<int:pk>/', views.announcement_detail, name='announcement_detail'),
-    path('announcements/<int:pk>/edit/', views.announcement_edit, name='announcement_edit'),
-    path('announcements/<int:pk>/delete/', views.announcement_delete, name='announcement_delete'),
+    # Comunicados
+    path('announcements/', views_simple.announcements_list, name='announcements_list'),
+    path('announcements/<int:announcement_id>/', views_simple.announcement_detail, name='announcement_detail'),
+    path('announcements/create/', views_simple.create_announcement, name='create_announcement'),
+    path('announcements/<int:announcement_id>/edit/', views_simple.edit_announcement, name='edit_announcement'),
+    path('announcements/<int:announcement_id>/delete/', views_simple.delete_announcement, name='delete_announcement'),
     
-    # Internal Memos
-    path('memos/', views.memo_list, name='memo_list'),
-    path('memos/create/', views.memo_create, name='memo_create'),
-    path('memos/<int:pk>/', views.memo_detail, name='memo_detail'),
-    path('memos/<int:pk>/edit/', views.memo_edit, name='memo_edit'),
-    path('memos/<int:pk>/delete/', views.memo_delete, name='memo_delete'),
+    # Mensagens
+    path('messages/', views_simple.messages_list, name='messages_list'),
+    path('messages/<int:message_id>/', views_simple.message_detail, name='message_detail'),
+    path('messages/create/', views_simple.create_message, name='create_message'),
+    path('messages/<int:message_id>/read/', views_simple.mark_message_read, name='mark_message_read'),
     
     # Newsletters
-    path('newsletters/', views.newsletter_list, name='newsletter_list'),
-    path('newsletters/create/', views.newsletter_create, name='newsletter_create'),
-    path('newsletters/<int:pk>/', views.newsletter_detail, name='newsletter_detail'),
-    path('newsletters/<int:pk>/edit/', views.newsletter_edit, name='newsletter_edit'),
-    path('newsletters/<int:pk>/delete/', views.newsletter_delete, name='newsletter_delete'),
-    path('newsletters/<int:pk>/pdf/', views.newsletter_pdf, name='newsletter_pdf'),
-    path('newsletters/<int:pk>/analytics/', views.newsletter_analytics_export, name='newsletter_analytics_export'),
+    path('newsletters/', views_simple.newsletters_list, name='newsletters_list'),
+    path('newsletters/<int:newsletter_id>/', views_simple.newsletter_detail, name='newsletter_detail'),
     
-    # Messages
-    path('messages/', views.message_list, name='message_list'),
-    path('messages/create/', views.message_create, name='message_create'),
-    path('messages/<int:pk>/', views.message_detail, name='message_detail'),
+    # Políticas
+    path('policies/', views_simple.policies_list, name='policies_list'),
+    path('policies/<int:policy_id>/', views_simple.policy_detail, name='policy_detail'),
+    path('policies/<int:policy_id>/acknowledge/', views_simple.acknowledge_policy, name='acknowledge_policy'),
     
-    # Announcement Board
-    path('board/', views.announcement_board, name='announcement_board'),
+    # Feedback
+    path('feedback/', views_simple.feedback_list, name='feedback_list'),
+    path('feedback/create/', views_simple.create_feedback, name='create_feedback'),
     
-    # Settings and Configuration
-    path('settings/', views.settings, name='settings'),
-    path('templates/create/', views.template_create, name='template_create'),
-    path('templates/<int:pk>/edit/', views.template_edit, name='template_edit'),
-    path('templates/<int:pk>/delete/', views.template_delete, name='template_delete'),
-    path('automation/rules/create/', views.automation_rule_create, name='automation_rule_create'),
-    path('automation/rules/<int:pk>/edit/', views.automation_rule_edit, name='automation_rule_edit'),
-    path('automation/rules/<int:pk>/delete/', views.automation_rule_delete, name='automation_rule_delete'),
-    path('automation/rules/<int:pk>/toggle/', views.automation_rule_toggle, name='automation_rule_toggle'),
+    # Enquetes
+    path('surveys/', views_simple.surveys_list, name='surveys_list'),
+    path('surveys/<int:survey_id>/', views_simple.survey_detail, name='survey_detail'),
     
-    # API endpoints
-    path('api/dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats_api'),
-    path('api/mark-as-read/', views.mark_as_read_api, name='mark_as_read_api'),
-    path('api/search/', views.search_api, name='search_api'),
-    path('api/upload/', views.upload_api, name='upload_api'),
+    # Recursos de Aprendizado
+    path('resources/', views_simple.resources_list, name='resources_list'),
+    path('resources/<int:resource_id>/', views_simple.resource_detail, name='resource_detail'),
+    
+    # Analytics
+    path('analytics/', views_simple.communication_analytics, name='analytics'),
+    
+    # APIs
+    path('api/metrics/', views_simple.metrics_api, name='metrics_api'),
+    path('api/search/', views_simple.search_api, name='search_api'),
 ]
