@@ -1,0 +1,313 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Excluir Funcionário - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.delete-card {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.warning-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.employee-info {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+    border-left: 4px solid #ec4899;
+}
+
+.btn-danger {
+    background-color: #dc2626;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.warning-list {
+    background: #fef3c7;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+    border-left: 4px solid #f59e0b;
+}
+
+.warning-list ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.warning-list li {
+    color: #92400e;
+    margin-bottom: 8px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="delete-card">
+        <!-- Ícone de Aviso -->
+        <div class="warning-icon">
+            <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+        </div>
+
+        <!-- Título -->
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Confirmar Exclusão</h1>
+            <p class="text-gray-600">Esta ação não pode ser desfeita</p>
+        </div>
+
+        <!-- Informações do Funcionário -->
+        <div class="employee-info">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="w-16 h-16 bg-pink-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                    {{ object.first_name.0 }}{{ object.last_name.0 }}
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        {{ object.first_name }} {{ object.last_name }}
+                    </h3>
+                    <p class="text-gray-600">{{ object.job_position.title }}</p>
+                    <p class="text-sm text-gray-500">{{ object.department.name }}</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="font-medium text-gray-700">E-mail:</span>
+                    <p class="text-gray-900">{{ object.email }}</p>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Status:</span>
+                    <p class="text-gray-900">
+                        {% if object.employee_status == 'active' %}Ativo
+                        {% elif object.employee_status == 'inactive' %}Inativo
+                        {% elif object.employee_status == 'on_leave' %}Em Licença
+                        {% elif object.employee_status == 'terminated' %}Desligado
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <span class="font-medium text-gray-700">Data de Admissão:</span>
+                    <p class="text-gray-900">{{ object.hire_date|date:"d/m/Y" }}</p>
+                </div>
+                {% if object.phone %}
+                <div>
+                    <span class="font-medium text-gray-700">Telefone:</span>
+                    <p class="text-gray-900">{{ object.phone }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Aviso sobre Consequências -->
+        <div class="warning-list">
+            <h4 class="font-semibold text-amber-800 mb-3">⚠️ Ao excluir este funcionário:</h4>
+            <ul class="text-sm">
+                <li>Todos os dados pessoais serão removidos permanentemente</li>
+                <li>Histórico de avaliações será perdido</li>
+                <li>Registros de treinamentos serão excluídos</li>
+                <li>Metas e feedbacks relacionados serão removidos</li>
+                <li>Esta ação não pode ser revertida</li>
+            </ul>
+        </div>
+
+        <!-- Confirmação Final -->
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-red-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <div>
+                    <h4 class="font-semibold text-red-800">Atenção!</h4>
+                    <p class="text-red-700 text-sm mt-1">
+                        Você está prestes a excluir permanentemente o funcionário 
+                        <strong>{{ object.first_name }} {{ object.last_name }}</strong>. 
+                        Certifique-se de que realmente deseja prosseguir.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <form method="post" id="deleteForm">
+            {% csrf_token %}
+            <div class="flex items-center justify-between">
+                <a href="{% url 'hr:employee_detail' object.id %}" class="btn-secondary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Cancelar
+                </a>
+                
+                <button type="button" onclick="confirmFinalDelete()" class="btn-danger">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Confirmar Exclusão
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Confirmação Final -->
+<div id="finalConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Última Confirmação</h3>
+            <p class="text-gray-600 mb-6">
+                Digite <strong>"EXCLUIR"</strong> para confirmar a exclusão de 
+                <strong>{{ object.first_name }} {{ object.last_name }}</strong>
+            </p>
+            
+            <input type="text" id="confirmInput" 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 mb-6"
+                   placeholder="Digite EXCLUIR" maxlength="7">
+            
+            <div class="flex justify-center space-x-4">
+                <button type="button" onclick="closeFinalModal()" class="btn-secondary">
+                    Cancelar
+                </button>
+                <button type="button" id="finalDeleteBtn" onclick="submitDelete()" 
+                        class="btn-danger opacity-50 cursor-not-allowed" disabled>
+                    Excluir Definitivamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmFinalDelete() {
+    document.getElementById('finalConfirmModal').classList.remove('hidden');
+    document.getElementById('confirmInput').focus();
+}
+
+function closeFinalModal() {
+    document.getElementById('finalConfirmModal').classList.add('hidden');
+    document.getElementById('confirmInput').value = '';
+    updateDeleteButton();
+}
+
+function updateDeleteButton() {
+    const input = document.getElementById('confirmInput');
+    const button = document.getElementById('finalDeleteBtn');
+    
+    if (input.value.toUpperCase() === 'EXCLUIR') {
+        button.disabled = false;
+        button.classList.remove('opacity-50', 'cursor-not-allowed');
+        button.classList.add('hover:bg-red-700');
+    } else {
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+        button.classList.remove('hover:bg-red-700');
+    }
+}
+
+function submitDelete() {
+    const input = document.getElementById('confirmInput');
+    if (input.value.toUpperCase() === 'EXCLUIR') {
+        // Adicionar loading ao botão
+        const button = document.getElementById('finalDeleteBtn');
+        button.innerHTML = `
+            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Excluindo...
+        `;
+        button.disabled = true;
+        
+        // Submit do formulário
+        document.getElementById('deleteForm').submit();
+    }
+}
+
+// Event listener para o input de confirmação
+document.getElementById('confirmInput').addEventListener('input', updateDeleteButton);
+
+// Event listener para Enter no input
+document.getElementById('confirmInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && this.value.toUpperCase() === 'EXCLUIR') {
+        submitDelete();
+    }
+});
+
+// Fechar modal com ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFinalModal();
+    }
+});
+
+// Prevenir fechamento acidental da página
+window.addEventListener('beforeunload', function(e) {
+    const modal = document.getElementById('finalConfirmModal');
+    if (!modal.classList.contains('hidden')) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+</script>
+{% endblock %}

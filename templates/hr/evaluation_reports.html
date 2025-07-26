@@ -1,0 +1,1347 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Relatórios de Avaliação - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.reports-container {
+    max-width: 7xl;
+}
+
+.reports-header {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    color: white;
+    border-radius: 24px;
+    padding: 40px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.reports-header::before {
+    content: '';
+    position: absolute;
+    top: -100px;
+    right: -100px;
+    width: 200px;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: pulse 8s infinite;
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+}
+
+.header-info h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-info p {
+    font-size: 18px;
+    opacity: 0.9;
+    margin-bottom: 24px;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.quick-stat {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 800;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 11px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-export {
+    background: white;
+    color: #ec4899;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    color: #ec4899;
+}
+
+.filters-panel {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    margin-bottom: 32px;
+    border: 1px solid rgba(236, 72, 153, 0.1);
+}
+
+.filters-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.filters-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reset-filters {
+    font-size: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.reset-filters:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.filter-select {
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.date-range {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+}
+
+.date-input {
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: white;
+    color: #374151;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.reports-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+}
+
+.report-card {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(236, 72, 153, 0.1);
+    transition: all 0.3s ease;
+}
+
+.report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+}
+
+.report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.report-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.icon-performance {
+    background: linear-gradient(135deg, #ec4899, #be185d);
+}
+
+.icon-department {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.icon-trends {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.icon-comparison {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.chart-container {
+    height: 300px;
+    margin-bottom: 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 14px;
+    border: 2px dashed #d1d5db;
+}
+
+.metric-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.metric-item {
+    text-align: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.metric-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ec4899;
+    margin-bottom: 4px;
+}
+
+.metric-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.full-width-report {
+    grid-column: 1 / -1;
+}
+
+.detailed-table {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(236, 72, 153, 0.1);
+}
+
+.table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-table-action {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+}
+
+.btn-export-table {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.btn-export-table:hover {
+    background: #bfdbfe;
+}
+
+.btn-print-table {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-print-table:hover {
+    background: #e5e7eb;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.data-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.data-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+
+.data-table tr:hover {
+    background: #fef7ff;
+}
+
+.employee-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.employee-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ec4899, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.employee-info {
+    flex-grow: 1;
+}
+
+.employee-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 2px;
+}
+
+.employee-department {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.score-cell {
+    text-align: center;
+}
+
+.score-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.score-excellent {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.score-good {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.score-average {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.score-poor {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.progress-cell {
+    width: 120px;
+}
+
+.mini-progress {
+    width: 100%;
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.mini-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ec4899, #8b5cf6);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: #6b7280;
+    text-align: center;
+}
+
+.status-cell {
+    text-align: center;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-completed {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-in-progress {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.insights-section {
+    background: white;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(236, 72, 153, 0.1);
+    margin-top: 32px;
+}
+
+.insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.insight-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 24px;
+    border-left: 4px solid #ec4899;
+}
+
+.insight-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.insight-text {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.insight-action {
+    font-size: 12px;
+    color: #ec4899;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.insight-action:hover {
+    color: #be185d;
+}
+
+@media (max-width: 1200px) {
+    .reports-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .reports-header {
+        padding: 24px;
+    }
+    
+    .header-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .quick-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-range {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .data-table {
+        font-size: 12px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px;
+    }
+    
+    .employee-cell {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+}
+
+@media print {
+    .reports-header {
+        background: #f3f4f6 !important;
+        color: #1f2937 !important;
+    }
+    
+    .header-actions,
+    .filters-panel,
+    .btn-table-action {
+        display: none !important;
+    }
+    
+    .report-card,
+    .detailed-table {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb !important;
+        page-break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container mx-auto">
+    <!-- Header -->
+    <div class="reports-header">
+        <div class="header-content">
+            <div class="header-info">
+                <h1>Relatórios de Avaliação</h1>
+                <p>Análise detalhada do desempenho da equipe e tendências organizacionais</p>
+                
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <span class="stat-number">{{ total_evaluations }}</span>
+                        <span class="stat-label">Avaliações</span>
+                    </div>
+                    
+                    <div class="quick-stat">
+                        <span class="stat-number">{{ avg_score|floatformat:1 }}</span>
+                        <span class="stat-label">Média Geral</span>
+                    </div>
+                    
+                    <div class="quick-stat">
+                        <span class="stat-number">{{ departments_count }}</span>
+                        <span class="stat-label">Departamentos</span>
+                    </div>
+                    
+                    <div class="quick-stat">
+                        <span class="stat-number">{{ completion_rate }}%</span>
+                        <span class="stat-label">Taxa Conclusão</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button onclick="exportAllReports()" class="btn-export">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exportar Todos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-panel">
+        <div class="filters-header">
+            <h2 class="filters-title">
+                <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"/>
+                </svg>
+                Filtros de Relatório
+            </h2>
+            
+            <a href="#" onclick="resetFilters()" class="reset-filters">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Limpar Filtros
+            </a>
+        </div>
+        
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label class="filter-label">Departamento</label>
+                <select class="filter-select" id="departmentFilter" onchange="applyFilters()">
+                    <option value="">Todos os Departamentos</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Tipo de Avaliação</label>
+                <select class="filter-select" id="typeFilter" onchange="applyFilters()">
+                    <option value="">Todos os Tipos</option>
+                    <option value="quarterly">Trimestral</option>
+                    <option value="annual">Anual</option>
+                    <option value="probationary">Experiência</option>
+                    <option value="performance">Performance</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                    <option value="">Todos os Status</option>
+                    <option value="completed">Concluídas</option>
+                    <option value="in-progress">Em Andamento</option>
+                    <option value="pending">Pendentes</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label class="filter-label">Período</label>
+                <div class="date-range">
+                    <input type="date" class="date-input" id="startDate" onchange="applyFilters()">
+                    <span class="text-gray-400">até</span>
+                    <input type="date" class="date-input" id="endDate" onchange="applyFilters()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Relatórios -->
+    <div class="reports-grid">
+        <!-- Relatório de Performance Geral -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-title">
+                    <div class="report-icon icon-performance">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    Performance Geral
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <!-- Aqui seria inserido um gráfico real -->
+                <div class="text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <p>Gráfico de Barras - Pontuação por Competência</p>
+                </div>
+            </div>
+            
+            <div class="metric-summary">
+                <div class="metric-item">
+                    <div class="metric-value">{{ technical_avg|floatformat:1 }}</div>
+                    <div class="metric-label">Técnicas</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ behavioral_avg|floatformat:1 }}</div>
+                    <div class="metric-label">Comportamentais</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ leadership_avg|floatformat:1 }}</div>
+                    <div class="metric-label">Liderança</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório por Departamento -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-title">
+                    <div class="report-icon icon-department">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    Performance por Departamento
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+                    </svg>
+                    <p>Gráfico de Pizza - Distribuição por Departamento</p>
+                </div>
+            </div>
+            
+            <div class="metric-summary">
+                <div class="metric-item">
+                    <div class="metric-value">{{ best_dept_score|floatformat:1 }}</div>
+                    <div class="metric-label">Melhor</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ dept_avg|floatformat:1 }}</div>
+                    <div class="metric-label">Média</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ improvement_needed }}</div>
+                    <div class="metric-label">A Melhorar</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório de Tendências -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-title">
+                    <div class="report-icon icon-trends">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                    Tendências Temporais
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                    </svg>
+                    <p>Gráfico de Linha - Evolução Trimestral</p>
+                </div>
+            </div>
+            
+            <div class="metric-summary">
+                <div class="metric-item">
+                    <div class="metric-value">+{{ trend_growth }}%</div>
+                    <div class="metric-label">Crescimento</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ peak_month }}</div>
+                    <div class="metric-label">Pico</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ consistency_score }}</div>
+                    <div class="metric-label">Consistência</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório Comparativo -->
+        <div class="report-card">
+            <div class="report-header">
+                <div class="report-title">
+                    <div class="report-icon icon-comparison">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                        </svg>
+                    </div>
+                    Análise Comparativa
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <div class="text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <p>Comparação - Atual vs. Anterior</p>
+                </div>
+            </div>
+            
+            <div class="metric-summary">
+                <div class="metric-item">
+                    <div class="metric-value">{{ top_performers }}</div>
+                    <div class="metric-label">Top 10%</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ avg_performers }}</div>
+                    <div class="metric-label">Média</div>
+                </div>
+                
+                <div class="metric-item">
+                    <div class="metric-value">{{ low_performers }}</div>
+                    <div class="metric-label">Abaixo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada -->
+    <div class="detailed-table full-width-report">
+        <div class="table-header">
+            <h2 class="report-title">
+                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                </svg>
+                Relatório Detalhado por Funcionário
+            </h2>
+            
+            <div class="table-actions">
+                <button onclick="exportTable()" class="btn-table-action btn-export-table">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/>
+                    </svg>
+                    Exportar
+                </button>
+                
+                <button onclick="printTable()" class="btn-table-action btn-print-table">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Imprimir
+                </button>
+            </div>
+        </div>
+        
+        <table class="data-table" id="evaluationsTable">
+            <thead>
+                <tr>
+                    <th>Funcionário</th>
+                    <th>Departamento</th>
+                    <th>Pontuação Geral</th>
+                    <th>Competências</th>
+                    <th>Metas</th>
+                    <th>Status</th>
+                    <th>Última Avaliação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evaluation in detailed_evaluations %}
+                <tr>
+                    <td>
+                        <div class="employee-cell">
+                            <div class="employee-avatar">
+                                {{ evaluation.employee.first_name.0 }}{{ evaluation.employee.last_name.0 }}
+                            </div>
+                            <div class="employee-info">
+                                <div class="employee-name">
+                                    {{ evaluation.employee.first_name }} {{ evaluation.employee.last_name }}
+                                </div>
+                                <div class="employee-department">
+                                    {{ evaluation.employee.job_position.title|default:"N/A" }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    
+                    <td>{{ evaluation.employee.department.name|default:"N/A" }}</td>
+                    
+                    <td class="score-cell">
+                        <span class="score-badge {% if evaluation.overall_score >= 4.5 %}score-excellent{% elif evaluation.overall_score >= 3.5 %}score-good{% elif evaluation.overall_score >= 2.5 %}score-average{% else %}score-poor{% endif %}">
+                            {{ evaluation.overall_score|floatformat:1|default:"--" }}
+                        </span>
+                    </td>
+                    
+                    <td class="score-cell">
+                        <span class="score-badge {% if evaluation.competencies_avg >= 4.5 %}score-excellent{% elif evaluation.competencies_avg >= 3.5 %}score-good{% elif evaluation.competencies_avg >= 2.5 %}score-average{% else %}score-poor{% endif %}">
+                            {{ evaluation.competencies_avg|floatformat:1|default:"--" }}
+                        </span>
+                    </td>
+                    
+                    <td class="progress-cell">
+                        <div class="mini-progress">
+                            <div class="mini-progress-fill" style="width: {{ evaluation.goals_completion|default:0 }}%"></div>
+                        </div>
+                        <div class="progress-text">{{ evaluation.goals_completion|default:0 }}%</div>
+                    </td>
+                    
+                    <td class="status-cell">
+                        <span class="status-badge {% if evaluation.is_completed %}status-completed{% elif evaluation.is_in_progress %}status-in-progress{% else %}status-pending{% endif %}">
+                            {% if evaluation.is_completed %}
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Concluída
+                            {% elif evaluation.is_in_progress %}
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                                Em Andamento
+                            {% else %}
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                                </svg>
+                                Pendente
+                            {% endif %}
+                        </span>
+                    </td>
+                    
+                    <td>{{ evaluation.updated_at|date:"d/m/Y" }}</td>
+                    
+                    <td>
+                        <a href="{% url 'hr:evaluation_detail' evaluation.id %}" class="btn-table-action btn-export-table">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-8 text-gray-500">
+                        <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <p>Nenhuma avaliação encontrada com os filtros selecionados</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Insights e Recomendações -->
+    <div class="insights-section">
+        <div class="filters-header">
+            <h2 class="filters-title">
+                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Insights e Recomendações
+            </h2>
+        </div>
+        
+        <div class="insights-grid">
+            <div class="insight-card">
+                <div class="insight-title">
+                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    Pontos Fortes da Organização
+                </div>
+                <div class="insight-text">
+                    O departamento de Tecnologia apresenta a maior média de avaliação (4.2), com destaque para competências técnicas e capacidade de inovação.
+                </div>
+                <a href="#" class="insight-action">
+                    Ver detalhes completos
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    Áreas de Atenção
+                </div>
+                <div class="insight-text">
+                    15% dos funcionários estão com avaliações pendentes há mais de 30 dias. Recomenda-se uma ação imediata para regularizar a situação.
+                </div>
+                <a href="#" class="insight-action">
+                    Plano de ação
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            
+            <div class="insight-card">
+                <div class="insight-title">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    Tendência Positiva
+                </div>
+                <div class="insight-text">
+                    Houve um crescimento de 12% na média geral de avaliações comparado ao trimestre anterior, indicando melhoria no desempenho organizacional.
+                </div>
+                <a href="#" class="insight-action">
+                    Análise completa
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Aplicar filtros
+function applyFilters() {
+    const department = document.getElementById('departmentFilter').value;
+    const type = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    // Aqui seria implementada a lógica de filtros
+    console.log('Applying filters:', { department, type, status, startDate, endDate });
+    
+    // Simular filtro na tabela
+    const rows = document.querySelectorAll('#evaluationsTable tbody tr');
+    rows.forEach(row => {
+        let show = true;
+        
+        // Implementar lógica de filtro baseada nos valores
+        // Esta é uma versão simplificada - na implementação real,
+        // os filtros seriam aplicados via backend
+        
+        if (show) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Limpar filtros
+function resetFilters() {
+    document.getElementById('departmentFilter').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    applyFilters();
+}
+
+// Exportar todos os relatórios
+function exportAllReports() {
+    const exportData = {
+        performance: 'performance_data',
+        departments: 'department_data',
+        trends: 'trends_data',
+        comparison: 'comparison_data'
+    };
+    
+    // Simular exportação
+    console.log('Exporting all reports:', exportData);
+    
+    // Na implementação real, seria feita uma chamada para o backend
+    fetch('/hr/evaluations/export-reports/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(exportData)
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'relatorios_avaliacao.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        alert('Erro ao exportar relatórios');
+    });
+}
+
+// Exportar tabela
+function exportTable() {
+    const table = document.getElementById('evaluationsTable');
+    const data = [];
+    
+    // Extrair dados da tabela
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const cells = row.querySelectorAll('td');
+            const rowData = Array.from(cells).map(cell => cell.textContent.trim());
+            data.push(rowData);
+        }
+    });
+    
+    console.log('Exporting table data:', data);
+    
+    // Simular download
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "Funcionário,Departamento,Pontuação,Competências,Metas,Status,Última Avaliação\n"
+        + data.map(row => row.slice(0, -1).join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "avaliacoes_detalhadas.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Imprimir tabela
+function printTable() {
+    const printContent = document.getElementById('evaluationsTable').outerHTML;
+    const printWindow = window.open('', '', 'height=600,width=800');
+    
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Relatório de Avaliações</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .employee-avatar { display: none; }
+                .btn-table-action { display: none; }
+            </style>
+        </head>
+        <body>
+            <h1>Relatório Detalhado de Avaliações</h1>
+            <p>Gerado em: ${new Date().toLocaleDateString('pt-BR')}</p>
+            ${printContent}
+        </body>
+        </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar animações de entrada
+    const cards = document.querySelectorAll('.report-card, .detailed-table, .insights-section');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+    
+    // Configurar ordenação da tabela
+    const tableHeaders = document.querySelectorAll('#evaluationsTable th');
+    tableHeaders.forEach((header, index) => {
+        if (index < tableHeaders.length - 1) { // Não incluir coluna de ações
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => sortTable(index));
+        }
+    });
+});
+
+// Ordenar tabela
+function sortTable(columnIndex) {
+    const table = document.getElementById('evaluationsTable');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    const isNumeric = columnIndex === 2 || columnIndex === 3 || columnIndex === 4; // Colunas numéricas
+    
+    rows.sort((a, b) => {
+        const aText = a.cells[columnIndex].textContent.trim();
+        const bText = b.cells[columnIndex].textContent.trim();
+        
+        if (isNumeric) {
+            const aNum = parseFloat(aText) || 0;
+            const bNum = parseFloat(bText) || 0;
+            return bNum - aNum; // Ordem decrescente para números
+        } else {
+            return aText.localeCompare(bText);
+        }
+    });
+    
+    // Remover e re-adicionar linhas ordenadas
+    rows.forEach(row => tbody.removeChild(row));
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+// Atualizar dados em tempo real (simulado)
+setInterval(function() {
+    // Simular atualização de estatísticas
+    const stats = document.querySelectorAll('.stat-number, .metric-value');
+    stats.forEach(stat => {
+        const currentValue = parseFloat(stat.textContent);
+        if (!isNaN(currentValue)) {
+            // Simular pequena variação (+/- 0.1)
+            const variation = (Math.random() - 0.5) * 0.2;
+            const newValue = Math.max(0, currentValue + variation);
+            stat.textContent = newValue.toFixed(1);
+        }
+    });
+}, 30000); // Atualizar a cada 30 segundos
+
+// Atalhos de teclado
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'e':
+                e.preventDefault();
+                exportAllReports();
+                break;
+            case 'p':
+                e.preventDefault();
+                printTable();
+                break;
+            case 'r':
+                e.preventDefault();
+                resetFilters();
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,863 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Upload de Documento - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.upload-container {
+    max-width: 4xl;
+}
+
+.upload-form {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ec4899 0%, #f97316 50%, #10b981 100%);
+}
+
+.form-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-icon {
+    width: 20px;
+    height: 20px;
+    color: #ec4899;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.required {
+    color: #dc2626;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.2s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.file-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    border-color: #ec4899;
+    background: #fdf2f8;
+}
+
+.file-upload-area.dragover {
+    border-color: #ec4899;
+    background: #fdf2f8;
+    transform: scale(1.02);
+}
+
+.file-upload-icon {
+    width: 48px;
+    height: 48px;
+    color: #9ca3af;
+    margin: 0 auto 16px;
+}
+
+.file-upload-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.file-upload-hint {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.file-upload-formats {
+    font-size: 12px;
+    color: #9ca3af;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.file-preview {
+    margin-top: 16px;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    display: none;
+}
+
+.file-preview.active {
+    display: block;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.file-icon {
+    width: 40px;
+    height: 40px;
+    background: #f3f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.file-details {
+    flex-grow: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.file-size {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.file-remove {
+    background: #fef2f2;
+    color: #dc2626;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.file-remove:hover {
+    background: #fee2e2;
+}
+
+.upload-progress {
+    margin-top: 16px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ec4899 0%, #f97316 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox:checked {
+    background: #ec4899;
+    border-color: #ec4899;
+}
+
+.checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.form-hint svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.success-message {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #166534;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .upload-form {
+        padding: 24px 16px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container mx-auto max-w-4xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Upload de Documento</h1>
+                <p class="text-gray-600">Envie documentos para o sistema de RH</p>
+            </div>
+        </div>
+        <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Voltar à Lista
+        </a>
+    </div>
+
+    <!-- Mensagem de Sucesso -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="success-message">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulário -->
+    <form method="post" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+        {% csrf_token %}
+        
+        <!-- Seção: Informações Básicas -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Informações Básicas
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="id_name" class="form-label">
+                        Nome do Documento <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           id="id_name" 
+                           name="name" 
+                           class="form-input" 
+                           placeholder="Ex: Contrato de Trabalho - João Silva"
+                           required>
+                    <div class="form-hint">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Use um nome descritivo para facilitar a busca
+                    </div>
+                    {% if form.name.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.name.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_employee" class="form-label">
+                        Funcionário <span class="required">*</span>
+                    </label>
+                    <select id="id_employee" name="employee" class="form-select" required>
+                        <option value="">Selecione um funcionário</option>
+                        {% for employee in employees %}
+                            <option value="{{ employee.id }}">
+                                {{ employee.first_name }} {{ employee.last_name }} - {{ employee.department }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.employee.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.employee.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="id_document_type" class="form-label">
+                        Tipo de Documento <span class="required">*</span>
+                    </label>
+                    <select id="id_document_type" name="document_type" class="form-select" required>
+                        <option value="">Selecione o tipo</option>
+                        <option value="contract">Contrato</option>
+                        <option value="identification">Identificação</option>
+                        <option value="certificate">Certificado</option>
+                        <option value="evaluation">Avaliação</option>
+                        <option value="medical">Atestado Médico</option>
+                        <option value="vacation">Documento de Férias</option>
+                        <option value="payslip">Holerite</option>
+                        <option value="other">Outros</option>
+                    </select>
+                    {% if form.document_type.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.document_type.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_expiry_date" class="form-label">
+                        Data de Validade
+                    </label>
+                    <input type="date" 
+                           id="id_expiry_date" 
+                           name="expiry_date" 
+                           class="form-input">
+                    <div class="form-hint">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6m-6 0l-1 12a2 2 0 002 2h8a2 2 0 002-2L15 7m-6 0V5"/>
+                        </svg>
+                        Opcional - para documentos com validade específica
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description" class="form-label">
+                    Descrição
+                </label>
+                <textarea id="id_description" 
+                          name="description" 
+                          class="form-textarea" 
+                          placeholder="Descreva brevemente o conteúdo do documento..."></textarea>
+                <div class="form-hint">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Informações adicionais que ajudem a identificar o documento
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Upload do Arquivo -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Arquivo do Documento
+            </h2>
+
+            <div class="form-group">
+                <label for="id_file" class="form-label">
+                    Selecionar Arquivo <span class="required">*</span>
+                </label>
+                
+                <!-- Área de Upload -->
+                <div class="file-upload-area" id="uploadArea" onclick="document.getElementById('id_file').click()">
+                    <input type="file" 
+                           id="id_file" 
+                           name="file" 
+                           style="display: none;" 
+                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.txt"
+                           required
+                           onchange="handleFileSelect(this)">
+                    
+                    <svg class="file-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                    
+                    <div class="file-upload-text">Clique para selecionar ou arraste o arquivo aqui</div>
+                    <div class="file-upload-hint">Solte seu arquivo aqui ou clique para selecionar</div>
+                    <div class="file-upload-formats">
+                        PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF (máx. 10MB)
+                    </div>
+                </div>
+
+                <!-- Preview do Arquivo -->
+                <div class="file-preview" id="filePreview">
+                    <div class="file-info">
+                        <div class="file-icon" id="fileIcon">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="file-details">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <button type="button" class="file-remove" onclick="removeFile()">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Barra de Progresso -->
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-2">Enviando arquivo...</div>
+                </div>
+
+                {% if form.file.errors %}
+                    <div class="error-message">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ form.file.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção: Configurações -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Configurações
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="id_is_confidential" name="is_confidential" class="checkbox">
+                    <label for="id_is_confidential" class="text-sm text-gray-700">
+                        Documento confidencial
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="id_needs_approval" name="needs_approval" class="checkbox">
+                    <label for="id_needs_approval" class="text-sm text-gray-700">
+                        Requer aprovação
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-hint mt-4">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Documentos confidenciais têm acesso restrito. Documentos que precisam de aprovação ficam pendentes até revisão.
+            </div>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Cancelar
+            </a>
+            
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                Enviar Documento
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Formatação de tamanho de arquivo
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Obter ícone do arquivo baseado na extensão
+function getFileIcon(extension) {
+    const icons = {
+        pdf: '<svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+        doc: '<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+        docx: '<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>',
+        xls: '<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+        xlsx: '<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+        jpg: '<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+        jpeg: '<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+        png: '<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+        gif: '<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>'
+    };
+    
+    return icons[extension] || '<svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+}
+
+// Manipular seleção de arquivo
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validar tamanho (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Arquivo muito grande. O tamanho máximo é 10MB.');
+        input.value = '';
+        return;
+    }
+
+    // Validar tipo
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'text/plain'];
+    
+    if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não suportado. Use: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF ou TXT.');
+        input.value = '';
+        return;
+    }
+
+    // Mostrar preview
+    const extension = file.name.split('.').pop().toLowerCase();
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    document.getElementById('fileIcon').innerHTML = getFileIcon(extension);
+    document.getElementById('filePreview').classList.add('active');
+
+    // Auto-preencher nome se estiver vazio
+    const nameInput = document.getElementById('id_name');
+    if (!nameInput.value.trim()) {
+        const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, "");
+        nameInput.value = nameWithoutExtension;
+    }
+}
+
+// Remover arquivo
+function removeFile() {
+    document.getElementById('id_file').value = '';
+    document.getElementById('filePreview').classList.remove('active');
+}
+
+// Drag and Drop
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('id_file').files = files;
+        handleFileSelect(document.getElementById('id_file'));
+    }
+});
+
+// Validação do formulário
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    const fileInput = document.getElementById('id_file');
+    
+    if (!fileInput.files.length) {
+        e.preventDefault();
+        alert('Por favor, selecione um arquivo para upload.');
+        return false;
+    }
+    
+    // Desabilitar botão e mostrar progresso
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Enviando...';
+    
+    // Simular progresso (você pode implementar upload real com AJAX)
+    let progress = 0;
+    const progressFill = document.getElementById('progressFill');
+    const uploadProgress = document.getElementById('uploadProgress');
+    
+    uploadProgress.style.display = 'block';
+    
+    const interval = setInterval(() => {
+        progress += 10;
+        progressFill.style.width = progress + '%';
+        
+        if (progress >= 90) {
+            clearInterval(interval);
+        }
+    }, 200);
+});
+
+// Auto-complete do nome baseado no tipo de documento selecionado
+document.getElementById('id_document_type').addEventListener('change', function() {
+    const type = this.value;
+    const employeeSelect = document.getElementById('id_employee');
+    const nameInput = document.getElementById('id_name');
+    
+    if (type && employeeSelect.value && !nameInput.value.trim()) {
+        const employeeName = employeeSelect.options[employeeSelect.selectedIndex].text.split(' - ')[0];
+        const typeNames = {
+            'contract': 'Contrato de Trabalho',
+            'identification': 'Documento de Identificação',
+            'certificate': 'Certificado',
+            'evaluation': 'Avaliação de Desempenho',
+            'medical': 'Atestado Médico',
+            'vacation': 'Documento de Férias',
+            'payslip': 'Holerite',
+            'other': 'Documento'
+        };
+        
+        if (typeNames[type]) {
+            nameInput.value = `${typeNames[type]} - ${employeeName}`;
+        }
+    }
+});
+
+// Também atualizar quando funcionário muda
+document.getElementById('id_employee').addEventListener('change', function() {
+    const type = document.getElementById('id_document_type').value;
+    const nameInput = document.getElementById('id_name');
+    
+    if (type && this.value && !nameInput.value.trim()) {
+        const employeeName = this.options[this.selectedIndex].text.split(' - ')[0];
+        const typeNames = {
+            'contract': 'Contrato de Trabalho',
+            'identification': 'Documento de Identificação',
+            'certificate': 'Certificado',
+            'evaluation': 'Avaliação de Desempenho',
+            'medical': 'Atestado Médico',
+            'vacation': 'Documento de Férias',
+            'payslip': 'Holerite',
+            'other': 'Documento'
+        };
+        
+        if (typeNames[type]) {
+            nameInput.value = `${typeNames[type]} - ${employeeName}`;
+        }
+    }
+});
+</script>
+{% endblock %}

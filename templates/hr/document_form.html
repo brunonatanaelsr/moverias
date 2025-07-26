@@ -1,0 +1,948 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}Editar Documento - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.edit-container {
+    max-width: 4xl;
+}
+
+.edit-form {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.edit-form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ec4899 0%, #f97316 50%, #10b981 100%);
+}
+
+.form-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-icon {
+    width: 20px;
+    height: 20px;
+    color: #ec4899;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.required {
+    color: #dc2626;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: white;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.2s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.current-file-info {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.current-file-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.file-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.file-icon.pdf { background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); }
+.file-icon.doc { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); }
+.file-icon.xlsx { background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); }
+.file-icon.image { background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%); }
+.file-icon.other { background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); }
+
+.file-details h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.file-meta {
+    font-size: 14px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.btn-icon {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-icon:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.btn-icon.download { color: #059669; }
+.btn-icon.download:hover { background: #ecfdf5; }
+
+.file-replace-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    background: #f9fafb;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    margin-top: 16px;
+}
+
+.file-replace-area:hover {
+    border-color: #ec4899;
+    background: #fdf2f8;
+}
+
+.file-replace-area.dragover {
+    border-color: #ec4899;
+    background: #fdf2f8;
+    transform: scale(1.02);
+}
+
+.replace-icon {
+    width: 40px;
+    height: 40px;
+    color: #9ca3af;
+    margin: 0 auto 12px;
+}
+
+.replace-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.replace-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.checkbox {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.checkbox:checked {
+    background: #ec4899;
+    border-color: #ec4899;
+}
+
+.checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #ec4899 0%, #f97316 100%);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(236, 72, 153, 0.3);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    padding: 14px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.form-hint svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.success-message {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #166534;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.change-log {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+}
+
+.change-log-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.change-item {
+    font-size: 12px;
+    color: #78350f;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+@media (max-width: 768px) {
+    .edit-form {
+        padding: 24px 16px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .file-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container mx-auto max-w-4xl">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Editar Documento</h1>
+                <p class="text-gray-600">Atualize as informações do documento</p>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'hr:document_detail' document.id %}" class="btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Visualizar
+            </a>
+            <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Voltar
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensagens -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="success-message">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulário -->
+    <form method="post" enctype="multipart/form-data" class="edit-form" id="editForm">
+        {% csrf_token %}
+        
+        <!-- Seção: Informações Básicas -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Informações Básicas
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="id_name" class="form-label">
+                        Nome do Documento <span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           id="id_name" 
+                           name="name" 
+                           class="form-input" 
+                           value="{{ document.name }}"
+                           required>
+                    <div class="form-hint">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Use um nome descritivo para facilitar a busca
+                    </div>
+                    {% if form.name.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.name.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_employee" class="form-label">
+                        Funcionário <span class="required">*</span>
+                    </label>
+                    <select id="id_employee" name="employee" class="form-select" required>
+                        {% for employee in employees %}
+                            <option value="{{ employee.id }}" {% if employee.id == document.employee.id %}selected{% endif %}>
+                                {{ employee.first_name }} {{ employee.last_name }} - {{ employee.department }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.employee.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.employee.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label for="id_document_type" class="form-label">
+                        Tipo de Documento <span class="required">*</span>
+                    </label>
+                    <select id="id_document_type" name="document_type" class="form-select" required>
+                        <option value="contract" {% if document.document_type == 'contract' %}selected{% endif %}>Contrato</option>
+                        <option value="identification" {% if document.document_type == 'identification' %}selected{% endif %}>Identificação</option>
+                        <option value="certificate" {% if document.document_type == 'certificate' %}selected{% endif %}>Certificado</option>
+                        <option value="evaluation" {% if document.document_type == 'evaluation' %}selected{% endif %}>Avaliação</option>
+                        <option value="medical" {% if document.document_type == 'medical' %}selected{% endif %}>Atestado Médico</option>
+                        <option value="vacation" {% if document.document_type == 'vacation' %}selected{% endif %}>Documento de Férias</option>
+                        <option value="payslip" {% if document.document_type == 'payslip' %}selected{% endif %}>Holerite</option>
+                        <option value="other" {% if document.document_type == 'other' %}selected{% endif %}>Outros</option>
+                    </select>
+                    {% if form.document_type.errors %}
+                        <div class="error-message">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ form.document_type.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_expiry_date" class="form-label">
+                        Data de Validade
+                    </label>
+                    <input type="date" 
+                           id="id_expiry_date" 
+                           name="expiry_date" 
+                           class="form-input"
+                           value="{{ document.expiry_date|date:'Y-m-d' }}">
+                    <div class="form-hint">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4m-6 0h6m-6 0l-1 12a2 2 0 002 2h8a2 2 0 002-2L15 7m-6 0V5"/>
+                        </svg>
+                        Opcional - para documentos com validade específica
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description" class="form-label">
+                    Descrição
+                </label>
+                <textarea id="id_description" 
+                          name="description" 
+                          class="form-textarea" 
+                          placeholder="Descreva brevemente o conteúdo do documento...">{{ document.description }}</textarea>
+                <div class="form-hint">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                    Informações adicionais que ajudem a identificar o documento
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Arquivo Atual -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Arquivo Atual
+            </h2>
+
+            <div class="current-file-info">
+                <div class="current-file-header">
+                    <div class="file-icon {{ document.file_extension|default:'other' }}">
+                        {% if document.file_extension == 'pdf' %}
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        {% elif document.file_extension in 'doc,docx' %}
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        {% elif document.file_extension in 'xls,xlsx' %}
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        {% elif document.file_extension in 'jpg,jpeg,png,gif' %}
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        {% else %}
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        {% endif %}
+                    </div>
+                    <div class="file-details">
+                        <h4>{{ document.file.name|default:'Arquivo atual' }}</h4>
+                        <div class="file-meta">
+                            <span>{{ document.file_size_display }}</span>
+                            <span>{{ document.file_extension|upper|default:'N/A' }}</span>
+                            <span>Enviado em {{ document.uploaded_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file-actions">
+                    <a href="{{ document.file.url }}" target="_blank" class="btn-icon download" title="Visualizar arquivo atual">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                    </a>
+                    <a href="{{ document.file.url }}" download class="btn-icon download" title="Baixar arquivo atual">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Área para substituir arquivo -->
+                <div class="file-replace-area" id="replaceArea" onclick="document.getElementById('id_file').click()">
+                    <input type="file" 
+                           id="id_file" 
+                           name="file" 
+                           style="display: none;" 
+                           accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.txt"
+                           onchange="handleFileReplace(this)">
+                    
+                    <svg class="replace-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    
+                    <div class="replace-text">Clique para substituir o arquivo</div>
+                    <div class="replace-hint">Ou arraste um novo arquivo aqui</div>
+                    <div class="text-xs text-gray-500 mt-2">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF (máx. 10MB)</div>
+                </div>
+
+                {% if form.file.errors %}
+                    <div class="error-message">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        {{ form.file.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção: Configurações -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <svg class="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Configurações
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="checkbox-group">
+                    <input type="checkbox" 
+                           id="id_is_confidential" 
+                           name="is_confidential" 
+                           class="checkbox"
+                           {% if document.is_confidential %}checked{% endif %}>
+                    <label for="id_is_confidential" class="text-sm text-gray-700">
+                        Documento confidencial
+                    </label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" 
+                           id="id_needs_approval" 
+                           name="needs_approval" 
+                           class="checkbox"
+                           {% if document.needs_approval %}checked{% endif %}>
+                    <label for="id_needs_approval" class="text-sm text-gray-700">
+                        Requer aprovação
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-hint mt-4">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Documentos confidenciais têm acesso restrito. Alterações que requerem aprovação ficam pendentes até revisão.
+            </div>
+        </div>
+
+        <!-- Log de Alterações -->
+        <div class="change-log">
+            <div class="change-log-title">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Registro de Alterações
+            </div>
+            <div class="change-item">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                Documento criado em {{ document.uploaded_at|date:"d/m/Y H:i" }}
+            </div>
+            {% if document.updated_at and document.updated_at != document.uploaded_at %}
+            <div class="change-item">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+                Última atualização em {{ document.updated_at|date:"d/m/Y H:i" }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <div class="flex gap-3">
+                <a href="{% url 'hr:document_detail' document.id %}" class="btn-secondary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Cancelar
+                </a>
+                
+                <a href="{% url 'hr:document_delete' document.id %}" 
+                   onclick="return confirm('Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.')"
+                   class="btn-danger">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Excluir
+                </a>
+            </div>
+            
+            <button type="submit" class="btn-primary" id="submitBtn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Salvar Alterações
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Manipular substituição de arquivo
+function handleFileReplace(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Validar tamanho (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('Arquivo muito grande. O tamanho máximo é 10MB.');
+        input.value = '';
+        return;
+    }
+
+    // Validar tipo
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'text/plain'];
+    
+    if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não suportado. Use: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF ou TXT.');
+        input.value = '';
+        return;
+    }
+
+    // Atualizar interface
+    const replaceArea = document.getElementById('replaceArea');
+    replaceArea.innerHTML = `
+        <div class="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div class="flex items-center gap-3">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <div class="font-medium text-green-900">Novo arquivo selecionado</div>
+                    <div class="text-sm text-green-700">${file.name} (${formatFileSize(file.size)})</div>
+                </div>
+            </div>
+            <button type="button" onclick="removeFileReplace()" class="text-green-600 hover:text-green-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    `;
+
+    // Destacar que haverá mudanças
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        Salvar com Novo Arquivo
+    `;
+}
+
+// Remover arquivo de substituição
+function removeFileReplace() {
+    document.getElementById('id_file').value = '';
+    const replaceArea = document.getElementById('replaceArea');
+    replaceArea.innerHTML = `
+        <input type="file" 
+               id="id_file" 
+               name="file" 
+               style="display: none;" 
+               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xls,.xlsx,.txt"
+               onchange="handleFileReplace(this)">
+        
+        <svg class="replace-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        
+        <div class="replace-text">Clique para substituir o arquivo</div>
+        <div class="replace-hint">Ou arraste um novo arquivo aqui</div>
+        <div class="text-xs text-gray-500 mt-2">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, GIF (máx. 10MB)</div>
+    `;
+    replaceArea.onclick = () => document.getElementById('id_file').click();
+
+    // Restaurar botão
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.innerHTML = `
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Salvar Alterações
+    `;
+}
+
+// Formatação de tamanho de arquivo
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Drag and Drop para substituição
+const replaceArea = document.getElementById('replaceArea');
+
+replaceArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    replaceArea.classList.add('dragover');
+});
+
+replaceArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    replaceArea.classList.remove('dragover');
+});
+
+replaceArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    replaceArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        document.getElementById('id_file').files = files;
+        handleFileReplace(document.getElementById('id_file'));
+    }
+});
+
+// Detecção de mudanças no formulário
+let formChanged = false;
+const form = document.getElementById('editForm');
+const originalData = new FormData(form);
+
+form.addEventListener('input', function() {
+    formChanged = true;
+});
+
+form.addEventListener('change', function() {
+    formChanged = true;
+});
+
+// Aviso antes de sair se houver mudanças
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged) {
+        const message = 'Você tem alterações não salvas. Deseja realmente sair?';
+        e.returnValue = message;
+        return message;
+    }
+});
+
+// Validação do formulário
+form.addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Desabilitar botão e mostrar loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Salvando...';
+    
+    formChanged = false; // Evitar aviso de saída
+});
+
+// Confirmação para ações destrutivas
+document.querySelectorAll('a[href*="delete"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        if (!confirm('Tem certeza que deseja excluir este documento? Esta ação não pode ser desfeita.')) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

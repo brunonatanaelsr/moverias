@@ -1,0 +1,856 @@
+{% extends "base_optimized.html" %}
+{% load static %}
+
+{% block title %}{% if object %}Editar Cargo{% else %}Novo Cargo{% endif %} - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 24px;
+}
+
+.form-section h3 {
+    color: #1f2937;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #ec4899;
+    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.btn-primary {
+    background-color: #ec4899;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background-color: #db2777;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+.error-text {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.required-field::after {
+    content: "*";
+    color: #dc2626;
+    margin-left: 4px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #ec4899;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+.level-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.level-option {
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.level-option:hover {
+    border-color: #ec4899;
+    background: #fef7f0;
+}
+
+.level-option.selected {
+    background: #ec4899;
+    color: white;
+    border-color: #ec4899;
+}
+
+.level-junior { border-color: #3b82f6; }
+.level-junior.selected { background: #3b82f6; }
+
+.level-pleno { border-color: #f59e0b; }
+.level-pleno.selected { background: #f59e0b; }
+
+.level-senior { border-color: #10b981; }
+.level-senior.selected { background: #10b981; }
+
+.level-coordenacao { border-color: #ec4899; }
+.level-coordenacao.selected { background: #ec4899; }
+
+.level-gerencia { border-color: #8b5cf6; }
+.level-gerencia.selected { background: #8b5cf6; }
+
+.level-diretoria { border-color: #ef4444; }
+.level-diretoria.selected { background: #ef4444; }
+
+.salary-range-inputs {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+}
+
+.salary-input {
+    position: relative;
+}
+
+.salary-input::before {
+    content: "R$";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-weight: 500;
+    z-index: 1;
+}
+
+.salary-input input {
+    padding-left: 40px;
+}
+
+.info-box {
+    background: #f0f9ff;
+    border: 1px solid #0ea5e9;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.requirements-list {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.requirement-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.requirement-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #ec4899;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-section {
+        padding: 16px;
+    }
+    
+    .level-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .salary-range-inputs {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 00-2 2H8a2 2 0 00-2-2V6m8 0h2a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h2"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    {% if object %}Editar Cargo{% else %}Novo Cargo{% endif %}
+                </h1>
+                <p class="text-gray-600">
+                    {% if object %}Atualize as informações do cargo{% else %}Crie um novo cargo na organização{% endif %}
+                </p>
+            </div>
+        </div>
+        <a href="{% url 'hr:position_list' %}" class="btn-secondary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Voltar
+        </a>
+    </div>
+
+    <form method="post" id="positionForm">
+        {% csrf_token %}
+        
+        <!-- Informações Básicas -->
+        <div class="form-section">
+            <h3>
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Informações Básicas
+            </h3>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label required-field" for="id_title">Título do Cargo</label>
+                    <input type="text" name="title" id="id_title" 
+                           class="form-input" value="{{ form.title.value|default:'' }}" 
+                           required placeholder="Ex: Analista de Recursos Humanos">
+                    {% if form.title.errors %}
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            {{ form.title.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required-field" for="id_department">Departamento</label>
+                    <select name="department" id="id_department" class="form-input form-select" required>
+                        <option value="">Selecione um departamento</option>
+                        {% for department in departments %}
+                            <option value="{{ department.id }}" 
+                                    {% if form.department.value == department.id %}selected{% endif %}>
+                                {{ department.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.department.errors %}
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            {{ form.department.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_description">Descrição do Cargo</label>
+                <textarea name="description" id="id_description" 
+                          class="form-input form-textarea" 
+                          placeholder="Descreva as principais responsabilidades e atividades do cargo">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.description.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Nível Hierárquico -->
+        <div class="form-section">
+            <h3>
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Nível Hierárquico
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label required-field">Selecione o nível do cargo</label>
+                <input type="hidden" name="level" id="id_level" value="{{ form.level.value|default:'junior' }}">
+                
+                <div class="level-selector">
+                    <div class="level-option level-junior" data-level="junior">
+                        <div class="font-semibold">Júnior</div>
+                        <div class="text-xs mt-1">Entrada/Trainee</div>
+                    </div>
+                    <div class="level-option level-pleno" data-level="pleno">
+                        <div class="font-semibold">Pleno</div>
+                        <div class="text-xs mt-1">Experiência</div>
+                    </div>
+                    <div class="level-option level-senior" data-level="senior">
+                        <div class="font-semibold">Sênior</div>
+                        <div class="text-xs mt-1">Especialista</div>
+                    </div>
+                    <div class="level-option level-coordenacao" data-level="coordenacao">
+                        <div class="font-semibold">Coordenação</div>
+                        <div class="text-xs mt-1">Liderança</div>
+                    </div>
+                    <div class="level-option level-gerencia" data-level="gerencia">
+                        <div class="font-semibold">Gerência</div>
+                        <div class="text-xs mt-1">Gestão</div>
+                    </div>
+                    <div class="level-option level-diretoria" data-level="diretoria">
+                        <div class="font-semibold">Diretoria</div>
+                        <div class="text-xs mt-1">Executivo</div>
+                    </div>
+                </div>
+                
+                {% if form.level.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.level.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Informações Salariais -->
+        <div class="form-section">
+            <h3>
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                </svg>
+                Informações Salariais
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label">Faixa Salarial</label>
+                <div class="salary-range-inputs">
+                    <div class="salary-input">
+                        <input type="number" name="min_salary" id="id_min_salary" 
+                               class="form-input" value="{{ form.min_salary.value|default:'' }}" 
+                               step="0.01" min="0" placeholder="Salário mínimo">
+                    </div>
+                    <span class="text-gray-500 font-medium">até</span>
+                    <div class="salary-input">
+                        <input type="number" name="max_salary" id="id_max_salary" 
+                               class="form-input" value="{{ form.max_salary.value|default:'' }}" 
+                               step="0.01" min="0" placeholder="Salário máximo">
+                    </div>
+                </div>
+                
+                {% if form.min_salary.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.min_salary.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.max_salary.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.max_salary.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_openings">Número de Vagas</label>
+                    <input type="number" name="openings" id="id_openings" 
+                           class="form-input" value="{{ form.openings.value|default:1 }}" 
+                           min="0" placeholder="Quantas vagas estão abertas">
+                    {% if form.openings.errors %}
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            {{ form.openings.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="id_work_schedule">Regime de Trabalho</label>
+                    <select name="work_schedule" id="id_work_schedule" class="form-input form-select">
+                        <option value="">Selecione o regime</option>
+                        <option value="full_time" {% if form.work_schedule.value == "full_time" %}selected{% endif %}>Tempo Integral</option>
+                        <option value="part_time" {% if form.work_schedule.value == "part_time" %}selected{% endif %}>Meio Período</option>
+                        <option value="flexible" {% if form.work_schedule.value == "flexible" %}selected{% endif %}>Flexível</option>
+                        <option value="remote" {% if form.work_schedule.value == "remote" %}selected{% endif %}>Remoto</option>
+                        <option value="hybrid" {% if form.work_schedule.value == "hybrid" %}selected{% endif %}>Híbrido</option>
+                    </select>
+                    {% if form.work_schedule.errors %}
+                        <div class="error-text">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                            </svg>
+                            {{ form.work_schedule.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Requisitos e Qualificações -->
+        <div class="form-section">
+            <h3>
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Requisitos e Qualificações
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_requirements">Requisitos Específicos</label>
+                <textarea name="requirements" id="id_requirements" 
+                          class="form-input form-textarea" 
+                          placeholder="Liste os requisitos necessários para o cargo (experiência, habilidades, certificações, etc.)">{{ form.requirements.value|default:'' }}</textarea>
+                {% if form.requirements.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.requirements.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="requirements-list">
+                <h4 class="font-medium text-gray-900 mb-3">Requisitos Gerais</h4>
+                
+                <div class="requirement-item">
+                    <input type="checkbox" name="requires_degree" id="id_requires_degree" 
+                           {% if form.requires_degree.value %}checked{% endif %}>
+                    <label for="id_requires_degree" class="form-label">Exige Ensino Superior</label>
+                </div>
+                
+                <div class="requirement-item">
+                    <input type="checkbox" name="requires_experience" id="id_requires_experience" 
+                           {% if form.requires_experience.value %}checked{% endif %}>
+                    <label for="id_requires_experience" class="form-label">Exige Experiência Prévia</label>
+                </div>
+                
+                <div class="requirement-item">
+                    <input type="checkbox" name="requires_english" id="id_requires_english" 
+                           {% if form.requires_english.value %}checked{% endif %}>
+                    <label for="id_requires_english" class="form-label">Exige Inglês</label>
+                </div>
+                
+                <div class="requirement-item">
+                    <input type="checkbox" name="requires_travel" id="id_requires_travel" 
+                           {% if form.requires_travel.value %}checked{% endif %}>
+                    <label for="id_requires_travel" class="form-label">Disponibilidade para Viagens</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configurações -->
+        <div class="form-section">
+            <h3>
+                <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Configurações
+            </h3>
+            
+            <div class="form-group">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <label class="form-label" for="id_is_active">Status do Cargo</label>
+                        <p class="text-sm text-gray-600">Cargos inativos não aparecem nas listas de seleção</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" name="is_active" id="id_is_active" 
+                               {% if form.is_active.value %}checked{% endif %}>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                {% if form.is_active.errors %}
+                    <div class="error-text">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        {{ form.is_active.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Informação sobre níveis -->
+        <div class="info-box">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <h4 class="font-medium text-blue-900">Sobre os Níveis Hierárquicos</h4>
+                    <p class="text-sm text-blue-800 mt-1">
+                        Os níveis ajudam a organizar a estrutura hierárquica e definem responsabilidades, 
+                        faixas salariais e requisitos específicos para cada posição.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex items-center justify-between bg-white rounded-lg p-6 shadow-sm">
+            <a href="{% url 'hr:position_list' %}" class="btn-secondary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Cancelar
+            </a>
+            
+            <div class="flex items-center space-x-4">
+                {% if object %}
+                    <button type="button" onclick="confirmDelete()" class="text-red-600 hover:text-red-800 font-medium">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Excluir
+                    </button>
+                {% endif %}
+                
+                <button type="submit" class="btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {% if object %}Atualizar Cargo{% else %}Criar Cargo{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Confirmação de Exclusão -->
+{% if object %}
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900">Confirmar Exclusão</h3>
+        </div>
+        
+        <p class="text-gray-600 mb-6">
+            Tem certeza que deseja excluir o cargo "{{ object.title }}"? 
+            {% if object.employees.count > 0 %}
+                <span class="text-red-600 font-medium">
+                    Este cargo possui {{ object.employees.count }} funcionário(s) vinculado(s).
+                </span>
+            {% endif %}
+        </p>
+        
+        <div class="flex justify-end space-x-4">
+            <button type="button" onclick="closeDeleteModal()" class="btn-secondary">
+                Cancelar
+            </button>
+            <a href="{% url 'hr:position_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
+                Confirmar Exclusão
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Seleção de nível hierárquico
+document.addEventListener('DOMContentLoaded', function() {
+    const levelOptions = document.querySelectorAll('.level-option');
+    const levelInput = document.getElementById('id_level');
+    
+    // Marcar nível selecionado inicialmente
+    const currentLevel = levelInput.value || 'junior';
+    document.querySelector(`[data-level="${currentLevel}"]`)?.classList.add('selected');
+    
+    levelOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remover seleção anterior
+            levelOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Selecionar novo nível
+            this.classList.add('selected');
+            levelInput.value = this.dataset.level;
+        });
+    });
+});
+
+// Validação de faixa salarial
+document.getElementById('id_min_salary').addEventListener('input', validateSalaryRange);
+document.getElementById('id_max_salary').addEventListener('input', validateSalaryRange);
+
+function validateSalaryRange() {
+    const minSalary = parseFloat(document.getElementById('id_min_salary').value) || 0;
+    const maxSalary = parseFloat(document.getElementById('id_max_salary').value) || 0;
+    
+    if (minSalary > 0 && maxSalary > 0 && minSalary > maxSalary) {
+        document.getElementById('id_max_salary').style.borderColor = '#dc2626';
+        showSalaryError('O salário máximo deve ser maior que o mínimo');
+    } else {
+        document.getElementById('id_max_salary').style.borderColor = '#e5e7eb';
+        hideSalaryError();
+    }
+}
+
+function showSalaryError(message) {
+    let errorDiv = document.getElementById('salaryError');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'salaryError';
+        errorDiv.className = 'error-text';
+        errorDiv.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.314 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            ${message}
+        `;
+        document.querySelector('.salary-range-inputs').appendChild(errorDiv);
+    }
+    errorDiv.textContent = message;
+}
+
+function hideSalaryError() {
+    const errorDiv = document.getElementById('salaryError');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+}
+
+// Formatação de valores monetários
+document.getElementById('id_min_salary').addEventListener('blur', function(e) {
+    if (e.target.value) {
+        const value = parseFloat(e.target.value);
+        if (!isNaN(value)) {
+            e.target.value = value.toFixed(2);
+        }
+    }
+});
+
+document.getElementById('id_max_salary').addEventListener('blur', function(e) {
+    if (e.target.value) {
+        const value = parseFloat(e.target.value);
+        if (!isNaN(value)) {
+            e.target.value = value.toFixed(2);
+        }
+    }
+});
+
+// Funções do modal de exclusão
+function confirmDelete() {
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// Validação do formulário
+document.getElementById('positionForm').addEventListener('submit', function(e) {
+    const titleField = document.getElementById('id_title');
+    const departmentField = document.getElementById('id_department');
+    let hasErrors = false;
+    
+    // Validar campos obrigatórios
+    if (!titleField.value.trim()) {
+        titleField.style.borderColor = '#dc2626';
+        hasErrors = true;
+    } else {
+        titleField.style.borderColor = '#e5e7eb';
+    }
+    
+    if (!departmentField.value) {
+        departmentField.style.borderColor = '#dc2626';
+        hasErrors = true;
+    } else {
+        departmentField.style.borderColor = '#e5e7eb';
+    }
+    
+    // Validar faixa salarial
+    const minSalary = parseFloat(document.getElementById('id_min_salary').value) || 0;
+    const maxSalary = parseFloat(document.getElementById('id_max_salary').value) || 0;
+    
+    if (minSalary > 0 && maxSalary > 0 && minSalary > maxSalary) {
+        hasErrors = true;
+        showSalaryError('O salário máximo deve ser maior que o mínimo');
+    }
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Por favor, corrija os erros no formulário antes de continuar.');
+    }
+});
+
+// Fechar modal com ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+
+// Fechar modal clicando fora
+document.getElementById('deleteModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+// Auto-ajustar altura do textarea
+function autoResizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+}
+
+document.getElementById('id_description').addEventListener('input', function() {
+    autoResizeTextarea(this);
+});
+
+document.getElementById('id_requirements').addEventListener('input', function() {
+    autoResizeTextarea(this);
+});
+
+// Aplicar auto-resize inicialmente
+document.addEventListener('DOMContentLoaded', function() {
+    autoResizeTextarea(document.getElementById('id_description'));
+    autoResizeTextarea(document.getElementById('id_requirements'));
+});
+</script>
+{% endblock %}
