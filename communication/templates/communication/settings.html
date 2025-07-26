@@ -1,0 +1,590 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações de Comunicação - Move Marias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/communication.css' %}">
+</head>
+<body class="bg-gray-50">
+    <div class="communication-module">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="communication-container">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'communication:dashboard' %}" class="text-gray-600 hover:text-primary-600">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <div>
+                            <h1 class="text-xl font-semibold text-gray-800">Configurações de Comunicação</h1>
+                            <p class="text-sm text-gray-500">Gerencie as configurações do sistema de comunicação</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="communication-container py-8">
+            <!-- Tabs de Configurações -->
+            <div class="comm-nav">
+                <a href="#general" class="comm-nav-item active" data-tab="general">
+                    <i class="fas fa-cog mr-2"></i>
+                    Geral
+                </a>
+                <a href="#notifications" class="comm-nav-item" data-tab="notifications">
+                    <i class="fas fa-bell mr-2"></i>
+                    Notificações
+                </a>
+                <a href="#templates" class="comm-nav-item" data-tab="templates">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Templates
+                </a>
+                <a href="#permissions" class="comm-nav-item" data-tab="permissions">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Permissões
+                </a>
+                <a href="#automation" class="comm-nav-item" data-tab="automation">
+                    <i class="fas fa-robot mr-2"></i>
+                    Automação
+                </a>
+            </div>
+
+            <!-- Tab Content -->
+            
+            <!-- Configurações Gerais -->
+            <div class="tab-content active" id="general-tab">
+                <div class="comm-grid cols-1">
+                    <div class="comm-card">
+                        <div class="comm-card-header">
+                            <h3 class="comm-card-title">Configurações Gerais</h3>
+                        </div>
+                        <div class="comm-card-body">
+                            <form method="post" action="{% url 'communication:settings' %}" data-validate="true">
+                                {% csrf_token %}
+                                <input type="hidden" name="tab" value="general">
+                                
+                                <div class="comm-grid cols-2">
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label" for="auto_archive_days">
+                                            Arquivar automaticamente após (dias)
+                                        </label>
+                                        <input type="number" 
+                                               id="auto_archive_days" 
+                                               name="auto_archive_days" 
+                                               class="comm-form-control"
+                                               value="{{ settings.auto_archive_days|default:30 }}"
+                                               min="1" max="365">
+                                        <div class="comm-form-help">
+                                            Comunicações serão arquivadas automaticamente após este período
+                                        </div>
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label" for="max_file_size">
+                                            Tamanho máximo de arquivo (MB)
+                                        </label>
+                                        <input type="number" 
+                                               id="max_file_size" 
+                                               name="max_file_size" 
+                                               class="comm-form-control"
+                                               value="{{ settings.max_file_size|default:10 }}"
+                                               min="1" max="100">
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label" for="default_priority">
+                                            Prioridade padrão
+                                        </label>
+                                        <select id="default_priority" name="default_priority" class="comm-form-control">
+                                            <option value="low" {% if settings.default_priority == 'low' %}selected{% endif %}>Baixa</option>
+                                            <option value="medium" {% if settings.default_priority == 'medium' %}selected{% endif %}>Média</option>
+                                            <option value="high" {% if settings.default_priority == 'high' %}selected{% endif %}>Alta</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label" for="require_read_confirmation">
+                                            <input type="checkbox" 
+                                                   id="require_read_confirmation" 
+                                                   name="require_read_confirmation"
+                                                   {% if settings.require_read_confirmation %}checked{% endif %}>
+                                            Exigir confirmação de leitura
+                                        </label>
+                                        <div class="comm-form-help">
+                                            Todas as comunicações exigirão confirmação de leitura por padrão
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="comm-form-group">
+                                    <label class="comm-form-label" for="allowed_file_types">
+                                        Tipos de arquivo permitidos
+                                    </label>
+                                    <textarea id="allowed_file_types" 
+                                              name="allowed_file_types" 
+                                              class="comm-form-control" 
+                                              rows="3">{{ settings.allowed_file_types|default:".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif" }}</textarea>
+                                    <div class="comm-form-help">
+                                        Extensões permitidas, separadas por vírgula (ex: .pdf,.doc,.jpg)
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <button type="submit" class="comm-btn primary">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Salvar Configurações
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configurações de Notificações -->
+            <div class="tab-content" id="notifications-tab">
+                <div class="comm-grid cols-1">
+                    <div class="comm-card">
+                        <div class="comm-card-header">
+                            <h3 class="comm-card-title">Configurações de Notificação</h3>
+                        </div>
+                        <div class="comm-card-body">
+                            <form method="post" action="{% url 'communication:settings' %}" data-validate="true">
+                                {% csrf_token %}
+                                <input type="hidden" name="tab" value="notifications">
+                                
+                                <div class="comm-grid cols-2">
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label">
+                                            <input type="checkbox" 
+                                                   name="email_notifications"
+                                                   {% if settings.email_notifications %}checked{% endif %}>
+                                            Notificações por email
+                                        </label>
+                                        <div class="comm-form-help">
+                                            Enviar notificações por email quando disponível
+                                        </div>
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label">
+                                            <input type="checkbox" 
+                                                   name="browser_notifications"
+                                                   {% if settings.browser_notifications %}checked{% endif %}>
+                                            Notificações do navegador
+                                        </label>
+                                        <div class="comm-form-help">
+                                            Mostrar notificações no navegador
+                                        </div>
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label">
+                                            <input type="checkbox" 
+                                                   name="urgent_only_notifications"
+                                                   {% if settings.urgent_only_notifications %}checked{% endif %}>
+                                            Apenas comunicações urgentes
+                                        </label>
+                                        <div class="comm-form-help">
+                                            Receber notificações apenas para itens marcados como urgentes
+                                        </div>
+                                    </div>
+
+                                    <div class="comm-form-group">
+                                        <label class="comm-form-label" for="notification_frequency">
+                                            Frequência de notificação
+                                        </label>
+                                        <select id="notification_frequency" name="notification_frequency" class="comm-form-control">
+                                            <option value="immediate" {% if settings.notification_frequency == 'immediate' %}selected{% endif %}>Imediata</option>
+                                            <option value="hourly" {% if settings.notification_frequency == 'hourly' %}selected{% endif %}>A cada hora</option>
+                                            <option value="daily" {% if settings.notification_frequency == 'daily' %}selected{% endif %}>Diária</option>
+                                            <option value="weekly" {% if settings.notification_frequency == 'weekly' %}selected{% endif %}>Semanal</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="text-right">
+                                    <button type="submit" class="comm-btn primary">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Salvar Configurações
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates -->
+            <div class="tab-content" id="templates-tab">
+                <div class="comm-grid cols-1">
+                    <div class="comm-card">
+                        <div class="comm-card-header">
+                            <h3 class="comm-card-title">Templates de Comunicação</h3>
+                            <button type="button" class="comm-btn primary" onclick="ModalManager.open('addTemplateModal')">
+                                <i class="fas fa-plus mr-2"></i>
+                                Novo Template
+                            </button>
+                        </div>
+                        <div class="comm-card-body">
+                            <div class="comm-list">
+                                {% for template in templates %}
+                                <div class="comm-list-item">
+                                    <div class="comm-list-item-icon">
+                                        <i class="fas fa-file-alt"></i>
+                                    </div>
+                                    <div class="comm-list-item-content">
+                                        <div class="comm-list-item-title">{{ template.name }}</div>
+                                        <div class="comm-list-item-subtitle">
+                                            {{ template.type|capfirst }} • 
+                                            Usado {{ template.usage_count }} vezes
+                                        </div>
+                                    </div>
+                                    <div class="comm-list-item-actions">
+                                        <button type="button" class="comm-btn secondary" onclick="editTemplate({{ template.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="comm-btn danger" onclick="deleteTemplate({{ template.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-file-alt text-4xl mb-4"></i>
+                                    <p>Nenhum template cadastrado</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permissões -->
+            <div class="tab-content" id="permissions-tab">
+                <div class="comm-grid cols-1">
+                    <div class="comm-card">
+                        <div class="comm-card-header">
+                            <h3 class="comm-card-title">Configurações de Permissão</h3>
+                        </div>
+                        <div class="comm-card-body">
+                            <form method="post" action="{% url 'communication:settings' %}" data-validate="true">
+                                {% csrf_token %}
+                                <input type="hidden" name="tab" value="permissions">
+                                
+                                <div class="space-y-6">
+                                    <div>
+                                        <h4 class="font-medium text-gray-800 mb-4">Anúncios</h4>
+                                        <div class="comm-grid cols-2">
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="announcement_create_all"
+                                                           {% if permissions.announcement_create_all %}checked{% endif %}>
+                                                    Qualquer usuário pode criar anúncios
+                                                </label>
+                                            </div>
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="announcement_require_approval"
+                                                           {% if permissions.announcement_require_approval %}checked{% endif %}>
+                                                    Anúncios requerem aprovação
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="font-medium text-gray-800 mb-4">Memorandos</h4>
+                                        <div class="comm-grid cols-2">
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="memo_create_all"
+                                                           {% if permissions.memo_create_all %}checked{% endif %}>
+                                                    Qualquer usuário pode criar memorandos
+                                                </label>
+                                            </div>
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="memo_department_only"
+                                                           {% if permissions.memo_department_only %}checked{% endif %}>
+                                                    Memorandos apenas dentro do departamento
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h4 class="font-medium text-gray-800 mb-4">Newsletters</h4>
+                                        <div class="comm-grid cols-2">
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="newsletter_admin_only"
+                                                           {% if permissions.newsletter_admin_only %}checked{% endif %}>
+                                                    Apenas administradores podem criar newsletters
+                                                </label>
+                                            </div>
+                                            <div class="comm-form-group">
+                                                <label class="comm-form-label">
+                                                    <input type="checkbox" 
+                                                           name="newsletter_schedule_required"
+                                                           {% if permissions.newsletter_schedule_required %}checked{% endif %}>
+                                                    Newsletters devem ser agendadas
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-right mt-6">
+                                    <button type="submit" class="comm-btn primary">
+                                        <i class="fas fa-save mr-2"></i>
+                                        Salvar Permissões
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Automação -->
+            <div class="tab-content" id="automation-tab">
+                <div class="comm-grid cols-1">
+                    <div class="comm-card">
+                        <div class="comm-card-header">
+                            <h3 class="comm-card-title">Regras de Automação</h3>
+                            <button type="button" class="comm-btn primary" onclick="ModalManager.open('addRuleModal')">
+                                <i class="fas fa-plus mr-2"></i>
+                                Nova Regra
+                            </button>
+                        </div>
+                        <div class="comm-card-body">
+                            <div class="comm-list">
+                                {% for rule in automation_rules %}
+                                <div class="comm-list-item">
+                                    <div class="comm-list-item-icon">
+                                        <i class="fas fa-robot"></i>
+                                    </div>
+                                    <div class="comm-list-item-content">
+                                        <div class="comm-list-item-title">{{ rule.name }}</div>
+                                        <div class="comm-list-item-subtitle">
+                                            {{ rule.description }}
+                                            <span class="comm-badge {% if rule.is_active %}status-sent{% else %}status-pending{% endif %}">
+                                                {% if rule.is_active %}Ativa{% else %}Inativa{% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="comm-list-item-actions">
+                                        <button type="button" class="comm-btn secondary" onclick="editRule({{ rule.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="comm-btn {% if rule.is_active %}warning{% else %}success{% endif %}" onclick="toggleRule({{ rule.id }})">
+                                            <i class="fas fa-{% if rule.is_active %}pause{% else %}play{% endif %}"></i>
+                                        </button>
+                                        <button type="button" class="comm-btn danger" onclick="deleteRule({{ rule.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="fas fa-robot text-4xl mb-4"></i>
+                                    <p>Nenhuma regra de automação configurada</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Adicionar Template -->
+    <div id="addTemplateModal" class="comm-modal">
+        <div class="comm-modal-content">
+            <div class="comm-modal-header">
+                <h3 class="comm-modal-title">Novo Template</h3>
+                <button type="button" class="comm-modal-close">&times;</button>
+            </div>
+            <div class="comm-modal-body">
+                <form id="addTemplateForm" method="post" action="{% url 'communication:template_create' %}">
+                    {% csrf_token %}
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="template_name">Nome do Template</label>
+                        <input type="text" id="template_name" name="name" class="comm-form-control" required>
+                    </div>
+                    
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="template_type">Tipo</label>
+                        <select id="template_type" name="type" class="comm-form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="announcement">Anúncio</option>
+                            <option value="memo">Memorando</option>
+                            <option value="newsletter">Newsletter</option>
+                        </select>
+                    </div>
+                    
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="template_content">Conteúdo</label>
+                        <textarea id="template_content" name="content" class="comm-form-control wysiwyg-editor" rows="6"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="comm-modal-footer">
+                <button type="button" class="comm-btn secondary" onclick="ModalManager.close('addTemplateModal')">
+                    Cancelar
+                </button>
+                <button type="submit" form="addTemplateForm" class="comm-btn primary">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Template
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Adicionar Regra de Automação -->
+    <div id="addRuleModal" class="comm-modal">
+        <div class="comm-modal-content">
+            <div class="comm-modal-header">
+                <h3 class="comm-modal-title">Nova Regra de Automação</h3>
+                <button type="button" class="comm-modal-close">&times;</button>
+            </div>
+            <div class="comm-modal-body">
+                <form id="addRuleForm" method="post" action="{% url 'communication:automation_rule_create' %}">
+                    {% csrf_token %}
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="rule_name">Nome da Regra</label>
+                        <input type="text" id="rule_name" name="name" class="comm-form-control" required>
+                    </div>
+                    
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="rule_description">Descrição</label>
+                        <textarea id="rule_description" name="description" class="comm-form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="rule_trigger">Gatilho</label>
+                        <select id="rule_trigger" name="trigger" class="comm-form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="new_user">Novo usuário cadastrado</option>
+                            <option value="birthday">Aniversário de usuário</option>
+                            <option value="schedule">Agendamento regular</option>
+                            <option value="keyword">Palavra-chave detectada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="comm-form-group">
+                        <label class="comm-form-label" for="rule_action">Ação</label>
+                        <select id="rule_action" name="action" class="comm-form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="send_welcome">Enviar mensagem de boas-vindas</option>
+                            <option value="send_birthday">Enviar parabéns</option>
+                            <option value="create_announcement">Criar anúncio</option>
+                            <option value="notify_admin">Notificar administrador</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="comm-modal-footer">
+                <button type="button" class="comm-btn secondary" onclick="ModalManager.close('addRuleModal')">
+                    Cancelar
+                </button>
+                <button type="submit" form="addRuleForm" class="comm-btn primary">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Regra
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.tiny.cloud/1/your-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="{% static 'js/communication.js' %}"></script>
+    
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabLinks = document.querySelectorAll('.comm-nav-item');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(targetTab + '-tab').classList.add('active');
+                });
+            });
+        });
+
+        // Template functions
+        function editTemplate(templateId) {
+            // Implementar edição de template
+            console.log('Edit template:', templateId);
+        }
+
+        function deleteTemplate(templateId) {
+            if (confirm('Tem certeza que deseja excluir este template?')) {
+                // Implementar exclusão
+                console.log('Delete template:', templateId);
+            }
+        }
+
+        // Rule functions
+        function editRule(ruleId) {
+            // Implementar edição de regra
+            console.log('Edit rule:', ruleId);
+        }
+
+        function toggleRule(ruleId) {
+            // Implementar ativação/desativação
+            console.log('Toggle rule:', ruleId);
+        }
+
+        function deleteRule(ruleId) {
+            if (confirm('Tem certeza que deseja excluir esta regra?')) {
+                // Implementar exclusão
+                console.log('Delete rule:', ruleId);
+            }
+        }
+    </script>
+
+    <style>
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .comm-nav-item {
+            display: flex;
+            align-items: center;
+        }
+        
+        .comm-form-group label input[type="checkbox"] {
+            margin-right: 8px;
+        }
+    </style>
+</body>
+</html>

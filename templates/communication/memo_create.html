@@ -1,0 +1,808 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Novo Memorando - Comunicação{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<link href="{% static 'css/forms.css' %}" rel="stylesheet">
+<style>
+.memo-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.memo-header {
+    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+}
+
+.memo-body {
+    background: white;
+    padding: 2rem;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.memo-number-display {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.memo-number {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fbbf24;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    margin-right: 0.5rem;
+    color: #1e40af;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.memo-type-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.memo-type-option {
+    position: relative;
+}
+
+.memo-type-option input[type="radio"] {
+    opacity: 0;
+    position: absolute;
+}
+
+.memo-type-label {
+    display: block;
+    padding: 1.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    background: white;
+}
+
+.memo-type-option input[type="radio"]:checked + .memo-type-label {
+    border-color: #1e40af;
+    background-color: #eff6ff;
+}
+
+.memo-type-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #6b7280;
+}
+
+.memo-type-option input[type="radio"]:checked + .memo-type-label .memo-type-icon {
+    color: #1e40af;
+}
+
+.memo-type-title {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.memo-type-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.recipients-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.department-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1rem 0;
+    gap: 1rem;
+}
+
+.department-box {
+    background: white;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    min-width: 150px;
+}
+
+.department-box.selected {
+    border-color: #1e40af;
+    background-color: #eff6ff;
+}
+
+.flow-arrow {
+    font-size: 1.5rem;
+    color: #6b7280;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.setting-card {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.memo-preview {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 1rem;
+}
+
+.memo-letterhead {
+    text-align: center;
+    border-bottom: 2px solid #1e40af;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.organization-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.memo-title-preview {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.memo-header-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    font-size: 0.875rem;
+}
+
+.memo-field {
+    display: flex;
+    border-bottom: 1px solid #d1d5db;
+    padding-bottom: 0.25rem;
+}
+
+.memo-field-label {
+    font-weight: 600;
+    min-width: 80px;
+    color: #374151;
+}
+
+.memo-field-value {
+    flex: 1;
+    color: #6b7280;
+}
+
+.memo-content-preview {
+    line-height: 1.8;
+    color: #374151;
+    margin-bottom: 2rem;
+}
+
+.memo-signature-area {
+    text-align: right;
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid #d1d5db;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 2rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: #1e40af;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+    .memo-form-container {
+        padding: 1rem;
+    }
+    
+    .memo-type-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .department-flow {
+        flex-direction: column;
+    }
+    
+    .flow-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .memo-header-info {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="memo-form-container">
+    <div class="memo-header">
+        <div class="memo-number-display">
+            <div class="text-sm mb-1">Número do Memorando</div>
+            <div class="memo-number" id="memoNumber">MEMO-{{ current_year }}-{{ next_number|stringformat:"04d" }}</div>
+        </div>
+        
+        <h1 class="text-2xl font-bold mb-2">
+            <i class="fas fa-file-contract"></i>
+            Novo Memorando Interno
+        </h1>
+        <p class="text-blue-100">
+            Crie um memorando oficial para comunicação entre departamentos
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="memo-body" id="memoForm">
+        {% csrf_token %}
+        
+        <!-- Seção: Tipo e Categoria -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-tags"></i>
+                Tipo de Memorando
+            </h3>
+            
+            <div class="memo-type-selector">
+                <div class="memo-type-option">
+                    <input type="radio" id="type_informative" name="memo_type" value="informative" checked>
+                    <label for="type_informative" class="memo-type-label">
+                        <i class="fas fa-info-circle memo-type-icon"></i>
+                        <div class="memo-type-title">Informativo</div>
+                        <div class="memo-type-description">Para compartilhar informações</div>
+                    </label>
+                </div>
+                
+                <div class="memo-type-option">
+                    <input type="radio" id="type_directive" name="memo_type" value="directive">
+                    <label for="type_directive" class="memo-type-label">
+                        <i class="fas fa-gavel memo-type-icon"></i>
+                        <div class="memo-type-title">Diretivo</div>
+                        <div class="memo-type-description">Para dar instruções ou ordens</div>
+                    </label>
+                </div>
+                
+                <div class="memo-type-option">
+                    <input type="radio" id="type_request" name="memo_type" value="request">
+                    <label for="type_request" class="memo-type-label">
+                        <i class="fas fa-hand-paper memo-type-icon"></i>
+                        <div class="memo-type-title">Solicitação</div>
+                        <div class="memo-type-description">Para fazer pedidos ou solicitações</div>
+                    </label>
+                </div>
+                
+                <div class="memo-type-option">
+                    <input type="radio" id="type_policy" name="memo_type" value="policy">
+                    <label for="type_policy" class="memo-type-label">
+                        <i class="fas fa-clipboard-list memo-type-icon"></i>
+                        <div class="memo-type-title">Política</div>
+                        <div class="memo-type-description">Para definir políticas e normas</div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Conteúdo Principal -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-edit"></i>
+                Conteúdo do Memorando
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_subject">Assunto *</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="id_subject" 
+                    name="subject" 
+                    placeholder="Digite o assunto do memorando..."
+                    required
+                    maxlength="200"
+                >
+                <small class="text-gray-500">Seja claro e objetivo no assunto</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_content">Conteúdo *</label>
+                <textarea 
+                    class="form-control" 
+                    id="id_content" 
+                    name="content" 
+                    rows="10"
+                    placeholder="Digite o conteúdo completo do memorando..."
+                    required
+                ></textarea>
+                <small class="text-gray-500">Use linguagem formal e profissional</small>
+            </div>
+        </div>
+
+        <!-- Seção: Fluxo Departamental -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-route"></i>
+                Fluxo Departamental
+            </h3>
+            
+            <div class="recipients-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label class="form-label" for="from_department">Departamento de Origem *</label>
+                        <select class="form-control" id="from_department" name="from_department" required>
+                            <option value="">Selecione o departamento...</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if dept.id == user.employee.department.id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="to_departments">Departamentos de Destino *</label>
+                        <select class="form-control" id="to_departments" name="to_departments" multiple required>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}">{{ dept.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-gray-500">Use Ctrl/Cmd para selecionar múltiplos departamentos</small>
+                    </div>
+                </div>
+
+                <!-- Visualização do Fluxo -->
+                <div class="department-flow" id="departmentFlow">
+                    <div class="department-box" id="fromDeptBox">
+                        <div class="font-medium">Origem</div>
+                        <div class="text-sm text-gray-600" id="fromDeptName">Selecione...</div>
+                    </div>
+                    
+                    <i class="fas fa-arrow-right flow-arrow"></i>
+                    
+                    <div class="department-box" id="toDeptBox">
+                        <div class="font-medium">Destino</div>
+                        <div class="text-sm text-gray-600" id="toDeptName">Selecione...</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="to_users">Usuários Específicos (Opcional)</label>
+                    <select class="form-control" id="to_users" name="to_users" multiple>
+                        <!-- Será preenchido via JavaScript baseado nos departamentos selecionados -->
+                    </select>
+                    <small class="text-gray-500">Deixe vazio para enviar a todos do departamento</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Configurações -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-cog"></i>
+                Configurações do Memorando
+            </h3>
+            
+            <div class="settings-grid">
+                <div class="setting-card">
+                    <label class="flex items-center mb-3">
+                        <input type="checkbox" id="requires_response" name="requires_response" class="mr-2">
+                        <span class="font-medium">Requer Resposta</span>
+                    </label>
+                    <p class="text-sm text-gray-600">Destinatários precisarão responder a este memorando</p>
+                    
+                    <div class="mt-3" id="responseSettings" style="display: none;">
+                        <label class="form-label" for="response_deadline">Prazo para Resposta</label>
+                        <input type="date" class="form-control" id="response_deadline" name="response_deadline">
+                    </div>
+                </div>
+
+                <div class="setting-card">
+                    <label class="form-label" for="priority">Prioridade</label>
+                    <select class="form-control" id="priority" name="priority">
+                        <option value="normal">Normal</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+
+                <div class="setting-card">
+                    <label class="form-label" for="confidentiality">Nível de Confidencialidade</label>
+                    <select class="form-control" id="confidentiality" name="confidentiality">
+                        <option value="public">Público</option>
+                        <option value="internal">Interno</option>
+                        <option value="confidential">Confidencial</option>
+                        <option value="restricted">Restrito</option>
+                    </select>
+                </div>
+
+                <div class="setting-card">
+                    <label class="flex items-center mb-3">
+                        <input type="checkbox" id="requires_signature" name="requires_signature" class="mr-2">
+                        <span class="font-medium">Requer Assinatura Digital</span>
+                    </label>
+                    <p class="text-sm text-gray-600">Memorando será assinado digitalmente</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Anexos -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-paperclip"></i>
+                Anexos
+            </h3>
+            
+            <div class="file-upload-area" id="fileUploadArea">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                <p class="text-lg font-medium text-gray-700 mb-2">Arraste arquivos aqui ou clique para selecionar</p>
+                <p class="text-sm text-gray-500">Tipos aceitos: PDF, DOC, DOCX, XLS, XLSX (máx. 10MB cada)</p>
+                <input type="file" id="attachments" name="attachments" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx">
+            </div>
+            <div id="filesList" class="mt-4"></div>
+        </div>
+
+        <!-- Seção: Preview -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-eye"></i>
+                Preview do Memorando
+            </h3>
+            
+            <div class="memo-preview" id="memoPreview">
+                <div class="memo-letterhead">
+                    <div class="organization-name">{{ organization_name|default:"ORGANIZAÇÃO" }}</div>
+                    <div class="memo-title-preview">MEMORANDO INTERNO</div>
+                </div>
+
+                <div class="memo-header-info">
+                    <div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">MEMO Nº:</span>
+                            <span class="memo-field-value" id="previewMemoNumber">{{ next_memo_number }}</span>
+                        </div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">DATA:</span>
+                            <span class="memo-field-value">{{ today|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">DE:</span>
+                            <span class="memo-field-value" id="previewFromDept">Departamento de Origem</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">PARA:</span>
+                            <span class="memo-field-value" id="previewToDept">Departamento de Destino</span>
+                        </div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">ASSUNTO:</span>
+                            <span class="memo-field-value" id="previewSubject">Assunto do memorando</span>
+                        </div>
+                        <div class="memo-field">
+                            <span class="memo-field-label">TIPO:</span>
+                            <span class="memo-field-value" id="previewType">Informativo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="memo-content-preview" id="previewContent">
+                    O conteúdo do memorando aparecerá aqui conforme você digita...
+                </div>
+
+                <div class="memo-signature-area">
+                    <div class="mb-4">Atenciosamente,</div>
+                    <div class="font-semibold">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="text-sm text-gray-600">{{ user.employee.position|default:"Cargo" }}</div>
+                    <div class="text-sm text-gray-600" id="previewFromDeptSignature">Departamento</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <div class="text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Todos os campos marcados com * são obrigatórios
+            </div>
+            
+            <div class="btn-group">
+                <a href="{% url 'communication:memo_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </a>
+                <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Rascunho
+                </button>
+                <button type="submit" class="btn btn-primary" id="sendMemoBtn">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Enviar Memorando
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Controle de resposta obrigatória
+    const requiresResponseCheckbox = document.getElementById('requires_response');
+    const responseSettings = document.getElementById('responseSettings');
+    
+    requiresResponseCheckbox.addEventListener('change', function() {
+        responseSettings.style.display = this.checked ? 'block' : 'none';
+    });
+
+    // Atualizar fluxo departamental
+    const fromDeptSelect = document.getElementById('from_department');
+    const toDeptSelect = document.getElementById('to_departments');
+    const fromDeptBox = document.getElementById('fromDeptBox');
+    const toDeptBox = document.getElementById('toDeptBox');
+    
+    fromDeptSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const deptName = selectedOption.text;
+        
+        document.getElementById('fromDeptName').textContent = deptName || 'Selecione...';
+        document.getElementById('previewFromDept').textContent = deptName || 'Departamento de Origem';
+        document.getElementById('previewFromDeptSignature').textContent = deptName || 'Departamento';
+        
+        fromDeptBox.classList.toggle('selected', this.value !== '');
+        updatePreview();
+    });
+
+    toDeptSelect.addEventListener('change', function() {
+        const selectedOptions = Array.from(this.selectedOptions);
+        const deptNames = selectedOptions.map(option => option.text);
+        
+        document.getElementById('toDeptName').textContent = deptNames.length ? deptNames.join(', ') : 'Selecione...';
+        document.getElementById('previewToDept').textContent = deptNames.length ? deptNames.join(', ') : 'Departamento de Destino';
+        
+        toDeptBox.classList.toggle('selected', deptNames.length > 0);
+        updatePreview();
+    });
+
+    // Upload de arquivos
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('attachments');
+    const filesList = document.getElementById('filesList');
+
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        filesList.innerHTML = '';
+        Array.from(files).forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2';
+            fileItem.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                    <div>
+                        <div class="font-medium">${file.name}</div>
+                        <div class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                    </div>
+                </div>
+                <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            filesList.appendChild(fileItem);
+        });
+    }
+
+    // Preview em tempo real
+    function updatePreview() {
+        const subject = document.getElementById('id_subject').value;
+        const content = document.getElementById('id_content').value;
+        const memoType = document.querySelector('input[name="memo_type"]:checked')?.value;
+        
+        document.getElementById('previewSubject').textContent = subject || 'Assunto do memorando';
+        document.getElementById('previewContent').textContent = content || 'O conteúdo do memorando aparecerá aqui conforme você digita...';
+        
+        const typeLabels = {
+            'informative': 'Informativo',
+            'directive': 'Diretivo', 
+            'request': 'Solicitação',
+            'policy': 'Política'
+        };
+        document.getElementById('previewType').textContent = typeLabels[memoType] || 'Informativo';
+    }
+
+    // Event listeners para preview
+    document.getElementById('id_subject').addEventListener('input', updatePreview);
+    document.getElementById('id_content').addEventListener('input', updatePreview);
+    document.querySelectorAll('input[name="memo_type"]').forEach(radio => {
+        radio.addEventListener('change', updatePreview);
+    });
+
+    // Salvar rascunho
+    document.getElementById('saveDraftBtn').addEventListener('click', function() {
+        // Implementar salvamento de rascunho via AJAX
+        alert('Funcionalidade de rascunho será implementada');
+    });
+
+    // Validação do formulário
+    document.getElementById('memoForm').addEventListener('submit', function(e) {
+        const subject = document.getElementById('id_subject').value.trim();
+        const content = document.getElementById('id_content').value.trim();
+        const fromDept = document.getElementById('from_department').value;
+        const toDepts = document.getElementById('to_departments').selectedOptions;
+        
+        if (!subject) {
+            e.preventDefault();
+            alert('Por favor, preencha o assunto do memorando.');
+            document.getElementById('id_subject').focus();
+            return;
+        }
+
+        if (!content) {
+            e.preventDefault();
+            alert('Por favor, preencha o conteúdo do memorando.');
+            document.getElementById('id_content').focus();
+            return;
+        }
+
+        if (!fromDept) {
+            e.preventDefault();
+            alert('Por favor, selecione o departamento de origem.');
+            document.getElementById('from_department').focus();
+            return;
+        }
+
+        if (toDepts.length === 0) {
+            e.preventDefault();
+            alert('Por favor, selecione pelo menos um departamento de destino.');
+            document.getElementById('to_departments').focus();
+            return;
+        }
+    });
+
+    // Inicializar preview
+    updatePreview();
+});
+</script>
+{% endblock %}

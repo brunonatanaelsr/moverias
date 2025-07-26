@@ -1,0 +1,669 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Novo Comunicado - Comunicação{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<link href="{% static 'css/forms.css' %}" rel="stylesheet">
+<!-- TinyMCE para editor WYSIWYG -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<style>
+.announcement-form-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+}
+
+.form-body {
+    background: white;
+    padding: 2rem;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    margin-right: 0.5rem;
+    color: #667eea;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.priority-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.priority-option {
+    position: relative;
+}
+
+.priority-option input[type="radio"] {
+    opacity: 0;
+    position: absolute;
+}
+
+.priority-label {
+    display: block;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.priority-option input[type="radio"]:checked + .priority-label {
+    border-color: #667eea;
+    background-color: #f0f4ff;
+}
+
+.priority-low { border-left: 4px solid #10b981; }
+.priority-medium { border-left: 4px solid #f59e0b; }
+.priority-high { border-left: 4px solid #ef4444; }
+.priority-urgent { border-left: 4px solid #dc2626; animation: pulse 2s infinite; }
+
+.recipients-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.recipients-toggle {
+    margin-bottom: 1rem;
+}
+
+.recipients-options {
+    display: none;
+}
+
+.recipients-options.active {
+    display: block;
+}
+
+.departments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.department-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+.department-option input[type="checkbox"] {
+    margin-right: 0.5rem;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.setting-card {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.datetime-input {
+    position: relative;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 2rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a67d8;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+}
+
+.file-upload-area {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: border-color 0.15s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #667eea;
+    background-color: #f0f4ff;
+}
+
+.preview-section {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-top: 1rem;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announcement-form-container">
+    <div class="form-header">
+        <h1 class="text-2xl font-bold mb-2">
+            <i class="fas fa-bullhorn"></i>
+            Novo Comunicado
+        </h1>
+        <p class="text-blue-100">
+            Crie um comunicado oficial para sua organização
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="form-body" id="announcementForm">
+        {% csrf_token %}
+        
+        <!-- Seção: Conteúdo Principal -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-edit"></i>
+                Conteúdo do Comunicado
+            </h3>
+            
+            <div class="form-group">
+                <label class="form-label" for="id_title">Título *</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    id="id_title" 
+                    name="title" 
+                    placeholder="Digite o título do comunicado..."
+                    required
+                    maxlength="200"
+                >
+                <small class="text-gray-500">Máximo 200 caracteres</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_summary">Resumo</label>
+                <textarea 
+                    class="form-control" 
+                    id="id_summary" 
+                    name="summary" 
+                    rows="3"
+                    placeholder="Breve resumo do comunicado (aparece na listagem)..."
+                    maxlength="500"
+                ></textarea>
+                <small class="text-gray-500">Máximo 500 caracteres</small>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_content">Conteúdo *</label>
+                <textarea 
+                    id="id_content" 
+                    name="content" 
+                    placeholder="Digite o conteúdo completo do comunicado..."
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Seção: Categorização -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-tags"></i>
+                Categorização
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label class="form-label" for="id_category">Categoria</label>
+                    <select class="form-control" id="id_category" name="category">
+                        <option value="general">Geral</option>
+                        <option value="policy">Política</option>
+                        <option value="event">Evento</option>
+                        <option value="training">Treinamento</option>
+                        <option value="safety">Segurança</option>
+                        <option value="hr">Recursos Humanos</option>
+                        <option value="technical">Técnico</option>
+                        <option value="financial">Financeiro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prioridade *</label>
+                    <div class="priority-selector">
+                        <div class="priority-option">
+                            <input type="radio" id="priority_low" name="priority" value="low">
+                            <label for="priority_low" class="priority-label priority-low">
+                                <i class="fas fa-circle text-green-500"></i>
+                                <div class="font-medium">Baixa</div>
+                            </label>
+                        </div>
+                        <div class="priority-option">
+                            <input type="radio" id="priority_medium" name="priority" value="medium" checked>
+                            <label for="priority_medium" class="priority-label priority-medium">
+                                <i class="fas fa-circle text-yellow-500"></i>
+                                <div class="font-medium">Média</div>
+                            </label>
+                        </div>
+                        <div class="priority-option">
+                            <input type="radio" id="priority_high" name="priority" value="high">
+                            <label for="priority_high" class="priority-label priority-high">
+                                <i class="fas fa-circle text-red-500"></i>
+                                <div class="font-medium">Alta</div>
+                            </label>
+                        </div>
+                        <div class="priority-option">
+                            <input type="radio" id="priority_urgent" name="priority" value="urgent">
+                            <label for="priority_urgent" class="priority-label priority-urgent">
+                                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                <div class="font-medium">Urgente</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Destinatários -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-users"></i>
+                Destinatários
+            </h3>
+            
+            <div class="recipients-section">
+                <div class="recipients-toggle">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="is_global" name="is_global" class="mr-2">
+                        <span class="font-medium">Enviar para toda a organização</span>
+                    </label>
+                </div>
+
+                <div class="recipients-options" id="recipientsOptions">
+                    <div class="form-group">
+                        <label class="form-label">Departamentos</label>
+                        <div class="departments-grid" id="departmentsGrid">
+                            <!-- Será preenchido via JavaScript com dados dos departamentos -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="target_users">Usuários Específicos</label>
+                        <select class="form-control" id="target_users" name="target_users" multiple>
+                            <!-- Será preenchido via JavaScript -->
+                        </select>
+                        <small class="text-gray-500">Use Ctrl/Cmd para selecionar múltiplos usuários</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Configurações -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-cog"></i>
+                Configurações de Publicação
+            </h3>
+            
+            <div class="settings-grid">
+                <div class="setting-card">
+                    <label class="flex items-center mb-3">
+                        <input type="checkbox" id="is_pinned" name="is_pinned" class="mr-2">
+                        <span class="font-medium">Fixar no topo</span>
+                    </label>
+                    <p class="text-sm text-gray-600">Comunicado permanecerá fixado no topo da lista</p>
+                </div>
+
+                <div class="setting-card">
+                    <label class="flex items-center mb-3">
+                        <input type="checkbox" id="requires_acknowledgment" name="requires_acknowledgment" class="mr-2">
+                        <span class="font-medium">Requer confirmação de leitura</span>
+                    </label>
+                    <p class="text-sm text-gray-600">Usuários precisarão confirmar que leram o comunicado</p>
+                </div>
+
+                <div class="setting-card">
+                    <label class="form-label" for="publish_date">Data de Publicação</label>
+                    <input 
+                        type="datetime-local" 
+                        class="form-control" 
+                        id="publish_date" 
+                        name="publish_date"
+                        value="{{ now|date:'Y-m-d\TH:i' }}"
+                    >
+                </div>
+
+                <div class="setting-card">
+                    <label class="form-label" for="expire_date">Data de Expiração (Opcional)</label>
+                    <input type="datetime-local" class="form-control" id="expire_date" name="expire_date">
+                    <p class="text-sm text-gray-600 mt-1">Comunicado será ocultado após esta data</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Anexos -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-paperclip"></i>
+                Anexos
+            </h3>
+            
+            <div class="file-upload-area" id="fileUploadArea">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                <p class="text-lg font-medium text-gray-700 mb-2">Arraste arquivos aqui ou clique para selecionar</p>
+                <p class="text-sm text-gray-500">Tipos aceitos: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (máx. 10MB cada)</p>
+                <input type="file" id="attachments" name="attachments" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+            </div>
+            <div id="filesList" class="mt-4"></div>
+        </div>
+
+        <!-- Seção: Preview -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-eye"></i>
+                Preview
+            </h3>
+            
+            <div class="preview-section" id="previewSection">
+                <p class="text-gray-500 italic">O preview aparecerá aqui conforme você preenche o formulário...</p>
+            </div>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <div class="text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Todos os campos marcados com * são obrigatórios
+            </div>
+            
+            <div class="btn-group">
+                <a href="{% url 'communication:dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </a>
+                <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Rascunho
+                </button>
+                <button type="submit" class="btn btn-primary" id="publishBtn">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Publicar Comunicado
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar TinyMCE
+    tinymce.init({
+        selector: '#id_content',
+        height: 400,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px }',
+        language: 'pt_BR'
+    });
+
+    // Toggle destinatários
+    const isGlobalCheckbox = document.getElementById('is_global');
+    const recipientsOptions = document.getElementById('recipientsOptions');
+    
+    isGlobalCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            recipientsOptions.classList.remove('active');
+        } else {
+            recipientsOptions.classList.add('active');
+        }
+    });
+
+    // Upload de arquivos
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('attachments');
+    const filesList = document.getElementById('filesList');
+
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.add('border-blue-500', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('dragleave', () => {
+        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50');
+    });
+
+    fileUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadArea.classList.remove('border-blue-500', 'bg-blue-50');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+    });
+
+    function handleFiles(files) {
+        filesList.innerHTML = '';
+        Array.from(files).forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg mb-2';
+            fileItem.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-file-alt text-gray-400 mr-3"></i>
+                    <div>
+                        <div class="font-medium">${file.name}</div>
+                        <div class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                    </div>
+                </div>
+                <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            filesList.appendChild(fileItem);
+        });
+    }
+
+    // Preview em tempo real
+    function updatePreview() {
+        const title = document.getElementById('id_title').value;
+        const summary = document.getElementById('id_summary').value;
+        const priority = document.querySelector('input[name="priority"]:checked')?.value;
+        const category = document.getElementById('id_category').value;
+        
+        if (title || summary) {
+            const previewSection = document.getElementById('previewSection');
+            previewSection.innerHTML = `
+                <div class="announcement-preview">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <span class="priority-badge priority-${priority || 'medium'} mr-2">${getPriorityLabel(priority)}</span>
+                            <span class="category-badge">${getCategoryLabel(category)}</span>
+                        </div>
+                        <span class="text-sm text-gray-500">${new Date().toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">${title || 'Título do comunicado'}</h3>
+                    <p class="text-gray-600">${summary || 'Resumo do comunicado aparecerá aqui...'}</p>
+                </div>
+            `;
+        }
+    }
+
+    function getPriorityLabel(priority) {
+        const labels = {
+            'low': 'Baixa',
+            'medium': 'Média', 
+            'high': 'Alta',
+            'urgent': 'Urgente'
+        };
+        return labels[priority] || 'Média';
+    }
+
+    function getCategoryLabel(category) {
+        const labels = {
+            'general': 'Geral',
+            'policy': 'Política',
+            'event': 'Evento',
+            'training': 'Treinamento',
+            'safety': 'Segurança',
+            'hr': 'Recursos Humanos',
+            'technical': 'Técnico',
+            'financial': 'Financeiro'
+        };
+        return labels[category] || 'Geral';
+    }
+
+    // Event listeners para preview
+    document.getElementById('id_title').addEventListener('input', updatePreview);
+    document.getElementById('id_summary').addEventListener('input', updatePreview);
+    document.querySelectorAll('input[name="priority"]').forEach(radio => {
+        radio.addEventListener('change', updatePreview);
+    });
+    document.getElementById('id_category').addEventListener('change', updatePreview);
+
+    // Salvar rascunho
+    document.getElementById('saveDraftBtn').addEventListener('click', function() {
+        // Implementar salvamento de rascunho via AJAX
+        alert('Funcionalidade de rascunho será implementada');
+    });
+
+    // Validação do formulário
+    document.getElementById('announcementForm').addEventListener('submit', function(e) {
+        const title = document.getElementById('id_title').value.trim();
+        if (!title) {
+            e.preventDefault();
+            alert('Por favor, preencha o título do comunicado.');
+            document.getElementById('id_title').focus();
+            return;
+        }
+
+        // Verificar se o TinyMCE tem conteúdo
+        const content = tinymce.get('id_content').getContent();
+        if (!content.trim()) {
+            e.preventDefault();
+            alert('Por favor, preencha o conteúdo do comunicado.');
+            tinymce.get('id_content').focus();
+            return;
+        }
+    });
+
+    // Inicializar preview
+    updatePreview();
+});
+</script>
+{% endblock %}

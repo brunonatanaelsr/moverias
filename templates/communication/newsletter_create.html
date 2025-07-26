@@ -1,0 +1,972 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Nova Newsletter - Comunicação{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<link href="{% static 'css/forms.css' %}" rel="stylesheet">
+<!-- TinyMCE para editor WYSIWYG -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<style>
+.newsletter-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.newsletter-header {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+}
+
+.newsletter-body {
+    background: white;
+    padding: 2rem;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.form-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    margin-right: 0.5rem;
+    color: #059669;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #059669;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+}
+
+.template-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.template-option {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid #e5e7eb;
+}
+
+.template-option:hover {
+    border-color: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.template-option.selected {
+    border-color: #059669;
+    background-color: #f0fdf4;
+}
+
+.template-option input[type="radio"] {
+    opacity: 0;
+    position: absolute;
+}
+
+.template-preview {
+    height: 150px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.template-info {
+    padding: 1rem;
+}
+
+.template-name {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.template-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.sections-container {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f9fafb;
+}
+
+.section-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.section-title-input {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.section-remove {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.section-remove:hover {
+    background: #fecaca;
+}
+
+.add-section-btn {
+    background: #f0fdf4;
+    border: 2px dashed #22c55e;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.add-section-btn:hover {
+    background: #dcfce7;
+    border-color: #16a34a;
+}
+
+.distribution-options {
+    background: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.distribution-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.distribution-option {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.distribution-option:hover {
+    border-color: #059669;
+    background-color: #f0fdf4;
+}
+
+.distribution-option.selected {
+    border-color: #059669;
+    background-color: #f0fdf4;
+}
+
+.distribution-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #6b7280;
+}
+
+.distribution-option.selected .distribution-icon {
+    color: #059669;
+}
+
+.recipients-details {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.newsletter-preview {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2rem;
+    margin-top: 1rem;
+}
+
+.newsletter-preview-header {
+    text-align: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e5e7eb;
+    margin-bottom: 2rem;
+}
+
+.newsletter-logo {
+    width: 80px;
+    height: 80px;
+    background: #059669;
+    border-radius: 50%;
+    margin: 0 auto 1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+}
+
+.newsletter-title-preview {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.newsletter-edition-preview {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.newsletter-section-preview {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.newsletter-section-title-preview {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #059669;
+    margin-bottom: 1rem;
+    border-left: 4px solid #059669;
+    padding-left: 1rem;
+}
+
+.newsletter-footer-preview {
+    text-align: center;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 2rem;
+}
+
+.btn-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: #059669;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #047857;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+}
+
+@media (max-width: 768px) {
+    .newsletter-form-container {
+        padding: 1rem;
+    }
+    
+    .newsletter-header {
+        padding: 1.5rem;
+    }
+    
+    .newsletter-body {
+        padding: 1.5rem;
+    }
+    
+    .template-selector {
+        grid-template-columns: 1fr;
+    }
+    
+    .distribution-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="newsletter-form-container">
+    <div class="newsletter-header">
+        <h1 class="text-2xl font-bold mb-2">
+            <i class="fas fa-newspaper"></i>
+            Nova Newsletter
+        </h1>
+        <p class="text-green-100">
+            Crie uma newsletter informativa para sua organização
+        </p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="newsletter-body" id="newsletterForm">
+        {% csrf_token %}
+        
+        <!-- Seção: Informações Básicas -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-info-circle"></i>
+                Informações Básicas
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label class="form-label" for="id_title">Título da Newsletter *</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="id_title" 
+                        name="title" 
+                        placeholder="Ex: Newsletter Semanal - Edição #15"
+                        required
+                        maxlength="200"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_edition">Edição</label>
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="id_edition" 
+                        name="edition" 
+                        placeholder="Ex: Edição #15 - Julho 2024"
+                        maxlength="100"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="id_description">Descrição</label>
+                <textarea 
+                    class="form-control" 
+                    id="id_description" 
+                    name="description" 
+                    rows="3"
+                    placeholder="Breve descrição sobre esta edição da newsletter..."
+                    maxlength="500"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Seção: Template -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-palette"></i>
+                Modelo de Newsletter
+            </h3>
+            
+            <div class="template-selector">
+                <div class="template-option">
+                    <input type="radio" id="template_basic" name="template" value="basic" checked>
+                    <label for="template_basic">
+                        <div class="template-preview">
+                            <i class="fas fa-file-alt text-4xl"></i>
+                        </div>
+                        <div class="template-info">
+                            <div class="template-name">Básico</div>
+                            <div class="template-description">Layout simples e limpo</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="template-option">
+                    <input type="radio" id="template_modern" name="template" value="modern">
+                    <label for="template_modern">
+                        <div class="template-preview">
+                            <i class="fas fa-magic text-4xl"></i>
+                        </div>
+                        <div class="template-info">
+                            <div class="template-name">Moderno</div>
+                            <div class="template-description">Design contemporâneo</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="template-option">
+                    <input type="radio" id="template_corporate" name="template" value="corporate">
+                    <label for="template_corporate">
+                        <div class="template-preview">
+                            <i class="fas fa-building text-4xl"></i>
+                        </div>
+                        <div class="template-info">
+                            <div class="template-name">Corporativo</div>
+                            <div class="template-description">Formal e profissional</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="template-option">
+                    <input type="radio" id="template_colorful" name="template" value="colorful">
+                    <label for="template_colorful">
+                        <div class="template-preview">
+                            <i class="fas fa-rainbow text-4xl"></i>
+                        </div>
+                        <div class="template-info">
+                            <div class="template-name">Colorido</div>
+                            <div class="template-description">Vibrante e chamativo</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Seções da Newsletter -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-list"></i>
+                Seções da Newsletter
+            </h3>
+            
+            <div class="sections-container">
+                <div id="sectionsContainer">
+                    <!-- Seção inicial será adicionada via JavaScript -->
+                </div>
+                
+                <div class="add-section-btn" onclick="addNewsletterSection()">
+                    <i class="fas fa-plus text-2xl text-green-600 mb-2"></i>
+                    <p class="font-medium text-green-700">Adicionar Nova Seção</p>
+                    <p class="text-sm text-green-600">Clique para adicionar uma seção à newsletter</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Distribuição -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-share-alt"></i>
+                Distribuição
+            </h3>
+            
+            <div class="distribution-options">
+                <div class="distribution-grid">
+                    <div class="distribution-option" data-type="all">
+                        <i class="fas fa-globe distribution-icon"></i>
+                        <div class="font-medium">Toda a Organização</div>
+                        <div class="text-sm text-gray-600">Enviar para todos os usuários</div>
+                    </div>
+
+                    <div class="distribution-option" data-type="departments">
+                        <i class="fas fa-building distribution-icon"></i>
+                        <div class="font-medium">Departamentos Específicos</div>
+                        <div class="text-sm text-gray-600">Selecionar departamentos</div>
+                    </div>
+
+                    <div class="distribution-option" data-type="users">
+                        <i class="fas fa-users distribution-icon"></i>
+                        <div class="font-medium">Usuários Específicos</div>
+                        <div class="text-sm text-gray-600">Selecionar usuários individuais</div>
+                    </div>
+
+                    <div class="distribution-option" data-type="external">
+                        <i class="fas fa-envelope distribution-icon"></i>
+                        <div class="font-medium">Lista Externa</div>
+                        <div class="text-sm text-gray-600">Importar lista de emails</div>
+                    </div>
+                </div>
+
+                <!-- Detalhes de Destinatários (será mostrado baseado na seleção) -->
+                <div class="recipients-details" id="recipientsDetails" style="display: none;">
+                    <!-- Conteúdo será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção: Configurações de Publicação -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-calendar"></i>
+                Configurações de Publicação
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="form-group">
+                    <label class="form-label" for="publish_date">Data de Publicação</label>
+                    <input 
+                        type="datetime-local" 
+                        class="form-control" 
+                        id="publish_date" 
+                        name="publish_date"
+                        value="{{ now|date:'Y-m-d\TH:i' }}"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="frequency">Frequência</label>
+                    <select class="form-control" id="frequency" name="frequency">
+                        <option value="one-time">Única</option>
+                        <option value="weekly">Semanal</option>
+                        <option value="monthly">Mensal</option>
+                        <option value="quarterly">Trimestral</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="flex items-center">
+                    <input type="checkbox" id="auto_archive" name="auto_archive" class="mr-2">
+                    <span class="font-medium">Arquivar automaticamente após 30 dias</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Seção: Preview -->
+        <div class="form-section">
+            <h3 class="form-section-title">
+                <i class="fas fa-eye"></i>
+                Preview da Newsletter
+            </h3>
+            
+            <div class="newsletter-preview" id="newsletterPreview">
+                <div class="newsletter-preview-header">
+                    <div class="newsletter-logo">
+                        <i class="fas fa-newspaper"></i>
+                    </div>
+                    <div class="newsletter-title-preview" id="previewTitle">Newsletter da Organização</div>
+                    <div class="newsletter-edition-preview" id="previewEdition">Edição</div>
+                </div>
+
+                <div id="previewSections">
+                    <div class="newsletter-section-preview">
+                        <div class="newsletter-section-title-preview">Seção de Exemplo</div>
+                        <div class="text-gray-600">
+                            O conteúdo das seções aparecerá aqui conforme você as adiciona...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="newsletter-footer-preview">
+                    <p>{{ organization_name|default:"Sua Organização" }}</p>
+                    <p>Newsletter enviada em {{ now|date:"d/m/Y" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações do Formulário -->
+        <div class="form-actions">
+            <div class="text-sm text-gray-500">
+                <i class="fas fa-info-circle mr-1"></i>
+                Você pode salvar como rascunho e publicar posteriormente
+            </div>
+            
+            <div class="btn-group">
+                <a href="{% url 'communication:newsletter_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancelar
+                </a>
+                <button type="button" class="btn btn-secondary" id="saveDraftBtn">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Rascunho
+                </button>
+                <button type="submit" class="btn btn-primary" id="publishBtn">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Publicar Newsletter
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let sectionCounter = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Adicionar primeira seção automaticamente
+    addNewsletterSection();
+    
+    // Event listeners para template selection
+    document.querySelectorAll('input[name="template"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Remover classe selected de todas as opções
+            document.querySelectorAll('.template-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // Adicionar classe selected à opção selecionada
+            this.closest('.template-option').classList.add('selected');
+            updatePreview();
+        });
+    });
+
+    // Event listeners para distribuição
+    document.querySelectorAll('.distribution-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // Remover seleção anterior
+            document.querySelectorAll('.distribution-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            // Selecionar atual
+            this.classList.add('selected');
+            showRecipientsDetails(this.dataset.type);
+        });
+    });
+
+    // Event listeners para preview
+    document.getElementById('id_title').addEventListener('input', updatePreview);
+    document.getElementById('id_edition').addEventListener('input', updatePreview);
+    
+    // Inicializar preview
+    updatePreview();
+});
+
+function addNewsletterSection() {
+    sectionCounter++;
+    const container = document.getElementById('sectionsContainer');
+    
+    const sectionDiv = document.createElement('div');
+    sectionDiv.className = 'section-item';
+    sectionDiv.id = `section-${sectionCounter}`;
+    
+    sectionDiv.innerHTML = `
+        <div class="section-header">
+            <input 
+                type="text" 
+                class="form-control section-title-input" 
+                name="section_title_${sectionCounter}" 
+                placeholder="Título da seção..."
+                onchange="updatePreview()"
+            >
+            <button type="button" class="section-remove" onclick="removeSection(${sectionCounter})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Conteúdo da Seção</label>
+            <textarea 
+                class="form-control section-content" 
+                name="section_content_${sectionCounter}" 
+                rows="8"
+                placeholder="Digite o conteúdo desta seção..."
+                onchange="updatePreview()"
+            ></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Imagem da Seção (Opcional)</label>
+            <input 
+                type="file" 
+                class="form-control" 
+                name="section_image_${sectionCounter}" 
+                accept="image/*"
+            >
+        </div>
+    `;
+    
+    container.appendChild(sectionDiv);
+    
+    // Inicializar TinyMCE para o novo textarea
+    initializeTinyMCE(`textarea[name="section_content_${sectionCounter}"]`);
+    
+    updatePreview();
+}
+
+function removeSection(sectionId) {
+    const section = document.getElementById(`section-${sectionId}`);
+    if (section) {
+        // Destruir instância do TinyMCE se existir
+        const textarea = section.querySelector('textarea');
+        if (textarea && tinymce.get(textarea.name)) {
+            tinymce.get(textarea.name).remove();
+        }
+        section.remove();
+        updatePreview();
+    }
+}
+
+function initializeTinyMCE(selector) {
+    tinymce.init({
+        selector: selector,
+        height: 300,
+        menubar: false,
+        plugins: [
+            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+            'insertdatetime', 'media', 'table', 'help', 'wordcount'
+        ],
+        toolbar: 'undo redo | blocks | bold italic forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px }',
+        language: 'pt_BR',
+        setup: function(editor) {
+            editor.on('change', function() {
+                updatePreview();
+            });
+        }
+    });
+}
+
+function showRecipientsDetails(type) {
+    const details = document.getElementById('recipientsDetails');
+    details.style.display = 'block';
+    
+    let content = '';
+    
+    switch(type) {
+        case 'all':
+            content = `
+                <p class="font-medium mb-2">Toda a Organização</p>
+                <p class="text-sm text-gray-600">A newsletter será enviada para todos os usuários ativos da organização.</p>
+            `;
+            break;
+            
+        case 'departments':
+            content = `
+                <p class="font-medium mb-2">Selecionar Departamentos</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="departments" value="1" class="mr-2">
+                        Recursos Humanos
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="departments" value="2" class="mr-2">
+                        Tecnologia
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="departments" value="3" class="mr-2">
+                        Financeiro
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="departments" value="4" class="mr-2">
+                        Marketing
+                    </label>
+                </div>
+            `;
+            break;
+            
+        case 'users':
+            content = `
+                <p class="font-medium mb-2">Selecionar Usuários</p>
+                <select class="form-control" name="target_users" multiple>
+                    <option value="1">João Silva</option>
+                    <option value="2">Maria Santos</option>
+                    <option value="3">Pedro Oliveira</option>
+                </select>
+                <small class="text-gray-500">Use Ctrl/Cmd para selecionar múltiplos usuários</small>
+            `;
+            break;
+            
+        case 'external':
+            content = `
+                <p class="font-medium mb-2">Lista Externa de Emails</p>
+                <textarea 
+                    class="form-control" 
+                    name="external_emails" 
+                    rows="4"
+                    placeholder="Digite os emails separados por vírgula ou quebra de linha..."
+                ></textarea>
+                <small class="text-gray-500">Você também pode importar um arquivo CSV</small>
+                <input type="file" class="form-control mt-2" name="email_list_file" accept=".csv,.txt">
+            `;
+            break;
+    }
+    
+    details.innerHTML = content;
+}
+
+function updatePreview() {
+    const title = document.getElementById('id_title').value || 'Newsletter da Organização';
+    const edition = document.getElementById('id_edition').value || 'Edição';
+    
+    document.getElementById('previewTitle').textContent = title;
+    document.getElementById('previewEdition').textContent = edition;
+    
+    // Atualizar seções no preview
+    const previewSections = document.getElementById('previewSections');
+    previewSections.innerHTML = '';
+    
+    const sections = document.querySelectorAll('.section-item');
+    sections.forEach((section, index) => {
+        const titleInput = section.querySelector('.section-title-input');
+        const contentTextarea = section.querySelector('.section-content');
+        
+        if (titleInput && titleInput.value) {
+            const previewSection = document.createElement('div');
+            previewSection.className = 'newsletter-section-preview';
+            
+            let content = 'Conteúdo da seção...';
+            if (contentTextarea) {
+                // Verificar se há instância do TinyMCE
+                const editor = tinymce.get(contentTextarea.name);
+                if (editor) {
+                    content = editor.getContent() || 'Conteúdo da seção...';
+                } else {
+                    content = contentTextarea.value || 'Conteúdo da seção...';
+                }
+            }
+            
+            previewSection.innerHTML = `
+                <div class="newsletter-section-title-preview">${titleInput.value}</div>
+                <div class="text-gray-600">${content}</div>
+            `;
+            
+            previewSections.appendChild(previewSection);
+        }
+    });
+    
+    if (previewSections.innerHTML === '') {
+        previewSections.innerHTML = `
+            <div class="newsletter-section-preview">
+                <div class="newsletter-section-title-preview">Seção de Exemplo</div>
+                <div class="text-gray-600">
+                    O conteúdo das seções aparecerá aqui conforme você as adiciona...
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Salvar rascunho
+document.getElementById('saveDraftBtn').addEventListener('click', function() {
+    const form = document.getElementById('newsletterForm');
+    const draftInput = document.createElement('input');
+    draftInput.type = 'hidden';
+    draftInput.name = 'save_as_draft';
+    draftInput.value = 'true';
+    form.appendChild(draftInput);
+    form.submit();
+});
+
+// Validação do formulário
+document.getElementById('newsletterForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('id_title').value.trim();
+    if (!title) {
+        e.preventDefault();
+        alert('Por favor, preencha o título da newsletter.');
+        document.getElementById('id_title').focus();
+        return;
+    }
+
+    const sections = document.querySelectorAll('.section-item');
+    if (sections.length === 0) {
+        e.preventDefault();
+        alert('Por favor, adicione pelo menos uma seção à newsletter.');
+        return;
+    }
+
+    let hasValidSection = false;
+    sections.forEach(section => {
+        const titleInput = section.querySelector('.section-title-input');
+        if (titleInput && titleInput.value.trim()) {
+            hasValidSection = true;
+        }
+    });
+
+    if (!hasValidSection) {
+        e.preventDefault();
+        alert('Por favor, preencha pelo menos uma seção com título.');
+        return;
+    }
+});
+</script>
+{% endblock %}

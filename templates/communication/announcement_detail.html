@@ -1,0 +1,640 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ announcement.title }} - Comunicado{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<style>
+.announcement-detail-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.announcement-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    margin-bottom: 0;
+}
+
+.announcement-body {
+    background: white;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.announcement-meta {
+    padding: 1.5rem 2rem;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.announcement-content {
+    padding: 2rem;
+}
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.priority-low {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.priority-medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.priority-high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.priority-urgent {
+    background-color: #fecaca;
+    color: #7f1d1d;
+    animation: pulse 2s infinite;
+}
+
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background-color: #e0e7ff;
+    color: #3730a3;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+}
+
+.meta-item i {
+    color: #667eea;
+    margin-right: 0.5rem;
+    width: 16px;
+}
+
+.recipients-list {
+    background: #f1f5f9;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+.recipients-list h4 {
+    margin-bottom: 0.5rem;
+    color: #475569;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.recipients-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.recipients-list li {
+    padding: 0.25rem 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.content-section {
+    line-height: 1.6;
+    color: #374151;
+}
+
+.content-section h1,
+.content-section h2,
+.content-section h3,
+.content-section h4,
+.content-section h5,
+.content-section h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.content-section p {
+    margin-bottom: 1rem;
+}
+
+.content-section ul,
+.content-section ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.content-section li {
+    margin-bottom: 0.5rem;
+}
+
+.acknowledgment-section {
+    background: #fef7cd;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.acknowledgment-required {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.acknowledgment-completed {
+    background: #f0fdf4;
+    border-color: #22c55e;
+}
+
+.attachments-section {
+    background: #f8fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    transition: all 0.15s ease;
+}
+
+.attachment-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.attachment-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 6px;
+    margin-right: 1rem;
+    color: #64748b;
+}
+
+.attachment-info {
+    flex: 1;
+}
+
+.attachment-name {
+    font-weight: 500;
+    color: #374151;
+}
+
+.attachment-size {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a67d8;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.read-status {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.read-status.unread {
+    color: #dc2626;
+}
+
+.read-status.read {
+    color: #059669;
+}
+
+.read-status.acknowledged {
+    color: #0369a1;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.pinned-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #f59e0b;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .announcement-detail-container {
+        padding: 1rem;
+    }
+    
+    .announcement-header {
+        padding: 1.5rem;
+    }
+    
+    .announcement-content {
+        padding: 1.5rem;
+    }
+    
+    .meta-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        padding: 1.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announcement-detail-container">
+    <div class="announcement-header">
+        {% if announcement.is_pinned %}
+        <div class="pinned-indicator">
+            <i class="fas fa-thumbtack"></i>
+        </div>
+        {% endif %}
+        
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                <span class="priority-badge priority-{{ announcement.priority }}">
+                    {% if announcement.priority == 'urgent' %}
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                    {% else %}
+                        <i class="fas fa-circle mr-1"></i>
+                    {% endif %}
+                    {{ announcement.get_priority_display }}
+                </span>
+                <span class="category-badge">
+                    <i class="fas fa-tag mr-1"></i>
+                    {{ announcement.get_category_display }}
+                </span>
+            </div>
+            
+            <div class="read-status {% if read_receipt.acknowledged_at %}acknowledged{% elif read_receipt.read_at %}read{% else %}unread{% endif %}">
+                {% if read_receipt.acknowledged_at %}
+                    <i class="fas fa-check-double mr-1"></i>
+                    Confirmado
+                {% elif read_receipt.read_at %}
+                    <i class="fas fa-check mr-1"></i>
+                    Lido
+                {% else %}
+                    <i class="fas fa-circle mr-1"></i>
+                    Não lido
+                {% endif %}
+            </div>
+        </div>
+        
+        <h1 class="text-3xl font-bold mb-4">{{ announcement.title }}</h1>
+        
+        {% if announcement.summary %}
+        <p class="text-xl text-blue-100 leading-relaxed">
+            {{ announcement.summary }}
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="announcement-body">
+        <div class="announcement-meta">
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <i class="fas fa-user"></i>
+                    <div>
+                        <div class="font-medium">Autor</div>
+                        <div class="text-sm text-gray-600">{{ announcement.author.get_full_name|default:announcement.author.username }}</div>
+                    </div>
+                </div>
+                
+                <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <div>
+                        <div class="font-medium">Publicado em</div>
+                        <div class="text-sm text-gray-600">{{ announcement.publish_date|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+                
+                {% if announcement.expire_date %}
+                <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <div class="font-medium">Expira em</div>
+                        <div class="text-sm text-gray-600">{{ announcement.expire_date|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="meta-item">
+                    <i class="fas fa-eye"></i>
+                    <div>
+                        <div class="font-medium">Visualizações</div>
+                        <div class="text-sm text-gray-600">{{ announcement.get_read_count }} de {{ announcement.get_total_recipients }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Destinatários -->
+            <div class="recipients-list">
+                <h4>Destinatários</h4>
+                {% if announcement.is_global %}
+                    <p class="text-sm text-gray-600">
+                        <i class="fas fa-globe mr-1"></i>
+                        Toda a organização
+                    </p>
+                {% else %}
+                    {% if announcement.departments.exists %}
+                        <div class="mb-2">
+                            <strong class="text-sm">Departamentos:</strong>
+                            <ul class="list-disc list-inside mt-1">
+                                {% for department in announcement.departments.all %}
+                                <li>{{ department.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    {% if announcement.target_users.exists %}
+                        <div>
+                            <strong class="text-sm">Usuários específicos:</strong>
+                            <ul class="list-disc list-inside mt-1">
+                                {% for user in announcement.target_users.all %}
+                                <li>{{ user.get_full_name|default:user.username }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="announcement-content">
+            <div class="content-section">
+                {{ announcement.content|safe }}
+            </div>
+        </div>
+
+        <!-- Anexos -->
+        {% if announcement.attachments.exists %}
+        <div class="attachments-section">
+            <h3 class="text-lg font-semibold mb-3 flex items-center">
+                <i class="fas fa-paperclip mr-2 text-gray-500"></i>
+                Anexos
+            </h3>
+            
+            {% for attachment in announcement.attachments.all %}
+            <div class="attachment-item">
+                <div class="attachment-icon">
+                    {% if attachment.file_type == 'pdf' %}
+                        <i class="fas fa-file-pdf text-red-500"></i>
+                    {% elif attachment.file_type in 'doc,docx' %}
+                        <i class="fas fa-file-word text-blue-500"></i>
+                    {% elif attachment.file_type in 'xls,xlsx' %}
+                        <i class="fas fa-file-excel text-green-500"></i>
+                    {% elif attachment.file_type in 'jpg,jpeg,png' %}
+                        <i class="fas fa-file-image text-purple-500"></i>
+                    {% else %}
+                        <i class="fas fa-file text-gray-500"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="attachment-info">
+                    <div class="attachment-name">{{ attachment.original_name }}</div>
+                    <div class="attachment-size">{{ attachment.file_size_formatted }}</div>
+                </div>
+                
+                <a href="{{ attachment.file.url }}" 
+                   class="btn btn-secondary btn-sm" 
+                   download
+                   target="_blank">
+                    <i class="fas fa-download mr-1"></i>
+                    Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Confirmação de Leitura -->
+        {% if announcement.requires_acknowledgment %}
+        <div class="acknowledgment-section {% if read_receipt.acknowledged_at %}acknowledgment-completed{% else %}acknowledgment-required{% endif %}">
+            {% if read_receipt.acknowledged_at %}
+                <div class="flex items-center text-green-800">
+                    <i class="fas fa-check-circle text-2xl mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold">Leitura Confirmada</h4>
+                        <p class="text-sm">
+                            Você confirmou a leitura deste comunicado em {{ read_receipt.acknowledged_at|date:"d/m/Y H:i" }}
+                        </p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-2xl text-yellow-600 mr-3 mt-1"></i>
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-yellow-800 mb-2">Confirmação de Leitura Obrigatória</h4>
+                        <p class="text-yellow-700 mb-4">
+                            Este comunicado requer que você confirme sua leitura. Por favor, leia atentamente todo o conteúdo antes de confirmar.
+                        </p>
+                        
+                        <form method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check mr-2"></i>
+                                Confirmar Leitura
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons">
+            <a href="{% url 'communication:announcement_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar à Lista
+            </a>
+            
+            {% if user.is_staff or user == announcement.author %}
+            <a href="{% url 'communication:announcement_edit' announcement.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i>
+                Editar
+            </a>
+            {% endif %}
+            
+            <button type="button" class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print mr-2"></i>
+                Imprimir
+            </button>
+            
+            <button type="button" class="btn btn-secondary" onclick="shareAnnouncement()">
+                <i class="fas fa-share mr-2"></i>
+                Compartilhar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Compartilhamento -->
+<div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Compartilhar Comunicado</h3>
+        
+        <div class="space-y-3">
+            <div class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="copyToClipboard()">
+                <i class="fas fa-link text-gray-500 mr-3"></i>
+                <div>
+                    <div class="font-medium">Copiar Link</div>
+                    <div class="text-sm text-gray-500">Copiar URL para compartilhar</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="shareByEmail()">
+                <i class="fas fa-envelope text-gray-500 mr-3"></i>
+                <div>
+                    <div class="font-medium">Compartilhar por Email</div>
+                    <div class="text-sm text-gray-500">Abrir cliente de email</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6">
+            <button type="button" class="btn btn-secondary" onclick="closeShareModal()">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function shareAnnouncement() {
+    document.getElementById('shareModal').classList.remove('hidden');
+    document.getElementById('shareModal').classList.add('flex');
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').classList.add('hidden');
+    document.getElementById('shareModal').classList.remove('flex');
+}
+
+function copyToClipboard() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Link copiado para a área de transferência!');
+        closeShareModal();
+    });
+}
+
+function shareByEmail() {
+    const subject = encodeURIComponent('{{ announcement.title }}');
+    const body = encodeURIComponent(`Confira este comunicado: ${window.location.href}`);
+    window.open(`mailto:?subject=${subject}&body=${body}`);
+    closeShareModal();
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('shareModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeShareModal();
+    }
+});
+
+// Marcar como lido automaticamente após alguns segundos
+setTimeout(function() {
+    // Enviar requisição AJAX para marcar como lido
+    fetch('{% url "communication:mark_as_read" announcement.pk %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    });
+}, 5000); // 5 segundos
+</script>
+{% endblock %}

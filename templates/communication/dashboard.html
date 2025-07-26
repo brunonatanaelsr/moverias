@@ -1,157 +1,732 @@
-{% extends "layouts/base.html" %}
+{% extends 'layouts/base.html' %}
 {% load static %}
 
-{% block title %}Painel de Comunicação{% endblock %}
+{% block title %}Central de Comunicação{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<style>
+.dashboard-container {
+    padding: 2rem;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card.announcements {
+    border-left-color: #667eea;
+}
+
+.stat-card.memos {
+    border-left-color: #1e40af;
+}
+
+.stat-card.pending {
+    border-left-color: #f59e0b;
+}
+
+.stat-card.engagement {
+    border-left-color: #10b981;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-icon.announcements {
+    background-color: #667eea;
+}
+
+.stat-icon.memos {
+    background-color: #1e40af;
+}
+
+.stat-icon.pending {
+    background-color: #f59e0b;
+}
+
+.stat-icon.engagement {
+    background-color: #10b981;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.stat-change {
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.stat-change.positive {
+    color: #059669;
+}
+
+.stat-change.negative {
+    color: #dc2626;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.content-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.section-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.section-action {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.section-action:hover {
+    text-decoration: underline;
+}
+
+.section-content {
+    padding: 1.5rem;
+}
+
+.recent-items {
+    space-y: 1rem;
+}
+
+.recent-item {
+    display: flex;
+    align-items: start;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+
+.recent-item:hover {
+    background: #f3f4f6;
+}
+
+.item-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.item-icon.announcement {
+    background-color: #eff6ff;
+    color: #667eea;
+}
+
+.item-icon.memo {
+    background-color: #eff6ff;
+    color: #1e40af;
+}
+
+.item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.item-title {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.item-meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-sent {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.priority-urgent {
+    background-color: #fecaca;
+    color: #7f1d1d;
+    animation: pulse 2s infinite;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #6b7280;
+    transition: all 0.15s ease;
+}
+
+.quick-action:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background-color: #f0f4ff;
+}
+
+.quick-action-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+}
+
+.quick-action-label {
+    font-weight: 500;
+    text-align: center;
+}
+
+.notifications-panel {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: start;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid;
+}
+
+.notification-item.info {
+    border-left-color: #3b82f6;
+}
+
+.notification-item.warning {
+    border-left-color: #f59e0b;
+}
+
+.notification-item.success {
+    border-left-color: #10b981;
+}
+
+.notification-icon {
+    margin-right: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.notification-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.progress-section {
+    margin-top: 2rem;
+}
+
+.progress-item {
+    margin-bottom: 1.5rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progress-label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.progress-value {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #667eea;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .dashboard-header {
+        padding: 1.5rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-6">
-    <div class="flex flex-col space-y-6">
-        <!-- Cabeçalho -->
-        <div class="bg-white shadow-sm rounded-lg p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Painel de Comunicação</h1>
-                    <p class="mt-1 text-sm text-gray-500">
-                        Gerencie todas as comunicações com as beneficiárias
-                    </p>
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">
+            <i class="fas fa-comments mr-3"></i>
+            Central de Comunicação
+        </h1>
+        <p class="dashboard-subtitle">
+            Gerencie comunicados, memorandos e mensagens da sua organização
+        </p>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card announcements">
+            <div class="stat-header">
+                <div class="stat-icon announcements">
+                    <i class="fas fa-bullhorn"></i>
                 </div>
-                <div class="flex space-x-3">
-                    <a href="{% url 'communication:create_announcement' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
-                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        Novo Anúncio
-                    </a>
-                    <a href="{% url 'communication:create_memo' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        Novo Memorando
-                    </a>
-                </div>
+            </div>
+            <div class="stat-value" id="announcementsCount">{{ total_announcements|default:0 }}</div>
+            <div class="stat-label">Comunicados Ativos</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up mr-1"></i>
+                +12% este mês
             </div>
         </div>
 
-        <!-- Estatísticas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-pink-100 text-pink-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <h2 class="text-lg font-semibold text-gray-900">{{ total_messages }}</h2>
-                        <p class="text-sm text-gray-500">Total de Mensagens</p>
-                    </div>
+        <div class="stat-card memos">
+            <div class="stat-header">
+                <div class="stat-icon memos">
+                    <i class="fas fa-file-contract"></i>
                 </div>
             </div>
-
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 text-green-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <h2 class="text-lg font-semibold text-gray-900">{{ messages_sent }}</h2>
-                        <p class="text-sm text-gray-500">Mensagens Enviadas</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <h2 class="text-lg font-semibold text-gray-900">{{ pending_messages }}</h2>
-                        <p class="text-sm text-gray-500">Mensagens Pendentes</p>
-                    </div>
-                </div>
+            <div class="stat-value" id="memosCount">{{ total_memos|default:0 }}</div>
+            <div class="stat-label">Memorandos</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up mr-1"></i>
+                +8% este mês
             </div>
         </div>
 
-        <!-- Lista de Mensagens Recentes -->
-        <div class="bg-white shadow-sm rounded-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Mensagens Recentes</h2>
-            </div>
-            {% if recent_messages %}
-            <div class="divide-y divide-gray-200">
-                {% for message in recent_messages %}
-                <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            {% if message.status == 'sent' %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Enviada
-                            </span>
-                            {% elif message.status == 'pending' %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Pendente
-                            </span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                {{ message.status|title }}
-                            </span>
-                            {% endif %}
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-900">{{ message.subject }}</h3>
-                            <p class="text-sm text-gray-500">Para: {{ message.recipient }}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <span class="text-sm text-gray-500">{{ message.created_at|date:"d/m/Y H:i" }}</span>
-                        <div class="flex space-x-2">
-                            <a href="{% if message.type == 'announcement' %}{% url 'communication:announcement_detail' message.id %}{% else %}{% url 'communication:memo_detail' message.id %}{% endif %}" 
-                               class="text-pink-600 hover:text-pink-900">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
+        <div class="stat-card pending">
+            <div class="stat-header">
+                <div class="stat-icon pending">
+                    <i class="fas fa-clock"></i>
                 </div>
-                {% endfor %}
             </div>
-            {% else %}
-            <div class="text-center py-12">
-                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z"/>
-                </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma mensagem encontrada</h3>
-                <p class="mt-1 text-sm text-gray-500">
-                    Comece criando uma nova mensagem para as beneficiárias.
-                </p>
-                <div class="mt-6 flex justify-center space-x-4">
-                    <a href="{% url 'communication:create_announcement' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
-                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        Novo Anúncio
-                    </a>
-                    <a href="{% url 'communication:create_memo' %}" 
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
-                        <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        Novo Memorando
-                    </a>
-                </div>
+            <div class="stat-value" id="pendingCount">{{ pending_responses|default:0 }}</div>
+            <div class="stat-label">Respostas Pendentes</div>
+            {% if pending_responses > 0 %}
+            <div class="stat-change negative">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Requer atenção
             </div>
             {% endif %}
         </div>
+
+        <div class="stat-card engagement">
+            <div class="stat-header">
+                <div class="stat-icon engagement">
+                    <i class="fas fa-eye"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="engagementRate">89%</div>
+            <div class="stat-label">Taxa de Leitura</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up mr-1"></i>
+                +5% este mês
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div class="main-content">
+        <!-- Mensagens Recentes -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Comunicações Recentes</h2>
+                <a href="{% url 'communication:announcement_list' %}" class="section-action">
+                    Ver todas
+                </a>
+            </div>
+            <div class="section-content">
+                <div class="recent-items">
+                    {% for message in recent_messages %}
+                    <div class="recent-item">
+                        <div class="item-icon {{ message.type }}">
+                            {% if message.type == 'announcement' %}
+                                <i class="fas fa-bullhorn"></i>
+                            {% else %}
+                                <i class="fas fa-file-contract"></i>
+                            {% endif %}
+                        </div>
+                        <div class="item-info">
+                            <div class="item-title">{{ message.subject }}</div>
+                            <div class="item-meta">
+                                <span>{{ message.recipient }}</span>
+                                <span>•</span>
+                                <span>{{ message.created_at|timesince }} atrás</span>
+                                <span class="item-status {% if message.status == 'sent' %}status-sent{% elif message.status == 'pending' %}status-pending{% endif %}">
+                                    {{ message.status|capfirst }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>Nenhuma comunicação recente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel Lateral -->
+        <div class="sidebar-content">
+            <!-- Ações Rápidas -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Ações Rápidas</h2>
+                </div>
+                <div class="section-content">
+                    <div class="quick-actions-grid">
+                        <a href="{% url 'communication:announcement_create' %}" class="quick-action">
+                            <i class="fas fa-bullhorn quick-action-icon"></i>
+                            <span class="quick-action-label">Novo Comunicado</span>
+                        </a>
+                        
+                        <a href="{% url 'communication:memo_create' %}" class="quick-action">
+                            <i class="fas fa-file-contract quick-action-icon"></i>
+                            <span class="quick-action-label">Novo Memorando</span>
+                        </a>
+                        
+                        <a href="{% url 'communication:announcement_board' %}" class="quick-action">
+                            <i class="fas fa-clipboard-list quick-action-icon"></i>
+                            <span class="quick-action-label">Mural</span>
+                        </a>
+                        
+                        <a href="{% url 'communication:settings' %}" class="quick-action">
+                            <i class="fas fa-cog quick-action-icon"></i>
+                            <span class="quick-action-label">Configurações</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notificações -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Notificações</h2>
+                </div>
+                <div class="section-content">
+                    <div class="notifications-panel">
+                        {% if pending_responses > 0 %}
+                        <div class="notification-item warning">
+                            <i class="fas fa-exclamation-triangle notification-icon text-yellow-500"></i>
+                            <div class="notification-content">
+                                <div class="notification-title">Respostas Pendentes</div>
+                                <div class="notification-text">
+                                    Você tem {{ pending_responses }} memorando{{ pending_responses|pluralize }} aguardando resposta
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if unread_announcements > 0 %}
+                        <div class="notification-item info">
+                            <i class="fas fa-bell notification-icon text-blue-500"></i>
+                            <div class="notification-content">
+                                <div class="notification-title">Comunicados Não Lidos</div>
+                                <div class="notification-text">
+                                    {{ unread_announcements }} novo{{ unread_announcements|pluralize }} comunicado{{ unread_announcements|pluralize }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="notification-item success">
+                            <i class="fas fa-check-circle notification-icon text-green-500"></i>
+                            <div class="notification-content">
+                                <div class="notification-title">Sistema Atualizado</div>
+                                <div class="notification-text">
+                                    Novos recursos de comunicação disponíveis
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progresso de Leitura -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Engajamento</h2>
+                </div>
+                <div class="section-content">
+                    <div class="progress-section">
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Taxa de Leitura</span>
+                                <span class="progress-value">89%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 89%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Confirmações</span>
+                                <span class="progress-value">76%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 76%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Respostas</span>
+                                <span class="progress-value">92%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 92%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção de Links Rápidos -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">Acesso Rápido</h2>
+        </div>
+        <div class="section-content">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="{% url 'communication:announcement_list' %}" class="quick-action">
+                    <i class="fas fa-list quick-action-icon"></i>
+                    <span class="quick-action-label">Todos os Comunicados</span>
+                </a>
+                
+                <a href="{% url 'communication:memo_list' %}" class="quick-action">
+                    <i class="fas fa-folder quick-action-icon"></i>
+                    <span class="quick-action-label">Todos os Memorandos</span>
+                </a>
+                
+                <a href="{% url 'communication:newsletter_list' %}" class="quick-action">
+                    <i class="fas fa-newspaper quick-action-icon"></i>
+                    <span class="quick-action-label">Newsletters</span>
+                </a>
+                
+                <a href="{% url 'communication:suggestion_list' %}" class="quick-action">
+                    <i class="fas fa-lightbulb quick-action-icon"></i>
+                    <span class="quick-action-label">Caixa de Sugestões</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Atualizar estatísticas em tempo real
+function updateStats() {
+    fetch('{% url "communication:get_dashboard_stats" %}')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('announcementsCount').textContent = data.announcements;
+        document.getElementById('memosCount').textContent = data.memos;
+        document.getElementById('pendingCount').textContent = data.pending;
+        document.getElementById('engagementRate').textContent = data.engagement + '%';
+    })
+    .catch(error => console.error('Erro ao atualizar estatísticas:', error));
+}
+
+// Atualizar a cada 30 segundos
+setInterval(updateStats, 30000);
+
+// Animação dos contadores
+function animateCounters() {
+    const counters = document.querySelectorAll('.stat-value');
+    
+    counters.forEach(counter => {
+        const target = parseInt(counter.textContent);
+        const increment = target / 50;
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                counter.textContent = target;
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current);
+            }
+        }, 20);
+    });
+}
+
+// Executar animação ao carregar a página
+document.addEventListener('DOMContentLoaded', animateCounters);
+</script>
 {% endblock %}

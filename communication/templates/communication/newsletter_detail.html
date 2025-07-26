@@ -1,0 +1,529 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ newsletter.title }} - Move Marias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/communication.css' %}">
+</head>
+<body class="bg-gray-50">
+    <div class="communication-module">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="communication-container">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-4">
+                        <a href="{% url 'communication:dashboard' %}" class="text-gray-600 hover:text-primary-600">
+                            <i class="fas fa-arrow-left text-lg"></i>
+                        </a>
+                        <div>
+                            <h1 class="text-xl font-semibold text-gray-800">{{ newsletter.title }}</h1>
+                            <p class="text-sm text-gray-500">
+                                Newsletter • 
+                                <span class="comm-badge status-{{ newsletter.status }}">{{ newsletter.get_status_display }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        {% if newsletter.status == 'draft' and perms.communication.change_newsletter %}
+                        <a href="{% url 'communication:newsletter_edit' newsletter.id %}" class="comm-btn secondary">
+                            <i class="fas fa-edit mr-2"></i>
+                            Editar
+                        </a>
+                        {% endif %}
+                        
+                        {% if newsletter.status == 'sent' %}
+                        <button type="button" class="comm-btn secondary" onclick="ModalManager.open('analyticsModal')">
+                            <i class="fas fa-chart-bar mr-2"></i>
+                            Estatísticas
+                        </button>
+                        {% endif %}
+                        
+                        <button type="button" class="comm-btn outline" onclick="ModalManager.open('shareModal')">
+                            <i class="fas fa-share-alt mr-2"></i>
+                            Compartilhar
+                        </button>
+                        
+                        <div class="relative" x-data="{ open: false }">
+                            <button type="button" class="comm-btn secondary" @click="open = !open">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                                <div class="py-1">
+                                    <button type="button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="printNewsletter()">
+                                        <i class="fas fa-print mr-2"></i>
+                                        Imprimir
+                                    </button>
+                                    <button type="button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="downloadPDF()">
+                                        <i class="fas fa-file-pdf mr-2"></i>
+                                        Baixar PDF
+                                    </button>
+                                    {% if perms.communication.delete_newsletter %}
+                                    <button type="button" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteNewsletter()">
+                                        <i class="fas fa-trash mr-2"></i>
+                                        Excluir
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="communication-container py-8">
+            <div class="comm-grid cols-1">
+                <!-- Newsletter Header Info -->
+                <div class="comm-card mb-6">
+                    <div class="comm-card-body">
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-newspaper text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800">{{ newsletter.title }}</h2>
+                                    <p class="text-sm text-gray-500">
+                                        Criado por {{ newsletter.created_by.get_full_name }}
+                                        • {{ newsletter.created_at|date:"d/m/Y H:i" }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex flex-col items-end">
+                                <span class="comm-badge status-{{ newsletter.status }} mb-2">
+                                    {{ newsletter.get_status_display }}
+                                </span>
+                                {% if newsletter.sent_at %}
+                                <p class="text-xs text-gray-500">
+                                    Enviado em {{ newsletter.sent_at|date:"d/m/Y H:i" }}
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if newsletter.description %}
+                        <div class="border-t pt-4">
+                            <p class="text-gray-600">{{ newsletter.description }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Newsletter Content -->
+                <div class="comm-card newsletter-content">
+                    <div class="comm-card-body">
+                        <!-- Template Info -->
+                        {% if newsletter.template %}
+                        <div class="flex items-center justify-between mb-6 pb-4 border-b">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas fa-palette text-gray-400"></i>
+                                <span class="text-sm text-gray-600">Template: {{ newsletter.template.name }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Newsletter Body -->
+                        <div class="newsletter-body prose max-w-none">
+                            {{ newsletter.content|safe }}
+                        </div>
+
+                        <!-- Sections -->
+                        {% if newsletter.sections.exists %}
+                        <div class="mt-8 space-y-6">
+                            {% for section in newsletter.sections.all %}
+                            <div class="newsletter-section border-l-4 border-blue-500 pl-4">
+                                <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ section.title }}</h3>
+                                <div class="prose max-w-none">
+                                    {{ section.content|safe }}
+                                </div>
+                                {% if section.image %}
+                                <div class="mt-4">
+                                    <img src="{{ section.image.url }}" alt="{{ section.title }}" class="max-w-full h-auto rounded-lg">
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Attachments -->
+                        {% if newsletter.attachments.exists %}
+                        <div class="mt-8 border-t pt-6">
+                            <h4 class="text-sm font-medium text-gray-800 mb-4">
+                                <i class="fas fa-paperclip mr-2"></i>
+                                Anexos ({{ newsletter.attachments.count }})
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {% for attachment in newsletter.attachments.all %}
+                                <div class="flex items-center p-3 border rounded-lg hover:bg-gray-50">
+                                    <div class="flex-shrink-0 mr-3">
+                                        {% if attachment.is_image %}
+                                        <i class="fas fa-image text-green-500"></i>
+                                        {% elif attachment.is_pdf %}
+                                        <i class="fas fa-file-pdf text-red-500"></i>
+                                        {% else %}
+                                        <i class="fas fa-file text-gray-500"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900 truncate">
+                                            {{ attachment.name }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ attachment.file_size|filesizeformat }}
+                                        </p>
+                                    </div>
+                                    <a href="{{ attachment.file.url }}" 
+                                       target="_blank" 
+                                       class="flex-shrink-0 ml-2 text-blue-600 hover:text-blue-700">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Distribution Info -->
+                {% if newsletter.status == 'sent' %}
+                <div class="comm-card">
+                    <div class="comm-card-header">
+                        <h3 class="comm-card-title">Informações de Distribuição</h3>
+                    </div>
+                    <div class="comm-card-body">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600" data-stat="recipients_total">
+                                    {{ newsletter.distribution_stats.recipients_total|default:0 }}
+                                </div>
+                                <div class="text-sm text-gray-500">Total de Destinatários</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" data-stat="read_count">
+                                    {{ newsletter.distribution_stats.read_count|default:0 }}
+                                </div>
+                                <div class="text-sm text-gray-500">Lidos</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-yellow-600" data-stat="read_rate">
+                                    {{ newsletter.distribution_stats.read_rate|default:0 }}%
+                                </div>
+                                <div class="text-sm text-gray-500">Taxa de Leitura</div>
+                            </div>
+                        </div>
+
+                        <!-- Recipients List -->
+                        {% if newsletter.distribution_list %}
+                        <div class="mt-6 border-t pt-6">
+                            <h4 class="text-sm font-medium text-gray-800 mb-4">
+                                Distribuição por Grupo
+                            </h4>
+                            <div class="space-y-2">
+                                {% for group, count in newsletter.distribution_list.items %}
+                                <div class="flex justify-between items-center py-2 px-3 bg-gray-50 rounded">
+                                    <span class="text-sm font-medium">{{ group }}</span>
+                                    <span class="text-sm text-gray-600">{{ count }} pessoas</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Compartilhar -->
+    <div id="shareModal" class="comm-modal">
+        <div class="comm-modal-content">
+            <div class="comm-modal-header">
+                <h3 class="comm-modal-title">Compartilhar Newsletter</h3>
+                <button type="button" class="comm-modal-close">&times;</button>
+            </div>
+            <div class="comm-modal-body">
+                <div class="space-y-4">
+                    <div>
+                        <label class="comm-form-label">Link da Newsletter</label>
+                        <div class="flex">
+                            <input type="text" 
+                                   id="shareUrl" 
+                                   class="comm-form-control rounded-r-none" 
+                                   value="{{ request.build_absolute_uri }}" 
+                                   readonly>
+                            <button type="button" 
+                                    class="px-4 py-2 bg-blue-500 text-white border border-l-0 border-blue-500 rounded-r-lg hover:bg-blue-600"
+                                    onclick="copyToClipboard('shareUrl')">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border-t pt-4">
+                        <p class="text-sm text-gray-600 mb-3">Compartilhar via:</p>
+                        <div class="flex space-x-2">
+                            <button type="button" class="comm-btn secondary" onclick="shareViaEmail()">
+                                <i class="fas fa-envelope mr-2"></i>
+                                Email
+                            </button>
+                            <button type="button" class="comm-btn secondary" onclick="shareViaWhatsApp()">
+                                <i class="fab fa-whatsapp mr-2"></i>
+                                WhatsApp
+                            </button>
+                            <button type="button" class="comm-btn secondary" onclick="shareViaLinkedIn()">
+                                <i class="fab fa-linkedin mr-2"></i>
+                                LinkedIn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="comm-modal-footer">
+                <button type="button" class="comm-btn secondary" onclick="ModalManager.close('shareModal')">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Estatísticas -->
+    {% if newsletter.status == 'sent' %}
+    <div id="analyticsModal" class="comm-modal">
+        <div class="comm-modal-content" style="max-width: 800px;">
+            <div class="comm-modal-header">
+                <h3 class="comm-modal-title">Estatísticas da Newsletter</h3>
+                <button type="button" class="comm-modal-close">&times;</button>
+            </div>
+            <div class="comm-modal-body">
+                <div class="space-y-6">
+                    <!-- Resumo de Engagement -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-xl font-bold text-blue-600">{{ newsletter.analytics.views|default:0 }}</div>
+                            <div class="text-xs text-gray-600">Visualizações</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-xl font-bold text-green-600">{{ newsletter.analytics.unique_readers|default:0 }}</div>
+                            <div class="text-xs text-gray-600">Leitores Únicos</div>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div class="text-xl font-bold text-yellow-600">{{ newsletter.analytics.avg_read_time|default:"0m" }}</div>
+                            <div class="text-xs text-gray-600">Tempo Médio</div>
+                        </div>
+                        <div class="text-center p-4 bg-purple-50 rounded-lg">
+                            <div class="text-xl font-bold text-purple-600">{{ newsletter.analytics.shares|default:0 }}</div>
+                            <div class="text-xs text-gray-600">Compartilhamentos</div>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico de Leituras por Dia -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-800 mb-3">Leituras por Dia</h4>
+                        <canvas id="readingsChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <!-- Top Leitores -->
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-800 mb-3">Principais Leitores</h4>
+                        <div class="space-y-2">
+                            {% for reader in newsletter.analytics.top_readers %}
+                            <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                                        <span class="text-xs font-medium">{{ reader.user.first_name.0 }}{{ reader.user.last_name.0 }}</span>
+                                    </div>
+                                    <span class="text-sm font-medium">{{ reader.user.get_full_name }}</span>
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    {{ reader.read_time|default:"Não lido" }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="comm-modal-footer">
+                <button type="button" class="comm-btn secondary" onclick="ModalManager.close('analyticsModal')">
+                    Fechar
+                </button>
+                <button type="button" class="comm-btn primary" onclick="exportAnalytics()">
+                    <i class="fas fa-download mr-2"></i>
+                    Exportar Dados
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="{% static 'js/communication.js' %}"></script>
+    
+    <script>
+        // Mark as read when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            CommunicationModule.ReadTrackingManager.markAsRead('{{ newsletter.id }}', 'newsletter');
+        });
+
+        // Print newsletter
+        function printNewsletter() {
+            window.print();
+        }
+
+        // Download PDF
+        function downloadPDF() {
+            const url = `{% url 'communication:newsletter_pdf' newsletter.id %}`;
+            window.open(url, '_blank');
+        }
+
+        // Delete newsletter
+        function deleteNewsletter() {
+            if (confirm('Tem certeza que deseja excluir esta newsletter?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `{% url 'communication:newsletter_delete' newsletter.id %}`;
+                
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = '{{ csrf_token }}';
+                
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            CommunicationModule.NotificationManager.success('Link copiado para a área de transferência!');
+        }
+
+        // Share functions
+        function shareViaEmail() {
+            const subject = encodeURIComponent(`Newsletter: {{ newsletter.title }}`);
+            const body = encodeURIComponent(`Confira esta newsletter: ${document.getElementById('shareUrl').value}`);
+            window.open(`mailto:?subject=${subject}&body=${body}`);
+        }
+
+        function shareViaWhatsApp() {
+            const text = encodeURIComponent(`Newsletter: {{ newsletter.title }} - ${document.getElementById('shareUrl').value}`);
+            window.open(`https://wa.me/?text=${text}`);
+        }
+
+        function shareViaLinkedIn() {
+            const url = encodeURIComponent(document.getElementById('shareUrl').value);
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`);
+        }
+
+        // Export analytics
+        function exportAnalytics() {
+            const url = `{% url 'communication:newsletter_analytics_export' newsletter.id %}`;
+            window.open(url, '_blank');
+        }
+
+        // Initialize chart if analytics modal exists
+        {% if newsletter.status == 'sent' %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartData = {{ newsletter.analytics.chart_data|safe }};
+            
+            if (chartData && document.getElementById('readingsChart')) {
+                const ctx = document.getElementById('readingsChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            label: 'Leituras',
+                            data: chartData.data,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        {% endif %}
+    </script>
+
+    <style>
+        .newsletter-content {
+            font-family: Georgia, serif;
+        }
+        
+        .newsletter-body {
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        
+        .newsletter-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+            color: #1f2937;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+        }
+        
+        .prose p {
+            margin-bottom: 1em;
+            color: #374151;
+        }
+        
+        .prose img {
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media print {
+            .comm-modal,
+            header,
+            .comm-btn,
+            button {
+                display: none !important;
+            }
+            
+            .newsletter-content {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</body>
+</html>

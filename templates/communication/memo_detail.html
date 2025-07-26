@@ -1,0 +1,884 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}{{ memo.subject }} - Memorando{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<style>
+.memo-detail-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.memo-document {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.memo-letterhead {
+    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.memo-number-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.organization-name {
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.memo-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+}
+
+.memo-type-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.memo-body {
+    padding: 2rem;
+}
+
+.memo-header-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.memo-field {
+    display: flex;
+    margin-bottom: 1rem;
+    align-items: start;
+}
+
+.memo-field-label {
+    font-weight: 700;
+    min-width: 100px;
+    color: #374151;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+}
+
+.memo-field-value {
+    flex: 1;
+    color: #6b7280;
+    padding-left: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.25rem;
+}
+
+.priority-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-normal {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.priority-high {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.priority-urgent {
+    background-color: #fecaca;
+    color: #7f1d1d;
+    animation: pulse 2s infinite;
+}
+
+.confidentiality-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.confidentiality-public {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.confidentiality-internal {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.confidentiality-confidential {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.confidentiality-restricted {
+    background-color: #fecaca;
+    color: #7f1d1d;
+}
+
+.memo-content {
+    line-height: 1.8;
+    color: #374151;
+    margin: 2rem 0;
+    font-size: 1rem;
+}
+
+.memo-content p {
+    margin-bottom: 1rem;
+}
+
+.memo-content h1,
+.memo-content h2,
+.memo-content h3,
+.memo-content h4,
+.memo-content h5,
+.memo-content h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.memo-content ul,
+.memo-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.memo-content li {
+    margin-bottom: 0.5rem;
+}
+
+.memo-signature-area {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: right;
+}
+
+.signature-line {
+    margin-bottom: 0.5rem;
+}
+
+.signature-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.signature-position {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.signature-department {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.signature-date {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+.digital-signature {
+    background: #f0fdf4;
+    border: 1px solid #22c55e;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.digital-signature i {
+    color: #22c55e;
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.attachments-section {
+    background: #f8fafc;
+    padding: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.attachments-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.attachments-title i {
+    margin-right: 0.5rem;
+    color: #6b7280;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    transition: all 0.15s ease;
+}
+
+.attachment-item:hover {
+    border-color: #1e40af;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.attachment-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border-radius: 8px;
+    margin-right: 1rem;
+    color: #64748b;
+    font-size: 1.5rem;
+}
+
+.attachment-info {
+    flex: 1;
+}
+
+.attachment-name {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+}
+
+.attachment-meta {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.response-section {
+    background: #f8fafc;
+    padding: 2rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.response-required-alert {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.response-completed-alert {
+    background: #f0fdf4;
+    border: 1px solid #22c55e;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.response-form {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.responses-list {
+    margin-top: 2rem;
+}
+
+.response-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+}
+
+.response-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.response-author {
+    display: flex;
+    align-items: center;
+}
+
+.response-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1e40af;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-right: 0.75rem;
+}
+
+.response-content {
+    color: #374151;
+    line-height: 1.6;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background-color: #1e40af;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+}
+
+.btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@media (max-width: 768px) {
+    .memo-detail-container {
+        padding: 1rem;
+    }
+    
+    .memo-letterhead {
+        padding: 1.5rem;
+    }
+    
+    .memo-body {
+        padding: 1.5rem;
+    }
+    
+    .memo-header-info {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .memo-field {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .memo-field-label {
+        min-width: auto;
+        margin-bottom: 0.25rem;
+    }
+    
+    .memo-field-value {
+        padding-left: 0;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        padding: 1.5rem;
+    }
+    
+    .response-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="memo-detail-container">
+    <div class="memo-document">
+        <!-- Cabeçalho Oficial -->
+        <div class="memo-letterhead">
+            <div class="memo-number-badge">
+                {{ memo.memo_number }}
+            </div>
+            
+            <div class="organization-name">{{ organization_name|default:"ORGANIZAÇÃO" }}</div>
+            <div class="memo-title">Memorando Interno</div>
+            
+            <div class="memo-type-badge">
+                <i class="fas fa-{% if memo.memo_type == 'informative' %}info-circle{% elif memo.memo_type == 'directive' %}gavel{% elif memo.memo_type == 'request' %}hand-paper{% else %}clipboard-list{% endif %} mr-2"></i>
+                {{ memo.get_memo_type_display }}
+            </div>
+        </div>
+
+        <!-- Corpo do Memorando -->
+        <div class="memo-body">
+            <!-- Informações do Cabeçalho -->
+            <div class="memo-header-info">
+                <div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">MEMO Nº:</span>
+                        <span class="memo-field-value">{{ memo.memo_number }}</span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">DATA:</span>
+                        <span class="memo-field-value">{{ memo.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">DE:</span>
+                        <span class="memo-field-value">{{ memo.from_department.name }}</span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">AUTOR:</span>
+                        <span class="memo-field-value">{{ memo.author.get_full_name|default:memo.author.username }}</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">PARA:</span>
+                        <span class="memo-field-value">
+                            {% for dept in memo.to_departments.all %}
+                                {{ dept.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">ASSUNTO:</span>
+                        <span class="memo-field-value">{{ memo.subject }}</span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">PRIORIDADE:</span>
+                        <span class="memo-field-value">
+                            <span class="priority-indicator priority-{{ memo.priority }}">
+                                {% if memo.priority == 'urgent' %}
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                {% endif %}
+                                {{ memo.get_priority_display }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="memo-field">
+                        <span class="memo-field-label">CONFIDENCIALIDADE:</span>
+                        <span class="memo-field-value">
+                            <span class="confidentiality-indicator confidentiality-{{ memo.confidentiality }}">
+                                <i class="fas fa-{% if memo.confidentiality == 'public' %}globe{% elif memo.confidentiality == 'internal' %}building{% elif memo.confidentiality == 'confidential' %}lock{% else %}user-secret{% endif %} mr-1"></i>
+                                {{ memo.get_confidentiality_display }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conteúdo do Memorando -->
+            <div class="memo-content">
+                {{ memo.content|linebreaks }}
+            </div>
+
+            <!-- Área de Assinatura -->
+            <div class="memo-signature-area">
+                <div class="signature-line">Atenciosamente,</div>
+                
+                {% if memo.requires_signature and memo.digital_signature %}
+                <div class="digital-signature">
+                    <i class="fas fa-certificate"></i>
+                    <div>
+                        <div class="font-medium">Documento Assinado Digitalmente</div>
+                        <div class="text-sm text-gray-600">
+                            Assinado em {{ memo.signed_at|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="signature-name">{{ memo.author.get_full_name|default:memo.author.username }}</div>
+                <div class="signature-position">{{ memo.author.employee.position|default:"Cargo" }}</div>
+                <div class="signature-department">{{ memo.from_department.name }}</div>
+                <div class="signature-date">{{ memo.created_at|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+
+        <!-- Anexos -->
+        {% if memo.attachments.exists %}
+        <div class="attachments-section">
+            <h3 class="attachments-title">
+                <i class="fas fa-paperclip"></i>
+                Anexos
+            </h3>
+            
+            {% for attachment in memo.attachments.all %}
+            <div class="attachment-item">
+                <div class="attachment-icon">
+                    {% if attachment.file_type == 'pdf' %}
+                        <i class="fas fa-file-pdf text-red-500"></i>
+                    {% elif attachment.file_type in 'doc,docx' %}
+                        <i class="fas fa-file-word text-blue-500"></i>
+                    {% elif attachment.file_type in 'xls,xlsx' %}
+                        <i class="fas fa-file-excel text-green-500"></i>
+                    {% else %}
+                        <i class="fas fa-file text-gray-500"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="attachment-info">
+                    <div class="attachment-name">{{ attachment.original_name }}</div>
+                    <div class="attachment-meta">
+                        {{ attachment.file_size_formatted }} • Anexado em {{ attachment.uploaded_at|date:"d/m/Y H:i" }}
+                    </div>
+                </div>
+                
+                <a href="{{ attachment.file.url }}" 
+                   class="btn btn-secondary" 
+                   download
+                   target="_blank">
+                    <i class="fas fa-download mr-2"></i>
+                    Download
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Seção de Resposta -->
+        {% if memo.requires_response %}
+        <div class="response-section">
+            <h3 class="text-lg font-semibold mb-4 flex items-center">
+                <i class="fas fa-reply mr-2 text-gray-500"></i>
+                Resposta ao Memorando
+            </h3>
+
+            {% if user_response %}
+                <div class="response-completed-alert">
+                    <div class="flex items-center text-green-800">
+                        <i class="fas fa-check-circle text-2xl mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold">Resposta Enviada</h4>
+                            <p class="text-sm">
+                                Você respondeu a este memorando em {{ user_response.created_at|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="response-item">
+                    <div class="response-header">
+                        <div class="response-author">
+                            <div class="response-avatar">
+                                {{ user_response.user.first_name.0|default:user_response.user.username.0|upper }}
+                            </div>
+                            <div>
+                                <div class="font-medium">{{ user_response.user.get_full_name|default:user_response.user.username }}</div>
+                                <div class="text-sm text-gray-500">{{ user_response.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="response-content">
+                        {{ user_response.content|linebreaks }}
+                    </div>
+                </div>
+            {% else %}
+                <div class="response-required-alert">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-triangle text-2xl text-yellow-600 mr-3 mt-1"></i>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-yellow-800 mb-2">Resposta Obrigatória</h4>
+                            <p class="text-yellow-700 mb-2">
+                                Este memorando requer sua resposta.
+                                {% if memo.response_deadline %}
+                                    <strong>Prazo: {{ memo.response_deadline|date:"d/m/Y" }}</strong>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" class="response-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label class="form-label" for="response_content">Sua Resposta *</label>
+                        <textarea 
+                            class="form-control" 
+                            id="response_content" 
+                            name="content" 
+                            rows="6"
+                            placeholder="Digite sua resposta ao memorando..."
+                            required
+                        ></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Enviar Resposta
+                    </button>
+                </form>
+            {% endif %}
+
+            <!-- Lista de Todas as Respostas (para admins/autores) -->
+            {% if user.is_staff or user == memo.author %}
+            <div class="responses-list">
+                <h4 class="font-semibold mb-3">
+                    Todas as Respostas ({{ responses|length }})
+                </h4>
+                
+                {% for response in responses %}
+                <div class="response-item">
+                    <div class="response-header">
+                        <div class="response-author">
+                            <div class="response-avatar">
+                                {{ response.user.first_name.0|default:response.user.username.0|upper }}
+                            </div>
+                            <div>
+                                <div class="font-medium">{{ response.user.get_full_name|default:response.user.username }}</div>
+                                <div class="text-sm text-gray-500">{{ response.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="response-content">
+                        {{ response.content|linebreaks }}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 italic">Ainda não há respostas para este memorando.</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons">
+            <a href="{% url 'communication:memo_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Voltar à Lista
+            </a>
+            
+            {% if user.is_staff or user == memo.author %}
+            <a href="{% url 'communication:memo_edit' memo.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit mr-2"></i>
+                Editar
+            </a>
+            {% endif %}
+            
+            <button type="button" class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print mr-2"></i>
+                Imprimir
+            </button>
+            
+            <button type="button" class="btn btn-secondary" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Exportar PDF
+            </button>
+            
+            <button type="button" class="btn btn-secondary" onclick="shareMemo()">
+                <i class="fas fa-share mr-2"></i>
+                Compartilhar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Compartilhamento -->
+<div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold mb-4">Compartilhar Memorando</h3>
+        
+        <div class="space-y-3">
+            <div class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="copyToClipboard()">
+                <i class="fas fa-link text-gray-500 mr-3"></i>
+                <div>
+                    <div class="font-medium">Copiar Link</div>
+                    <div class="text-sm text-gray-500">Copiar URL para compartilhar</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50" onclick="shareByEmail()">
+                <i class="fas fa-envelope text-gray-500 mr-3"></i>
+                <div>
+                    <div class="font-medium">Compartilhar por Email</div>
+                    <div class="text-sm text-gray-500">Abrir cliente de email</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end mt-6">
+            <button type="button" class="btn btn-secondary" onclick="closeShareModal()">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function shareMemo() {
+    document.getElementById('shareModal').classList.remove('hidden');
+    document.getElementById('shareModal').classList.add('flex');
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').classList.add('hidden');
+    document.getElementById('shareModal').classList.remove('flex');
+}
+
+function copyToClipboard() {
+    navigator.clipboard.writeText(window.location.href).then(function() {
+        alert('Link copiado para a área de transferência!');
+        closeShareModal();
+    });
+}
+
+function shareByEmail() {
+    const subject = encodeURIComponent('{{ memo.subject }}');
+    const body = encodeURIComponent(`Confira este memorando: ${window.location.href}`);
+    window.open(`mailto:?subject=Memorando: ${subject}&body=${body}`);
+    closeShareModal();
+}
+
+function exportToPDF() {
+    // Implementar exportação para PDF
+    window.print();
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('shareModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeShareModal();
+    }
+});
+
+// Auto-resize textarea na resposta
+const textarea = document.getElementById('response_content');
+if (textarea) {
+    textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+}
+
+// Alerta para prazo de resposta
+{% if memo.requires_response and memo.response_deadline and not user_response %}
+const deadline = new Date('{{ memo.response_deadline|date:"Y-m-d" }}');
+const today = new Date();
+const daysLeft = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+
+if (daysLeft <= 3 && daysLeft > 0) {
+    setTimeout(() => {
+        if (confirm(`Atenção: O prazo para responder este memorando vence em ${daysLeft} dia(s). Deseja responder agora?`)) {
+            document.getElementById('response_content').focus();
+        }
+    }, 2000);
+} else if (daysLeft <= 0) {
+    setTimeout(() => {
+        alert('O prazo para responder este memorando já venceu!');
+    }, 1000);
+}
+{% endif %}
+</script>
+{% endblock %}

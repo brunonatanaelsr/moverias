@@ -1,0 +1,806 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Mural de Comunicados{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/communication.css' %}" rel="stylesheet">
+<style>
+.announcement-board-container {
+    padding: 2rem;
+}
+
+.board-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+}
+
+.board-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.board-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+}
+
+.filters-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.filter-control {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+}
+
+.clear-filters {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.clear-filters:hover {
+    text-decoration: underline;
+}
+
+.announcements-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.pinned-section {
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 0.5rem;
+    color: #f59e0b;
+}
+
+.announcement-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.announcement-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.announcement-card.priority-low {
+    border-left-color: #10b981;
+}
+
+.announcement-card.priority-medium {
+    border-left-color: #f59e0b;
+}
+
+.announcement-card.priority-high {
+    border-left-color: #ef4444;
+}
+
+.announcement-card.priority-urgent {
+    border-left-color: #dc2626;
+    animation: subtle-pulse 3s infinite;
+}
+
+.announcement-card.unread {
+    background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%);
+}
+
+.announcement-card.pinned {
+    background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+    border: 2px solid #f59e0b;
+}
+
+.card-header {
+    padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.priority-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.priority-low {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.priority-medium {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.priority-high {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.priority-urgent {
+    background-color: #fecaca;
+    color: #7f1d1d;
+}
+
+.category-badge {
+    background-color: #e0e7ff;
+    color: #3730a3;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.pinned-badge {
+    background-color: #fbbf24;
+    color: #92400e;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+.pinned-badge i {
+    margin-right: 0.25rem;
+}
+
+.read-status {
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.read-status.unread {
+    color: #dc2626;
+}
+
+.read-status.read {
+    color: #059669;
+}
+
+.read-status.acknowledged {
+    color: #0369a1;
+}
+
+.card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.card-summary {
+    color: #6b7280;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.card-footer {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+.card-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 1rem;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+}
+
+.author-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #667eea;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+    font-size: 0.875rem;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a67d8;
+}
+
+.btn-success {
+    background-color: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #059669;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+
+.btn-outline:hover {
+    background-color: #667eea;
+    color: white;
+}
+
+.acknowledgment-required {
+    background-color: #fef3c7;
+    color: #92400e;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+}
+
+.acknowledgment-required i {
+    margin-right: 0.25rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 3rem;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination span {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #374151;
+}
+
+.pagination a:hover {
+    background-color: #f3f4f6;
+}
+
+.pagination .current {
+    background-color: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.quick-actions {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 50;
+}
+
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.fab:hover {
+    background-color: #5a67d8;
+    transform: scale(1.05);
+}
+
+@keyframes subtle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.95; }
+}
+
+@media (max-width: 768px) {
+    .announcement-board-container {
+        padding: 1rem;
+    }
+    
+    .board-header {
+        padding: 1.5rem;
+    }
+    
+    .board-title {
+        font-size: 1.5rem;
+    }
+    
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .quick-actions {
+        bottom: 1rem;
+        right: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announcement-board-container">
+    <!-- Header -->
+    <div class="board-header">
+        <h1 class="board-title">
+            <i class="fas fa-bullhorn mr-3"></i>
+            Mural de Comunicados
+        </h1>
+        <p class="board-subtitle">
+            Acompanhe todos os comunicados oficiais da organização
+        </p>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <form method="get" id="filtersForm">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">Categoria</label>
+                    <select name="category" class="filter-control" onchange="this.form.submit()">
+                        <option value="">Todas as categorias</option>
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Prioridade</label>
+                    <select name="priority" class="filter-control" onchange="this.form.submit()">
+                        <option value="">Todas as prioridades</option>
+                        {% for value, label in priorities %}
+                        <option value="{{ value }}" {% if current_priority == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Status de Leitura</label>
+                    <select name="read_status" class="filter-control" onchange="this.form.submit()">
+                        <option value="">Todos</option>
+                        <option value="unread" {% if request.GET.read_status == 'unread' %}selected{% endif %}>Não lidos</option>
+                        <option value="read" {% if request.GET.read_status == 'read' %}selected{% endif %}>Lidos</option>
+                        <option value="acknowledgment_required" {% if request.GET.read_status == 'acknowledgment_required' %}selected{% endif %}>Requer confirmação</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">Buscar</label>
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="{{ search }}" 
+                            placeholder="Pesquisar comunicados..." 
+                            class="search-input"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <a href="?" class="clear-filters">
+                    <i class="fas fa-times mr-1"></i>
+                    Limpar filtros
+                </a>
+                
+                <div class="text-sm text-gray-600">
+                    {{ announcements|length }} comunicado{{ announcements|length|pluralize }}
+                    {% if search or current_category or current_priority %}
+                        (filtrado{{ announcements|length|pluralize }})
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Comunicados Fixados -->
+    {% if pinned_announcements %}
+    <div class="pinned-section">
+        <h2 class="section-title">
+            <i class="fas fa-thumbtack"></i>
+            Comunicados Fixados
+        </h2>
+        
+        <div class="announcements-grid">
+            {% for announcement in pinned_announcements %}
+            <div class="announcement-card pinned priority-{{ announcement.priority }} {% if not announcement.read_by_user %}unread{% endif %}">
+                <div class="card-header">
+                    <div class="card-meta">
+                        <div class="badges">
+                            <span class="pinned-badge">
+                                <i class="fas fa-thumbtack"></i>
+                                Fixado
+                            </span>
+                            <span class="priority-badge priority-{{ announcement.priority }}">
+                                {% if announcement.priority == 'urgent' %}
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                {% endif %}
+                                {{ announcement.get_priority_display }}
+                            </span>
+                            <span class="category-badge">{{ announcement.get_category_display }}</span>
+                        </div>
+                        
+                        <div class="read-status {% if announcement.user_acknowledged %}acknowledged{% elif announcement.read_by_user %}read{% else %}unread{% endif %}">
+                            {% if announcement.user_acknowledged %}
+                                <i class="fas fa-check-double mr-1"></i>Confirmado
+                            {% elif announcement.read_by_user %}
+                                <i class="fas fa-check mr-1"></i>Lido
+                            {% else %}
+                                <i class="fas fa-circle mr-1"></i>Não lido
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h3 class="card-title">{{ announcement.title }}</h3>
+                    
+                    {% if announcement.summary %}
+                    <p class="card-summary">{{ announcement.summary|truncatewords:25 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-info">
+                        <div class="author-info">
+                            <div class="author-avatar">
+                                {{ announcement.author.first_name.0|default:announcement.author.username.0|upper }}
+                            </div>
+                            <span>{{ announcement.author.get_full_name|default:announcement.author.username }}</span>
+                        </div>
+                        <span>{{ announcement.publish_date|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <div>
+                            {% if announcement.requires_acknowledgment and not announcement.user_acknowledged %}
+                            <span class="acknowledgment-required">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Confirmação Obrigatória
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <a href="{% url 'communication:announcement_detail' announcement.pk %}" class="btn btn-primary">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comunicados Regulares -->
+    <div class="regular-section">
+        {% if not pinned_announcements %}
+        <h2 class="section-title">
+            <i class="fas fa-list"></i>
+            Comunicados
+        </h2>
+        {% else %}
+        <h2 class="section-title">
+            <i class="fas fa-list"></i>
+            Outros Comunicados
+        </h2>
+        {% endif %}
+        
+        {% if announcements %}
+        <div class="announcements-grid">
+            {% for announcement in announcements %}
+            {% if not announcement.is_pinned %}
+            <div class="announcement-card priority-{{ announcement.priority }} {% if not announcement.read_by_user %}unread{% endif %}">
+                <div class="card-header">
+                    <div class="card-meta">
+                        <div class="badges">
+                            <span class="priority-badge priority-{{ announcement.priority }}">
+                                {% if announcement.priority == 'urgent' %}
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                {% endif %}
+                                {{ announcement.get_priority_display }}
+                            </span>
+                            <span class="category-badge">{{ announcement.get_category_display }}</span>
+                        </div>
+                        
+                        <div class="read-status {% if announcement.user_acknowledged %}acknowledged{% elif announcement.read_by_user %}read{% else %}unread{% endif %}">
+                            {% if announcement.user_acknowledged %}
+                                <i class="fas fa-check-double mr-1"></i>Confirmado
+                            {% elif announcement.read_by_user %}
+                                <i class="fas fa-check mr-1"></i>Lido
+                            {% else %}
+                                <i class="fas fa-circle mr-1"></i>Não lido
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <h3 class="card-title">{{ announcement.title }}</h3>
+                    
+                    {% if announcement.summary %}
+                    <p class="card-summary">{{ announcement.summary|truncatewords:25 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer">
+                    <div class="card-info">
+                        <div class="author-info">
+                            <div class="author-avatar">
+                                {{ announcement.author.first_name.0|default:announcement.author.username.0|upper }}
+                            </div>
+                            <span>{{ announcement.author.get_full_name|default:announcement.author.username }}</span>
+                        </div>
+                        <span>{{ announcement.publish_date|date:"d/m/Y" }}</span>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <div>
+                            {% if announcement.requires_acknowledgment and not announcement.user_acknowledged %}
+                            <span class="acknowledgment-required">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Confirmação Obrigatória
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <a href="{% url 'communication:announcement_detail' announcement.pk %}" class="btn btn-primary">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-bullhorn"></i>
+            <h3 class="text-xl font-semibold mb-2">Nenhum comunicado encontrado</h3>
+            <p class="mb-4">
+                {% if search or current_category or current_priority %}
+                    Não encontramos comunicados com os filtros selecionados.
+                {% else %}
+                    Ainda não há comunicados disponíveis.
+                {% endif %}
+            </p>
+            {% if search or current_category or current_priority %}
+            <a href="?" class="btn btn-outline">
+                <i class="fas fa-times mr-2"></i>
+                Limpar Filtros
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginação -->
+    {% if announcements.has_other_pages %}
+    <div class="pagination">
+        {% if announcements.has_previous %}
+            <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}">&laquo; Primeira</a>
+            <a href="?page={{ announcements.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}">Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ announcements.number }} de {{ announcements.paginator.num_pages }}
+        </span>
+
+        {% if announcements.has_next %}
+            <a href="?page={{ announcements.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}">Próxima</a>
+            <a href="?page={{ announcements.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_priority %}&priority={{ current_priority }}{% endif %}">Última &raquo;</a>  
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Botão de Ação Rápida -->
+{% if user.is_staff %}
+<div class="quick-actions">
+    <a href="{% url 'communication:announcement_create' %}" class="fab" title="Novo Comunicado">
+        <i class="fas fa-plus"></i>
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Busca em tempo real
+let searchTimeout;
+const searchInput = document.querySelector('input[name="search"]');
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.form.submit();
+    }, 500);
+});
+
+// Marcar múltiplos como lido
+function markMultipleAsRead() {
+    const checkboxes = document.querySelectorAll('.announcement-checkbox:checked');
+    const ids = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (ids.length === 0) {
+        alert('Selecione pelo menos um comunicado.');
+        return;
+    }
+    
+    fetch('{% url "communication:mark_multiple_as_read" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ids: ids})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// Atualizar contadores em tempo real
+setInterval(function() {
+    fetch('{% url "communication:get_unread_count" %}')
+    .then(response => response.json())
+    .then(data => {
+        document.title = data.count > 0 ? `(${data.count}) Mural de Comunicados` : 'Mural de Comunicados';
+    });
+}, 30000); // A cada 30 segundos
+</script>
+{% endblock %}
