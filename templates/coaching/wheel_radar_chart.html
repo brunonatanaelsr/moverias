@@ -1,0 +1,1278 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Análise Radar - Wheel Chart - Move Marias{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
+<style>
+.radar-analysis {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.analysis-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.analysis-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    text-align: center;
+}
+
+.header-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    background: linear-gradient(45deg, #fff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0 0 20px 0;
+}
+
+.header-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.control-btn.active {
+    background: rgba(255, 255, 255, 0.9);
+    color: #667eea;
+}
+
+.radar-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.radar-main {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.radar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.radar-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.radar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.action-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+}
+
+.action-btn.primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.chart-container {
+    position: relative;
+    height: 500px;
+    margin-bottom: 30px;
+}
+
+.chart-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-info {
+    flex: 1;
+}
+
+.legend-label {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+}
+
+.legend-value {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+.radar-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.beneficiary-selector {
+    margin-bottom: 20px;
+}
+
+.selector-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.selector-dropdown {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    font-size: 0.875rem;
+    color: #1f2937;
+    transition: all 0.2s;
+}
+
+.selector-dropdown:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.scores-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.score-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.score-item:last-child {
+    border-bottom: none;
+}
+
+.score-label {
+    font-size: 0.875rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+.score-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.score-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+.insights-card {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-left: 4px solid #10b981;
+}
+
+.insight-item {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+}
+
+.insight-item:last-child {
+    margin-bottom: 0;
+}
+
+.insight-type {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.insight-type.strength {
+    color: #059669;
+}
+
+.insight-type.improvement {
+    color: #d97706;
+}
+
+.insight-type.recommendation {
+    color: #7c3aed;
+}
+
+.insight-text {
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.comparison-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.comparison-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.comparison-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.comparison-icon.individual {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.comparison-icon.group {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.comparison-icon.goals {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.comparison-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.comparison-chart {
+    height: 200px;
+    margin-bottom: 15px;
+}
+
+.comparison-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.summary-item {
+    text-align: center;
+}
+
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+.export-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.export-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+}
+
+.export-options {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.export-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.export-btn.secondary {
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.export-btn.secondary:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+@media (max-width: 1024px) {
+    .radar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .analysis-container {
+        padding: 0 15px;
+    }
+    
+    .analysis-header {
+        padding: 20px;
+    }
+    
+    .header-title {
+        font-size: 2rem;
+    }
+    
+    .header-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .chart-container {
+        height: 400px;
+    }
+    
+    .chart-legend {
+        grid-template-columns: 1fr;
+    }
+    
+    .export-options {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Animações */
+@keyframes radarAnimation {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.chart-container canvas {
+    animation: radarAnimation 1s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.sidebar-card {
+    animation: slideInUp 0.6s ease forwards;
+}
+
+.sidebar-card:nth-child(1) { animation-delay: 0.1s; }
+.sidebar-card:nth-child(2) { animation-delay: 0.2s; }
+.sidebar-card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Tooltip personalizado */
+.custom-tooltip {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="radar-analysis">
+    <div class="analysis-container">
+        <!-- Header -->
+        <div class="analysis-header">
+            <h1 class="header-title">
+                <i class="fas fa-chart-radar"></i>
+                Análise Radar - Wheel Chart
+            </h1>
+            <p class="header-subtitle">
+                Visualização multidimensional das competências desenvolvidas pelas beneficiárias
+            </p>
+            
+            <div class="header-controls">
+                <button class="control-btn active" onclick="setViewMode('individual')">
+                    <i class="fas fa-user"></i>
+                    Individual
+                </button>
+                <button class="control-btn" onclick="setViewMode('group')">
+                    <i class="fas fa-users"></i>
+                    Grupo
+                </button>
+                <button class="control-btn" onclick="setViewMode('comparison')">
+                    <i class="fas fa-balance-scale"></i>
+                    Comparação
+                </button>
+                <button class="control-btn" onclick="setTimeRange()">
+                    <i class="fas fa-calendar-alt"></i>
+                    Período
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid Principal -->
+        <div class="radar-grid">
+            <!-- Gráfico Radar Principal -->
+            <div class="radar-main">
+                <div class="radar-header">
+                    <h2 class="radar-title">Análise de Competências</h2>
+                    <div class="radar-actions">
+                        <button class="action-btn" onclick="toggleDataLabels()">
+                            <i class="fas fa-tags"></i>
+                            Rótulos
+                        </button>
+                        <button class="action-btn" onclick="changeChartType()">
+                            <i class="fas fa-chart-area"></i>
+                            Tipo
+                        </button>
+                        <button class="action-btn primary" onclick="generateInsights()">
+                            <i class="fas fa-lightbulb"></i>
+                            Insights
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="mainRadarChart"></canvas>
+                </div>
+                
+                <div class="chart-legend" id="chartLegend">
+                    <!-- Legenda será preenchida dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="radar-sidebar">
+                <!-- Seletor de Beneficiária -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <div class="sidebar-icon">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        Beneficiária
+                    </h3>
+                    
+                    <div class="beneficiary-selector">
+                        <label class="selector-label">Selecionar Beneficiária:</label>
+                        <select class="selector-dropdown" id="beneficiarySelect" onchange="updateRadarData()">
+                            <option value="all">Todas as Beneficiárias</option>
+                            {% for beneficiary in beneficiaries %}
+                            <option value="{{ beneficiary.id }}">{{ beneficiary.user.get_full_name }}</option>
+                            {% empty %}
+                            <option value="1">Maria Silva</option>
+                            <option value="2">Ana Costa</option>
+                            <option value="3">Joana Santos</option>
+                            <option value="4">Lucia Oliveira</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pontuações -->
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">
+                        <div class="sidebar-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        Pontuações
+                    </h3>
+                    
+                    <div class="scores-list" id="scoresList">
+                        <!-- Pontuações serão preenchidas dinamicamente -->
+                    </div>
+                </div>
+
+                <!-- Insights e Recomendações -->
+                <div class="sidebar-card insights-card">
+                    <h3 class="sidebar-title">
+                        <div class="sidebar-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        Insights
+                    </h3>
+                    
+                    <div id="insightsList">
+                        <div class="insight-item">
+                            <div class="insight-type strength">Pontos Fortes</div>
+                            <div class="insight-text">Excelente desenvolvimento na área de empoderamento e autoestima.</div>
+                        </div>
+                        
+                        <div class="insight-item">
+                            <div class="insight-type improvement">Melhorias</div>
+                            <div class="insight-text">Foco em comunicação e liderança pode acelerar o crescimento.</div>
+                        </div>
+                        
+                        <div class="insight-item">
+                            <div class="insight-type recommendation">Recomendação</div>
+                            <div class="insight-text">Participar de workshops de comunicação assertiva.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparações -->
+        <div class="comparison-grid">
+            <!-- Comparação Individual vs Média -->
+            <div class="comparison-card">
+                <div class="comparison-header">
+                    <div class="comparison-icon individual">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3 class="comparison-title">Individual vs Média do Grupo</h3>
+                </div>
+                
+                <div class="comparison-chart">
+                    <canvas id="individualComparisonChart"></canvas>
+                </div>
+                
+                <div class="comparison-summary">
+                    <div class="summary-item">
+                        <span class="summary-value">78%</span>
+                        <div class="summary-label">Individual</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">72%</span>
+                        <div class="summary-label">Média do Grupo</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">+6%</span>
+                        <div class="summary-label">Diferença</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evolução Temporal -->
+            <div class="comparison-card">
+                <div class="comparison-header">
+                    <div class="comparison-icon group">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="comparison-title">Evolução Temporal</h3>
+                </div>
+                
+                <div class="comparison-chart">
+                    <canvas id="evolutionChart"></canvas>
+                </div>
+                
+                <div class="comparison-summary">
+                    <div class="summary-item">
+                        <span class="summary-value">65%</span>
+                        <div class="summary-label">Início</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">78%</span>
+                        <div class="summary-label">Atual</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">+13%</span>
+                        <div class="summary-label">Crescimento</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Metas vs Realidade -->
+            <div class="comparison-card">
+                <div class="comparison-header">
+                    <div class="comparison-icon goals">
+                        <i class="fas fa-target"></i>
+                    </div>
+                    <h3 class="comparison-title">Metas vs Realidade</h3>
+                </div>
+                
+                <div class="comparison-chart">
+                    <canvas id="goalsChart"></canvas>
+                </div>
+                
+                <div class="comparison-summary">
+                    <div class="summary-item">
+                        <span class="summary-value">85%</span>
+                        <div class="summary-label">Meta</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">78%</span>
+                        <div class="summary-label">Atual</div>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-value">92%</span>
+                        <div class="summary-label">Progresso</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Exportação -->
+        <div class="export-section">
+            <h2 class="export-title">Exportar Análise</h2>
+            <div class="export-options">
+                <button class="export-btn" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    Relatório PDF
+                </button>
+                <button class="export-btn" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    Planilha Excel
+                </button>
+                <button class="export-btn secondary" onclick="exportAsImage()">
+                    <i class="fas fa-image"></i>
+                    Imagem PNG
+                </button>
+                <button class="export-btn secondary" onclick="shareResults()">
+                    <i class="fas fa-share"></i>
+                    Compartilhar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+<script>
+// Dados para os gráficos
+const competencyData = {
+    labels: ['Autoestima', 'Liderança', 'Comunicação', 'Empoderamento', 'Networking', 'Planejamento', 'Criatividade', 'Resiliência'],
+    datasets: [{
+        label: 'Pontuação Atual',
+        data: [78, 65, 71, 82, 69, 74, 76, 80],
+        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+        borderColor: 'rgba(102, 126, 234, 1)',
+        borderWidth: 3,
+        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8
+    }]
+};
+
+const beneficiaryData = {
+    'all': {
+        data: [75, 68, 72, 79, 71, 76, 74, 78],
+        name: 'Média Geral'
+    },
+    '1': {
+        data: [85, 72, 78, 88, 75, 80, 82, 85],
+        name: 'Maria Silva'
+    },
+    '2': {
+        data: [70, 65, 68, 75, 70, 72, 71, 74],
+        name: 'Ana Costa'
+    },
+    '3': {
+        data: [92, 88, 85, 95, 82, 87, 89, 91],
+        name: 'Joana Santos'
+    },
+    '4': {
+        data: [68, 58, 65, 72, 60, 66, 64, 70],
+        name: 'Lucia Oliveira'
+    }
+};
+
+let currentChart = null;
+let currentViewMode = 'individual';
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRadarChart();
+    updateScoresList();
+    initializeComparisonCharts();
+});
+
+function initializeRadarChart() {
+    const ctx = document.getElementById('mainRadarChart').getContext('2d');
+    
+    if (currentChart) {
+        currentChart.destroy();
+    }
+    
+    currentChart = new Chart(ctx, {
+        type: 'radar',
+        data: competencyData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.r}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100,
+                    min: 0,
+                    ticks: {
+                        stepSize: 20,
+                        color: '#64748b',
+                        backdropColor: 'transparent'
+                    },
+                    grid: {
+                        color: '#e2e8f0'
+                    },
+                    pointLabels: {
+                        color: '#1f2937',
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+    
+    updateChartLegend();
+}
+
+function updateRadarData() {
+    const select = document.getElementById('beneficiarySelect');
+    const selectedId = select.value;
+    const selectedData = beneficiaryData[selectedId];
+    
+    if (selectedData && currentChart) {
+        currentChart.data.datasets[0].data = selectedData.data;
+        currentChart.data.datasets[0].label = selectedData.name;
+        currentChart.update('active');
+        
+        updateScoresList();
+        updateInsights(selectedId);
+    }
+}
+
+function updateScoresList() {
+    const select = document.getElementById('beneficiarySelect');
+    const selectedId = select.value;
+    const selectedData = beneficiaryData[selectedId];
+    const scoresList = document.getElementById('scoresList');
+    
+    if (!selectedData) return;
+    
+    const labels = competencyData.labels;
+    const scores = selectedData.data;
+    
+    scoresList.innerHTML = '';
+    
+    labels.forEach((label, index) => {
+        const score = scores[index];
+        const scoreItem = document.createElement('div');
+        scoreItem.className = 'score-item';
+        
+        scoreItem.innerHTML = `
+            <div>
+                <div class="score-label">${label}</div>
+                <div class="score-bar">
+                    <div class="score-fill" style="width: ${score}%"></div>
+                </div>
+            </div>
+            <div class="score-value">${score}%</div>
+        `;
+        
+        scoresList.appendChild(scoreItem);
+    });
+}
+
+function updateChartLegend() {
+    const legend = document.getElementById('chartLegend');
+    const labels = competencyData.labels;
+    const colors = [
+        '#667eea', '#10b981', '#f59e0b', '#ef4444',
+        '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+    ];
+    
+    legend.innerHTML = '';
+    
+    labels.forEach((label, index) => {
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        
+        legendItem.innerHTML = `
+            <div class="legend-color" style="background-color: ${colors[index % colors.length]}"></div>
+            <div class="legend-info">
+                <div class="legend-label">${label}</div>
+                <div class="legend-value">Área de desenvolvimento</div>
+            </div>
+        `;
+        
+        legend.appendChild(legendItem);
+    });
+}
+
+function initializeComparisonCharts() {
+    // Gráfico de Comparação Individual
+    const individualCtx = document.getElementById('individualComparisonChart').getContext('2d');
+    new Chart(individualCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Autoestima', 'Liderança', 'Comunicação', 'Empoderamento'],
+            datasets: [{
+                label: 'Individual',
+                data: [85, 72, 78, 88],
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderRadius: 4
+            }, {
+                label: 'Média',
+                data: [75, 68, 72, 79],
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Gráfico de Evolução
+    const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+    new Chart(evolutionCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Evolução',
+                data: [65, 68, 72, 75, 76, 78],
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Gráfico de Metas
+    const goalsCtx = document.getElementById('goalsChart').getContext('2d');
+    new Chart(goalsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Alcançado', 'Restante'],
+            datasets: [{
+                data: [78, 22],
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(229, 231, 235, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+function updateInsights(beneficiaryId) {
+    const insightsList = document.getElementById('insightsList');
+    const insights = getInsightsForBeneficiary(beneficiaryId);
+    
+    insightsList.innerHTML = '';
+    
+    insights.forEach(insight => {
+        const insightItem = document.createElement('div');
+        insightItem.className = 'insight-item';
+        
+        insightItem.innerHTML = `
+            <div class="insight-type ${insight.type}">${insight.category}</div>
+            <div class="insight-text">${insight.text}</div>
+        `;
+        
+        insightsList.appendChild(insightItem);
+    });
+}
+
+function getInsightsForBeneficiary(beneficiaryId) {
+    // Simulação de insights baseados no ID da beneficiária
+    const insightsMap = {
+        '1': [
+            { type: 'strength', category: 'Pontos Fortes', text: 'Excelente em empoderamento e autoestima, demonstra grande crescimento pessoal.' },
+            { type: 'improvement', category: 'Melhorias', text: 'Pode desenvolver mais as habilidades de liderança em situações de grupo.' },
+            { type: 'recommendation', category: 'Recomendação', text: 'Participar de workshops de liderança e mentoria de outras beneficiárias.' }
+        ],
+        '2': [
+            { type: 'strength', category: 'Pontos Fortes', text: 'Boa base em todas as áreas, com desenvolvimento equilibrado.' },
+            { type: 'improvement', category: 'Melhorias', text: 'Foco em comunicação e networking pode acelerar o progresso geral.' },
+            { type: 'recommendation', category: 'Recomendação', text: 'Participar de atividades de networking e apresentações em público.' }
+        ],
+        'default': [
+            { type: 'strength', category: 'Pontos Fortes', text: 'Grupo demonstra boa evolução geral em todas as competências.' },
+            { type: 'improvement', category: 'Melhorias', text: 'Algumas áreas precisam de mais atenção individualizada.' },
+            { type: 'recommendation', category: 'Recomendação', text: 'Implementar planos de desenvolvimento personalizados.' }
+        ]
+    };
+    
+    return insightsMap[beneficiaryId] || insightsMap['default'];
+}
+
+// Funções de controle
+function setViewMode(mode) {
+    currentViewMode = mode;
+    
+    // Atualizar botões ativos
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    event.target.classList.add('active');
+    
+    // Implementar lógica específica para cada modo
+    switch(mode) {
+        case 'individual':
+            showIndividualView();
+            break;
+        case 'group':
+            showGroupView();
+            break;
+        case 'comparison':
+            showComparisonView();
+            break;
+    }
+}
+
+function showIndividualView() {
+    // Mostrar seletor de beneficiária
+    document.querySelector('.beneficiary-selector').style.display = 'block';
+    updateRadarData();
+}
+
+function showGroupView() {
+    // Mostrar dados agregados do grupo
+    if (currentChart) {
+        currentChart.data.datasets[0].data = beneficiaryData['all'].data;
+        currentChart.data.datasets[0].label = 'Média do Grupo';
+        currentChart.update();
+    }
+}
+
+function showComparisonView() {
+    // Implementar vista de comparação
+    console.log('Mostrando vista de comparação');
+}
+
+function setTimeRange() {
+    // Implementar seletor de período
+    const periods = ['Último mês', 'Últimos 3 meses', 'Últimos 6 meses', 'Último ano'];
+    const selectedPeriod = prompt('Selecione o período:\n' + periods.join('\n'));
+    
+    if (selectedPeriod) {
+        console.log('Período selecionado:', selectedPeriod);
+        // Atualizar dados baseado no período
+    }
+}
+
+function toggleDataLabels() {
+    if (currentChart) {
+        const showLabels = !currentChart.options.plugins.datalabels?.display;
+        currentChart.options.plugins.datalabels = { display: showLabels };
+        currentChart.update();
+    }
+}
+
+function changeChartType() {
+    const types = ['radar', 'polarArea', 'bar'];
+    const currentType = currentChart.config.type;
+    const currentIndex = types.indexOf(currentType);
+    const nextType = types[(currentIndex + 1) % types.length];
+    
+    currentChart.config.type = nextType;
+    currentChart.update();
+}
+
+function generateInsights() {
+    const select = document.getElementById('beneficiarySelect');
+    const selectedId = select.value;
+    updateInsights(selectedId);
+    
+    // Animação para destacar insights
+    const insightsList = document.getElementById('insightsList');
+    insightsList.style.animation = 'slideInUp 0.5s ease';
+}
+
+// Funções de exportação
+function exportToPDF() {
+    alert('Gerando relatório PDF...');
+    // Implementar exportação para PDF
+}
+
+function exportToExcel() {
+    alert('Exportando para Excel...');
+    // Implementar exportação para Excel
+}
+
+function exportAsImage() {
+    const canvas = document.getElementById('mainRadarChart');
+    const url = canvas.toDataURL('image/png');
+    
+    const link = document.createElement('a');
+    link.download = 'radar-chart.png';
+    link.href = url;
+    link.click();
+}
+
+function shareResults() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Análise Radar - Move Marias',
+            text: 'Confira os resultados da análise de competências',
+            url: window.location.href
+        });
+    } else {
+        // Fallback para cópia do link
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado para a área de transferência!');
+    }
+}
+
+// Atualização automática dos dados
+setInterval(() => {
+    // Simular atualizações em tempo real
+    if (Math.random() > 0.8) {
+        updateRadarData();
+    }
+}, 30000);
+</script>
+{% endblock %}

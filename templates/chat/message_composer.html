@@ -1,0 +1,1362 @@
+{% load static %}
+
+<!-- Compositor de Mensagens -->
+<div class="message-composer" id="messageComposer">
+    <!-- Resposta/Thread (se houver) -->
+    <div class="reply-context" id="replyContext" style="display: none;">
+        <div class="reply-header">
+            <div class="reply-info">
+                <i class="fas fa-reply"></i>
+                <span>Respondendo para <strong id="replyAuthor"></strong></span>
+            </div>
+            <button class="reply-cancel" onclick="cancelReply()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="reply-preview" id="replyPreview">
+            <!-- Conteúdo da mensagem sendo respondida -->
+        </div>
+    </div>
+
+    <!-- Área de upload de arquivos -->
+    <div class="file-upload-area" id="fileUploadArea" style="display: none;">
+        <div class="upload-header">
+            <span>Anexos</span>
+            <button class="upload-clear" onclick="clearAllFiles()">
+                <i class="fas fa-times"></i>
+                Limpar tudo
+            </button>
+        </div>
+        <div class="upload-files" id="uploadFiles">
+            <!-- Arquivos selecionados aparecerão aqui -->
+        </div>
+    </div>
+
+    <!-- Área principal do compositor -->
+    <div class="composer-main">
+        <div class="composer-container">
+            <!-- Avatar do usuário -->
+            <div class="composer-avatar">
+                {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+            </div>
+
+            <!-- Área de input -->
+            <div class="composer-input-area">
+                <div class="input-container">
+                    <textarea 
+                        class="composer-input" 
+                        id="messageInput" 
+                        placeholder="Digite uma mensagem..."
+                        rows="1"
+                        maxlength="2000"></textarea>
+                    
+                    <!-- Contador de caracteres -->
+                    <div class="char-counter" id="charCounter">0/2000</div>
+                </div>
+
+                <!-- Toolbar de formatação -->
+                <div class="composer-toolbar" id="composerToolbar">
+                    <div class="toolbar-left">
+                        <button class="toolbar-btn" onclick="formatText('bold')" title="Negrito (Ctrl+B)">
+                            <i class="fas fa-bold"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="formatText('italic')" title="Itálico (Ctrl+I)">
+                            <i class="fas fa-italic"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="formatText('code')" title="Código (`code`)">
+                            <i class="fas fa-code"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="formatText('link')" title="Link">
+                            <i class="fas fa-link"></i>
+                        </button>
+                        
+                        <div class="toolbar-divider"></div>
+                        
+                        <button class="toolbar-btn" onclick="insertEmoji()" title="Emoji">
+                            <i class="fas fa-smile"></i>
+                        </button>
+                        <button class="toolbar-btn" onclick="mentionUser()" title="Mencionar usuário (@)">
+                            <i class="fas fa-at"></i>
+                        </button>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <span class="toolbar-shortcut">Enter para enviar, Shift+Enter para nova linha</span>
+                    </div>
+                </div>
+
+                <!-- Sugestões de menção/emoji -->
+                <div class="suggestions-dropdown" id="suggestionsDropdown" style="display: none;">
+                    <div class="suggestions-list" id="suggestionsList">
+                        <!-- Sugestões aparecerão aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botões de ação -->
+            <div class="composer-actions">
+                <!-- Upload de arquivo -->
+                <button class="action-btn attachment-btn" onclick="triggerFileUpload()" title="Anexar arquivo">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+
+                <!-- Enviar mensagem -->
+                <button class="action-btn send-btn" id="sendBtn" onclick="sendMessage()" title="Enviar mensagem" disabled>
+                    <i id="sendIcon" class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input de arquivo oculto -->
+        <input type="file" 
+               id="fileInput" 
+               multiple 
+               style="display: none;" 
+               accept="image/*,document/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+    </div>
+
+    <!-- Preview de emoji picker -->
+    <div class="emoji-picker" id="emojiPicker" style="display: none;">
+        <div class="emoji-header">
+            <div class="emoji-categories">
+                <button class="emoji-category active" data-category="recent">
+                    <i class="fas fa-clock"></i>
+                </button>
+                <button class="emoji-category" data-category="smileys">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <button class="emoji-category" data-category="people">
+                    <i class="fas fa-user"></i>
+                </button>
+                <button class="emoji-category" data-category="nature">
+                    <i class="fas fa-leaf"></i>
+                </button>
+                <button class="emoji-category" data-category="food">
+                    <i class="fas fa-apple-alt"></i>
+                </button>
+                <button class="emoji-category" data-category="activity">
+                    <i class="fas fa-football-ball"></i>
+                </button>
+                <button class="emoji-category" data-category="travel">
+                    <i class="fas fa-plane"></i>
+                </button>
+                <button class="emoji-category" data-category="objects">
+                    <i class="fas fa-lightbulb"></i>
+                </button>
+                <button class="emoji-category" data-category="symbols">
+                    <i class="fas fa-heart"></i>
+                </button>
+                <button class="emoji-category" data-category="flags">
+                    <i class="fas fa-flag"></i>
+                </button>
+            </div>
+        </div>
+        <div class="emoji-content">
+            <div class="emoji-grid" id="emojiGrid">
+                <!-- Emojis serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos do compositor de mensagens */
+.message-composer {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 20px;
+    position: relative;
+}
+
+/* Contexto de resposta */
+.reply-context {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: -1px;
+}
+
+.reply-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.reply-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.reply-info i {
+    color: #667eea;
+}
+
+.reply-cancel {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.reply-cancel:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.reply-preview {
+    padding: 12px 16px;
+    border-left: 3px solid #667eea;
+    margin-left: 16px;
+    font-size: 0.875rem;
+    color: #6b7280;
+    background: white;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Área de upload de arquivos */
+.file-upload-area {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px 8px 0 0;
+    margin-bottom: -1px;
+}
+
+.upload-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.upload-clear {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.upload-clear:hover {
+    background: #fef2f2;
+}
+
+.upload-files {
+    padding: 12px 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.file-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    position: relative;
+    max-width: 200px;
+}
+
+.file-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #667eea;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-size {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.file-remove {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 2px;
+    transition: all 0.2s;
+}
+
+.file-remove:hover {
+    background: #f3f4f6;
+    color: #ef4444;
+}
+
+/* Área principal do compositor */
+.composer-main {
+    position: relative;
+}
+
+.composer-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    position: relative;
+}
+
+.composer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Área de input */
+.composer-input-area {
+    flex: 1;
+    position: relative;
+}
+
+.input-container {
+    position: relative;
+}
+
+.composer-input {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: none;
+    min-height: 44px;
+    max-height: 200px;
+    font-family: inherit;
+    transition: all 0.2s;
+    outline: none;
+}
+
+.composer-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.composer-input::placeholder {
+    color: #9ca3af;
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    background: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+    pointer-events: none;
+}
+
+.char-counter.warning {
+    color: #f59e0b;
+}
+
+.char-counter.danger {
+    color: #ef4444;
+}
+
+/* Toolbar de formatação */
+.composer-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding: 0 4px;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.toolbar-btn {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.toolbar-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.toolbar-btn.active {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 16px;
+    background: #e5e7eb;
+    margin: 0 8px;
+}
+
+.toolbar-right {
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+/* Dropdown de sugestões */
+.suggestions-dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-bottom: 8px;
+}
+
+.suggestions-list {
+    padding: 8px 0;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background: #f3f4f6;
+}
+
+.suggestion-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.suggestion-info {
+    flex: 1;
+}
+
+.suggestion-name {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.suggestion-username {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+/* Ações do compositor */
+.composer-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.attachment-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.attachment-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.send-btn {
+    background: #667eea;
+    color: white;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: #5a67d8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.send-btn:disabled {
+    background: #d1d5db;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.send-btn.sending {
+    background: #f59e0b;
+}
+
+.send-btn.sending i {
+    animation: spin 1s linear infinite;
+}
+
+/* Picker de emoji */
+.emoji-picker {
+    position: absolute;
+    bottom: 100%;
+    right: 60px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    width: 320px;
+    height: 400px;
+    z-index: 1000;
+    margin-bottom: 8px;
+}
+
+.emoji-header {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.emoji-categories {
+    display: flex;
+    gap: 4px;
+    justify-content: space-between;
+}
+
+.emoji-category {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.emoji-category:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.emoji-category.active {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.emoji-content {
+    height: calc(100% - 60px);
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+}
+
+.emoji-item {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1.25rem;
+    transition: all 0.2s;
+}
+
+.emoji-item:hover {
+    background: #f3f4f6;
+    transform: scale(1.2);
+}
+
+/* Estados de loading/erro */
+.composer-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.composer-error {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .message-composer {
+        padding: 12px 16px;
+    }
+    
+    .composer-container {
+        gap: 8px;
+    }
+    
+    .composer-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+    
+    .toolbar-right {
+        display: none;
+    }
+    
+    .emoji-picker {
+        width: calc(100vw - 32px);
+        right: 16px;
+        left: 16px;
+    }
+    
+    .action-btn {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* Animações */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.reply-context,
+.file-upload-area,
+.suggestions-dropdown,
+.emoji-picker {
+    animation: slideUp 0.2s ease-out;
+}
+</style>
+
+<script>
+// Variáveis globais do compositor
+let messageInput = document.getElementById('messageInput');
+let sendBtn = document.getElementById('sendBtn');
+let charCounter = document.getElementById('charCounter');
+let fileInput = document.getElementById('fileInput');
+let selectedFiles = [];
+let replyingTo = null;
+let isTyping = false;
+let typingTimeout = null;
+let selectedSuggestion = -1;
+
+// Inicialização do compositor
+document.addEventListener('DOMContentLoaded', function() {
+    initializeComposer();
+    setupComposerEventListeners();
+    loadRecentEmojis();
+});
+
+function initializeComposer() {
+    updateSendButton();
+    updateCharCounter();
+    
+    // Auto-resize do textarea
+    autoResizeTextarea();
+}
+
+function setupComposerEventListeners() {
+    // Input de mensagem
+    messageInput.addEventListener('input', function(e) {
+        autoResizeTextarea();
+        updateCharCounter();
+        updateSendButton();
+        handleTypingIndicator();
+        handleMentions(e);
+        handleEmojis(e);
+    });
+
+    // Teclas especiais
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        } else if (e.key === 'Escape') {
+            cancelReply();
+            hideEmojiPicker();
+            hideSuggestions();
+        } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            handleSuggestionNavigation(e);
+        } else if (e.key === 'Tab') {
+            handleSuggestionSelect(e);
+        }
+        
+        // Atalhos de formatação
+        if (e.ctrlKey || e.metaKey) {
+            switch(e.key) {
+                case 'b':
+                    e.preventDefault();
+                    formatText('bold');
+                    break;
+                case 'i':
+                    e.preventDefault();
+                    formatText('italic');
+                    break;
+            }
+        }
+    });
+
+    // Upload de arquivos
+    fileInput.addEventListener('change', handleFileSelect);
+    
+    // Drag and drop
+    setupDragAndDrop();
+    
+    // Fechar dropdowns ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.emoji-picker')) {
+            hideEmojiPicker();
+        }
+        if (!e.target.closest('.suggestions-dropdown')) {
+            hideSuggestions();
+        }
+    });
+}
+
+// Funções de envio de mensagem
+async function sendMessage() {
+    const content = messageInput.value.trim();
+    
+    if (!content && selectedFiles.length === 0) return;
+    if (content.length > 2000) return;
+
+    // Preparar dados da mensagem
+    const messageData = {
+        content: content,
+        channel_id: currentChannelId,
+        reply_to: replyingTo?.id || null,
+        files: selectedFiles
+    };
+
+    // UI feedback
+    setSendingState(true);
+
+    try {
+        // Enviar via WebSocket se disponível, senão via HTTP
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                type: 'chat_message',
+                message: content,
+                reply_to: replyingTo?.id || null
+            }));
+        } else {
+            await sendMessageHTTP(messageData);
+        }
+
+        // Limpar compositor
+        clearComposer();
+        
+    } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+        showError('Erro ao enviar mensagem. Tente novamente.');
+    } finally {
+        setSendingState(false);
+    }
+}
+
+async function sendMessageHTTP(messageData) {
+    const formData = new FormData();
+    formData.append('content', messageData.content);
+    formData.append('channel_id', messageData.channel_id);
+    
+    if (messageData.reply_to) {
+        formData.append('reply_to', messageData.reply_to);
+    }
+    
+    selectedFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file);
+    });
+
+    const response = await fetch('/chat/api/send-message/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        throw new Error('Erro na requisição');
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error(data.error || 'Erro desconhecido');
+    }
+}
+
+function clearComposer() {
+    messageInput.value = '';
+    selectedFiles = [];
+    replyingTo = null;
+    
+    autoResizeTextarea();
+    updateCharCounter();
+    updateSendButton();
+    hideFileUploadArea();
+    hideReplyContext();
+    
+    messageInput.focus();
+}
+
+// Funções de UI
+function autoResizeTextarea() {
+    messageInput.style.height = 'auto';
+    messageInput.style.height = Math.min(messageInput.scrollHeight, 200) + 'px';
+}
+
+function updateCharCounter() {
+    const length = messageInput.value.length;
+    charCounter.textContent = `${length}/2000`;
+    
+    charCounter.classList.remove('warning', 'danger');
+    if (length > 1800) {
+        charCounter.classList.add('warning');
+    }
+    if (length > 1950) {
+        charCounter.classList.add('danger');
+    }
+}
+
+function updateSendButton() {
+    const hasContent = messageInput.value.trim().length > 0;
+    const hasFiles = selectedFiles.length > 0;
+    const isValid = messageInput.value.length <= 2000;
+    
+    sendBtn.disabled = (!hasContent && !hasFiles) || !isValid;
+}
+
+function setSendingState(sending) {
+    const sendIcon = document.getElementById('sendIcon');
+    
+    if (sending) {
+        sendBtn.classList.add('sending');
+        sendBtn.disabled = true;
+        sendIcon.className = 'fas fa-spinner';
+    } else {
+        sendBtn.classList.remove('sending');
+        sendIcon.className = 'fas fa-paper-plane';
+        updateSendButton();
+    }
+}
+
+// Funções de arquivo
+function triggerFileUpload() {
+    fileInput.click();
+}
+
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    files.forEach(file => addFile(file));
+    e.target.value = ''; // Limpar input para permitir reselecionar o mesmo arquivo
+}
+
+function addFile(file) {
+    // Validar arquivo
+    if (file.size > 50 * 1024 * 1024) { // 50MB
+        showError('Arquivo muito grande. Máximo: 50MB');
+        return;
+    }
+    
+    if (selectedFiles.length >= 10) {
+        showError('Máximo de 10 arquivos por mensagem');
+        return;
+    }
+    
+    selectedFiles.push(file);
+    displayFiles();
+    updateSendButton();
+}
+
+function displayFiles() {
+    const uploadArea = document.getElementById('fileUploadArea');
+    const uploadFiles = document.getElementById('uploadFiles');
+    
+    if (selectedFiles.length === 0) {
+        hideFileUploadArea();
+        return;
+    }
+    
+    uploadArea.style.display = 'block';
+    uploadFiles.innerHTML = '';
+    
+    selectedFiles.forEach((file, index) => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'file-preview';
+        fileDiv.innerHTML = `
+            <div class="file-icon">
+                <i class="fas ${getFileIcon(file.type)}"></i>
+            </div>
+            <div class="file-info">
+                <div class="file-name">${file.name}</div>
+                <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+            <button class="file-remove" onclick="removeFile(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        uploadFiles.appendChild(fileDiv);
+    });
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    displayFiles();
+    updateSendButton();
+}
+
+function clearAllFiles() {
+    selectedFiles = [];
+    displayFiles();
+    updateSendButton();
+}
+
+function hideFileUploadArea() {
+    document.getElementById('fileUploadArea').style.display = 'none';
+}
+
+// Drag and drop
+function setupDragAndDrop() {
+    const composer = document.getElementById('messageComposer');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        composer.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        composer.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        composer.addEventListener(eventName, unhighlight, false);
+    });
+    
+    composer.addEventListener('drop', handleDrop, false);
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function highlight(e) {
+    document.getElementById('messageComposer').classList.add('drag-over');
+}
+
+function unhighlight(e) {
+    document.getElementById('messageComposer').classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    const files = Array.from(e.dataTransfer.files);
+    files.forEach(file => addFile(file));
+}
+
+// Funções de formatação
+function formatText(type) {
+    const start = messageInput.selectionStart;
+    const end = messageInput.selectionEnd;
+    const selectedText = messageInput.value.substring(start, end);
+    let formattedText = '';
+    
+    switch(type) {
+        case 'bold':
+            formattedText = `**${selectedText}**`;
+            break;
+        case 'italic':
+            formattedText = `*${selectedText}*`;
+            break;
+        case 'code':
+            formattedText = `\`${selectedText}\``;
+            break;
+        case 'link':
+            const url = prompt('Digite a URL:');
+            if (url) {
+                formattedText = `[${selectedText || 'link'}](${url})`;
+            }
+            break;
+    }
+    
+    if (formattedText) {
+        messageInput.setRangeText(formattedText, start, end, 'end');
+        messageInput.focus();
+        updateCharCounter();
+        updateSendButton();
+    }
+}
+
+// Funções de emoji
+function insertEmoji() {
+    toggleEmojiPicker();
+}
+
+function toggleEmojiPicker() {
+    const picker = document.getElementById('emojiPicker');
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+    
+    if (picker.style.display === 'block') {
+        loadEmojis('smileys');
+    }
+}
+
+function hideEmojiPicker() {
+    document.getElementById('emojiPicker').style.display = 'none';
+}
+
+function loadEmojis(category) {
+    const grid = document.getElementById('emojiGrid');
+    const emojis = getEmojisByCategory(category);
+    
+    grid.innerHTML = '';
+    emojis.forEach(emoji => {
+        const item = document.createElement('div');
+        item.className = 'emoji-item';
+        item.textContent = emoji;
+        item.onclick = () => selectEmoji(emoji);
+        grid.appendChild(item);
+    });
+    
+    // Atualizar categoria ativa
+    document.querySelectorAll('.emoji-category').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-category="${category}"]`).classList.add('active');
+}
+
+function selectEmoji(emoji) {
+    const start = messageInput.selectionStart;
+    const end = messageInput.selectionEnd;
+    
+    messageInput.setRangeText(emoji, start, end, 'end');
+    messageInput.focus();
+    
+    updateCharCounter();
+    updateSendButton();
+    hideEmojiPicker();
+    
+    // Salvar emoji recente
+    saveRecentEmoji(emoji);
+}
+
+// Funções de menção
+function mentionUser() {
+    const start = messageInput.selectionStart;
+    messageInput.setRangeText('@', start, start, 'end');
+    messageInput.focus();
+    showUserSuggestions('');
+}
+
+function handleMentions(e) {
+    const text = messageInput.value;
+    const cursorPos = messageInput.selectionStart;
+    
+    // Procurar por @ antes do cursor
+    const beforeCursor = text.substring(0, cursorPos);
+    const match = beforeCursor.match(/@(\w*)$/);
+    
+    if (match) {
+        const query = match[1];
+        showUserSuggestions(query);
+    } else {
+        hideSuggestions();
+    }
+}
+
+function showUserSuggestions(query) {
+    // Buscar usuários que correspondem à query
+    const users = getUserSuggestions(query);
+    displaySuggestions(users, 'user');
+}
+
+function displaySuggestions(items, type) {
+    const dropdown = document.getElementById('suggestionsDropdown');
+    const list = document.getElementById('suggestionsList');
+    
+    if (items.length === 0) {
+        hideSuggestions();
+        return;
+    }
+    
+    list.innerHTML = '';
+    items.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.onclick = () => selectSuggestion(item, type);
+        
+        if (type === 'user') {
+            div.innerHTML = `
+                <div class="suggestion-avatar">
+                    ${item.first_name ? item.first_name.charAt(0).toUpperCase() : item.username.charAt(0).toUpperCase()}
+                </div>
+                <div class="suggestion-info">
+                    <div class="suggestion-name">${item.full_name || item.username}</div>
+                    <div class="suggestion-username">@${item.username}</div>
+                </div>
+            `;
+        }
+        
+        list.appendChild(div);
+    });
+    
+    dropdown.style.display = 'block';
+    selectedSuggestion = -1;
+}
+
+function selectSuggestion(item, type) {
+    const text = messageInput.value;
+    const cursorPos = messageInput.selectionStart;
+    
+    if (type === 'user') {
+        // Substituir @query por @username
+        const beforeCursor = text.substring(0, cursorPos);
+        const match = beforeCursor.match(/@(\w*)$/);
+        
+        if (match) {
+            const start = cursorPos - match[0].length;
+            const replacement = `@${item.username} `;
+            messageInput.setRangeText(replacement, start, cursorPos, 'end');
+        }
+    }
+    
+    hideSuggestions();
+    messageInput.focus();
+    updateCharCounter();
+    updateSendButton();
+}
+
+function hideSuggestions() {
+    document.getElementById('suggestionsDropdown').style.display = 'none';
+    selectedSuggestion = -1;
+}
+
+// Funções de resposta
+function replyToMessage(messageId, messageData) {
+    replyingTo = { id: messageId, ...messageData };
+    showReplyContext();
+    messageInput.focus();
+}
+
+function showReplyContext() {
+    const context = document.getElementById('replyContext');
+    const author = document.getElementById('replyAuthor');
+    const preview = document.getElementById('replyPreview');
+    
+    author.textContent = replyingTo.author.full_name || replyingTo.author.username;
+    preview.textContent = replyingTo.content.substring(0, 100) + (replyingTo.content.length > 100 ? '...' : '');
+    
+    context.style.display = 'block';
+}
+
+function cancelReply() {
+    replyingTo = null;
+    hideReplyContext();
+}
+
+function hideReplyContext() {
+    document.getElementById('replyContext').style.display = 'none';
+}
+
+// Indicador de digitação
+function handleTypingIndicator() {
+    if (!isTyping && chatSocket) {
+        isTyping = true;
+        chatSocket.send(JSON.stringify({
+            type: 'typing_start'
+        }));
+    }
+    
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        if (isTyping && chatSocket) {
+            isTyping = false;
+            chatSocket.send(JSON.stringify({
+                type: 'typing_stop'
+            }));
+        }
+    }, 1000);
+}
+
+// Funções utilitárias
+function getFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return 'fa-image';
+    if (mimeType.startsWith('video/')) return 'fa-video';
+    if (mimeType.startsWith('audio/')) return 'fa-music';
+    if (mimeType.includes('pdf')) return 'fa-file-pdf';
+    if (mimeType.includes('word')) return 'fa-file-word';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fa-file-excel';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'fa-file-powerpoint';
+    if (mimeType.includes('zip') || mimeType.includes('rar')) return 'fa-file-archive';
+    return 'fa-file';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getEmojisByCategory(category) {
+    // Emoji básicos por categoria
+    const emojis = {
+        recent: JSON.parse(localStorage.getItem('recentEmojis') || '["😊", "👍", "❤️", "😂", "😢"]'),
+        smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳'],
+        people: ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌'],
+        nature: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥'],
+        food: ['🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒'],
+        activity: ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋'],
+        travel: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚛', '🚜', '🏍️', '🛵', '🚲', '🛴', '🛹', '🛼', '🚁', '🛸', '✈️', '🛩️', '🚀', '🛰️'],
+        objects: ['💎', '🔔', '🔕', '🎵', '🎶', '💰', '💴', '💵', '💶', '💷', '💸', '💳', '💹', '💱', '💲', '📱', '📲', '☎️', '📞', '📟', '📠', '🔋', '🔌', '💻', '🖥️', '🖨️'],
+        symbols: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯'],
+        flags: ['🏁', '🚩', '🎌', '🏴', '🏳️', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇷']
+    };
+    
+    return emojis[category] || [];
+}
+
+function saveRecentEmoji(emoji) {
+    let recent = JSON.parse(localStorage.getItem('recentEmojis') || '[]');
+    recent = recent.filter(e => e !== emoji);
+    recent.unshift(emoji);
+    recent = recent.slice(0, 20);
+    localStorage.setItem('recentEmojis', JSON.stringify(recent));
+}
+
+function loadRecentEmojis() {
+    // Carregar emojis recentes na inicialização
+}
+
+function getUserSuggestions(query) {
+    // Retornar lista de usuários que correspondem à query
+    // Esta função deve ser implementada para buscar usuários reais
+    return [];
+}
+
+function showError(message) {
+    // Implementar sistema de notificação de erros
+    console.error(message);
+}
+
+// Event listeners para categorias de emoji
+document.querySelectorAll('.emoji-category').forEach(btn => {
+    btn.addEventListener('click', function() {
+        loadEmojis(this.dataset.category);
+    });
+});
+
+// Navegação por teclado nas sugestões
+function handleSuggestionNavigation(e) {
+    const suggestions = document.querySelectorAll('.suggestion-item');
+    if (suggestions.length === 0) return;
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedSuggestion = Math.min(selectedSuggestion + 1, suggestions.length - 1);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedSuggestion = Math.max(selectedSuggestion - 1, -1);
+    }
+    
+    suggestions.forEach((item, index) => {
+        item.classList.toggle('selected', index === selectedSuggestion);
+    });
+}
+
+function handleSuggestionSelect(e) {
+    const selectedItem = document.querySelector('.suggestion-item.selected');
+    if (selectedItem) {
+        e.preventDefault();
+        selectedItem.click();
+    }
+}
+</script>

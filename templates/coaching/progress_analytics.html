@@ -1,0 +1,1511 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Análise de Progresso - Move Marias{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
+<style>
+.progress-analytics {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.analytics-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.analytics-header {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.header-info h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    background: linear-gradient(45deg, #fff, #e0e7ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.header-info p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.header-filters {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.filter-select option {
+    background: #1f2937;
+    color: white;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.metric-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.metric-trend {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.trend-up {
+    color: #10b981;
+}
+
+.trend-down {
+    color: #ef4444;
+}
+
+.trend-neutral {
+    color: #6b7280;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 5px;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 15px;
+}
+
+.metric-progress {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    transition: width 1.5s ease;
+}
+
+.metric-details {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.charts-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.main-chart {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.chart-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.chart-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+}
+
+.chart-btn:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.chart-btn.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+}
+
+.chart-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.side-charts {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.side-chart {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.side-chart-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.side-chart-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.side-chart-container {
+    height: 200px;
+    margin-bottom: 15px;
+}
+
+.analysis-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.analysis-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}
+
+.analysis-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.analysis-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.analysis-icon.performance {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.analysis-icon.patterns {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.analysis-icon.predictions {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.analysis-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.insight-item {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 20px;
+    border-left: 4px solid #667eea;
+}
+
+.insight-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.insight-description {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.insight-value {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 1.1rem;
+}
+
+.recommendations-section {
+    background: linear-gradient(135deg, #1f2937, #374151);
+    border-radius: 20px;
+    padding: 40px;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.recommendations-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.recommendations-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+}
+
+.recommendations-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin: 0;
+}
+
+.recommendations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.recommendation-card {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.recommendation-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+}
+
+.recommendation-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+}
+
+.recommendation-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+}
+
+.recommendation-description {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.recommendation-priority {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.priority-high {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.priority-medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.priority-low {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.export-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.export-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 25px 0;
+}
+
+.export-options {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.export-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.export-btn.secondary {
+    background: #f8fafc;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+}
+
+.export-btn.secondary:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+@media (max-width: 1024px) {
+    .charts-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .analysis-section {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .analytics-container {
+        padding: 0 15px;
+    }
+    
+    .analytics-header {
+        padding: 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-info h1 {
+        font-size: 2rem;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-container {
+        height: 300px;
+    }
+    
+    .side-chart-container {
+        height: 150px;
+    }
+    
+    .recommendations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .export-options {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Animações */
+@keyframes progressAnimation {
+    from {
+        width: 0%;
+    }
+    to {
+        width: var(--target-width);
+    }
+}
+
+.progress-fill {
+    animation: progressAnimation 2s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.metric-card {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+.metric-card:nth-child(1) { animation-delay: 0.1s; }
+.metric-card:nth-child(2) { animation-delay: 0.2s; }
+.metric-card:nth-child(3) { animation-delay: 0.3s; }
+.metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Scrollbar personalizada */
+.analytics-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.analytics-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.analytics-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.analytics-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="progress-analytics">
+    <div class="analytics-container">
+        <!-- Header -->
+        <div class="analytics-header">
+            <div class="header-content">
+                <div class="header-info">
+                    <h1>
+                        <i class="fas fa-chart-line"></i>
+                        Análise de Progresso
+                    </h1>
+                    <p>Dashboard avançado com métricas detalhadas e insights sobre o desenvolvimento das beneficiárias</p>
+                </div>
+                
+                <div class="header-filters">
+                    <select class="filter-select" id="timeRangeFilter" onchange="updateTimeRange()">
+                        <option value="7d">Últimos 7 dias</option>
+                        <option value="30d" selected>Últimos 30 dias</option>
+                        <option value="3m">Últimos 3 meses</option>
+                        <option value="6m">Últimos 6 meses</option>
+                        <option value="1y">Último ano</option>
+                    </select>
+                    
+                    <select class="filter-select" id="competencyFilter" onchange="updateCompetencyFilter()">
+                        <option value="all">Todas as Competências</option>
+                        <option value="autoestima">Autoestima</option>
+                        <option value="lideranca">Liderança</option>
+                        <option value="comunicacao">Comunicação</option>
+                        <option value="empoderamento">Empoderamento</option>
+                    </select>
+                    
+                    <select class="filter-select" id="beneficiaryFilter" onchange="updateBeneficiaryFilter()">
+                        <option value="all">Todas as Beneficiárias</option>
+                        {% for beneficiary in beneficiaries %}
+                        <option value="{{ beneficiary.id }}">{{ beneficiary.user.get_full_name }}</option>
+                        {% empty %}
+                        <option value="1">Maria Silva</option>
+                        <option value="2">Ana Costa</option>
+                        <option value="3">Joana Santos</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas Principais -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="metric-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        +12%
+                    </div>
+                </div>
+                <div class="metric-value">{{ total_beneficiaries|default:24 }}</div>
+                <div class="metric-label">Beneficiárias Ativas</div>
+                <div class="metric-progress">
+                    <div class="progress-fill" style="--target-width: 85%; width: 85%"></div>
+                </div>
+                <div class="metric-details">85% de engajamento</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        +8%
+                    </div>
+                </div>
+                <div class="metric-value">{{ average_progress|default:76 }}%</div>
+                <div class="metric-label">Progresso Médio</div>
+                <div class="metric-progress">
+                    <div class="progress-fill" style="--target-width: 76%; width: 76%"></div>
+                </div>
+                <div class="metric-details">Meta: 80%</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="metric-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        +15%
+                    </div>
+                </div>
+                <div class="metric-value">{{ completed_sessions|default:142 }}</div>
+                <div class="metric-label">Sessões Concluídas</div>
+                <div class="metric-progress">
+                    <div class="progress-fill" style="--target-width: 92%; width: 92%"></div>
+                </div>
+                <div class="metric-details">92% de taxa de conclusão</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="metric-trend trend-up">
+                        <i class="fas fa-arrow-up"></i>
+                        +25%
+                    </div>
+                </div>
+                <div class="metric-value">{{ achieved_goals|default:18 }}</div>
+                <div class="metric-label">Metas Alcançadas</div>
+                <div class="metric-progress">
+                    <div class="progress-fill" style="--target-width: 72%; width: 72%"></div>
+                </div>
+                <div class="metric-details">72% das metas mensais</div>
+            </div>
+        </div>
+
+        <!-- Seção de Gráficos -->
+        <div class="charts-section">
+            <!-- Gráfico Principal -->
+            <div class="main-chart">
+                <div class="chart-header">
+                    <h2 class="chart-title">Evolução do Progresso</h2>
+                    <div class="chart-controls">
+                        <button class="chart-btn active" onclick="setChartType('line')">Linha</button>
+                        <button class="chart-btn" onclick="setChartType('bar')">Barras</button>
+                        <button class="chart-btn" onclick="setChartType('area')">Área</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+                
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #667eea;"></div>
+                        <span>Autoestima</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #10b981;"></div>
+                        <span>Liderança</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #f59e0b;"></div>
+                        <span>Comunicação</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #ef4444;"></div>
+                        <span>Empoderamento</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos Laterais -->
+            <div class="side-charts">
+                <div class="side-chart">
+                    <h3 class="side-chart-title">
+                        <div class="side-chart-icon">
+                            <i class="fas fa-pie-chart"></i>
+                        </div>
+                        Distribuição por Competência
+                    </h3>
+                    <div class="side-chart-container">
+                        <canvas id="competencyDistribution"></canvas>
+                    </div>
+                </div>
+
+                <div class="side-chart">
+                    <h3 class="side-chart-title">
+                        <div class="side-chart-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        Engajamento Semanal
+                    </h3>
+                    <div class="side-chart-container">
+                        <canvas id="weeklyEngagement"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Análises -->
+        <div class="analysis-section">
+            <!-- Análise de Performance -->
+            <div class="analysis-card">
+                <div class="analysis-header">
+                    <div class="analysis-icon performance">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3 class="analysis-title">Análise de Performance</h3>
+                </div>
+                
+                <div class="analysis-content">
+                    <div class="insight-item">
+                        <div class="insight-title">Melhor Performance</div>
+                        <div class="insight-description">
+                            Área de Empoderamento apresenta os melhores resultados
+                        </div>
+                        <div class="insight-value">86% de aproveitamento</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Maior Crescimento</div>
+                        <div class="insight-description">
+                            Autoestima teve o maior crescimento no último mês
+                        </div>
+                        <div class="insight-value">+15% de evolução</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Oportunidade</div>
+                        <div class="insight-description">
+                            Liderança precisa de mais atenção e foco
+                        </div>
+                        <div class="insight-value">62% de aproveitamento</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Padrões Identificados -->
+            <div class="analysis-card">
+                <div class="analysis-header">
+                    <div class="analysis-icon patterns">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3 class="analysis-title">Padrões Identificados</h3>
+                </div>
+                
+                <div class="analysis-content">
+                    <div class="insight-item">
+                        <div class="insight-title">Horário de Pico</div>
+                        <div class="insight-description">
+                            Maior engajamento entre 14h-16h nos dias úteis
+                        </div>
+                        <div class="insight-value">45% das sessões</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Duração Ideal</div>
+                        <div class="insight-description">
+                            Sessões de 45-60 min têm melhor aproveitamento
+                        </div>
+                        <div class="insight-value">92% de satisfação</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Método Preferido</div>
+                        <div class="insight-description">
+                            Coaching individual supera workshops em resultados
+                        </div>
+                        <div class="insight-value">18% mais efetivo</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predições e Tendências -->
+            <div class="analysis-card">
+                <div class="analysis-header">
+                    <div class="analysis-icon predictions">
+                        <i class="fas fa-crystal-ball"></i>
+                    </div>
+                    <h3 class="analysis-title">Predições e Tendências</h3>
+                </div>
+                
+                <div class="analysis-content">
+                    <div class="insight-item">
+                        <div class="insight-title">Previsão para Próximo Mês</div>
+                        <div class="insight-description">
+                            Baseado na tendência atual, progresso médio pode chegar a
+                        </div>
+                        <div class="insight-value">82% (+6%)</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Beneficiárias em Risco</div>
+                        <div class="insight-description">
+                            3 beneficiárias podem precisar de atenção especial
+                        </div>
+                        <div class="insight-value">Intervenção recomendada</div>
+                    </div>
+                    
+                    <div class="insight-item">
+                        <div class="insight-title">Meta Anual</div>
+                        <div class="insight-description">
+                            Probabilidade de atingir meta de 85% de progresso médio
+                        </div>
+                        <div class="insight-value">89% de chance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recomendações -->
+        <div class="recommendations-section">
+            <div class="recommendations-header">
+                <h2 class="recommendations-title">Recomendações Baseadas em IA</h2>
+                <p class="recommendations-subtitle">Insights inteligentes para otimizar o desenvolvimento das beneficiárias</p>
+            </div>
+            
+            <div class="recommendations-grid">
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h4 class="recommendation-title">Sessões Individualizadas</h4>
+                    <p class="recommendation-description">
+                        Implementar planos de coaching personalizados para beneficiárias com desempenho abaixo da média
+                    </p>
+                    <span class="recommendation-priority priority-high">Alta Prioridade</span>
+                </div>
+                
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <h4 class="recommendation-title">Workshops Temáticos</h4>
+                    <p class="recommendation-description">
+                        Criar workshops específicos para liderança, que mostra menor aproveitamento no grupo
+                    </p>
+                    <span class="recommendation-priority priority-medium">Média Prioridade</span>
+                </div>
+                
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h4 class="recommendation-title">Otimização de Horários</h4>
+                    <p class="recommendation-description">
+                        Concentrar mais sessões no período da tarde para aproveitar o pico de engajamento
+                    </p>
+                    <span class="recommendation-priority priority-medium">Média Prioridade</span>
+                </div>
+                
+                <div class="recommendation-card">
+                    <div class="recommendation-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h4 class="recommendation-title">Sistema de Alertas</h4>
+                    <p class="recommendation-description">
+                        Implementar alertas automáticos para beneficiárias que não participam há mais de 2 semanas
+                    </p>
+                    <span class="recommendation-priority priority-low">Baixa Prioridade</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Exportação -->
+        <div class="export-section">
+            <h2 class="export-title">Exportar Análises</h2>
+            <div class="export-options">
+                <button class="export-btn" onclick="exportAnalyticsPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    Relatório Completo PDF
+                </button>
+                <button class="export-btn" onclick="exportAnalyticsExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    Dados em Excel
+                </button>
+                <button class="export-btn secondary" onclick="scheduleReport()">
+                    <i class="fas fa-calendar"></i>
+                    Agendar Relatório
+                </button>
+                <button class="export-btn secondary" onclick="shareAnalytics()">
+                    <i class="fas fa-share"></i>
+                    Compartilhar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+<script>
+// Dados para os gráficos
+const progressData = {
+    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'],
+    datasets: [
+        {
+            label: 'Autoestima',
+            data: [65, 68, 72, 75, 78, 80, 83],
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        },
+        {
+            label: 'Liderança',
+            data: [58, 60, 62, 65, 67, 69, 72],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        },
+        {
+            label: 'Comunicação',
+            data: [62, 65, 67, 70, 73, 75, 78],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        },
+        {
+            label: 'Empoderamento',
+            data: [70, 73, 76, 79, 82, 84, 86],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }
+    ]
+};
+
+let mainChart = null;
+let currentChartType = 'line';
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    animateMetrics();
+    setupRealTimeUpdates();
+});
+
+function initializeCharts() {
+    // Gráfico Principal de Progresso
+    const progressCtx = document.getElementById('progressChart').getContext('2d');
+    mainChart = new Chart(progressCtx, {
+        type: 'line',
+        data: progressData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: '#667eea',
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: '#f1f5f9'
+                    },
+                    ticks: {
+                        color: '#64748b'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: {
+                        color: '#f1f5f9'
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+
+    // Gráfico de Distribuição por Competência
+    const competencyCtx = document.getElementById('competencyDistribution').getContext('2d');
+    new Chart(competencyCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Autoestima', 'Liderança', 'Comunicação', 'Empoderamento'],
+            datasets: [{
+                data: [28, 22, 24, 26],
+                backgroundColor: [
+                    '#667eea',
+                    '#10b981',
+                    '#f59e0b',
+                    '#ef4444'
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+
+    // Gráfico de Engajamento Semanal
+    const engagementCtx = document.getElementById('weeklyEngagement').getContext('2d');
+    new Chart(engagementCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            datasets: [{
+                label: 'Sessões',
+                data: [12, 15, 18, 22, 16, 8, 5],
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderRadius: 4,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9'
+                    },
+                    ticks: {
+                        color: '#64748b',
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function animateMetrics() {
+    const progressBars = document.querySelectorAll('.progress-fill');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const targetWidth = entry.target.style.getPropertyValue('--target-width');
+                entry.target.style.width = '0%';
+                setTimeout(() => {
+                    entry.target.style.width = targetWidth;
+                }, 200);
+            }
+        });
+    });
+    
+    progressBars.forEach(bar => observer.observe(bar));
+}
+
+function setupRealTimeUpdates() {
+    // Simular atualizações em tempo real
+    setInterval(() => {
+        if (Math.random() > 0.8) {
+            updateMetrics();
+        }
+    }, 30000);
+}
+
+function updateMetrics() {
+    // Simular atualização das métricas
+    const metricValues = document.querySelectorAll('.metric-value');
+    
+    metricValues.forEach(metric => {
+        const currentValue = parseInt(metric.textContent);
+        const change = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+        const newValue = Math.max(0, currentValue + change);
+        
+        if (change !== 0) {
+            metric.style.transition = 'all 0.3s ease';
+            metric.textContent = newValue;
+            
+            // Highlight mudança
+            metric.style.background = '#fef3c7';
+            setTimeout(() => {
+                metric.style.background = 'transparent';
+            }, 1000);
+        }
+    });
+}
+
+// Funções de controle
+function updateTimeRange() {
+    const timeRange = document.getElementById('timeRangeFilter').value;
+    console.log('Atualizando período:', timeRange);
+    
+    // Simular carregamento
+    showLoadingIndicator();
+    
+    setTimeout(() => {
+        updateChartData(timeRange);
+        hideLoadingIndicator();
+    }, 1000);
+}
+
+function updateCompetencyFilter() {
+    const competency = document.getElementById('competencyFilter').value;
+    console.log('Filtrando por competência:', competency);
+    
+    // Implementar filtro de competência
+    filterChartData(competency);
+}
+
+function updateBeneficiaryFilter() {
+    const beneficiary = document.getElementById('beneficiaryFilter').value;
+    console.log('Filtrando por beneficiária:', beneficiary);
+    
+    // Implementar filtro de beneficiária
+    filterBeneficiaryData(beneficiary);
+}
+
+function setChartType(type) {
+    currentChartType = type;
+    
+    // Atualizar botões ativos
+    document.querySelectorAll('.chart-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    event.target.classList.add('active');
+    
+    // Atualizar tipo do gráfico
+    if (mainChart) {
+        mainChart.config.type = type;
+        
+        if (type === 'area') {
+            mainChart.config.type = 'line';
+            mainChart.data.datasets.forEach(dataset => {
+                dataset.fill = true;
+            });
+        } else {
+            mainChart.data.datasets.forEach(dataset => {
+                dataset.fill = (type === 'line');
+            });
+        }
+        
+        mainChart.update();
+    }
+}
+
+function updateChartData(timeRange) {
+    // Simular dados diferentes baseados no período
+    const dataMap = {
+        '7d': {
+            labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+            data: [[78, 79, 80, 81, 82, 81, 83]]
+        },
+        '30d': {
+            labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
+            data: [[75, 77, 79, 81]]
+        },
+        '3m': progressData,
+        '6m': {
+            labels: ['Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'],
+            data: [[68, 72, 75, 78, 80, 83]]
+        },
+        '1y': {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+            data: [[60, 65, 68, 72, 75, 78, 80, 83, 85, 87, 89, 90]]
+        }
+    };
+    
+    const newData = dataMap[timeRange] || progressData;
+    
+    if (mainChart) {
+        mainChart.data.labels = newData.labels;
+        // Atualizar apenas o primeiro dataset para simplificar
+        if (newData.data && newData.data[0]) {
+            mainChart.data.datasets[0].data = newData.data[0];
+        }
+        mainChart.update();
+    }
+}
+
+function filterChartData(competency) {
+    if (!mainChart) return;
+    
+    if (competency === 'all') {
+        mainChart.data.datasets.forEach(dataset => {
+            dataset.hidden = false;
+        });
+    } else {
+        mainChart.data.datasets.forEach(dataset => {
+            dataset.hidden = dataset.label.toLowerCase() !== competency;
+        });
+    }
+    
+    mainChart.update();
+}
+
+function filterBeneficiaryData(beneficiaryId) {
+    // Implementar filtro por beneficiária
+    console.log('Filtrando dados da beneficiária:', beneficiaryId);
+    
+    // Simular mudança nos dados
+    if (beneficiaryId !== 'all') {
+        showIndividualData(beneficiaryId);
+    } else {
+        showAggregatedData();
+    }
+}
+
+function showIndividualData(beneficiaryId) {
+    // Simular dados individuais
+    const individualData = {
+        '1': [85, 88, 90, 92, 94, 95, 97],
+        '2': [70, 72, 74, 76, 78, 80, 82],
+        '3': [60, 65, 70, 75, 80, 85, 88]
+    };
+    
+    if (mainChart && individualData[beneficiaryId]) {
+        mainChart.data.datasets[0].data = individualData[beneficiaryId];
+        mainChart.update();
+    }
+}
+
+function showAggregatedData() {
+    if (mainChart) {
+        mainChart.data.datasets[0].data = progressData.datasets[0].data;
+        mainChart.update();
+    }
+}
+
+function showLoadingIndicator() {
+    // Implementar indicador de carregamento
+    const charts = document.querySelectorAll('.chart-container');
+    charts.forEach(chart => {
+        chart.style.opacity = '0.5';
+    });
+}
+
+function hideLoadingIndicator() {
+    const charts = document.querySelectorAll('.chart-container');
+    charts.forEach(chart => {
+        chart.style.opacity = '1';
+    });
+}
+
+// Funções de exportação
+function exportAnalyticsPDF() {
+    alert('Gerando relatório PDF completo...');
+    // Implementar exportação para PDF
+}
+
+function exportAnalyticsExcel() {
+    alert('Exportando dados para Excel...');
+    // Implementar exportação para Excel
+}
+
+function scheduleReport() {
+    const frequency = prompt('Frequência do relatório:\n1. Semanal\n2. Mensal\n3. Trimestral');
+    
+    if (frequency) {
+        alert(`Relatório agendado com frequência: ${frequency}`);
+        // Implementar agendamento
+    }
+}
+
+function shareAnalytics() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Análise de Progresso - Move Marias',
+            text: 'Confira as análises detalhadas do progresso das beneficiárias',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert('Link copiado para a área de transferência!');
+    }
+}
+
+// Função para gerar insights em tempo real
+function generateRealTimeInsights() {
+    const insights = [
+        'Nova tendência identificada: aumento de 12% no engajamento',
+        'Beneficiária Maria Silva atingiu nova meta pessoal',
+        'Área de Liderança mostra sinais de melhoria significativa',
+        'Padrão sazonal detectado: maior participação nas terças-feiras'
+    ];
+    
+    const randomInsight = insights[Math.floor(Math.random() * insights.length)];
+    
+    // Mostrar notification
+    if (Notification.permission === 'granted') {
+        new Notification('Move Marias - Novo Insight', {
+            body: randomInsight,
+            icon: '/static/img/logo.png'
+        });
+    }
+}
+
+// Solicitar permissão para notificações
+if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
+
+// Gerar insights periodicamente
+setInterval(generateRealTimeInsights, 120000); // A cada 2 minutos
+</script>
+{% endblock %}

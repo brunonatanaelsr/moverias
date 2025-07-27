@@ -21,47 +21,129 @@ ChatRoomMembership = ChatChannelMembership
 
 @login_required
 def chat_home(request):
-    """Página principal do chat"""
-    # Canais do usuário (channels)
-    user_channels = ChatChannel.objects.filter(
-        members=request.user, 
+    """Página principal do chat completa com interface moderna"""
+    
+    # Canais públicos
+    public_channels = ChatChannel.objects.filter(
+        members=request.user,
         is_active=True,
-        channel_type='channel'
+        channel_type='public'
     ).annotate(
-        last_message_time=Max('messages__created_at')
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
+    ).order_by('-last_message_time')
+    
+    # Canais privados
+    private_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        channel_type='private'
+    ).annotate(
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
+    ).order_by('-last_message_time')
+    
+    # Canais de departamento
+    department_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        channel_type='department'
+    ).annotate(
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
+    ).order_by('-last_message_time')
+    
+    # Canais de projeto
+    project_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        channel_type='project'
+    ).annotate(
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
+    ).order_by('-last_message_time')
+    
+    # Canais favoritos
+    favorite_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True,
+        memberships__is_favorite=True,
+        memberships__user=request.user
+    ).annotate(
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
     ).order_by('-last_message_time')
     
     # Conversas diretas (DMs)
-    user_dms = ChatChannel.objects.filter(
+    direct_messages = ChatChannel.objects.filter(
         members=request.user,
         is_active=True,
         channel_type='direct'
     ).annotate(
-        last_message_time=Max('messages__created_at')
+        last_message_time=Max('messages__created_at'),
+        unread_count=Count('messages', filter=Q(
+            messages__created_at__gt=request.user.profile.last_seen_at if hasattr(request.user, 'profile') else timezone.now()
+        ))
     ).order_by('-last_message_time')
+    
+    # Adicionar informação do outro usuário para DMs
+    for dm in direct_messages:
+        other_user = dm.members.exclude(id=request.user.id).first()
+        dm.other_user = other_user
+        
+        # Verificar se usuário está online (implementar lógica de presença)
+        if hasattr(other_user, 'profile'):
+            dm.other_user.is_online = other_user.profile.is_online if hasattr(other_user.profile, 'is_online') else False
+            dm.other_user.status = other_user.profile.status if hasattr(other_user.profile, 'status') else 'offline'
+        else:
+            dm.other_user.is_online = False
+            dm.other_user.status = 'offline'
     
     # Canal selecionado (primeiro da lista ou especificado)
     selected_channel = None
     channel_id = request.GET.get('channel')
     
     if channel_id:
-        # Buscar canal específico
-        all_channels = user_channels.union(user_dms)
-        selected_channel = all_channels.filter(id=channel_id).first()
+        # Buscar canal específico em todas as listas
+        all_channels = list(public_channels) + list(private_channels) + list(department_channels) + list(project_channels) + list(direct_messages)
+        selected_channel = next((ch for ch in all_channels if str(ch.id) == channel_id), None)
     
     if not selected_channel:
         # Selecionar primeiro canal disponível
-        if user_channels.exists():
-            selected_channel = user_channels.first()
-        elif user_dms.exists():
-            selected_channel = user_dms.first()
-    
+        if public_channels.exists():
+            selected_channel = public_channels.first()
+        elif favorite_channels.exists():
+            selected_channel = favorite_channels.first()
+        elif direct_messages.exists():
+            selected_channel = direct_messages.first()
+        elif private_channels.exists():
+            selected_channel = private_channels.first()
+        elif department_channels.exists():
+            selected_channel = department_channels.first()
+        elif project_channels.exists():
+            selected_channel = project_channels.first()
+
+    # Adicionar informações do outro usuário se for DM
+    if selected_channel and selected_channel.channel_type == 'direct':
+        other_user = selected_channel.members.exclude(id=request.user.id).first()
+        selected_channel.other_user = other_user
+
     # Mensagens do canal selecionado
     messages_list = []
     if selected_channel:
         messages_list = selected_channel.messages.filter(
             is_deleted=False
-        ).select_related('sender').order_by('created_at')
+        ).select_related('author').order_by('-created_at')[:50]
         
         # Marcar como lida
         try:
@@ -69,34 +151,51 @@ def chat_home(request):
                 user=request.user,
                 channel=selected_channel
             )
-            membership.mark_as_read()
+            membership.last_read_at = timezone.now()
+            membership.save()
         except ChatChannelMembership.DoesNotExist:
             pass
-    
-    # Contagem de mensagens não lidas
-    unread_count = 0
-    all_user_channels = user_channels.union(user_dms)
-    for channel in all_user_channels:
-        try:
-            membership = ChatChannelMembership.objects.get(
-                user=request.user,
-                channel=channel
-            )
-            unread_count += channel.messages.filter(
-                created_at__gt=membership.last_read_at or timezone.now() - timezone.timedelta(days=1),
-                is_deleted=False
-            ).exclude(sender=request.user).count()
-        except ChatChannelMembership.DoesNotExist:
-            continue
-    
-    # Usuários online
+
+    # Usuários online (implementar lógica de presença)
     online_users = User.objects.filter(
-        is_active=True,
-        last_login__gte=timezone.now() - timezone.timedelta(minutes=15)
+        is_active=True
     ).exclude(id=request.user.id)[:20]
     
+    # Adicionar informações de status para usuários online
+    for user in online_users:
+        if hasattr(user, 'profile'):
+            user.is_online = user.profile.is_online if hasattr(user.profile, 'is_online') else True
+            user.status = user.profile.status if hasattr(user.profile, 'status') else 'online'
+        else:
+            user.is_online = True
+            user.status = 'online'
+
+    # Estatísticas
+    total_messages = ChatMessage.objects.filter(
+        channel__in=public_channels.union(private_channels).union(department_channels).union(project_channels).union(direct_messages),
+        created_at__date=timezone.now().date()
+    ).count()
+    
+    total_active_users = User.objects.filter(
+        is_active=True,
+        last_login__date=timezone.now().date()
+    ).count()
     context = {
-        'user_channels': user_channels,
+        'public_channels': public_channels,
+        'private_channels': private_channels,
+        'department_channels': department_channels,
+        'project_channels': project_channels,
+        'favorite_channels': favorite_channels,
+        'direct_messages': direct_messages,
+        'selected_channel': selected_channel,
+        'messages': list(reversed(messages_list)),
+        'online_users': online_users,
+        'total_messages': total_messages,
+        'total_active_users': total_active_users,
+    }
+    
+    # Usar o template principal novo
+    return render(request, 'chat/chat_main.html', context)
         'user_dms': user_dms,
         'selected_channel': selected_channel,
         'messages': messages_list,

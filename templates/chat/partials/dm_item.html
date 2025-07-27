@@ -1,0 +1,607 @@
+<!-- Item de Mensagem Direta na Sidebar -->
+<li class="channel-item dm-item {% if dm.id == selected_channel.id %}active{% endif %} {% if dm.has_unread %}unread{% endif %}" 
+    data-channel-id="{{ dm.id }}" 
+    data-user-id="{{ dm.other_user.id }}"
+    onclick="selectChannel('{{ dm.id }}')">
+    
+    <!-- Avatar do usuário -->
+    <div class="dm-avatar">
+        <div class="user-avatar">
+            {{ dm.other_user.first_name|slice:":1"|upper|default:dm.other_user.username|slice:":1"|upper }}
+        </div>
+        
+        <!-- Status do usuário -->
+        <div class="user-status-indicator {{ dm.other_user.status|default:'offline' }}" 
+             title="{% if dm.other_user.is_online %}Online{% else %}Última atividade: {{ dm.other_user.last_seen|timesince }} atrás{% endif %}">
+        </div>
+    </div>
+    
+    <!-- Informações da conversa -->
+    <div class="dm-info">
+        <div class="dm-name">
+            {{ dm.other_user.get_full_name|default:dm.other_user.username }}
+        </div>
+        
+        {% if dm.last_message %}
+        <div class="dm-preview">
+            {% if dm.last_message.author.id == user.id %}
+                <span class="message-author-self">Você: </span>
+            {% endif %}
+            {{ dm.last_message.content|truncatechars:25 }}
+        </div>
+        {% else %}
+        <div class="dm-preview no-messages">
+            Iniciar conversa
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Indicadores da conversa -->
+    <div class="dm-indicators">
+        <!-- Timestamp da última mensagem -->
+        {% if dm.last_message %}
+        <div class="dm-time">
+            {{ dm.last_message.created_at|timesince }}
+        </div>
+        {% endif %}
+        
+        <!-- Badge de mensagens não lidas -->
+        {% if dm.unread_count > 0 %}
+        <div class="unread-badge">
+            {% if dm.unread_count > 99 %}
+                99+
+            {% else %}
+                {{ dm.unread_count }}
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Indicador de conversa silenciada -->
+        {% if dm.is_muted %}
+        <div class="muted-indicator" title="Notificações silenciadas">
+            <i class="fas fa-bell-slash"></i>
+        </div>
+        {% endif %}
+        
+        <!-- Indicador de digitação -->
+        {% if dm.other_user.is_typing %}
+        <div class="typing-indicator-small" title="{{ dm.other_user.get_full_name|default:dm.other_user.username }} está digitando">
+            <div class="typing-dots-small">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Menu de contexto da DM -->
+    <div class="dm-menu" onclick="event.stopPropagation(); showDMContextMenu('{{ dm.id }}', '{{ dm.other_user.id }}')">
+        <i class="fas fa-ellipsis-v"></i>
+    </div>
+</li>
+
+<style>
+/* Estilos específicos para mensagens diretas */
+.dm-item {
+    background: rgba(255, 255, 255, 0.02);
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.dm-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: #667eea;
+}
+
+.dm-item.active {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-left-color: #047857;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.dm-item.unread {
+    background: rgba(16, 185, 129, 0.1);
+    border-left-color: #10b981;
+}
+
+/* Avatar da DM */
+.dm-avatar {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.dm-avatar .user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    position: relative;
+    border: 2px solid rgba(16, 185, 129, 0.2);
+    transition: all 0.2s;
+}
+
+.dm-item.active .dm-avatar .user-avatar {
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Status do usuário */
+.user-status-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+    transition: all 0.2s;
+}
+
+.user-status-indicator.online {
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.user-status-indicator.away {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.user-status-indicator.busy {
+    background: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+}
+
+.user-status-indicator.offline {
+    background: #6b7280;
+    border-color: #374151;
+}
+
+/* Informações da DM */
+.dm-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dm-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.dm-item:not(.active) .dm-name {
+    color: #e5e7eb;
+}
+
+.dm-preview {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+.dm-item.active .dm-preview {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.dm-preview.no-messages {
+    font-style: italic;
+    color: #6b7280;
+}
+
+.dm-item.active .dm-preview.no-messages {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Indicadores da DM */
+.dm-indicators {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.dm-time {
+    font-size: 0.75rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.dm-item.active .dm-time {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Indicador de digitação pequeno */
+.typing-indicator-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 12px;
+}
+
+.typing-dots-small {
+    display: flex;
+    gap: 2px;
+}
+
+.typing-dots-small span {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: typingSmall 1.4s infinite ease-in-out;
+}
+
+.typing-dots-small span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots-small span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingSmall {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Menu de contexto da DM */
+.dm-menu {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.2s;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.dm-item:hover .dm-menu {
+    opacity: 1;
+}
+
+.dm-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.dm-item.active .dm-menu {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Estados especiais */
+.dm-item.new-message {
+    animation: dmPulse 2s ease-in-out;
+}
+
+@keyframes dmPulse {
+    0% { 
+        background: rgba(16, 185, 129, 0.2);
+        border-left-color: #10b981;
+    }
+    50% { 
+        background: rgba(16, 185, 129, 0.1);
+        border-left-color: rgba(16, 185, 129, 0.5);
+    }
+    100% { 
+        background: rgba(16, 185, 129, 0.2);
+        border-left-color: #10b981;
+    }
+}
+
+/* Drag and drop para DMs */
+.dm-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.dm-item.drop-target {
+    background: rgba(16, 185, 129, 0.2);
+    border: 2px dashed #10b981;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .dm-item {
+        padding: 12px 16px;
+        margin: 0 8px 2px;
+    }
+    
+    .dm-avatar .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+    
+    .user-status-indicator {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .dm-preview {
+        display: none;
+    }
+    
+    .dm-indicators {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* Variações de tema */
+.dm-item.priority-high {
+    border-left-color: #ef4444;
+}
+
+.dm-item.priority-high.unread {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.dm-item.archived {
+    opacity: 0.6;
+}
+
+.dm-item.archived .dm-name {
+    text-decoration: line-through;
+}
+</style>
+
+<script>
+// Função para mostrar menu de contexto da DM
+function showDMContextMenu(dmId, userId) {
+    const menu = document.createElement('div');
+    menu.className = 'context-menu dm-context-menu';
+    menu.innerHTML = `
+        <div class="context-menu-item" onclick="markDMAsRead('${dmId}')">
+            <i class="fas fa-check"></i>
+            Marcar como lida
+        </div>
+        <div class="context-menu-item" onclick="toggleDMMute('${dmId}')">
+            <i class="fas fa-bell-slash"></i>
+            Silenciar conversa
+        </div>
+        <div class="context-menu-item" onclick="pinDM('${dmId}')">
+            <i class="fas fa-thumbtack"></i>
+            Fixar conversa
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="viewUserProfile('${userId}')">
+            <i class="fas fa-user"></i>
+            Ver perfil
+        </div>
+        <div class="context-menu-item" onclick="callUser('${userId}')">
+            <i class="fas fa-phone"></i>
+            Ligar
+        </div>
+        <div class="context-menu-item" onclick="videoCallUser('${userId}')">
+            <i class="fas fa-video"></i>
+            Videochamada
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="searchInDM('${dmId}')">
+            <i class="fas fa-search"></i>
+            Buscar na conversa
+        </div>
+        <div class="context-menu-item danger" onclick="clearDMHistory('${dmId}')">
+            <i class="fas fa-trash"></i>
+            Limpar histórico
+        </div>
+    `;
+    
+    // Posicionar menu
+    const rect = event.target.getBoundingClientRect();
+    menu.style.position = 'fixed';
+    menu.style.top = rect.top + 'px';
+    menu.style.left = (rect.left - 200) + 'px';
+    menu.style.zIndex = '10000';
+    
+    document.body.appendChild(menu);
+    
+    // Remover menu ao clicar fora
+    setTimeout(() => {
+        document.addEventListener('click', function removeMenu() {
+            if (menu.parentNode) {
+                menu.parentNode.removeChild(menu);
+            }
+            document.removeEventListener('click', removeMenu);
+        });
+    }, 10);
+}
+
+// Funções do menu de contexto da DM
+function markDMAsRead(dmId) {
+    console.log('Marcando DM como lida:', dmId);
+    
+    // Remover badge de não lidas
+    const dmItem = document.querySelector(`[data-channel-id="${dmId}"]`);
+    if (dmItem) {
+        dmItem.classList.remove('unread');
+        const badge = dmItem.querySelector('.unread-badge');
+        if (badge) {
+            badge.remove();
+        }
+    }
+}
+
+function toggleDMMute(dmId) {
+    console.log('Toggle mute da DM:', dmId);
+    
+    const dmItem = document.querySelector(`[data-channel-id="${dmId}"]`);
+    if (dmItem) {
+        const muteIndicator = dmItem.querySelector('.muted-indicator');
+        
+        if (muteIndicator) {
+            muteIndicator.remove();
+        } else {
+            const indicators = dmItem.querySelector('.dm-indicators');
+            const newMute = document.createElement('div');
+            newMute.className = 'muted-indicator';
+            newMute.innerHTML = '<i class="fas fa-bell-slash"></i>';
+            newMute.title = 'Notificações silenciadas';
+            indicators.appendChild(newMute);
+        }
+    }
+}
+
+function pinDM(dmId) {
+    console.log('Fixando DM:', dmId);
+    
+    // Mover DM para o topo da lista
+    const dmItem = document.querySelector(`[data-channel-id="${dmId}"]`);
+    const dmsList = dmItem.parentElement;
+    
+    if (dmItem && dmsList) {
+        dmsList.insertBefore(dmItem, dmsList.firstChild);
+        
+        // Adicionar indicador de fixado
+        if (!dmItem.querySelector('.pinned-indicator')) {
+            const indicators = dmItem.querySelector('.dm-indicators');
+            const pinnedIndicator = document.createElement('div');
+            pinnedIndicator.className = 'pinned-indicator';
+            pinnedIndicator.innerHTML = '<i class="fas fa-thumbtack"></i>';
+            pinnedIndicator.title = 'Conversa fixada';
+            indicators.appendChild(pinnedIndicator);
+        }
+    }
+}
+
+function viewUserProfile(userId) {
+    console.log('Visualizando perfil do usuário:', userId);
+    // Implementar abertura do perfil do usuário
+}
+
+function callUser(userId) {
+    console.log('Ligando para usuário:', userId);
+    // Implementar chamada de voz
+}
+
+function videoCallUser(userId) {
+    console.log('Videochamada com usuário:', userId);
+    // Implementar videochamada
+}
+
+function searchInDM(dmId) {
+    console.log('Buscando na DM:', dmId);
+    // Implementar busca na conversa
+}
+
+function clearDMHistory(dmId) {
+    if (confirm('Tem certeza que deseja limpar o histórico desta conversa? Esta ação não pode ser desfeita.')) {
+        console.log('Limpando histórico da DM:', dmId);
+        // Implementar limpeza do histórico
+    }
+}
+
+// Função para atualizar status do usuário em tempo real
+function updateUserStatus(userId, status) {
+    const dmItems = document.querySelectorAll(`[data-user-id="${userId}"]`);
+    
+    dmItems.forEach(item => {
+        const statusIndicator = item.querySelector('.user-status-indicator');
+        if (statusIndicator) {
+            statusIndicator.className = `user-status-indicator ${status}`;
+            
+            // Atualizar tooltip
+            const statusText = {
+                online: 'Online',
+                away: 'Ausente',
+                busy: 'Ocupado',
+                offline: 'Offline'
+            };
+            
+            statusIndicator.title = statusText[status] || 'Status desconhecido';
+        }
+    });
+}
+
+// Função para mostrar indicador de digitação
+function showUserTyping(userId) {
+    const dmItem = document.querySelector(`[data-user-id="${userId}"]`);
+    
+    if (dmItem) {
+        const indicators = dmItem.querySelector('.dm-indicators');
+        
+        // Remover indicador existente
+        const existingTyping = indicators.querySelector('.typing-indicator-small');
+        if (existingTyping) {
+            existingTyping.remove();
+        }
+        
+        // Adicionar novo indicador
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator-small';
+        typingDiv.innerHTML = `
+            <div class="typing-dots-small">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+        indicators.appendChild(typingDiv);
+    }
+}
+
+// Função para ocultar indicador de digitação
+function hideUserTyping(userId) {
+    const dmItem = document.querySelector(`[data-user-id="${userId}"]`);
+    
+    if (dmItem) {
+        const typingIndicator = dmItem.querySelector('.typing-indicator-small');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+}
+
+// Função para atualizar última mensagem da DM
+function updateDMLastMessage(dmId, message) {
+    const dmItem = document.querySelector(`[data-channel-id="${dmId}"]`);
+    
+    if (dmItem) {
+        const preview = dmItem.querySelector('.dm-preview');
+        const time = dmItem.querySelector('.dm-time');
+        
+        if (preview) {
+            preview.textContent = message.content.substring(0, 25) + 
+                (message.content.length > 25 ? '...' : '');
+            preview.classList.remove('no-messages');
+        }
+        
+        if (time) {
+            time.textContent = 'agora';
+        }
+        
+        // Mover para o topo da lista
+        const dmsList = dmItem.parentElement;
+        if (dmsList) {
+            dmsList.insertBefore(dmItem, dmsList.firstChild);
+        }
+        
+        // Adicionar animação de nova mensagem
+        dmItem.classList.add('new-message');
+        setTimeout(() => {
+            dmItem.classList.remove('new-message');
+        }, 2000);
+    }
+}
+</script>

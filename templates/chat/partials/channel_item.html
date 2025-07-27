@@ -1,0 +1,373 @@
+<!-- Item de Canal na Sidebar -->
+<li class="channel-item {% if channel.id == selected_channel.id %}active{% endif %} {% if channel.has_unread %}unread{% endif %}" 
+    data-channel-id="{{ channel.id }}" 
+    data-channel-type="{{ channel.channel_type }}"
+    onclick="selectChannel('{{ channel.id }}')">
+    
+    <!-- Ícone do Canal -->
+    <div class="channel-icon">
+        {% if channel.channel_type == 'public' %}
+            <i class="fas fa-hashtag"></i>
+        {% elif channel.channel_type == 'private' %}
+            <i class="fas fa-lock"></i>
+        {% elif channel.channel_type == 'department' %}
+            <i class="fas fa-building"></i>
+        {% elif channel.channel_type == 'project' %}
+            <i class="fas fa-folder"></i>
+        {% elif channel.channel_type == 'task' %}
+            <i class="fas fa-tasks"></i>
+        {% else %}
+            <i class="fas fa-comments"></i>
+        {% endif %}
+    </div>
+    
+    <!-- Informações do Canal -->
+    <div class="channel-info">
+        <div class="channel-name">{{ channel.name }}</div>
+        {% if channel.last_message %}
+        <div class="channel-preview">
+            {% if channel.last_message.author.id == user.id %}
+                <span class="message-author-self">Você: </span>
+            {% else %}
+                <span class="message-author">{{ channel.last_message.author.first_name|default:channel.last_message.author.username }}: </span>
+            {% endif %}
+            {{ channel.last_message.content|truncatechars:30 }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Indicadores do Canal -->
+    <div class="channel-indicators">
+        <!-- Timestamp da última mensagem -->
+        {% if channel.last_message %}
+        <div class="channel-time">
+            {{ channel.last_message.created_at|timesince }}
+        </div>
+        {% endif %}
+        
+        <!-- Badge de mensagens não lidas -->
+        {% if channel.unread_count > 0 %}
+        <div class="unread-badge">
+            {% if channel.unread_count > 99 %}
+                99+
+            {% else %}
+                {{ channel.unread_count }}
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Indicador de canal favorito -->
+        {% if is_favorite %}
+        <div class="favorite-indicator" title="Canal favorito">
+            <i class="fas fa-star"></i>
+        </div>
+        {% endif %}
+        
+        <!-- Indicador de notificações silenciadas -->
+        {% if channel.is_muted %}
+        <div class="muted-indicator" title="Notificações silenciadas">
+            <i class="fas fa-bell-slash"></i>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Menu de contexto do canal -->
+    <div class="channel-menu" onclick="event.stopPropagation(); showChannelContextMenu('{{ channel.id }}')">
+        <i class="fas fa-ellipsis-v"></i>
+    </div>
+</li>
+
+<style>
+/* Estilos para item de canal */
+.channel-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #ccc;
+    border-radius: 6px;
+    margin: 0 10px 2px;
+    position: relative;
+    min-height: 44px;
+}
+
+.channel-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.channel-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.channel-item.unread {
+    color: white;
+    font-weight: 600;
+}
+
+.channel-item.unread .channel-name {
+    font-weight: 700;
+}
+
+/* Ícone do canal */
+.channel-item .channel-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.channel-item.active .channel-icon {
+    opacity: 1;
+}
+
+/* Informações do canal */
+.channel-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.channel-preview {
+    font-size: 0.75rem;
+    color: #999;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+.channel-item.active .channel-preview {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-author-self {
+    font-weight: 600;
+}
+
+.message-author {
+    font-weight: 500;
+}
+
+/* Indicadores */
+.channel-indicators {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.channel-time {
+    font-size: 0.75rem;
+    color: #666;
+    white-space: nowrap;
+}
+
+.channel-item.active .channel-time {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.unread-badge {
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 18px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+}
+
+.channel-item.active .unread-badge {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.favorite-indicator {
+    color: #f59e0b;
+    font-size: 0.75rem;
+}
+
+.muted-indicator {
+    color: #6b7280;
+    font-size: 0.75rem;
+}
+
+/* Menu de contexto */
+.channel-menu {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: all 0.2s;
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.channel-item:hover .channel-menu {
+    opacity: 1;
+}
+
+.channel-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.channel-item.active .channel-menu {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Estados especiais */
+.channel-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+.channel-item.drop-target {
+    background: rgba(102, 126, 234, 0.2);
+    border: 2px dashed #667eea;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .channel-item {
+        padding: 12px 16px;
+        margin: 0 8px 2px;
+    }
+    
+    .channel-preview {
+        display: none;
+    }
+    
+    .channel-indicators {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+/* Animações */
+@keyframes channelPulse {
+    0% { background: rgba(102, 126, 234, 0.3); }
+    50% { background: rgba(102, 126, 234, 0.1); }
+    100% { background: rgba(102, 126, 234, 0.3); }
+}
+
+.channel-item.new-message {
+    animation: channelPulse 2s ease-in-out;
+}
+
+/* Tema escuro específico */
+.chat-sidebar .channel-item {
+    color: #d1d5db;
+}
+
+.chat-sidebar .channel-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.chat-sidebar .channel-item .channel-preview {
+    color: #9ca3af;
+}
+
+.chat-sidebar .channel-item .channel-time {
+    color: #6b7280;
+}
+</style>
+
+<script>
+// Função para mostrar menu de contexto do canal
+function showChannelContextMenu(channelId) {
+    // Criar menu de contexto dinamicamente
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.innerHTML = `
+        <div class="context-menu-item" onclick="markChannelAsRead('${channelId}')">
+            <i class="fas fa-check"></i>
+            Marcar como lida
+        </div>
+        <div class="context-menu-item" onclick="toggleChannelFavorite('${channelId}')">
+            <i class="fas fa-star"></i>
+            Adicionar aos favoritos
+        </div>
+        <div class="context-menu-item" onclick="toggleChannelMute('${channelId}')">
+            <i class="fas fa-bell-slash"></i>
+            Silenciar notificações
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" onclick="copyChannelLink('${channelId}')">
+            <i class="fas fa-link"></i>
+            Copiar link
+        </div>
+        <div class="context-menu-item danger" onclick="leaveChannel('${channelId}')">
+            <i class="fas fa-sign-out-alt"></i>
+            Sair do canal
+        </div>
+    `;
+    
+    // Posicionar e mostrar menu
+    document.body.appendChild(menu);
+    
+    // Remover menu ao clicar fora
+    setTimeout(() => {
+        document.addEventListener('click', function removeMenu() {
+            if (menu.parentNode) {
+                menu.parentNode.removeChild(menu);
+            }
+            document.removeEventListener('click', removeMenu);
+        });
+    }, 10);
+}
+
+// Funções do menu de contexto
+function markChannelAsRead(channelId) {
+    // Implementar marcação como lida
+    console.log('Marcando canal como lido:', channelId);
+}
+
+function toggleChannelFavorite(channelId) {
+    // Implementar toggle de favorito
+    console.log('Toggle favorito do canal:', channelId);
+}
+
+function toggleChannelMute(channelId) {
+    // Implementar toggle de silenciar
+    console.log('Toggle mute do canal:', channelId);
+}
+
+function copyChannelLink(channelId) {
+    // Implementar cópia do link
+    const link = `${window.location.origin}/chat/?channel=${channelId}`;
+    navigator.clipboard.writeText(link).then(() => {
+        console.log('Link copiado:', link);
+    });
+}
+
+function leaveChannel(channelId) {
+    if (confirm('Tem certeza que deseja sair deste canal?')) {
+        console.log('Saindo do canal:', channelId);
+    }
+}
+</script>

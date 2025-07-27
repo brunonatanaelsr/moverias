@@ -1,0 +1,1075 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Chat - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+.chat-container {
+    height: calc(100vh - 120px);
+    display: flex;
+    background: #f8fafc;
+    overflow: hidden;
+}
+
+.chat-sidebar {
+    width: 320px;
+    background: #1a1a1a;
+    color: white;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #2d2d2d;
+}
+
+.chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #2d2d2d;
+    background: #0f0f0f;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: #a0a0a0;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    margin-left: auto;
+}
+
+.sidebar-search {
+    padding: 15px 20px;
+    border-bottom: 1px solid #2d2d2d;
+}
+
+.search-input {
+    width: 100%;
+    background: #2d2d2d;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.875rem;
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.search-input:focus {
+    outline: none;
+    background: #3d3d3d;
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.channel-section {
+    padding: 15px 0;
+}
+
+.section-header {
+    padding: 0 20px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.section-toggle {
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.channel-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.channel-item {
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ccc;
+}
+
+.channel-item:hover {
+    background: #2d2d2d;
+}
+
+.channel-item.active {
+    background: #667eea;
+    color: white;
+}
+
+.channel-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.channel-name {
+    flex: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    truncate: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.unread-badge {
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 18px;
+    text-align: center;
+}
+
+.main-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: between;
+}
+
+.channel-info {
+    flex: 1;
+}
+
+.channel-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.channel-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.channel-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.action-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message-group {
+    display: flex;
+    gap: 12px;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+    align-self: start;
+}
+
+.message-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.message-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.message-author {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.message-text {
+    color: #374151;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-reactions {
+    display: flex;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.reaction {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.reaction:hover {
+    background: #e5e7eb;
+}
+
+.reaction.user-reacted {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.message-composer {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+}
+
+.composer-container {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+}
+
+.composer-input {
+    flex: 1;
+    border: 1px solid #d1d5db;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    resize: none;
+    min-height: 40px;
+    max-height: 120px;
+    line-height: 1.4;
+}
+
+.composer-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.composer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.composer-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.composer-btn:hover {
+    background: #5a67d8;
+}
+
+.composer-btn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+.typing-indicator {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-style: italic;
+    border-top: 1px solid #f3f4f6;
+}
+
+.online-users {
+    padding: 15px 20px;
+    border-top: 1px solid #2d2d2d;
+}
+
+.online-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.online-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.online-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #ccc;
+    font-size: 0.875rem;
+}
+
+.online-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.online-status {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #6b7280;
+    padding: 40px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: #d1d5db;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.empty-description {
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 400px;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 60px);
+    }
+    
+    .chat-sidebar {
+        width: 280px;
+        position: absolute;
+        left: -280px;
+        top: 0;
+        height: 100%;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .chat-sidebar.open {
+        left: 0;
+    }
+    
+    .sidebar-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+}
+
+.connection-status {
+    padding: 5px 20px;
+    background: #dc2626;
+    color: white;
+    font-size: 0.875rem;
+    text-align: center;
+    display: none;
+}
+
+.connection-status.show {
+    display: block;
+}
+
+.connection-status.connected {
+    background: #10b981;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container" id="chatContainer">
+    <!-- Sidebar -->
+    <div class="chat-sidebar" id="chatSidebar">
+        <!-- Header da Sidebar -->
+        <div class="sidebar-header">
+            <div class="sidebar-title">Move Marias Chat</div>
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                </div>
+                <span>{{ user.get_full_name|default:user.username }}</span>
+                <div class="status-indicator"></div>
+            </div>
+        </div>
+
+        <!-- Busca -->
+        <div class="sidebar-search">
+            <input type="text" class="search-input" placeholder="Buscar conversas..." id="searchInput">
+        </div>
+
+        <!-- Conteúdo da Sidebar -->
+        <div class="sidebar-content">
+            <!-- Canais -->
+            <div class="channel-section">
+                <div class="section-header">
+                    <span>Canais</span>
+                    <span class="section-toggle" onclick="toggleSection('channels')">−</span>
+                </div>
+                <ul class="channel-list" id="channelsList">
+                    {% for channel in channels %}
+                    <li class="channel-item {% if channel.id == selected_channel.id %}active{% endif %}" 
+                        data-channel-id="{{ channel.id }}" 
+                        onclick="selectChannel('{{ channel.id }}')">
+                        <div class="channel-icon">
+                            {% if channel.channel_type == 'public' %}
+                                <i class="fas fa-hashtag"></i>
+                            {% elif channel.channel_type == 'private' %}
+                                <i class="fas fa-lock"></i>
+                            {% elif channel.channel_type == 'department' %}
+                                <i class="fas fa-building"></i>
+                            {% else %}
+                                <i class="fas fa-comments"></i>
+                            {% endif %}
+                        </div>
+                        <span class="channel-name">{{ channel.name }}</span>
+                        {% if channel.unread_count %}
+                        <span class="unread-badge">{{ channel.unread_count }}</span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li style="padding: 10px 20px; color: #666; font-size: 0.875rem;">
+                        Nenhum canal disponível
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Mensagens Diretas -->
+            <div class="channel-section">
+                <div class="section-header">
+                    <span>Mensagens Diretas</span>
+                    <span class="section-toggle" onclick="toggleSection('dms')">−</span>
+                </div>
+                <ul class="channel-list" id="dmsList">
+                    {% for dm in direct_messages %}
+                    <li class="channel-item {% if dm.id == selected_channel.id %}active{% endif %}" 
+                        data-channel-id="{{ dm.id }}" 
+                        onclick="selectChannel('{{ dm.id }}')">
+                        <div class="channel-icon">
+                            <div class="user-avatar" style="width: 20px; height: 20px; font-size: 0.75rem;">
+                                {{ dm.other_user.first_name|slice:":1"|upper|default:dm.other_user.username|slice:":1"|upper }}
+                            </div>
+                        </div>
+                        <span class="channel-name">{{ dm.other_user.get_full_name|default:dm.other_user.username }}</span>
+                        {% if dm.unread_count %}
+                        <span class="unread-badge">{{ dm.unread_count }}</span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li style="padding: 10px 20px; color: #666; font-size: 0.875rem;">
+                        Nenhuma conversa
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Usuários Online -->
+        <div class="online-users">
+            <div class="online-title">Online ({{ online_users.count }})</div>
+            <div class="online-list" id="onlineList">
+                {% for user in online_users %}
+                <div class="online-user">
+                    <div class="online-avatar">
+                        {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                        <div class="online-status"></div>
+                    </div>
+                    <span>{{ user.get_full_name|default:user.username }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Área Principal -->
+    <div class="chat-main">
+        <!-- Status de Conexão -->
+        <div class="connection-status" id="connectionStatus">
+            Conectando ao chat...
+        </div>
+
+        {% if selected_channel %}
+        <!-- Header do Canal -->
+        <div class="main-header">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" style="display: none;">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div class="channel-info">
+                <div class="channel-title">
+                    {% if selected_channel.channel_type == 'direct' %}
+                        {{ selected_channel.other_user.get_full_name|default:selected_channel.other_user.username }}
+                    {% else %}
+                        {{ selected_channel.name }}
+                    {% endif %}
+                </div>
+                {% if selected_channel.description %}
+                <div class="channel-description">{{ selected_channel.description }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="channel-actions">
+                <button class="action-btn" onclick="showChannelInfo()">
+                    <i class="fas fa-info-circle"></i>
+                    Informações
+                </button>
+                {% if selected_channel.channel_type != 'direct' %}
+                <button class="action-btn" onclick="showChannelMembers()">
+                    <i class="fas fa-users"></i>
+                    Membros
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Área de Mensagens -->
+        <div class="messages-container" id="messagesContainer">
+            <!-- Mensagens serão carregadas via JavaScript -->
+        </div>
+
+        <!-- Indicador de Digitação -->
+        <div class="typing-indicator" id="typingIndicator" style="display: none;">
+            <span id="typingText"></span>
+        </div>
+
+        <!-- Compositor de Mensagens -->
+        <div class="message-composer">
+            <div class="composer-container">
+                <textarea 
+                    class="composer-input" 
+                    id="messageInput" 
+                    placeholder="Digite sua mensagem..."
+                    rows="1"></textarea>
+                
+                <div class="composer-actions">
+                    <button class="composer-btn" id="attachBtn" title="Anexar arquivo">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button class="composer-btn" id="sendBtn" onclick="sendMessage()" title="Enviar mensagem">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+            <input type="file" id="fileInput" style="display: none;" accept="image/*,document/*">
+        </div>
+        {% else %}
+        <!-- Estado Vazio -->
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="empty-title">Bem-vindo ao Chat</div>
+            <div class="empty-description">
+                Selecione um canal ou inicie uma conversa para começar a trocar mensagens com sua equipe.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Input hidden para CSRF -->
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+<input type="hidden" id="currentChannelId" value="{{ selected_channel.id|default:'' }}">
+<input type="hidden" id="currentUserId" value="{{ user.id }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variáveis globais
+let chatSocket = null;
+let currentChannelId = document.getElementById('currentChannelId').value;
+let currentUserId = document.getElementById('currentUserId').value;
+let typingTimer = null;
+let isTyping = false;
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChat();
+    setupEventListeners();
+    
+    if (currentChannelId) {
+        connectToChannel(currentChannelId);
+        loadMessages(currentChannelId);
+    }
+});
+
+// Configurar event listeners
+function setupEventListeners() {
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const attachBtn = document.getElementById('attachBtn');
+    const fileInput = document.getElementById('fileInput');
+    const searchInput = document.getElementById('searchInput');
+
+    // Auto-resize textarea
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        
+        // Indicador de digitação
+        handleTyping();
+    });
+
+    // Enviar mensagem com Enter
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Anexar arquivo
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileAttachment);
+
+    // Busca
+    searchInput.addEventListener('input', handleSearch);
+
+    // Redimensionamento responsivo
+    window.addEventListener('resize', handleResize);
+    handleResize();
+}
+
+// Conectar ao WebSocket do canal
+function connectToChannel(channelId) {
+    // Desconectar socket anterior se existir
+    if (chatSocket) {
+        chatSocket.close();
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const socketUrl = `${protocol}//${window.location.host}/ws/chat/${channelId}/`;
+    
+    chatSocket = new WebSocket(socketUrl);
+
+    chatSocket.onopen = function(e) {
+        console.log('Conectado ao canal:', channelId);
+        updateConnectionStatus('connected');
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        handleWebSocketMessage(data);
+    };
+
+    chatSocket.onclose = function(e) {
+        console.log('Desconectado do canal:', channelId);
+        updateConnectionStatus('disconnected');
+        
+        // Tentar reconectar após 3 segundos
+        setTimeout(() => {
+            if (currentChannelId === channelId) {
+                connectToChannel(channelId);
+            }
+        }, 3000);
+    };
+
+    chatSocket.onerror = function(e) {
+        console.error('Erro no WebSocket:', e);
+        updateConnectionStatus('error');
+    };
+}
+
+// Processar mensagens do WebSocket
+function handleWebSocketMessage(data) {
+    switch(data.type) {
+        case 'chat_message':
+            addMessageToUI(data.message);
+            break;
+        case 'typing_start':
+            showTypingIndicator(data.user);
+            break;
+        case 'typing_stop':
+            hideTypingIndicator(data.user);
+            break;
+        case 'user_joined':
+            updateOnlineUsers(data.online_users);
+            break;
+        case 'user_left':
+            updateOnlineUsers(data.online_users);
+            break;
+        case 'message_reaction':
+            updateMessageReaction(data.message_id, data.reactions);
+            break;
+    }
+}
+
+// Enviar mensagem
+function sendMessage() {
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value.trim();
+    
+    if (!message || !chatSocket) return;
+
+    chatSocket.send(JSON.stringify({
+        'type': 'chat_message',
+        'message': message
+    }));
+
+    messageInput.value = '';
+    messageInput.style.height = 'auto';
+    
+    // Parar indicador de digitação
+    stopTyping();
+}
+
+// Carregar mensagens do canal
+async function loadMessages(channelId) {
+    try {
+        const response = await fetch(`/chat/api/messages/${channelId}/`, {
+            headers: {
+                'X-CSRFToken': document.getElementById('csrfToken').value
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayMessages(data.messages);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
+    }
+}
+
+// Exibir mensagens na UI
+function displayMessages(messages) {
+    const container = document.getElementById('messagesContainer');
+    container.innerHTML = '';
+    
+    messages.forEach(message => {
+        addMessageToUI(message);
+    });
+    
+    scrollToBottom();
+}
+
+// Adicionar mensagem à UI
+function addMessageToUI(message) {
+    const container = document.getElementById('messagesContainer');
+    const messageElement = createMessageElement(message);
+    container.appendChild(messageElement);
+    scrollToBottom();
+}
+
+// Criar elemento de mensagem
+function createMessageElement(message) {
+    const div = document.createElement('div');
+    div.className = 'message-group';
+    div.setAttribute('data-message-id', message.id);
+    
+    div.innerHTML = `
+        <div class="message-avatar">
+            ${message.author.first_name ? message.author.first_name.charAt(0).toUpperCase() : message.author.username.charAt(0).toUpperCase()}
+        </div>
+        <div class="message-content">
+            <div class="message-header">
+                <span class="message-author">${message.author.full_name || message.author.username}</span>
+                <span class="message-time">${formatMessageTime(message.created_at)}</span>
+            </div>
+            <div class="message-text">${escapeHtml(message.content)}</div>
+            ${message.reactions ? createReactionsHTML(message.reactions) : ''}
+        </div>
+    `;
+    
+    return div;
+}
+
+// Criar HTML das reações
+function createReactionsHTML(reactions) {
+    if (!reactions || reactions.length === 0) return '';
+    
+    const reactionsHTML = reactions.map(reaction => 
+        `<span class="reaction ${reaction.user_reacted ? 'user-reacted' : ''}" 
+               onclick="toggleReaction('${reaction.emoji}', '${reaction.message_id}')">
+            ${reaction.emoji} ${reaction.count}
+        </span>`
+    ).join('');
+    
+    return `<div class="message-reactions">${reactionsHTML}</div>`;
+}
+
+// Selecionar canal
+function selectChannel(channelId) {
+    if (channelId === currentChannelId) return;
+    
+    // Atualizar UI
+    document.querySelectorAll('.channel-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    document.querySelector(`[data-channel-id="${channelId}"]`).classList.add('active');
+    
+    // Conectar ao novo canal
+    currentChannelId = channelId;
+    document.getElementById('currentChannelId').value = channelId;
+    
+    connectToChannel(channelId);
+    loadMessages(channelId);
+    
+    // Recarregar página para atualizar header (temporário)
+    window.location.href = `?channel=${channelId}`;
+}
+
+// Indicador de digitação
+function handleTyping() {
+    if (!chatSocket) return;
+    
+    if (!isTyping) {
+        isTyping = true;
+        chatSocket.send(JSON.stringify({
+            'type': 'typing_start'
+        }));
+    }
+    
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(stopTyping, 1000);
+}
+
+function stopTyping() {
+    if (isTyping && chatSocket) {
+        isTyping = false;
+        chatSocket.send(JSON.stringify({
+            'type': 'typing_stop'
+        }));
+    }
+    clearTimeout(typingTimer);
+}
+
+// Mostrar/ocultar indicador de digitação
+function showTypingIndicator(user) {
+    const indicator = document.getElementById('typingIndicator');
+    const text = document.getElementById('typingText');
+    
+    text.textContent = `${user.full_name || user.username} está digitando...`;
+    indicator.style.display = 'block';
+}
+
+function hideTypingIndicator(user) {
+    const indicator = document.getElementById('typingIndicator');
+    indicator.style.display = 'none';
+}
+
+// Atualizar status de conexão
+function updateConnectionStatus(status) {
+    const statusElement = document.getElementById('connectionStatus');
+    
+    statusElement.classList.remove('show', 'connected');
+    
+    switch(status) {
+        case 'connected':
+            statusElement.textContent = 'Conectado';
+            statusElement.classList.add('show', 'connected');
+            setTimeout(() => statusElement.classList.remove('show'), 2000);
+            break;
+        case 'disconnected':
+            statusElement.textContent = 'Desconectado - Tentando reconectar...';
+            statusElement.classList.add('show');
+            break;
+        case 'error':
+            statusElement.textContent = 'Erro de conexão';
+            statusElement.classList.add('show');
+            break;
+    }
+}
+
+// Utilitários
+function scrollToBottom() {
+    const container = document.getElementById('messagesContainer');
+    container.scrollTop = container.scrollHeight;
+}
+
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Responsividade
+function handleResize() {
+    if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar-toggle').style.display = 'block';
+    } else {
+        document.querySelector('.sidebar-toggle').style.display = 'none';
+        document.getElementById('chatSidebar').classList.remove('open');
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('chatSidebar').classList.toggle('open');
+}
+
+// Outras funcções
+function toggleSection(section) {
+    // Implementar toggle de seções
+}
+
+function handleSearch() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const channels = document.querySelectorAll('.channel-item');
+    
+    channels.forEach(channel => {
+        const name = channel.querySelector('.channel-name').textContent.toLowerCase();
+        channel.style.display = name.includes(query) ? 'flex' : 'none';
+    });
+}
+
+function handleFileAttachment() {
+    // Implementar upload de arquivos
+}
+
+function showChannelInfo() {
+    // Implementar modal de informações do canal
+}
+
+function showChannelMembers() {
+    // Implementar modal de membros do canal
+}
+
+function initializeChat() {
+    // Log inicial
+    console.log('Chat inicializado');
+}
+</script>
+{% endblock %}

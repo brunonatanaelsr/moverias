@@ -1,0 +1,950 @@
+{% load static %}
+
+<!-- Sidebar do Chat -->
+<div class="chat-sidebar" id="chatSidebar">
+    <!-- Header da Sidebar -->
+    <div class="sidebar-header">
+        <div class="sidebar-title">
+            <i class="fas fa-comments"></i>
+            Move Marias Chat
+        </div>
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                <div class="status-indicator online"></div>
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+                <div class="user-status">Online</div>
+            </div>
+            <div class="user-actions">
+                <button class="user-action-btn" onclick="toggleUserMenu()" title="Configurações">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Menu do usuário -->
+        <div class="user-menu" id="userMenu" style="display: none;">
+            <div class="menu-item" onclick="setStatus('online')">
+                <div class="status-dot online"></div>
+                Online
+            </div>
+            <div class="menu-item" onclick="setStatus('away')">
+                <div class="status-dot away"></div>
+                Ausente
+            </div>
+            <div class="menu-item" onclick="setStatus('busy')">
+                <div class="status-dot busy"></div>
+                Ocupado
+            </div>
+            <div class="menu-divider"></div>
+            <div class="menu-item" onclick="showPreferences()">
+                <i class="fas fa-cog"></i>
+                Preferências
+            </div>
+            <div class="menu-item" onclick="showHelp()">
+                <i class="fas fa-question-circle"></i>
+                Ajuda
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Busca -->
+    <div class="sidebar-search">
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" 
+                   class="search-input" 
+                   placeholder="Buscar conversas, pessoas..." 
+                   id="searchInput"
+                   autocomplete="off">
+            <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display: none;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Resultados da busca -->
+        <div class="search-results" id="searchResults" style="display: none;">
+            <div class="search-section">
+                <div class="search-section-title">Canais</div>
+                <div class="search-items" id="searchChannels"></div>
+            </div>
+            <div class="search-section">
+                <div class="search-section-title">Pessoas</div>
+                <div class="search-items" id="searchPeople"></div>
+            </div>
+            <div class="search-section">
+                <div class="search-section-title">Mensagens</div>
+                <div class="search-items" id="searchMessages"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal da Sidebar -->
+    <div class="sidebar-content">
+        <!-- Ações Rápidas -->
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="createChannel()" title="Criar Canal">
+                <i class="fas fa-plus"></i>
+                <span>Criar Canal</span>
+            </button>
+            <button class="quick-action-btn" onclick="startDirectMessage()" title="Nova Mensagem">
+                <i class="fas fa-user-plus"></i>
+                <span>Nova Mensagem</span>
+            </button>
+        </div>
+
+        <!-- Seção de Canais Favoritos -->
+        {% if favorite_channels %}
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('favorites')">
+                <i class="fas fa-star section-icon"></i>
+                <span class="section-title">Favoritos</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ favorite_channels|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="favorites"></i>
+                </div>
+            </div>
+            <div class="channel-list" id="favoritesList" data-section="favorites">
+                {% for channel in favorite_channels %}
+                {% include 'chat/partials/channel_item.html' with channel=channel is_favorite=True %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Seção de Canais Públicos -->
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('public')">
+                <i class="fas fa-hashtag section-icon"></i>
+                <span class="section-title">Canais</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ public_channels|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="public"></i>
+                </div>
+            </div>
+            <div class="channel-list expanded" id="publicChannelsList" data-section="public">
+                {% for channel in public_channels %}
+                {% include 'chat/partials/channel_item.html' with channel=channel %}
+                {% endfor %}
+                
+                {% if not public_channels %}
+                <div class="empty-section">
+                    <i class="fas fa-hashtag"></i>
+                    <span>Nenhum canal público disponível</span>
+                    <button class="create-channel-btn" onclick="createChannel()">
+                        Criar primeiro canal
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção de Canais Privados -->
+        {% if private_channels %}
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('private')">
+                <i class="fas fa-lock section-icon"></i>
+                <span class="section-title">Canais Privados</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ private_channels|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="private"></i>
+                </div>
+            </div>
+            <div class="channel-list" id="privateChannelsList" data-section="private">
+                {% for channel in private_channels %}
+                {% include 'chat/partials/channel_item.html' with channel=channel %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Seção de Mensagens Diretas -->
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('dms')">
+                <i class="fas fa-user section-icon"></i>
+                <span class="section-title">Mensagens Diretas</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ direct_messages|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="dms"></i>
+                </div>
+            </div>
+            <div class="channel-list expanded" id="directMessagesList" data-section="dms">
+                {% for dm in direct_messages %}
+                {% include 'chat/partials/dm_item.html' with dm=dm %}
+                {% endfor %}
+                
+                {% if not direct_messages %}
+                <div class="empty-section">
+                    <i class="fas fa-user"></i>
+                    <span>Nenhuma conversa ativa</span>
+                    <button class="create-channel-btn" onclick="startDirectMessage()">
+                        Iniciar conversa
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção de Canais de Departamento -->
+        {% if department_channels %}
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('departments')">
+                <i class="fas fa-building section-icon"></i>
+                <span class="section-title">Departamentos</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ department_channels|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="departments"></i>
+                </div>
+            </div>
+            <div class="channel-list" id="departmentChannelsList" data-section="departments">
+                {% for channel in department_channels %}
+                {% include 'chat/partials/channel_item.html' with channel=channel %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Seção de Canais de Projeto -->
+        {% if project_channels %}
+        <div class="channel-section">
+            <div class="section-header" onclick="toggleSection('projects')">
+                <i class="fas fa-folder section-icon"></i>
+                <span class="section-title">Projetos</span>
+                <div class="section-controls">
+                    <span class="section-count">{{ project_channels|length }}</span>
+                    <i class="fas fa-chevron-down section-toggle" data-section="projects"></i>
+                </div>
+            </div>
+            <div class="channel-list" id="projectChannelsList" data-section="projects">
+                {% for channel in project_channels %}
+                {% include 'chat/partials/channel_item.html' with channel=channel %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer da Sidebar - Usuários Online -->
+    <div class="sidebar-footer">
+        <div class="online-section">
+            <div class="online-header" onclick="toggleOnlineUsers()">
+                <i class="fas fa-circle online-dot"></i>
+                <span class="online-title">Online</span>
+                <span class="online-count" id="onlineCount">{{ online_users.count }}</span>
+                <i class="fas fa-chevron-up online-toggle" id="onlineToggle"></i>
+            </div>
+            
+            <div class="online-users-list" id="onlineUsersList">
+                {% for user in online_users %}
+                <div class="online-user" onclick="startDirectMessageWith('{{ user.id }}')">
+                    <div class="online-user-avatar">
+                        {{ user.first_name|slice:":1"|upper|default:user.username|slice:":1"|upper }}
+                        <div class="user-status-dot online"></div>
+                    </div>
+                    <div class="online-user-info">
+                        <div class="online-user-name">{{ user.get_full_name|default:user.username }}</div>
+                        <div class="online-user-status">{{ user.department.name|default:"Disponível" }}</div>
+                    </div>
+                    <div class="online-user-actions">
+                        <button class="user-action-icon" onclick="event.stopPropagation(); startDirectMessageWith('{{ user.id }}')" title="Enviar mensagem">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-online">
+                    <i class="fas fa-user-slash"></i>
+                    <span>Nenhum usuário online</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Estatísticas Rápidas -->
+        <div class="stats-section">
+            <div class="stat-item">
+                <i class="fas fa-comments"></i>
+                <span>{{ total_messages|default:0 }} mensagens hoje</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-users"></i>
+                <span>{{ total_active_users|default:0 }} usuários ativos</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos específicos da sidebar */
+.chat-sidebar {
+    width: 320px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #3d3d3d;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+/* Header da sidebar */
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #3d3d3d;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    position: relative;
+}
+
+.sidebar-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    position: relative;
+}
+
+.status-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.status-indicator.online { background: #10b981; }
+.status-indicator.away { background: #f59e0b; }
+.status-indicator.busy { background: #ef4444; }
+.status-indicator.offline { background: #6b7280; }
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: white;
+}
+
+.user-status {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+}
+
+.user-action-btn {
+    background: none;
+    border: none;
+    color: #a0a0a0;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.user-action-btn:hover {
+    background: #3d3d3d;
+    color: white;
+}
+
+/* Menu do usuário */
+.user-menu {
+    position: absolute;
+    top: 100%;
+    right: 20px;
+    background: #2d2d2d;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    min-width: 200px;
+    z-index: 1000;
+    border: 1px solid #3d3d3d;
+}
+
+.menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+}
+
+.menu-item:hover {
+    background: #3d3d3d;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #3d3d3d;
+    margin: 5px 0;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* Barra de busca */
+.sidebar-search {
+    padding: 15px 20px;
+    border-bottom: 1px solid #3d3d3d;
+    position: relative;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #666;
+    font-size: 0.875rem;
+    z-index: 1;
+}
+
+.search-input {
+    width: 100%;
+    background: #3d3d3d;
+    border: none;
+    padding: 12px 40px 12px 35px;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.search-input::placeholder {
+    color: #666;
+}
+
+.search-input:focus {
+    outline: none;
+    background: #4a4a4a;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.search-clear {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.search-clear:hover {
+    background: #5d5d5d;
+    color: white;
+}
+
+/* Resultados da busca */
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 20px;
+    right: 20px;
+    background: #2d2d2d;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    border: 1px solid #3d3d3d;
+    margin-top: 5px;
+}
+
+.search-section {
+    padding: 10px 0;
+}
+
+.search-section:not(:last-child) {
+    border-bottom: 1px solid #3d3d3d;
+}
+
+.search-section-title {
+    padding: 0 16px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Ações rápidas */
+.quick-actions {
+    padding: 15px 20px;
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+.quick-action-btn {
+    flex: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+}
+
+.quick-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Conteúdo da sidebar */
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+}
+
+/* Seções de canais */
+.channel-section {
+    margin-bottom: 5px;
+}
+
+.section-header {
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #a0a0a0;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.section-header:hover {
+    color: white;
+    background: rgba(255,255,255,0.05);
+}
+
+.section-icon {
+    font-size: 0.875rem;
+}
+
+.section-title {
+    flex: 1;
+}
+
+.section-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-count {
+    font-size: 0.75rem;
+    background: #3d3d3d;
+    padding: 2px 6px;
+    border-radius: 10px;
+    color: #a0a0a0;
+}
+
+.section-toggle {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.section-toggle.expanded {
+    transform: rotate(180deg);
+}
+
+/* Lista de canais */
+.channel-list {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.channel-list.expanded {
+    max-height: 500px;
+}
+
+/* Estado vazio */
+.empty-section {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+}
+
+.empty-section i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.create-channel-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+}
+
+.create-channel-btn:hover {
+    background: #5a67d8;
+}
+
+/* Footer da sidebar */
+.sidebar-footer {
+    border-top: 1px solid #3d3d3d;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+}
+
+/* Seção de usuários online */
+.online-section {
+    padding: 15px 20px;
+}
+
+.online-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    user-select: none;
+}
+
+.online-dot {
+    font-size: 0.5rem;
+    color: #10b981;
+}
+
+.online-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.online-count {
+    background: #3d3d3d;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: #a0a0a0;
+}
+
+.online-toggle {
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+}
+
+.online-users-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.online-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.online-user:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.online-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.user-status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.online-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.online-user-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.online-user-status {
+    font-size: 0.75rem;
+    color: #a0a0a0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-action-icon {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.online-user:hover .user-action-icon {
+    opacity: 1;
+}
+
+.user-action-icon:hover {
+    background: #3d3d3d;
+    color: white;
+}
+
+.empty-online {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    padding: 20px 0;
+}
+
+.empty-online i {
+    display: block;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+/* Estatísticas */
+.stats-section {
+    padding: 15px 20px;
+    border-top: 1px solid #3d3d3d;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Scrollbar personalizada */
+.sidebar-content::-webkit-scrollbar,
+.online-users-list::-webkit-scrollbar,
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track,
+.online-users-list::-webkit-scrollbar-track,
+.search-results::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb,
+.online-users-list::-webkit-scrollbar-thumb,
+.search-results::-webkit-scrollbar-thumb {
+    background: #3d3d3d;
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover,
+.online-users-list::-webkit-scrollbar-thumb:hover,
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: #4a4a4a;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .chat-sidebar {
+        width: 100%;
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .chat-sidebar.open {
+        left: 0;
+    }
+}
+</style>
+
+<script>
+// Funções da sidebar
+function toggleSection(sectionId) {
+    const list = document.querySelector(`[data-section="${sectionId}"]`);
+    const toggle = document.querySelector(`[data-section="${sectionId}"] ~ .section-header .section-toggle`);
+    
+    if (list && toggle) {
+        list.classList.toggle('expanded');
+        toggle.classList.toggle('expanded');
+    }
+}
+
+function toggleUserMenu() {
+    const menu = document.getElementById('userMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleOnlineUsers() {
+    const list = document.getElementById('onlineUsersList');
+    const toggle = document.getElementById('onlineToggle');
+    
+    list.classList.toggle('expanded');
+    toggle.classList.toggle('expanded');
+}
+
+function setStatus(status) {
+    // Implementar mudança de status
+    console.log('Mudando status para:', status);
+    toggleUserMenu();
+}
+
+function clearSearch() {
+    const input = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('searchClear');
+    const results = document.getElementById('searchResults');
+    
+    input.value = '';
+    clearBtn.style.display = 'none';
+    results.style.display = 'none';
+}
+
+function createChannel() {
+    // Implementar criação de canal
+    console.log('Criando novo canal');
+}
+
+function startDirectMessage() {
+    // Implementar início de mensagem direta
+    console.log('Iniciando nova mensagem direta');
+}
+
+function startDirectMessageWith(userId) {
+    // Implementar mensagem direta com usuário específico
+    console.log('Iniciando conversa com usuário:', userId);
+}
+
+function showPreferences() {
+    // Implementar tela de preferências
+    console.log('Mostrando preferências');
+    toggleUserMenu();
+}
+
+function showHelp() {
+    // Implementar tela de ajuda
+    console.log('Mostrando ajuda');
+    toggleUserMenu();
+}
+
+// Busca em tempo real
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    const clearBtn = document.getElementById('searchClear');
+    const results = document.getElementById('searchResults');
+    
+    if (query.length > 0) {
+        clearBtn.style.display = 'block';
+        results.style.display = 'block';
+        performSearch(query);
+    } else {
+        clearBtn.style.display = 'none';
+        results.style.display = 'none';
+    }
+});
+
+function performSearch(query) {
+    // Implementar busca
+    console.log('Buscando por:', query);
+}
+
+// Fechar menus ao clicar fora
+document.addEventListener('click', function(e) {
+    const userMenu = document.getElementById('userMenu');
+    const searchResults = document.getElementById('searchResults');
+    
+    if (!e.target.closest('.sidebar-user')) {
+        userMenu.style.display = 'none';
+    }
+    
+    if (!e.target.closest('.sidebar-search')) {
+        searchResults.style.display = 'none';
+    }
+});
+</script>

@@ -1,0 +1,1177 @@
+{% load static %}
+
+<!-- Interface principal do canal -->
+<div class="channel-view" id="channelView" data-channel-id="{{ channel.id }}">
+    <!-- Header do Canal -->
+    <div class="channel-header">
+        <div class="channel-info">
+            <div class="channel-title-section">
+                <div class="channel-icon">
+                    {% if channel.channel_type == 'public' %}
+                        <i class="fas fa-hashtag"></i>
+                    {% elif channel.channel_type == 'private' %}
+                        <i class="fas fa-lock"></i>
+                    {% elif channel.channel_type == 'department' %}
+                        <i class="fas fa-building"></i>
+                    {% elif channel.channel_type == 'project' %}
+                        <i class="fas fa-folder"></i>
+                    {% elif channel.channel_type == 'task' %}
+                        <i class="fas fa-tasks"></i>
+                    {% elif channel.channel_type == 'direct' %}
+                        <div class="user-avatar-small">
+                            {{ channel.other_user.first_name|slice:":1"|upper|default:channel.other_user.username|slice:":1"|upper }}
+                        </div>
+                    {% else %}
+                        <i class="fas fa-comments"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="channel-details">
+                    <h2 class="channel-name">
+                        {% if channel.channel_type == 'direct' %}
+                            {{ channel.other_user.get_full_name|default:channel.other_user.username }}
+                        {% else %}
+                            {{ channel.name }}
+                        {% endif %}
+                    </h2>
+                    
+                    {% if channel.description %}
+                    <p class="channel-description">{{ channel.description }}</p>
+                    {% elif channel.channel_type == 'direct' %}
+                    <p class="channel-description">
+                        <span class="status-indicator {{ channel.other_user.status|default:'offline' }}"></span>
+                        {% if channel.other_user.is_online %}
+                            Online
+                        {% else %}
+                            Visto por último: {{ channel.other_user.last_seen|timesince }} atrás
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Membros do canal (só para canais não diretos) -->
+            {% if channel.channel_type != 'direct' %}
+            <div class="channel-members-preview">
+                <div class="members-avatars">
+                    {% for member in channel.members.all|slice:":5" %}
+                    <div class="member-avatar" title="{{ member.user.get_full_name|default:member.user.username }}">
+                        {{ member.user.first_name|slice:":1"|upper|default:member.user.username|slice:":1"|upper }}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if channel.member_count > 5 %}
+                    <div class="member-count-more">
+                        +{{ channel.member_count|add:"-5" }}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <span class="member-count-text">
+                    {{ channel.member_count }} membro{{ channel.member_count|pluralize }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Ações do Canal -->
+        <div class="channel-actions">
+            {% if channel.channel_type != 'direct' %}
+            <button class="channel-action-btn" onclick="showChannelMembers()" title="Ver membros">
+                <i class="fas fa-users"></i>
+                <span class="btn-text">Membros</span>
+            </button>
+            {% endif %}
+            
+            <button class="channel-action-btn" onclick="showChannelInfo()" title="Informações do canal">
+                <i class="fas fa-info-circle"></i>
+                <span class="btn-text">Info</span>
+            </button>
+            
+            <button class="channel-action-btn" onclick="searchInChannel()" title="Pesquisar no canal">
+                <i class="fas fa-search"></i>
+                <span class="btn-text">Buscar</span>
+            </button>
+            
+            {% if channel.can_user_manage %}
+            <button class="channel-action-btn" onclick="showChannelSettings()" title="Configurações do canal">
+                <i class="fas fa-cog"></i>
+                <span class="btn-text">Config</span>
+            </button>
+            {% endif %}
+            
+            <div class="channel-actions-dropdown">
+                <button class="channel-action-btn dropdown-toggle" onclick="toggleChannelMenu()" title="Mais opções">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                
+                <div class="dropdown-menu" id="channelMenu">
+                    <div class="dropdown-item" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span>{% if channel.notifications_enabled %}Silenciar{% else %}Ativar{% endif %} notificações</span>
+                    </div>
+                    
+                    {% if channel.channel_type != 'direct' %}
+                    <div class="dropdown-item" onclick="toggleFavorite()">
+                        <i class="fas fa-star"></i>
+                        <span>{% if channel.is_favorite %}Remover dos{% else %}Adicionar aos{% endif %} favoritos</span>
+                    </div>
+                    
+                    <div class="dropdown-item" onclick="copyChannelLink()">
+                        <i class="fas fa-link"></i>
+                        <span>Copiar link do canal</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="dropdown-divider"></div>
+                    
+                    {% if channel.can_user_leave %}
+                    <div class="dropdown-item danger" onclick="leaveChannel()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sair do canal</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Área de Mensagens -->
+    <div class="messages-area" id="messagesArea">
+        <!-- Carregamento inicial -->
+        <div class="loading-messages" id="loadingMessages">
+            <div class="spinner"></div>
+            <span>Carregando mensagens...</span>
+        </div>
+        
+        <!-- Container de mensagens -->
+        <div class="messages-container" id="messagesContainer">
+            <!-- Mensagens serão inseridas aqui via JavaScript -->
+        </div>
+        
+        <!-- Botão para carregar mensagens antigas -->
+        <div class="load-older-messages" id="loadOlderBtn" style="display: none;">
+            <button class="load-older-btn" onclick="loadOlderMessages()">
+                <i class="fas fa-arrow-up"></i>
+                Carregar mensagens anteriores
+            </button>
+        </div>
+        
+        <!-- Mensagem de chegada ao final -->
+        <div class="end-of-messages" id="endOfMessages" style="display: none;">
+            <div class="end-marker">
+                <i class="fas fa-flag-checkered"></i>
+                <span>Você chegou ao início desta conversa</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Indicator de Digitação -->
+    <div class="typing-indicator" id="typingIndicator" style="display: none;">
+        <div class="typing-users">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span class="typing-text" id="typingText">Alguém está digitando...</span>
+        </div>
+    </div>
+    
+    <!-- Área de Composer -->
+    {% include 'chat/message_composer.html' %}
+</div>
+
+<!-- Modal de Informações do Canal -->
+<div class="modal" id="channelInfoModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Informações do Canal</h3>
+            <button class="modal-close" onclick="closeModal('channelInfoModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="info-section">
+                <h4>Detalhes</h4>
+                <div class="info-item">
+                    <strong>Nome:</strong>
+                    <span>{{ channel.name }}</span>
+                </div>
+                {% if channel.description %}
+                <div class="info-item">
+                    <strong>Descrição:</strong>
+                    <span>{{ channel.description }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <strong>Tipo:</strong>
+                    <span>{{ channel.get_channel_type_display }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Criado em:</strong>
+                    <span>{{ channel.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                {% if channel.created_by %}
+                <div class="info-item">
+                    <strong>Criado por:</strong>
+                    <span>{{ channel.created_by.get_full_name|default:channel.created_by.username }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if channel.channel_type != 'direct' %}
+            <div class="info-section">
+                <h4>Estatísticas</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ channel.member_count }}</div>
+                        <div class="stat-label">Membros</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ channel.message_count }}</div>
+                        <div class="stat-label">Mensagens</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ channel.active_today }}</div>
+                        <div class="stat-label">Ativos Hoje</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Membros do Canal -->
+{% if channel.channel_type != 'direct' %}
+<div class="modal" id="channelMembersModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Membros do Canal</h3>
+            <button class="modal-close" onclick="closeModal('channelMembersModal')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="members-search">
+                <input type="text" placeholder="Buscar membros..." id="membersSearch">
+            </div>
+            
+            <div class="members-list" id="membersList">
+                <!-- Membros serão carregados via JavaScript -->
+            </div>
+            
+            {% if channel.can_user_invite %}
+            <div class="invite-section">
+                <button class="invite-btn" onclick="showInviteModal()">
+                    <i class="fas fa-user-plus"></i>
+                    Convidar Pessoas
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+/* Estilos do canal */
+.channel-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white;
+}
+
+/* Header do canal */
+.channel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
+    min-height: 80px;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-title-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.user-avatar-small {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.channel-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.channel-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.channel-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-indicator.online { background: #10b981; }
+.status-indicator.away { background: #f59e0b; }
+.status-indicator.busy { background: #ef4444; }
+.status-indicator.offline { background: #6b7280; }
+
+.channel-members-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.members-avatars {
+    display: flex;
+    align-items: center;
+    gap: -8px;
+}
+
+.member-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 2px solid white;
+    margin-left: -8px;
+    position: relative;
+    z-index: 1;
+}
+
+.member-avatar:first-child {
+    margin-left: 0;
+}
+
+.member-count-more {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 2px solid white;
+    margin-left: -8px;
+}
+
+.member-count-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Ações do canal */
+.channel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.channel-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.channel-action-btn:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-text {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .btn-text {
+        display: inline;
+    }
+}
+
+.channel-actions-dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    min-width: 200px;
+    z-index: 1000;
+    display: none;
+    margin-top: 4px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 0.875rem;
+}
+
+.dropdown-item:hover {
+    background: #f3f4f6;
+}
+
+.dropdown-item.danger {
+    color: #ef4444;
+}
+
+.dropdown-item.danger:hover {
+    background: #fef2f2;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 4px 0;
+}
+
+/* Área de mensagens */
+.messages-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.loading-messages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.messages-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scroll-behavior: smooth;
+}
+
+.load-older-messages {
+    text-align: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.load-older-btn {
+    background: #f3f4f6;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: #6b7280;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.load-older-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.end-of-messages {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+}
+
+.end-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+}
+
+.end-marker i {
+    font-size: 1.5rem;
+    color: #d1d5db;
+}
+
+/* Indicador de digitação */
+.typing-indicator {
+    padding: 10px 20px;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+
+.typing-users {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 3px;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6b7280;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Modais */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+}
+
+.info-section {
+    margin-bottom: 24px;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-section h4 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item strong {
+    color: #374151;
+    font-weight: 500;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Busca de membros */
+.members-search {
+    margin-bottom: 16px;
+}
+
+.members-search input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+}
+
+.members-search input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.members-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.invite-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.invite-btn {
+    width: 100%;
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.invite-btn:hover {
+    background: #5a67d8;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .channel-header {
+        padding: 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        min-height: auto;
+    }
+    
+    .channel-info {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+    
+    .channel-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .channel-action-btn .btn-text {
+        display: none;
+    }
+    
+    .messages-container {
+        padding: 16px;
+    }
+}
+</style>
+
+<script>
+// Variáveis globais do canal
+let currentChannelId = document.querySelector('[data-channel-id]')?.dataset.channelId;
+let messagesContainer = document.getElementById('messagesContainer');
+let loadingMessages = document.getElementById('loadingMessages');
+let currentPage = 1;
+let hasMoreMessages = true;
+let isLoadingMessages = false;
+
+// Inicialização do canal
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChannel();
+    setupChannelEventListeners();
+});
+
+function initializeChannel() {
+    if (currentChannelId) {
+        loadInitialMessages();
+        setupScrollListener();
+    }
+}
+
+function setupChannelEventListeners() {
+    // Scroll para detectar quando carregar mais mensagens
+    const messagesArea = document.getElementById('messagesArea');
+    if (messagesArea) {
+        messagesArea.addEventListener('scroll', handleScroll);
+    }
+    
+    // Fechar dropdowns ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.channel-actions-dropdown')) {
+            document.getElementById('channelMenu').classList.remove('show');
+        }
+    });
+}
+
+// Carregar mensagens iniciais
+async function loadInitialMessages() {
+    try {
+        loadingMessages.style.display = 'flex';
+        
+        const response = await fetch(`/chat/api/messages/${currentChannelId}/`, {
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            displayMessages(data.messages);
+            hasMoreMessages = data.has_more;
+            updateLoadOlderButton();
+        }
+        
+        loadingMessages.style.display = 'none';
+        scrollToBottom();
+        
+    } catch (error) {
+        console.error('Erro ao carregar mensagens:', error);
+        loadingMessages.style.display = 'none';
+    }
+}
+
+// Carregar mensagens antigas
+async function loadOlderMessages() {
+    if (isLoadingMessages || !hasMoreMessages) return;
+    
+    isLoadingMessages = true;
+    currentPage++;
+    
+    try {
+        const response = await fetch(`/chat/api/messages/${currentChannelId}/?page=${currentPage}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            prependMessages(data.messages);
+            hasMoreMessages = data.has_more;
+            updateLoadOlderButton();
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar mensagens antigas:', error);
+        currentPage--; // Reverter página em caso de erro
+    }
+    
+    isLoadingMessages = false;
+}
+
+// Exibir mensagens
+function displayMessages(messages) {
+    messagesContainer.innerHTML = '';
+    messages.forEach(message => addMessageToContainer(message));
+}
+
+// Adicionar mensagens ao início (para mensagens antigas)
+function prependMessages(messages) {
+    const fragment = document.createDocumentFragment();
+    messages.reverse().forEach(message => {
+        const messageElement = createMessageElement(message);
+        fragment.appendChild(messageElement);
+    });
+    messagesContainer.insertBefore(fragment, messagesContainer.firstChild);
+}
+
+// Adicionar mensagem ao container
+function addMessageToContainer(message) {
+    const messageElement = createMessageElement(message);
+    messagesContainer.appendChild(messageElement);
+}
+
+// Criar elemento de mensagem
+function createMessageElement(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message-group';
+    messageDiv.dataset.messageId = message.id;
+    
+    const isCurrentUser = message.author.id == getCurrentUserId();
+    const messageClass = isCurrentUser ? 'message-own' : 'message-other';
+    
+    messageDiv.innerHTML = `
+        <div class="message ${messageClass}">
+            <div class="message-avatar">
+                ${getAvatarInitials(message.author)}
+            </div>
+            <div class="message-content">
+                <div class="message-header">
+                    <span class="message-author">${message.author.full_name || message.author.username}</span>
+                    <span class="message-time">${formatMessageTime(message.created_at)}</span>
+                </div>
+                <div class="message-text">${escapeHtml(message.content)}</div>
+                ${message.attachments ? createAttachmentsHTML(message.attachments) : ''}
+                ${message.reactions ? createReactionsHTML(message.reactions) : ''}
+            </div>
+            <div class="message-actions">
+                <button class="message-action-btn" onclick="addReaction('${message.id}')" title="Reagir">
+                    <i class="fas fa-smile"></i>
+                </button>
+                <button class="message-action-btn" onclick="replyToMessage('${message.id}')" title="Responder">
+                    <i class="fas fa-reply"></i>
+                </button>
+                ${isCurrentUser ? `<button class="message-action-btn" onclick="editMessage('${message.id}')" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </button>` : ''}
+            </div>
+        </div>
+    `;
+    
+    return messageDiv;
+}
+
+// Funções de ações do canal
+function toggleChannelMenu() {
+    document.getElementById('channelMenu').classList.toggle('show');
+}
+
+function showChannelInfo() {
+    document.getElementById('channelInfoModal').style.display = 'flex';
+}
+
+function showChannelMembers() {
+    document.getElementById('channelMembersModal').style.display = 'flex';
+    loadChannelMembers();
+}
+
+function showChannelSettings() {
+    // Implementar configurações do canal
+}
+
+function searchInChannel() {
+    // Implementar busca no canal
+}
+
+function toggleNotifications() {
+    // Implementar toggle de notificações
+}
+
+function toggleFavorite() {
+    // Implementar toggle de favoritos
+}
+
+function copyChannelLink() {
+    // Implementar cópia do link do canal
+    const link = `${window.location.origin}/chat/?channel=${currentChannelId}`;
+    navigator.clipboard.writeText(link).then(() => {
+        showNotification('Link copiado para a área de transferência!');
+    });
+}
+
+function leaveChannel() {
+    if (confirm('Tem certeza que deseja sair deste canal?')) {
+        // Implementar saída do canal
+    }
+}
+
+// Carregar membros do canal
+async function loadChannelMembers() {
+    try {
+        const response = await fetch(`/chat/api/channels/${currentChannelId}/members/`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayChannelMembers(data.members);
+        }
+    } catch (error) {
+        console.error('Erro ao carregar membros:', error);
+    }
+}
+
+function displayChannelMembers(members) {
+    const membersList = document.getElementById('membersList');
+    membersList.innerHTML = '';
+    
+    members.forEach(member => {
+        const memberDiv = document.createElement('div');
+        memberDiv.className = 'member-item';
+        memberDiv.innerHTML = `
+            <div class="member-avatar">
+                ${getAvatarInitials(member.user)}
+            </div>
+            <div class="member-info">
+                <div class="member-name">${member.user.full_name || member.user.username}</div>
+                <div class="member-role">${member.role}</div>
+            </div>
+            <div class="member-status ${member.user.is_online ? 'online' : 'offline'}">
+                ${member.user.is_online ? 'Online' : 'Offline'}
+            </div>
+        `;
+        membersList.appendChild(memberDiv);
+    });
+}
+
+// Funções utilitárias
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function updateLoadOlderButton() {
+    const loadOlderBtn = document.getElementById('loadOlderBtn');
+    const endOfMessages = document.getElementById('endOfMessages');
+    
+    if (hasMoreMessages) {
+        loadOlderBtn.style.display = 'block';
+        endOfMessages.style.display = 'none';
+    } else {
+        loadOlderBtn.style.display = 'none';
+        endOfMessages.style.display = 'block';
+    }
+}
+
+function setupScrollListener() {
+    const messagesArea = document.getElementById('messagesArea');
+    messagesArea.addEventListener('scroll', debounce(handleScroll, 100));
+}
+
+function handleScroll(e) {
+    const container = e.target;
+    
+    // Carregar mensagens antigas quando chegar perto do topo
+    if (container.scrollTop < 100 && hasMoreMessages && !isLoadingMessages) {
+        loadOlderMessages();
+    }
+}
+
+function scrollToBottom() {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function getCurrentUserId() {
+    return document.getElementById('currentUserId')?.value;
+}
+
+function getAvatarInitials(user) {
+    return user.first_name ? user.first_name.charAt(0).toUpperCase() : user.username.charAt(0).toUpperCase();
+}
+
+function formatMessageTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function createAttachmentsHTML(attachments) {
+    // Implementar exibição de anexos
+    return '';
+}
+
+function createReactionsHTML(reactions) {
+    // Implementar exibição de reações
+    return '';
+}
+
+function showNotification(message) {
+    // Implementar sistema de notificações
+    console.log('Notificação:', message);
+}
+
+// Funções de ações de mensagem
+function addReaction(messageId) {
+    // Implementar adição de reação
+}
+
+function replyToMessage(messageId) {
+    // Implementar resposta à mensagem
+}
+
+function editMessage(messageId) {
+    // Implementar edição de mensagem
+}
+</script>
