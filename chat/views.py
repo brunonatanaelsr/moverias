@@ -192,21 +192,11 @@ def chat_home(request):
         'online_users': online_users,
         'total_messages': total_messages,
         'total_active_users': total_active_users,
+        'current_channel_id': selected_channel.id if selected_channel else None,
     }
     
     # Usar o template principal novo
     return render(request, 'chat/chat_main.html', context)
-        'user_dms': user_dms,
-        'selected_channel': selected_channel,
-        'messages': messages_list,
-        'unread_count': unread_count,
-        'online_users': online_users,
-        'message_form': ChatMessageForm(),
-        'current_user_id': request.user.id,
-        'current_channel_id': selected_channel.id if selected_channel else None,
-    }
-    
-    return render(request, 'chat/chat_home.html', context)
 
 
 @login_required

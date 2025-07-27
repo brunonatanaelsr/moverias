@@ -371,7 +371,7 @@ def create_announcement(request):
     """Criar comunicado (apenas staff)"""
     if not request.user.is_staff:
         messages.error(request, 'Você não tem permissão para criar comunicados.')
-        return redirect('communication:announcement_list')
+        return redirect('communication:announcements_list')
     
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, request.FILES)
@@ -381,7 +381,7 @@ def create_announcement(request):
             announcement.save()
             form.save_m2m()
             messages.success(request, 'Comunicado criado com sucesso!')
-            return redirect('communication:announcement_list')
+            return redirect('communication:announcements_list')
     else:
         form = AnnouncementForm()
     
