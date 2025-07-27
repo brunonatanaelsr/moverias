@@ -75,6 +75,29 @@ class SocialAnamnesis(models.Model):
     signed_by_beneficiary = models.BooleanField('Assinado pela Beneficiária', default=False)
     locked = models.BooleanField('Bloqueado para Edição', default=False)
     
+    # Sistema de assinatura digital
+    signature_beneficiary = models.TextField(
+        'Assinatura da Beneficiária',
+        blank=True,
+        help_text='Canvas data da assinatura digital da beneficiária'
+    )
+    signature_technician = models.TextField(
+        'Assinatura da Técnica',
+        blank=True,
+        help_text='Assinatura eletrônica da técnica responsável'
+    )
+    signature_timestamp = models.DateTimeField(
+        'Data/Hora da Assinatura',
+        null=True,
+        blank=True,
+        help_text='Timestamp certificado da assinatura'
+    )
+    is_signed = models.BooleanField(
+        'Assinado Digitalmente',
+        default=False,
+        help_text='Indica se a anamnese foi assinada digitalmente'
+    )
+    
     class Meta:
         verbose_name = 'Anamnese Social'
         verbose_name_plural = 'Anamneses Sociais'

@@ -22,4 +22,12 @@ urlpatterns = [
     # Novas funcionalidades
     path('anamnesis/<int:pk>/evolution/', views.add_evolution, name='add-evolution'),
     path('api/vulnerability-categories/', views.vulnerability_categories_api, name='vulnerability-categories-api'),
+    
+    # Sistema de assinatura digital
+    path('anamnesis/<int:pk>/signature/', views.wizard_signature_view, name='wizard_signature'),
+    path('anamnesis/<int:pk>/pdf/', views.generate_anamnesis_pdf, name='anamnesis_pdf'),
+    
+    # Relatórios e Analytics
+    path('reports/', views.SocialReportsView.as_view(), name='social_reports'),
+    path('analytics/vulnerabilities/', views.VulnerabilityAnalyticsView.as_view(), name='vulnerability_analytics'),
 ]

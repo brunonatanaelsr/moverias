@@ -1,0 +1,592 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Assinatura Digital - Anamnese Social{% endblock %}
+
+{% block extra_css %}
+<style>
+.signature-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.signature-header {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px 12px 0 0;
+    text-align: center;
+}
+
+.signature-content {
+    padding: 2rem;
+}
+
+.signature-pad-container {
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    background: #F9FAFB;
+    padding: 1rem;
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.signature-pad {
+    border: 1px solid #D1D5DB;
+    border-radius: 4px;
+    background: white;
+    cursor: crosshair;
+    display: block;
+    margin: 0 auto;
+}
+
+.signature-controls {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-signature {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-clear {
+    background: #F59E0B;
+    color: white;
+}
+
+.btn-clear:hover {
+    background: #D97706;
+}
+
+.review-section {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.consent-section {
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+}
+
+.final-actions {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid #E5E7EB;
+    margin-top: 2rem;
+}
+
+.btn-finalize {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-finalize:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-finalize:disabled {
+    background: #9CA3AF;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.signature-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.status-pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border: 1px solid #FDE68A;
+}
+
+.status-signed {
+    background: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.signature-info {
+    font-size: 0.875rem;
+    color: #6B7280;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+@media (max-width: 768px) {
+    .signature-container {
+        margin: 1rem;
+    }
+    
+    .signature-content {
+        padding: 1rem;
+    }
+    
+    .signature-pad {
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .signature-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.loading-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #E5E7EB;
+    border-top: 4px solid #8B5CF6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="signature-container">
+    <!-- Header -->
+    <div class="signature-header">
+        <h1 class="text-2xl font-bold mb-2">
+            <i class="fas fa-signature mr-2"></i>
+            Assinatura Digital
+        </h1>
+        <p class="text-purple-100">
+            Finalização da Anamnese Social - {{ anamnesis.beneficiary.full_name }}
+        </p>
+    </div>
+    
+    <div class="signature-content">
+        <!-- Resumo da Anamnese -->
+        <div class="review-section">
+            <h2 class="text-lg font-semibold text-blue-800 mb-3">
+                <i class="fas fa-clipboard-check mr-2"></i>
+                Resumo da Anamnese
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <strong>Beneficiária:</strong> {{ anamnesis.beneficiary.full_name }}
+                </div>
+                <div>
+                    <strong>Data de Criação:</strong> {{ anamnesis.created_at|date:"d/m/Y H:i" }}
+                </div>
+                <div>
+                    <strong>Renda Familiar:</strong> 
+                    {% if anamnesis.family_income %}
+                        R$ {{ anamnesis.family_income|floatformat:2 }}
+                    {% else %}
+                        Não informada
+                    {% endif %}
+                </div>
+                <div>
+                    <strong>Vulnerabilidades Identificadas:</strong> {{ anamnesis.vulnerabilities.count }}
+                </div>
+            </div>
+            
+            {% if anamnesis.observations %}
+            <div class="mt-3">
+                <strong>Observações:</strong>
+                <p class="text-gray-700 mt-1">{{ anamnesis.observations|truncatewords:30 }}</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <form id="signatureForm" method="post">
+            {% csrf_token %}
+            
+            <!-- Assinatura da Beneficiária -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">
+                    <i class="fas fa-user-edit mr-2"></i>
+                    Assinatura da Beneficiária
+                </h3>
+                
+                <div class="signature-status {% if not anamnesis.signed_by_beneficiary %}status-pending{% else %}status-signed{% endif %}">
+                    {% if not anamnesis.signed_by_beneficiary %}
+                        <i class="fas fa-clock mr-2"></i>
+                        Aguardando assinatura da beneficiária
+                    {% else %}
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Assinado pela beneficiária
+                    {% endif %}
+                </div>
+                
+                {% if not anamnesis.signed_by_beneficiary %}
+                <div class="signature-pad-container">
+                    <p class="text-sm text-gray-600 mb-3">
+                        <strong>{{ anamnesis.beneficiary.full_name }}</strong>, por favor assine abaixo para confirmar as informações:
+                    </p>
+                    
+                    <canvas id="beneficiarySignaturePad" class="signature-pad" width="500" height="200"></canvas>
+                    
+                    <div class="signature-controls">
+                        <button type="button" id="clearBeneficiarySignature" class="btn-signature btn-clear">
+                            <i class="fas fa-eraser mr-2"></i>
+                            Limpar
+                        </button>
+                    </div>
+                    
+                    <div class="signature-info">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Use o mouse ou toque na tela para assinar
+                    </div>
+                </div>
+                {% else %}
+                <div class="signature-pad-container">
+                    <p class="text-green-700 font-medium">
+                        <i class="fas fa-check mr-2"></i>
+                        Assinatura registrada em {{ anamnesis.signature_timestamp|date:"d/m/Y às H:i" }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Assinatura da Técnica -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3">
+                    <i class="fas fa-user-shield mr-2"></i>
+                    Confirmação da Técnica
+                </h3>
+                
+                <div class="signature-status {% if not anamnesis.signed_by_technician %}status-pending{% else %}status-signed{% endif %}">
+                    {% if not anamnesis.signed_by_technician %}
+                        <i class="fas fa-clock mr-2"></i>
+                        Aguardando confirmação da técnica
+                    {% else %}
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Confirmado por {{ anamnesis.signed_by_technician.get_full_name }}
+                    {% endif %}
+                </div>
+                
+                {% if not anamnesis.signed_by_technician %}
+                <div class="signature-pad-container">
+                    <div class="form-group mb-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="technicianConfirmation" name="technician_confirmation" class="mr-2">
+                            <span class="text-sm">
+                                Eu, <strong>{{ user.get_full_name }}</strong>, confirmo que realizei esta anamnese social e 
+                                que as informações registradas são fidedignas ao relato da beneficiária.
+                            </span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="technicianPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                            Digite sua senha para confirmar a assinatura eletrônica:
+                        </label>
+                        <input type="password" id="technicianPassword" name="technician_password" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                               placeholder="Senha de confirmação">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Termos de Consentimento -->
+            <div class="consent-section">
+                <h3 class="text-lg font-semibold text-orange-800 mb-3">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    Termos de Consentimento
+                </h3>
+                
+                <div class="text-sm text-gray-700 space-y-2">
+                    <p>Ao assinar este documento, as partes concordam que:</p>
+                    <ul class="list-disc list-inside space-y-1 ml-4">
+                        <li>As informações coletadas são confidenciais e protegidas pela LGPD;</li>
+                        <li>Os dados serão utilizados exclusivamente para o acompanhamento social;</li>
+                        <li>A beneficiária tem direito de acesso, correção e exclusão dos dados;</li>
+                        <li>A técnica responsável garante a veracidade das informações registradas;</li>
+                        <li>Este documento possui validade legal para os fins do programa social.</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="flex items-start">
+                        <input type="checkbox" id="consentTerms" name="consent_terms" class="mr-2 mt-1" required>
+                        <span class="text-sm">
+                            <strong>Concordo com os termos de consentimento</strong> e autorizo o processamento 
+                            dos dados pessoais conforme descrito acima.
+                        </span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Ações Finais -->
+            <div class="final-actions">
+                {% if anamnesis.is_signed %}
+                <div class="text-center">
+                    <div class="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg">
+                        <i class="fas fa-certificate mr-2"></i>
+                        <span class="font-medium">Documento Assinado Digitalmente</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-2">
+                        Assinado em {{ anamnesis.signature_timestamp|date:"d/m/Y às H:i" }}
+                    </p>
+                    
+                    <div class="mt-4 space-x-4">
+                        <a href="{% url 'social:anamnesis_detail' anamnesis.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-eye mr-2"></i>
+                            Visualizar Anamnese
+                        </a>
+                        <button type="button" onclick="downloadPDF()" class="btn btn-primary">
+                            <i class="fas fa-download mr-2"></i>
+                            Baixar PDF
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <button type="submit" id="finalizeButton" class="btn-finalize" disabled>
+                    <i class="fas fa-certificate mr-2"></i>
+                    Finalizar e Assinar Digitalmente
+                </button>
+                
+                <p class="text-sm text-gray-600 mt-3">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Após a finalização, este documento não poderá mais ser editado
+                </p>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="font-medium">Processando assinatura digital...</p>
+        <p class="text-sm text-gray-600">Por favor, aguarde.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar signature pad
+    const canvas = document.getElementById('beneficiarySignaturePad');
+    let signaturePad = null;
+    
+    if (canvas) {
+        signaturePad = new SignaturePad(canvas, {
+            backgroundColor: 'rgb(255, 255, 255)',
+            penColor: 'rgb(0, 0, 0)',
+            minWidth: 2,
+            maxWidth: 4,
+            throttle: 16,
+            minDistance: 5,
+        });
+        
+        // Ajustar canvas para dispositivos de alta resolução
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext('2d').scale(ratio, ratio);
+            signaturePad.clear();
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Botão limpar assinatura
+        document.getElementById('clearBeneficiarySignature').addEventListener('click', function() {
+            signaturePad.clear();
+            validateForm();
+        });
+        
+        // Validar quando assinar
+        signaturePad.addEventListener('endStroke', function() {
+            validateForm();
+        });
+    }
+    
+    // Elementos do formulário
+    const technicianConfirmation = document.getElementById('technicianConfirmation');
+    const technicianPassword = document.getElementById('technicianPassword');
+    const consentTerms = document.getElementById('consentTerms');
+    const finalizeButton = document.getElementById('finalizeButton');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    // Validação do formulário
+    function validateForm() {
+        let isValid = true;
+        
+        // Verificar assinatura da beneficiária
+        if (signaturePad && signaturePad.isEmpty()) {
+            isValid = false;
+        }
+        
+        // Verificar confirmação da técnica
+        if (technicianConfirmation && !technicianConfirmation.checked) {
+            isValid = false;
+        }
+        
+        // Verificar senha da técnica
+        if (technicianPassword && technicianPassword.value.length < 3) {
+            isValid = false;
+        }
+        
+        // Verificar termos de consentimento
+        if (consentTerms && !consentTerms.checked) {
+            isValid = false;
+        }
+        
+        if (finalizeButton) {
+            finalizeButton.disabled = !isValid;
+        }
+    }
+    
+    // Event listeners para validação
+    if (technicianConfirmation) {
+        technicianConfirmation.addEventListener('change', validateForm);
+    }
+    
+    if (technicianPassword) {
+        technicianPassword.addEventListener('input', validateForm);
+    }
+    
+    if (consentTerms) {
+        consentTerms.addEventListener('change', validateForm);
+    }
+    
+    // Submissão do formulário
+    const form = document.getElementById('signatureForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (finalizeButton && finalizeButton.disabled) {
+                alert('Por favor, complete todos os campos obrigatórios.');
+                return;
+            }
+            
+            // Mostrar loading
+            loadingOverlay.classList.add('active');
+            
+            // Capturar dados da assinatura
+            const formData = new FormData(form);
+            
+            if (signaturePad && !signaturePad.isEmpty()) {
+                formData.append('beneficiary_signature', signaturePad.toDataURL());
+            }
+            
+            // Enviar via AJAX
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingOverlay.classList.remove('active');
+                
+                if (data.success) {
+                    // Mostrar sucesso e redirecionar
+                    alert('Anamnese assinada com sucesso!');
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Mostrar erros
+                    alert('Erro ao processar assinatura: ' + (data.error || 'Erro desconhecido'));
+                }
+            })
+            .catch(error => {
+                loadingOverlay.classList.remove('active');
+                console.error('Erro:', error);
+                alert('Erro de conexão. Tente novamente.');
+            });
+        });
+    }
+    
+    // Validação inicial
+    validateForm();
+});
+
+// Função para download do PDF
+function downloadPDF() {
+    const anamnesisId = {{ anamnesis.pk }};
+    window.open(`/social/anamnesis/${anamnesisId}/pdf/`, '_blank');
+}
+
+// Prevenir saída acidental
+window.addEventListener('beforeunload', function(e) {
+    if (!{{ anamnesis.is_signed|yesno:"true,false" }}) {
+        e.preventDefault();
+        e.returnValue = 'Você tem alterações não salvas. Deseja sair mesmo assim?';
+    }
+});
+</script>
+{% endblock %}

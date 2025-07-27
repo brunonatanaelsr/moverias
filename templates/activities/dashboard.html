@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard de Atividades - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar-alt text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Dashboard de Atividades</h6>
+                        </div>
+                        <div>
+                            <a href="{% url 'activities:create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Nova Atividade
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Principais -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Total de Atividades</div>
+                            <div class="h3 mb-0">{{ metrics.total_activities }}</div>
+                            <div class="text-success small">
+                                <i class="fas fa-arrow-up me-1"></i>
+                                +{{ metrics.activities_this_month }} este mês
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-primary bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-calendar-alt text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Atividades Ativas</div>
+                            <div class="h3 mb-0">{{ metrics.active_activities }}</div>
+                            <div class="text-info small">
+                                <i class="fas fa-play me-1"></i>
+                                {{ metrics.active_percentage }}% do total
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-success bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-play text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Beneficiárias Atendidas</div>
+                            <div class="h3 mb-0">{{ metrics.beneficiaries_count }}</div>
+                            <div class="text-warning small">
+                                <i class="fas fa-users me-1"></i>
+                                {{ metrics.avg_activities_per_beneficiary }} atividades/pessoa
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-info bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-users text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <div class="text-muted small">Taxa de Presença</div>
+                            <div class="h3 mb-0">{{ metrics.attendance_rate }}%</div>
+                            <div class="text-success small">
+                                <i class="fas fa-check me-1"></i>
+                                Média geral do programa
+                            </div>
+                        </div>
+                        <div class="icon icon-lg bg-warning bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-check text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Navegação -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                                <i class="fas fa-chart-pie me-2"></i>Visão Geral
+                            </button>
+                            <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab">
+                                <i class="fas fa-calendar me-2"></i>Calendário
+                            </button>
+                            <button class="nav-link" id="activities-tab" data-bs-toggle="tab" data-bs-target="#activities" type="button" role="tab">
+                                <i class="fas fa-list me-2"></i>Atividades Recentes
+                            </button>
+                            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+                                <i class="fas fa-chart-bar me-2"></i>Relatórios
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="nav-tabContent">
+        <!-- Aba Visão Geral -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row">
+                <!-- Gráfico de Atividades por Mês -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <h6>Atividades por Mês</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="monthlyActivitiesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distribuição por Tipo -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header pb-0">
+                            <h6>Distribuição por Tipo</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="activityTypesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beneficiárias com Mais Atividades -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <h6>Top Beneficiárias Ativas</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Beneficiária</th>
+                                            <th class="text-center">Atividades</th>
+                                            <th class="text-center">Taxa Presença</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for beneficiary_stat in top_beneficiaries %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if beneficiary_stat.beneficiary.photo %}
+                                                            <img src="{{ beneficiary_stat.beneficiary.photo.url }}" 
+                                                                 alt="{{ beneficiary_stat.beneficiary.get_full_name }}" 
+                                                                 class="rounded-circle me-2" 
+                                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                                        {% else %}
+                                                            <div class="avatar avatar-sm bg-gradient-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                                <span class="text-white text-xs">{{ beneficiary_stat.beneficiary.first_name.0 }}{{ beneficiary_stat.beneficiary.last_name.0 }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                        <a href="{% url 'activities:beneficiary_dashboard' beneficiary_stat.beneficiary.id %}" class="text-decoration-none">
+                                                            {{ beneficiary_stat.beneficiary.get_full_name }}
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary">{{ beneficiary_stat.activities_count }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar bg-success" 
+                                                             role="progressbar" 
+                                                             style="width: {{ beneficiary_stat.attendance_rate }}%">
+                                                            {{ beneficiary_stat.attendance_rate }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted">Nenhum dado disponível</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status das Atividades -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <h6>Status das Atividades</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for status_stat in status_distribution %}
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                            {% if status_stat.status == 'ACTIVE' %}
+                                                <i class="fas fa-play text-success text-xs opacity-10"></i>
+                                            {% elif status_stat.status == 'COMPLETED' %}
+                                                <i class="fas fa-check text-primary text-xs opacity-10"></i>
+                                            {% elif status_stat.status == 'PLANNED' %}
+                                                <i class="fas fa-clock text-warning text-xs opacity-10"></i>
+                                            {% elif status_stat.status == 'CANCELLED' %}
+                                                <i class="fas fa-times text-danger text-xs opacity-10"></i>
+                                            {% elif status_stat.status == 'PAUSED' %}
+                                                <i class="fas fa-pause text-info text-xs opacity-10"></i>
+                                            {% endif %}
+                                        </div>
+                                        <span>{{ status_stat.get_status_display }}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2">{{ status_stat.count }}</span>
+                                        <div class="progress" style="width: 60px; height: 8px;">
+                                            <div class="progress-bar bg-primary" 
+                                                 role="progressbar" 
+                                                 style="width: {{ status_stat.percentage }}%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Calendário -->
+        <div class="tab-pane fade" id="calendar" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6>Calendário de Atividades</h6>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary active" onclick="changeCalendarView('month')">Mês</button>
+                                    <button class="btn btn-outline-primary" onclick="changeCalendarView('week')">Semana</button>
+                                    <button class="btn btn-outline-primary" onclick="changeCalendarView('day')">Dia</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="calendar" style="height: 600px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Atividades Recentes -->
+        <div class="tab-pane fade" id="activities" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6>Atividades Recentes</h6>
+                                <a href="{% url 'activities:list' %}" class="btn btn-sm btn-outline-primary">
+                                    Ver Todas
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Atividade</th>
+                                            <th>Beneficiária</th>
+                                            <th>Tipo</th>
+                                            <th>Status</th>
+                                            <th>Data</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for activity in recent_activities %}
+                                            <tr>
+                                                <td>
+                                                    <div>
+                                                        <div class="font-weight-bold">{{ activity.title }}</div>
+                                                        {% if activity.description %}
+                                                            <small class="text-muted">{{ activity.description|truncatechars:50 }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if activity.beneficiary.photo %}
+                                                            <img src="{{ activity.beneficiary.photo.url }}" 
+                                                                 alt="{{ activity.beneficiary.get_full_name }}" 
+                                                                 class="rounded-circle me-2" 
+                                                                 style="width: 24px; height: 24px; object-fit: cover;">
+                                                        {% else %}
+                                                            <div class="avatar avatar-xs bg-gradient-primary rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                                <span class="text-white" style="font-size: 10px;">{{ activity.beneficiary.first_name.0 }}{{ activity.beneficiary.last_name.0 }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                        {{ activity.beneficiary.get_full_name }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-info">{{ activity.get_activity_type_display }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if activity.status == 'ACTIVE' %}
+                                                        <span class="badge bg-success">{{ activity.get_status_display }}</span>
+                                                    {% elif activity.status == 'COMPLETED' %}
+                                                        <span class="badge bg-primary">{{ activity.get_status_display }}</span>
+                                                    {% elif activity.status == 'PLANNED' %}
+                                                        <span class="badge bg-warning">{{ activity.get_status_display }}</span>
+                                                    {% elif activity.status == 'CANCELLED' %}
+                                                        <span class="badge bg-danger">{{ activity.get_status_display }}</span>
+                                                    {% elif activity.status == 'PAUSED' %}
+                                                        <span class="badge bg-secondary">{{ activity.get_status_display }}</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ activity.start_date|date:"d/m/Y" }}</td>
+                                                <td class="text-center">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="{% url 'activities:detail' activity.id %}" class="btn btn-outline-primary">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{% url 'activities:edit' activity.id %}" class="btn btn-outline-info">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-4">
+                                                    <i class="fas fa-calendar-alt fa-2x mb-3"></i>
+                                                    <p>Nenhuma atividade encontrada</p>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Relatórios -->
+        <div class="tab-pane fade" id="reports" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6>Relatórios Rápidos</h6>
+                                <div>
+                                    <a href="{% url 'activities:reports' %}" class="btn btn-primary">
+                                        <i class="fas fa-chart-bar me-2"></i>Relatórios Completos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-gradient-primary text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-download fa-2x mb-2"></i>
+                                            <h6>Exportar Atividades</h6>
+                                            <button class="btn btn-white btn-sm mt-2" onclick="exportActivities('excel')">
+                                                <i class="fas fa-file-excel me-1"></i>Excel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-gradient-success text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-chart-pie fa-2x mb-2"></i>
+                                            <h6>Relatório de Presença</h6>
+                                            <button class="btn btn-white btn-sm mt-2" onclick="generateAttendanceReport()">
+                                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card bg-gradient-info text-white">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-users fa-2x mb-2"></i>
+                                            <h6>Relatório por Beneficiária</h6>
+                                            <button class="btn btn-white btn-sm mt-2" onclick="generateBeneficiaryReport()">
+                                                <i class="fas fa-file-pdf me-1"></i>Gerar PDF
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+
+<script>
+// Dados dos gráficos (normalmente vindos do backend)
+const monthlyData = {{ monthly_data|safe }};
+const typeData = {{ type_data|safe }};
+
+// Configurar gráfico mensal
+const monthlyCtx = document.getElementById('monthlyActivitiesChart').getContext('2d');
+const monthlyChart = new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyData.labels,
+        datasets: [{
+            label: 'Atividades Criadas',
+            data: monthlyData.data,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+
+// Configurar gráfico de tipos
+const typeCtx = document.getElementById('activityTypesChart').getContext('2d');
+const typeChart = new Chart(typeCtx, {
+    type: 'doughnut',
+    data: {
+        labels: typeData.labels,
+        datasets: [{
+            data: typeData.data,
+            backgroundColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#f5576c',
+                '#4facfe',
+                '#43e97b',
+                '#38ef7d',
+                '#ff9a9e',
+                '#fecfef',
+                '#ffecd2'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Inicializar calendário
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: [
+            // Eventos serão carregados via AJAX do backend
+            {% for event in calendar_events %}
+            {
+                title: '{{ event.title }}',
+                start: '{{ event.start_date|date:"Y-m-d" }}',
+                end: '{{ event.end_date|date:"Y-m-d" }}',
+                backgroundColor: '{{ event.color }}',
+                url: '{% url "activities:detail" event.id %}'
+            },
+            {% endfor %}
+        ],
+        eventClick: function(info) {
+            info.jsEvent.preventDefault();
+            if (info.event.url) {
+                window.open(info.event.url, '_blank');
+            }
+        }
+    });
+    calendar.render();
+    
+    // Função para mudar visualização do calendário
+    window.changeCalendarView = function(view) {
+        calendar.changeView(view);
+        
+        // Atualizar botões ativos
+        document.querySelectorAll('.btn-group .btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[onclick="changeCalendarView('${view}')"]`).classList.add('active');
+    };
+});
+
+// Funções de exportação
+function exportActivities(format) {
+    const url = `{% url 'activities:export' %}?format=${format}`;
+    window.location.href = url;
+}
+
+function generateAttendanceReport() {
+    const url = `{% url 'activities:attendance_report' %}`;
+    window.open(url, '_blank');
+}
+
+function generateBeneficiaryReport() {
+    const url = `{% url 'activities:beneficiary_report' %}`;
+    window.open(url, '_blank');
+}
+</script>
+
+<style>
+.chart-container {
+    position: relative;
+}
+
+.avatar-xs {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.nav-tabs .nav-link {
+    color: #67748e;
+}
+
+.nav-tabs .nav-link.active {
+    color: #667eea;
+    border-color: #667eea;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+#calendar {
+    font-family: inherit;
+}
+</style>
+{% endblock %}

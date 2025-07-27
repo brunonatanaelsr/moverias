@@ -1,0 +1,647 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Relatórios Sociais{% endblock %}
+
+{% block extra_css %}
+<style>
+.reports-header {
+    background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.filter-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.report-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.icon-purple { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
+.icon-blue { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+.icon-green { background: linear-gradient(135deg, #10B981, #34D399); }
+.icon-orange { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+.icon-red { background: linear-gradient(135deg, #EF4444, #F87171); }
+.icon-indigo { background: linear-gradient(135deg, #6366F1, #818CF8); }
+
+.btn-generate {
+    background: linear-gradient(135deg, #8B5CF6, #A78BFA);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-pdf {
+    background: #DC2626;
+    color: white;
+}
+
+.btn-excel {
+    background: #059669;
+    color: white;
+}
+
+.btn-csv {
+    background: #7C3AED;
+    color: white;
+}
+
+.btn-export:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6B7280;
+    font-size: 0.875rem;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #8B5CF6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.recent-reports {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.report-item {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.report-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .reports-header {
+        padding: 1.5rem;
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading .btn-generate {
+    background: #9CA3AF;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.loading .report-card {
+    animation: pulse 1.5s infinite;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-header">
+    <h1 class="text-2xl font-bold mb-2">
+        <i class="fas fa-chart-bar mr-2"></i>
+        Relatórios Sociais
+    </h1>
+    <p class="text-purple-100">
+        Análises e relatórios consolidados das anamneses sociais
+    </p>
+</div>
+
+<!-- Estatísticas Resumo -->
+<div class="stats-summary">
+    <div class="stat-item">
+        <div class="stat-value text-purple-600">{{ total_anamneses }}</div>
+        <div class="stat-label">Total de Anamneses</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value text-green-600">{{ completed_anamneses }}</div>
+        <div class="stat-label">Concluídas</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value text-orange-600">{{ draft_anamneses }}</div>
+        <div class="stat-label">Em Rascunho</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-value text-blue-600">{{ signed_anamneses }}</div>
+        <div class="stat-label">Assinadas</div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="filter-card">
+    <h2 class="text-lg font-semibold mb-3">
+        <i class="fas fa-filter mr-2"></i>
+        Filtros de Relatório
+    </h2>
+    
+    <form id="filterForm">
+        <div class="filter-row">
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                <select name="period" class="form-control">
+                    <option value="all">Todos os períodos</option>
+                    <option value="last_month">Último mês</option>
+                    <option value="last_3_months">Últimos 3 meses</option>
+                    <option value="last_6_months">Últimos 6 meses</option>
+                    <option value="this_year">Este ano</option>
+                    <option value="custom">Período personalizado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="form-control">
+                    <option value="all">Todos os status</option>
+                    <option value="draft">Rascunho</option>
+                    <option value="completed">Concluída</option>
+                    <option value="requires_update">Requer Atualização</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Técnica Responsável</label>
+                <select name="technician" class="form-control">
+                    <option value="all">Todas as técnicas</option>
+                    {% for tech in technicians %}
+                    <option value="{{ tech.id }}">{{ tech.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Faixa de Renda</label>
+                <select name="income_range" class="form-control">
+                    <option value="all">Todas as faixas</option>
+                    <option value="0-500">R$ 0 - R$ 500</option>
+                    <option value="501-1000">R$ 501 - R$ 1.000</option>
+                    <option value="1001-2000">R$ 1.001 - R$ 2.000</option>
+                    <option value="2001+">Acima de R$ 2.000</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="filter-row" id="customDateRange" style="display: none;">
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Data Inicial</label>
+                <input type="date" name="start_date" class="form-control">
+            </div>
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Data Final</label>
+                <input type="date" name="end_date" class="form-control">
+            </div>
+        </div>
+        
+        <button type="button" id="applyFilters" class="btn-generate">
+            <i class="fas fa-search mr-2"></i>
+            Aplicar Filtros
+        </button>
+    </form>
+</div>
+
+<!-- Grid de Relatórios -->
+<div class="report-grid">
+    <!-- Relatório Geral -->
+    <div class="report-card">
+        <div class="report-icon icon-purple">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Relatório Geral</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Visão geral das anamneses sociais com estatísticas consolidadas, 
+            distribuição por status e análise temporal.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('general', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('general', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('general', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+    
+    <!-- Relatório de Vulnerabilidades -->
+    <div class="report-card">
+        <div class="report-icon icon-red">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Vulnerabilidades</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Análise detalhada das vulnerabilidades identificadas, categorizadas 
+            por tipo, gravidade e status de acompanhamento.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('vulnerabilities', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('vulnerabilities', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('vulnerabilities', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+    
+    <!-- Relatório Socioeconômico -->
+    <div class="report-card">
+        <div class="report-icon icon-green">
+            <i class="fas fa-coins"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Perfil Socioeconômico</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Análise do perfil socioeconômico das beneficiárias, incluindo 
+            renda familiar, situação habitacional e composição familiar.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('socioeconomic', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('socioeconomic', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('socioeconomic', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+    
+    <!-- Relatório de Produtividade -->
+    <div class="report-card">
+        <div class="report-icon icon-blue">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Produtividade das Técnicas</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Relatório de produtividade das técnicas sociais, com número de 
+            anamneses realizadas, tempo médio e taxa de conclusão.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('productivity', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('productivity', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('productivity', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+    
+    <!-- Relatório de Rede de Apoio -->
+    <div class="report-card">
+        <div class="report-icon icon-orange">
+            <i class="fas fa-hands-helping"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Rede de Apoio</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Análise das redes de apoio identificadas, mapeamento de recursos 
+            comunitários e gaps de suporte social.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('support_network', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('support_network', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('support_network', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+    
+    <!-- Relatório Evolutivo -->
+    <div class="report-card">
+        <div class="report-icon icon-indigo">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <h3 class="font-semibold text-lg mb-2">Evolução Temporal</h3>
+        <p class="text-gray-600 text-sm mb-3">
+            Acompanhamento da evolução dos casos ao longo do tempo, 
+            mudanças nas situações sociais e efetividade das intervenções.
+        </p>
+        <div class="flex flex-wrap gap-1">
+            <button class="btn-export btn-pdf" onclick="generateReport('evolution', 'pdf')">
+                <i class="fas fa-file-pdf"></i> PDF
+            </button>
+            <button class="btn-export btn-excel" onclick="generateReport('evolution', 'excel')">
+                <i class="fas fa-file-excel"></i> Excel
+            </button>
+        </div>
+        <button class="btn-generate" onclick="generateReport('evolution', 'html')">
+            <i class="fas fa-eye mr-2"></i>
+            Visualizar Relatório
+        </button>
+    </div>
+</div>
+
+<!-- Relatórios Recentes -->
+<div class="recent-reports">
+    <h2 class="text-lg font-semibold mb-3">
+        <i class="fas fa-history mr-2"></i>
+        Relatórios Recentes
+    </h2>
+    
+    <div id="recentReports">
+        {% for report in recent_reports %}
+        <div class="report-item">
+            <div class="flex-1">
+                <h4 class="font-medium">{{ report.name }}</h4>
+                <p class="text-sm text-gray-600">
+                    Gerado em {{ report.created_at|date:"d/m/Y H:i" }}
+                    {% if report.created_by %}por {{ report.created_by.get_full_name }}{% endif %}
+                </p>
+            </div>
+            <div class="flex gap-2">
+                <button class="btn-export btn-pdf" onclick="downloadReport('{{ report.id }}', 'pdf')">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn-export btn-excel" onclick="downloadReport('{{ report.id }}', 'excel')">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-file-alt text-4xl mb-4"></i>
+            <p>Nenhum relatório gerado recentemente</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Controle de filtros
+    const periodSelect = document.querySelector('select[name="period"]');
+    const customDateRange = document.getElementById('customDateRange');
+    
+    periodSelect.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customDateRange.style.display = 'grid';
+        } else {
+            customDateRange.style.display = 'none';
+        }
+    });
+    
+    // Aplicar filtros
+    document.getElementById('applyFilters').addEventListener('click', function() {
+        const formData = new FormData(document.getElementById('filterForm'));
+        const params = new URLSearchParams(formData);
+        
+        // Atualizar URL com filtros
+        const newUrl = window.location.pathname + '?' + params.toString();
+        window.history.pushState({}, '', newUrl);
+        
+        // Recarregar estatísticas (simular)
+        updateStats(params);
+    });
+});
+
+// Gerar relatório
+function generateReport(type, format) {
+    const form = document.getElementById('filterForm');
+    const formData = new FormData(form);
+    formData.append('report_type', type);
+    formData.append('format', format);
+    
+    // Mostrar loading
+    const reportCards = document.querySelectorAll('.report-card');
+    reportCards.forEach(card => card.classList.add('loading'));
+    
+    // Simular geração
+    setTimeout(() => {
+        reportCards.forEach(card => card.classList.remove('loading'));
+        
+        if (format === 'html') {
+            // Abrir em nova aba
+            const params = new URLSearchParams(formData);
+            window.open(`/social/reports/view/?${params.toString()}`, '_blank');
+        } else {
+            // Download do arquivo
+            const params = new URLSearchParams(formData);
+            const link = document.createElement('a');
+            link.href = `/social/reports/download/?${params.toString()}`;
+            link.download = `relatorio_${type}_${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+            link.click();
+        }
+        
+        // Adicionar à lista de recentes (simular)
+        addToRecentReports(type, format);
+    }, 2000);
+}
+
+// Download de relatório existente
+function downloadReport(reportId, format) {
+    const link = document.createElement('a');
+    link.href = `/social/reports/${reportId}/download/?format=${format}`;
+    link.download = `relatorio_${reportId}.${format === 'pdf' ? 'pdf' : 'xlsx'}`;
+    link.click();
+}
+
+// Atualizar estatísticas (simular)
+function updateStats(params) {
+    // Em uma implementação real, faria uma requisição AJAX
+    // para atualizar as estatísticas baseadas nos filtros
+    console.log('Atualizando estatísticas com filtros:', params.toString());
+    
+    // Simular atualização
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(stat => {
+        stat.style.opacity = '0.5';
+        setTimeout(() => {
+            // Simular novos valores
+            const currentValue = parseInt(stat.textContent);
+            const newValue = Math.max(0, currentValue + Math.floor(Math.random() * 21) - 10);
+            stat.textContent = newValue;
+            stat.style.opacity = '1';
+        }, 1000);
+    });
+}
+
+// Adicionar à lista de recentes (simular)
+function addToRecentReports(type, format) {
+    const recentReports = document.getElementById('recentReports');
+    const reportNames = {
+        'general': 'Relatório Geral',
+        'vulnerabilities': 'Relatório de Vulnerabilidades',
+        'socioeconomic': 'Perfil Socioeconômico', 
+        'productivity': 'Produtividade das Técnicas',
+        'support_network': 'Rede de Apoio',
+        'evolution': 'Evolução Temporal'
+    };
+    
+    const newReportItem = document.createElement('div');
+    newReportItem.className = 'report-item';
+    newReportItem.innerHTML = `
+        <div class="flex-1">
+            <h4 class="font-medium">${reportNames[type]}</h4>
+            <p class="text-sm text-gray-600">
+                Gerado em ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}
+            </p>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn-export btn-pdf" onclick="downloadReport('new', 'pdf')">
+                <i class="fas fa-download"></i>
+            </button>
+            <button class="btn-export btn-excel" onclick="downloadReport('new', 'excel')">
+                <i class="fas fa-download"></i>
+            </button>
+        </div>
+    `;
+    
+    // Verificar se há mensagem de "nenhum relatório"
+    const emptyMessage = recentReports.querySelector('.text-center.text-gray-500');
+    if (emptyMessage) {
+        emptyMessage.remove();
+    }
+    
+    // Adicionar no topo
+    recentReports.insertBefore(newReportItem, recentReports.firstChild);
+    
+    // Limitar a 5 itens
+    const items = recentReports.querySelectorAll('.report-item');
+    if (items.length > 5) {
+        items[items.length - 1].remove();
+    }
+}
+</script>
+{% endblock %}

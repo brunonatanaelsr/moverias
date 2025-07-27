@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+
+{% block title %}{{ activity.title }} - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'activities:list' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar-alt text-primary text-sm opacity-10"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ activity.title }}</h6>
+                                <small class="text-muted">{{ activity.get_activity_type_display }}</small>
+                            </div>
+                        </div>
+                        <div>
+                            <a href="{% url 'activities:edit' activity.id %}" class="btn btn-info btn-sm me-2">
+                                <i class="fas fa-edit me-2"></i>Editar
+                            </a>
+                            <div class="dropdown d-inline">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="duplicateActivity()">
+                                            <i class="fas fa-copy me-2"></i>Duplicar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'activities:sessions' activity.id %}">
+                                            <i class="fas fa-calendar me-2"></i>Gerenciar Sessões
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'activities:attendance' activity.id %}">
+                                            <i class="fas fa-check me-2"></i>Controle de Presença
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="deleteActivity()">
+                                            <i class="fas fa-trash me-2"></i>Excluir
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informações Principais -->
+        <div class="col-lg-8">
+            <!-- Visão Geral -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Visão Geral</h6>
+                        <div>
+                            {% if activity.status == 'ACTIVE' %}
+                                <span class="badge bg-success">{{ activity.get_status_display }}</span>
+                            {% elif activity.status == 'COMPLETED' %}
+                                <span class="badge bg-primary">{{ activity.get_status_display }}</span>
+                            {% elif activity.status == 'PLANNED' %}
+                                <span class="badge bg-warning">{{ activity.get_status_display }}</span>
+                            {% elif activity.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">{{ activity.get_status_display }}</span>
+                            {% elif activity.status == 'PAUSED' %}
+                                <span class="badge bg-secondary">{{ activity.get_status_display }}</span>
+                            {% endif %}
+                            
+                            {% if activity.priority == 'LOW' %}
+                                <span class="badge bg-success ms-2">{{ activity.get_priority_display }}</span>
+                            {% elif activity.priority == 'MEDIUM' %}
+                                <span class="badge bg-warning ms-2">{{ activity.get_priority_display }}</span>
+                            {% elif activity.priority == 'HIGH' %}
+                                <span class="badge bg-danger ms-2">{{ activity.get_priority_display }}</span>
+                            {% elif activity.priority == 'URGENT' %}
+                                <span class="badge bg-dark ms-2">{{ activity.get_priority_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-user text-primary text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Beneficiária</small>
+                                    <div class="font-weight-bold">
+                                        <a href="{% url 'activities:beneficiary_dashboard' activity.beneficiary.id %}" class="text-decoration-none">
+                                            {{ activity.beneficiary.get_full_name }}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-user-tie text-success text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Facilitador</small>
+                                    <div class="font-weight-bold">{{ activity.facilitator }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-calendar text-info text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Data de Início</small>
+                                    <div class="font-weight-bold">{{ activity.start_date|date:"d/m/Y" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-map-marker-alt text-warning text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Local</small>
+                                    <div class="font-weight-bold">{{ activity.location }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if activity.end_date %}
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-calendar-check text-danger text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Data de Término</small>
+                                    <div class="font-weight-bold">{{ activity.end_date|date:"d/m/Y" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-redo text-secondary text-xs opacity-10"></i>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Frequência</small>
+                                    <div class="font-weight-bold">{{ activity.get_frequency_display }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if activity.description %}
+                    <div class="border-top pt-3 mt-3">
+                        <h6 class="text-sm font-weight-bold mb-2">Descrição</h6>
+                        <p class="text-muted">{{ activity.description|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Objetivos e Resultados -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Objetivos e Resultados</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-sm font-weight-bold mb-2">
+                                <i class="fas fa-bullseye text-primary me-2"></i>Objetivos
+                            </h6>
+                            <p class="text-muted">{{ activity.objectives|linebreaks }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-sm font-weight-bold mb-2">
+                                <i class="fas fa-trophy text-success me-2"></i>Resultados Esperados
+                            </h6>
+                            <p class="text-muted">{{ activity.expected_outcomes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Progresso -->
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-sm font-weight-bold mb-0">Progresso da Atividade</h6>
+                            <span class="text-sm font-weight-bold">{{ activity.completion_percentage }}%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-gradient-success" 
+                                 role="progressbar" 
+                                 style="width: {{ activity.completion_percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Impacto Social -->
+                    <div class="border-top pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-sm font-weight-bold mb-0">
+                                <i class="fas fa-heart text-danger me-2"></i>Impacto Social
+                            </h6>
+                            <span class="text-sm font-weight-bold">{{ activity.impact_score }}/100</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-gradient-info" 
+                                 role="progressbar" 
+                                 style="width: {{ activity.impact_score }}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Materiais e Recursos -->
+            {% if activity.materials_needed %}
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>
+                        <i class="fas fa-toolbox text-warning me-2"></i>Materiais e Recursos
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ activity.materials_needed|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Sessões da Atividade -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Sessões da Atividade</h6>
+                        <a href="{% url 'activities:session_create' activity.id %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-2"></i>Nova Sessão
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if sessions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Horário</th>
+                                        <th>Status</th>
+                                        <th>Presença</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for session in sessions %}
+                                        <tr>
+                                            <td>{{ session.session_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                {{ session.start_time|time:"H:i" }}
+                                                {% if session.end_time %}
+                                                    - {{ session.end_time|time:"H:i" }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.status == 'SCHEDULED' %}
+                                                    <span class="badge bg-warning">Agendada</span>
+                                                {% elif session.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">Realizada</span>
+                                                {% elif session.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">Cancelada</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if session.attendance.exists %}
+                                                    {% if session.attendance.first.attended %}
+                                                        <i class="fas fa-check text-success"></i> Presente
+                                                    {% else %}
+                                                        <i class="fas fa-times text-danger"></i> Ausente
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">Não registrada</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'activities:session_detail' session.id %}" class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'activities:session_edit' session.id %}" class="btn btn-outline-info">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-plus fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhuma sessão agendada ainda</p>
+                            <a href="{% url 'activities:session_create' activity.id %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Criar Primeira Sessão
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Notas e Observações -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Notas e Observações</h6>
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                            <i class="fas fa-plus me-2"></i>Nova Nota
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if notes %}
+                        {% for note in notes %}
+                            <div class="border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                            <i class="fas fa-user text-primary text-xs opacity-10"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ note.created_by.get_full_name }}</h6>
+                                            <small class="text-muted">{{ note.created_at|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                    </div>
+                                    {% if note.is_important %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-star"></i> Importante
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-muted mb-0">{{ note.content|linebreaks }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-sticky-note fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Nenhuma nota adicionada ainda</p>
+                            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                                <i class="fas fa-plus me-2"></i>Adicionar Primeira Nota
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Estatísticas Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Estatísticas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-primary h4">{{ sessions.count }}</div>
+                            <div class="text-xs text-muted">Sessões</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-success h4">{{ activity.attendance_rate }}%</div>
+                            <div class="text-xs text-muted">Presença</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-info h4">{{ notes.count }}</div>
+                            <div class="text-xs text-muted">Notas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Adicionais -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Informações Adicionais</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Criada por</small>
+                        <div>{{ activity.created_by.get_full_name }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Data de Criação</small>
+                        <div>{{ activity.created_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Última Atualização</small>
+                        <div>{{ activity.updated_at|date:"d/m/Y H:i" }}</div>
+                    </div>
+                    {% if activity.social_anamnesis %}
+                    <div class="mb-3">
+                        <small class="text-muted">Anamnese Social</small>
+                        <div>
+                            <a href="{% url 'social:anamnesis_detail' activity.social_anamnesis.id %}" class="text-decoration-none">
+                                Ver Anamnese Relacionada
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Ações Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if activity.status == 'PLANNED' %}
+                            <button class="btn btn-success" onclick="changeStatus('ACTIVE')">
+                                <i class="fas fa-play me-2"></i>Iniciar Atividade
+                            </button>
+                        {% elif activity.status == 'ACTIVE' %}
+                            <button class="btn btn-warning" onclick="changeStatus('PAUSED')">
+                                <i class="fas fa-pause me-2"></i>Pausar Atividade
+                            </button>
+                            <button class="btn btn-primary" onclick="changeStatus('COMPLETED')">
+                                <i class="fas fa-check me-2"></i>Concluir Atividade
+                            </button>
+                        {% elif activity.status == 'PAUSED' %}
+                            <button class="btn btn-success" onclick="changeStatus('ACTIVE')">
+                                <i class="fas fa-play me-2"></i>Retomar Atividade
+                            </button>
+                        {% endif %}
+                        
+                        <button class="btn btn-outline-info" onclick="generateReport()">
+                            <i class="fas fa-chart-bar me-2"></i>Gerar Relatório
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportData()">
+                            <i class="fas fa-download me-2"></i>Exportar Dados
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Feedback</h6>
+                </div>
+                <div class="card-body">
+                    {% if feedback_entries %}
+                        {% for feedback in feedback_entries %}
+                            <div class="mb-3 p-3 border border-light rounded">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <small class="text-muted">{{ feedback.created_at|date:"d/m/Y" }}</small>
+                                    <div class="text-warning">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= feedback.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <p class="text-sm mb-0">{{ feedback.comments|truncatechars:100 }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">Nenhum feedback registrado</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Nota -->
+<div class="modal fade" id="newNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'activities:note_create' activity.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Conteúdo da Nota</label>
+                        <textarea class="form-control" name="content" rows="4" required></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_important" id="is_important">
+                        <label class="form-check-label" for="is_important">
+                            Marcar como importante
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Nota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function changeStatus(newStatus) {
+    if (confirm('Tem certeza que deseja alterar o status da atividade?')) {
+        fetch(`{% url 'activities:change_status' activity.id %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao alterar status: ' + data.error);
+            }
+        });
+    }
+}
+
+function duplicateActivity() {
+    if (confirm('Deseja criar uma cópia desta atividade?')) {
+        fetch(`{% url 'activities:duplicate' activity.id %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = data.redirect_url;
+            } else {
+                alert('Erro ao duplicar atividade: ' + data.error);
+            }
+        });
+    }
+}
+
+function deleteActivity() {
+    if (confirm('Tem certeza que deseja excluir esta atividade? Esta ação não pode ser desfeita.')) {
+        fetch(`{% url 'activities:delete' activity.id %}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{% url "activities:list" %}';
+            } else {
+                alert('Erro ao excluir atividade: ' + data.error);
+            }
+        });
+    }
+}
+
+function generateReport() {
+    window.open(`{% url 'activities:report' activity.id %}`, '_blank');
+}
+
+function exportData() {
+    window.location.href = `{% url 'activities:export_single' activity.id %}`;
+}
+</script>
+
+<style>
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.border-light {
+    border-color: #e9ecef !important;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

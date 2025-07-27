@@ -349,6 +349,243 @@ class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteV
         return redirect(success_url)
 
 
+# Novas views para assinatura digital e relatórios
+
+@login_required
+@user_passes_test(is_technician)
+def wizard_signature_view(request, pk):
+    """View para assinatura digital da anamnese"""
+    anamnesis = get_object_or_404(
+        SocialAnamnesis.objects.select_related('beneficiary', 'signed_by_technician'), 
+        pk=pk
+    )
+    
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                # Processar assinatura da beneficiária
+                beneficiary_signature = request.POST.get('beneficiary_signature')
+                if beneficiary_signature:
+                    anamnesis.signature_beneficiary = beneficiary_signature
+                    anamnesis.signed_by_beneficiary = True
+                
+                # Processar confirmação da técnica
+                technician_confirmation = request.POST.get('technician_confirmation')
+                technician_password = request.POST.get('technician_password')
+                
+                if technician_confirmation and technician_password:
+                    # Verificar senha da técnica
+                    from django.contrib.auth import authenticate
+                    user = authenticate(username=request.user.username, password=technician_password)
+                    
+                    if user:
+                        anamnesis.signed_by_technician = request.user
+                        anamnesis.signature_technician = f"Assinatura eletrônica de {user.get_full_name()}"
+                    else:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Senha incorreta para confirmação da assinatura.'
+                        })
+                
+                # Verificar se ambas as assinaturas estão presentes
+                if anamnesis.signed_by_beneficiary and anamnesis.signed_by_technician:
+                    from django.utils import timezone
+                    anamnesis.signature_timestamp = timezone.now()
+                    anamnesis.is_signed = True
+                    anamnesis.locked = True
+                    anamnesis.status = 'completed'
+                
+                anamnesis.save()
+                
+                # Invalidar cache
+                cache.delete(f"social_anamnesis_{pk}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'redirect_url': reverse_lazy('social:anamnesis_detail', kwargs={'pk': pk})
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e)
+                })
+        else:
+            messages.error(request, 'Método de requisição inválido.')
+            return redirect('social:anamnesis_detail', pk=pk)
+    
+    context = {
+        'anamnesis': anamnesis,
+    }
+    
+    return render(request, 'social/wizard_signature.html', context)
+
+
+class SocialReportsView(LoginRequiredMixin, CoordinatorRequiredMixin, TemplateView):
+    """View para relatórios sociais"""
+    template_name = 'social/social_reports.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estatísticas resumo
+        total_anamneses = SocialAnamnesis.objects.count()
+        completed_anamneses = SocialAnamnesis.objects.filter(status='completed').count()
+        draft_anamneses = SocialAnamnesis.objects.filter(status='draft').count()
+        signed_anamneses = SocialAnamnesis.objects.filter(is_signed=True).count()
+        
+        context.update({
+            'total_anamneses': total_anamneses,
+            'completed_anamneses': completed_anamneses,
+            'draft_anamneses': draft_anamneses,
+            'signed_anamneses': signed_anamneses,
+        })
+        
+        # Lista de técnicas para filtro
+        from django.contrib.auth.models import User, Group
+        technician_group = Group.objects.get(name='Tecnica')
+        context['technicians'] = User.objects.filter(groups=technician_group)
+        
+        # Relatórios recentes (simulado)
+        context['recent_reports'] = []  # Em uma implementação real, viria do banco
+        
+        return context
+
+
+class VulnerabilityAnalyticsView(LoginRequiredMixin, CoordinatorRequiredMixin, TemplateView):
+    """View para analytics de vulnerabilidades"""
+    template_name = 'social/vulnerability_analytics.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Categorias de vulnerabilidades
+        context['vulnerability_categories'] = VulnerabilityCategory.objects.filter(is_active=True)
+        
+        # Contagens por gravidade
+        from django.db.models import Count
+        severity_counts = IdentifiedVulnerability.objects.values('severity').annotate(
+            count=Count('id')
+        )
+        
+        severity_data = {'low': 0, 'medium': 0, 'high': 0, 'critical': 0}
+        for item in severity_counts:
+            severity_data[item['severity']] = item['count']
+        
+        context['severity_counts'] = severity_data
+        
+        # Top vulnerabilidades
+        top_vulnerabilities = IdentifiedVulnerability.objects.values(
+            'category__name'
+        ).annotate(
+            count=Count('id')
+        ).order_by('-count')[:10]
+        
+        total_vulnerabilities = IdentifiedVulnerability.objects.count()
+        
+        for vuln in top_vulnerabilities:
+            vuln['percentage'] = (vuln['count'] / total_vulnerabilities * 100) if total_vulnerabilities > 0 else 0
+            vuln['trend'] = 0  # Em uma implementação real, calcularia a tendência
+            vuln['avg_severity'] = 'medium'  # Simplificado
+        
+        context['top_vulnerabilities'] = top_vulnerabilities
+        
+        return context
+
+
+@login_required
+@user_passes_test(is_technician)
+def generate_anamnesis_pdf(request, pk):
+    """Gerar PDF da anamnese social"""
+    anamnesis = get_object_or_404(
+        SocialAnamnesis.objects.select_related('beneficiary', 'signed_by_technician')
+        .prefetch_related('family_members', 'vulnerabilities__category', 'evolutions'), 
+        pk=pk
+    )
+    
+    try:
+        from django.http import HttpResponse
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from io import BytesIO
+        
+        # Criar buffer
+        buffer = BytesIO()
+        
+        # Criar documento PDF
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        
+        # Conteúdo do PDF
+        story = []
+        
+        # Título
+        title = Paragraph(f"Anamnese Social - {anamnesis.beneficiary.full_name}", styles['Title'])
+        story.append(title)
+        story.append(Spacer(1, 12))
+        
+        # Informações básicas
+        info_text = f"""
+        <b>Beneficiária:</b> {anamnesis.beneficiary.full_name}<br/>
+        <b>Data de Criação:</b> {anamnesis.created_at.strftime('%d/%m/%Y %H:%M')}<br/>
+        <b>Criada por:</b> {anamnesis.created_by.get_full_name()}<br/>
+        <b>Status:</b> {anamnesis.get_status_display()}<br/>
+        """
+        
+        if anamnesis.family_income:
+            info_text += f"<b>Renda Familiar:</b> R$ {anamnesis.family_income:.2f}<br/>"
+        
+        story.append(Paragraph(info_text, styles['Normal']))
+        story.append(Spacer(1, 12))
+        
+        # Situação habitacional
+        if anamnesis.housing_situation:
+            story.append(Paragraph("<b>Situação Habitacional:</b>", styles['Heading2']))
+            story.append(Paragraph(anamnesis.housing_situation, styles['Normal']))
+            story.append(Spacer(1, 12))
+        
+        # Rede de apoio
+        if anamnesis.support_network:
+            story.append(Paragraph("<b>Rede de Apoio:</b>", styles['Heading2']))
+            story.append(Paragraph(anamnesis.support_network, styles['Normal']))
+            story.append(Spacer(1, 12))
+        
+        # Observações
+        if anamnesis.observations:
+            story.append(Paragraph("<b>Observações:</b>", styles['Heading2']))
+            story.append(Paragraph(anamnesis.observations, styles['Normal']))
+            story.append(Spacer(1, 12))
+        
+        # Assinaturas
+        if anamnesis.is_signed:
+            signature_text = f"""
+            <b>DOCUMENTO ASSINADO DIGITALMENTE</b><br/>
+            Data/Hora: {anamnesis.signature_timestamp.strftime('%d/%m/%Y às %H:%M')}<br/>
+            Técnica Responsável: {anamnesis.signed_by_technician.get_full_name()}<br/>
+            Beneficiária: {'Assinado' if anamnesis.signed_by_beneficiary else 'Não assinado'}
+            """
+            story.append(Paragraph(signature_text, styles['Normal']))
+        
+        # Gerar PDF
+        doc.build(story)
+        
+        # Preparar resposta
+        buffer.seek(0)
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="anamnese_social_{anamnesis.beneficiary.full_name}_{anamnesis.created_at.strftime("%Y%m%d")}.pdf"'
+        
+        return response
+        
+    except ImportError:
+        messages.error(request, 'Biblioteca ReportLab não instalada. PDF não disponível.')
+        return redirect('social:anamnesis_detail', pk=pk)
+    except Exception as e:
+        messages.error(request, f'Erro ao gerar PDF: {str(e)}')
+        return redirect('social:anamnesis_detail', pk=pk)
+
+
 class SocialDashboardView(LoginRequiredMixin, TechnicianRequiredMixin, TemplateView):
     """Dashboard analítico do módulo social"""
     

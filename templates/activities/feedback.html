@@ -1,0 +1,832 @@
+{% extends "base.html" %}
+
+{% block title %}Feedback - {{ activity.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-comments text-info text-sm opacity-10"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Feedback da Atividade</h6>
+                                <p class="text-sm text-muted mb-0">{{ activity.title }}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                                <i class="fas fa-plus me-2"></i>Novo Feedback
+                            </button>
+                            <button class="btn btn-outline-info btn-sm" onclick="exportFeedback()">
+                                <i class="fas fa-download me-2"></i>Exportar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas de Feedback -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Total de Feedbacks</p>
+                                <h5 class="font-weight-bolder mb-0">{{ total_feedbacks }}</h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-primary shadow text-center border-radius-md">
+                                <i class="fas fa-comments text-lg opacity-10"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Avaliação Média</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {{ average_rating|floatformat:1 }}/5
+                                    <span class="text-sm text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= average_rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-success shadow text-center border-radius-md">
+                                <i class="fas fa-star text-lg opacity-10"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Feedbacks Positivos</p>
+                                <h5 class="font-weight-bolder mb-0">{{ positive_feedbacks }}</h5>
+                                <p class="mb-0">
+                                    <span class="text-success text-sm font-weight-bolder">{{ positive_percentage }}%</span> do total
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-info shadow text-center border-radius-md">
+                                <i class="fas fa-thumbs-up text-lg opacity-10"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-sm-6">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="numbers">
+                                <p class="text-sm mb-0 text-capitalize font-weight-bold">Último Feedback</p>
+                                <h5 class="font-weight-bolder mb-0">
+                                    {% if last_feedback %}
+                                        {{ last_feedback.created_at|timesince }} atrás
+                                    {% else %}
+                                        Nenhum
+                                    {% endif %}
+                                </h5>
+                            </div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="icon icon-shape bg-gradient-warning shadow text-center border-radius-md">
+                                <i class="fas fa-clock text-lg opacity-10"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Lista de Feedbacks -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6>Feedbacks da Atividade</h6>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="filterFeedbacks('all')">
+                                Todos
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" onclick="filterFeedbacks('positive')">
+                                Positivos (4-5★)
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="filterFeedbacks('neutral')">
+                                Neutros (3★)
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="filterFeedbacks('negative')">
+                                Negativos (1-2★)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if feedbacks %}
+                        {% for feedback in feedbacks %}
+                            <div class="feedback-item border border-light rounded p-4 mb-3" 
+                                 data-rating="{{ feedback.rating }}"
+                                 data-category="{% if feedback.rating >= 4 %}positive{% elif feedback.rating == 3 %}neutral{% else %}negative{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-3">
+                                            {% if feedback.author.profile_picture %}
+                                                <img src="{{ feedback.author.profile_picture.url }}" alt="{{ feedback.author.get_full_name }}" class="border-radius-lg">
+                                            {% else %}
+                                                <div class="avatar-initial rounded-circle bg-gradient-primary">
+                                                    {{ feedback.author.first_name.0 }}{{ feedback.author.last_name.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-sm">{{ feedback.author.get_full_name }}</h6>
+                                            <p class="text-xs text-muted mb-0">
+                                                {{ feedback.author_role|capfirst }} • {{ feedback.created_at|date:"d/m/Y H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        {% if feedback.rating %}
+                                            <div class="stars text-warning me-2">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= feedback.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="replyFeedback('{{ feedback.id }}')">
+                                                    <i class="fas fa-reply me-2"></i>Responder
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="markFeedback('{{ feedback.id }}', 'helpful')">
+                                                    <i class="fas fa-thumbs-up me-2"></i>Marcar como Útil
+                                                </a></li>
+                                                {% if feedback.author == request.user %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="editFeedback('{{ feedback.id }}')">
+                                                        <i class="fas fa-edit me-2"></i>Editar
+                                                    </a></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteFeedback('{{ feedback.id }}')">
+                                                        <i class="fas fa-trash me-2"></i>Excluir
+                                                    </a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if feedback.feedback_type %}
+                                    <div class="mb-2">
+                                        <span class="badge bg-info">{{ feedback.get_feedback_type_display }}</span>
+                                    </div>
+                                {% endif %}
+
+                                <div class="mb-3">
+                                    <p class="text-sm mb-0">{{ feedback.comment }}</p>
+                                </div>
+
+                                {% if feedback.suggestions %}
+                                    <div class="bg-light p-3 rounded mb-3">
+                                        <h6 class="text-sm mb-2">Sugestões de Melhoria:</h6>
+                                        <p class="text-sm mb-0">{{ feedback.suggestions }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if feedback.attachments.exists %}
+                                    <div class="mb-3">
+                                        <h6 class="text-sm mb-2">Anexos:</h6>
+                                        {% for attachment in feedback.attachments.all %}
+                                            <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-outline-primary btn-sm me-2 mb-2">
+                                                <i class="fas fa-paperclip me-1"></i>{{ attachment.filename }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        {% if feedback.is_helpful %}
+                                            <span class="badge bg-success me-2">Útil</span>
+                                        {% endif %}
+                                        {% if feedback.session %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                Sessão de {{ feedback.session.date|date:"d/m/Y" }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        {% if feedback.replies.count > 0 %}
+                                            <button class="btn btn-outline-info btn-xs me-2" onclick="toggleReplies('{{ feedback.id }}')">
+                                                <i class="fas fa-comments me-1"></i>{{ feedback.replies.count }} resposta{{ feedback.replies.count|pluralize }}
+                                            </button>
+                                        {% endif %}
+                                        <small class="text-muted">{{ feedback.created_at|timesince }} atrás</small>
+                                    </div>
+                                </div>
+
+                                <!-- Respostas -->
+                                <div id="replies-{{ feedback.id }}" class="replies mt-3" style="display: none;">
+                                    {% for reply in feedback.replies.all %}
+                                        <div class="border-start border-3 border-info ps-3 mt-3">
+                                            <div class="d-flex align-items-start mb-2">
+                                                <div class="avatar avatar-xs me-2">
+                                                    {% if reply.author.profile_picture %}
+                                                        <img src="{{ reply.author.profile_picture.url }}" alt="{{ reply.author.get_full_name }}" class="border-radius-lg">
+                                                    {% else %}
+                                                        <div class="avatar-initial rounded-circle bg-gradient-secondary text-xs">
+                                                            {{ reply.author.first_name.0 }}
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-0 text-xs">{{ reply.author.get_full_name }}</h6>
+                                                            <small class="text-muted">{{ reply.created_at|date:"d/m/Y H:i" }}</small>
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-xs mt-1 mb-0">{{ reply.comment }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Paginação -->
+                        {% if feedbacks.has_other_pages %}
+                            <nav aria-label="Feedback pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if feedbacks.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ feedbacks.previous_page_number }}">Anterior</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% for num in feedbacks.paginator.page_range %}
+                                        {% if feedbacks.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if feedbacks.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ feedbacks.next_page_number }}">Próximo</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-comment-dots fa-3x mb-3"></i>
+                            <h5>Nenhum feedback ainda</h5>
+                            <p>Seja o primeiro a deixar um feedback sobre esta atividade!</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                                <i class="fas fa-plus me-2"></i>Adicionar Feedback
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com Análises -->
+        <div class="col-lg-4">
+            <!-- Resumo por Avaliação -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Distribuição de Avaliações</h6>
+                </div>
+                <div class="card-body">
+                    {% for rating, count in rating_distribution.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="stars text-warning me-2">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= rating %}
+                                            <i class="fas fa-star text-xs"></i>
+                                        {% else %}
+                                            <i class="far fa-star text-xs"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="text-sm">{{ rating }} estrela{{ rating|pluralize }}</span>
+                            </div>
+                            <span class="badge bg-info">{{ count }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 4px;">
+                            <div class="progress-bar bg-gradient-warning" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio count total_feedbacks 100 %}%">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Palavras-chave Mais Mencionadas -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Palavras-chave Mais Mencionadas</h6>
+                </div>
+                <div class="card-body">
+                    {% if common_keywords %}
+                        <div class="tag-cloud">
+                            {% for keyword, count in common_keywords %}
+                                <span class="badge bg-light text-dark me-1 mb-1" 
+                                      style="font-size: {% widthratio count 10 1 %}rem;">
+                                    {{ keyword }} ({{ count }})
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">Nenhuma palavra-chave identificada ainda</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Feedback por Tipo -->
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Tipos de Feedback</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="feedbackTypeChart" width="300" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Ações Rápidas -->
+            <div class="card">
+                <div class="card-header pb-0">
+                    <h6>Ações</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newFeedbackModal">
+                            <i class="fas fa-plus me-2"></i>Adicionar Feedback
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="generateFeedbackReport()">
+                            <i class="fas fa-chart-bar me-2"></i>Relatório de Feedback
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportFeedback()">
+                            <i class="fas fa-download me-2"></i>Exportar Feedbacks
+                        </button>
+                        <a href="{% url 'activities:report' activity.id %}" class="btn btn-outline-warning btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar ao Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Novo Feedback -->
+<div class="modal fade" id="newFeedbackModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Novo Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="newFeedbackForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" name="activity" value="{{ activity.id }}">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Feedback</label>
+                            <select class="form-select" name="feedback_type">
+                                <option value="">Selecione...</option>
+                                <option value="PROGRESS">Progresso</option>
+                                <option value="CONTENT">Conteúdo</option>
+                                <option value="METHODOLOGY">Metodologia</option>
+                                <option value="INTERACTION">Interação</option>
+                                <option value="SUGGESTION">Sugestão</option>
+                                <option value="COMPLAINT">Reclamação</option>
+                                <option value="PRAISE">Elogio</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Sessão Relacionada</label>
+                            <select class="form-select" name="session">
+                                <option value="">Feedback geral da atividade</option>
+                                {% for session in recent_sessions %}
+                                    <option value="{{ session.id }}">{{ session.date|date:"d/m/Y" }} - {{ session.start_time }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Avaliação</label>
+                        <div class="rating-input text-center">
+                            <div class="stars-input">
+                                <i class="fas fa-star star-input" data-rating="1"></i>
+                                <i class="fas fa-star star-input" data-rating="2"></i>
+                                <i class="fas fa-star star-input" data-rating="3"></i>
+                                <i class="fas fa-star star-input" data-rating="4"></i>
+                                <i class="fas fa-star star-input" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" name="rating" id="feedback-rating">
+                            <small class="form-text text-muted">Clique nas estrelas para avaliar</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Comentário *</label>
+                        <textarea class="form-control" name="comment" rows="4" required 
+                                  placeholder="Descreva sua experiência, observações ou sugestões..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Sugestões de Melhoria</label>
+                        <textarea class="form-control" name="suggestions" rows="3" 
+                                  placeholder="Como podemos melhorar esta atividade?"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Anexos</label>
+                        <input type="file" class="form-control" name="attachments" multiple
+                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <small class="form-text text-muted">Você pode anexar imagens ou documentos (máx. 5MB cada)</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="notify_team" id="notifyTeam">
+                        <label class="form-check-label" for="notifyTeam">
+                            Notificar equipe sobre este feedback
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Inicialização
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    setupEventListeners();
+});
+
+function initializeCharts() {
+    // Gráfico de Tipos de Feedback
+    const typeCtx = document.getElementById('feedbackTypeChart').getContext('2d');
+    const typeData = {{ feedback_types|safe }};
+    
+    new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: typeData.map(item => item.label),
+            datasets: [{
+                data: typeData.map(item => item.count),
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)',
+                    'rgba(199, 199, 199, 0.8)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 10
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function setupEventListeners() {
+    // Sistema de avaliação por estrelas
+    const starsInput = document.querySelectorAll('.star-input');
+    starsInput.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.dataset.rating;
+            document.getElementById('feedback-rating').value = rating;
+            
+            starsInput.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('far');
+                    s.classList.add('fas');
+                    s.style.color = '#ffc107';
+                } else {
+                    s.classList.remove('fas');
+                    s.classList.add('far');
+                    s.style.color = '#dee2e6';
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = this.dataset.rating;
+            starsInput.forEach((s, index) => {
+                if (index < rating) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#dee2e6';
+                }
+            });
+        });
+    });
+
+    // Reset estrelas ao sair
+    document.querySelector('.stars-input').addEventListener('mouseleave', function() {
+        const currentRating = document.getElementById('feedback-rating').value;
+        starsInput.forEach((s, index) => {
+            if (index < currentRating) {
+                s.style.color = '#ffc107';
+            } else {
+                s.style.color = '#dee2e6';
+            }
+        });
+    });
+
+    // Submit do formulário
+    document.getElementById('newFeedbackForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('{% url "activities:create_feedback" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('newFeedbackModal')).hide();
+                location.reload();
+            } else {
+                alert('Erro ao enviar feedback: ' + (data.error || 'Erro desconhecido'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao enviar feedback');
+        });
+    });
+}
+
+function filterFeedbacks(category) {
+    const feedbackItems = document.querySelectorAll('.feedback-item');
+    
+    feedbackItems.forEach(item => {
+        if (category === 'all') {
+            item.style.display = '';
+        } else {
+            const itemCategory = item.dataset.category;
+            item.style.display = itemCategory === category ? '' : 'none';
+        }
+    });
+    
+    // Atualizar botões ativos
+    document.querySelectorAll('.card-header .btn').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-secondary');
+    });
+    
+    event.target.classList.remove('btn-outline-secondary');
+    event.target.classList.add('btn-primary');
+}
+
+function toggleReplies(feedbackId) {
+    const repliesDiv = document.getElementById(`replies-${feedbackId}`);
+    if (repliesDiv.style.display === 'none') {
+        repliesDiv.style.display = 'block';
+    } else {
+        repliesDiv.style.display = 'none';
+    }
+}
+
+function replyFeedback(feedbackId) {
+    const reply = prompt('Digite sua resposta:');
+    if (reply && reply.trim()) {
+        fetch('/activities/feedback/reply/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                feedback_id: feedbackId,
+                reply: reply.trim()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao enviar resposta');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao enviar resposta');
+        });
+    }
+}
+
+function markFeedback(feedbackId, action) {
+    fetch('/activities/feedback/mark/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            feedback_id: feedbackId,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao marcar feedback');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Erro ao marcar feedback');
+    });
+}
+
+function editFeedback(feedbackId) {
+    // Implementar edição de feedback
+    alert('Função em desenvolvimento');
+}
+
+function deleteFeedback(feedbackId) {
+    if (confirm('Tem certeza que deseja excluir este feedback?')) {
+        fetch(`/activities/feedback/${feedbackId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir feedback');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erro ao excluir feedback');
+        });
+    }
+}
+
+function exportFeedback() {
+    window.open(`{% url 'activities:export_feedback' activity.id %}`, '_blank');
+}
+
+function generateFeedbackReport() {
+    window.open(`{% url 'activities:feedback_report' activity.id %}`, '_blank');
+}
+</script>
+
+<style>
+.star-input {
+    font-size: 2rem;
+    cursor: pointer;
+    color: #dee2e6;
+    transition: color 0.2s;
+}
+
+.star-input:hover {
+    color: #ffc107;
+}
+
+.stars-input {
+    margin-bottom: 10px;
+}
+
+.feedback-item {
+    transition: all 0.3s ease;
+}
+
+.feedback-item:hover {
+    background-color: #f8f9fa;
+}
+
+.avatar-initial {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: white;
+}
+
+.tag-cloud .badge {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag-cloud .badge:hover {
+    transform: scale(1.1);
+}
+
+.replies {
+    border-left: 3px solid #17a2b8;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 0 10px 10px 0;
+}
+
+.stars i {
+    font-size: 0.9rem;
+}
+
+.border-start {
+    border-left: 3px solid #17a2b8 !important;
+}
+
+.btn-xs {
+    padding: 0.1rem 0.3rem;
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

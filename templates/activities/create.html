@@ -1,0 +1,637 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Atividade - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'activities:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-plus text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Nova Atividade</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="activity-form">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Formulário Principal -->
+            <div class="col-lg-8">
+                <!-- Informações Básicas -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Informações Básicas</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Beneficiária *</label>
+                                {{ form.beneficiary }}
+                                {% if form.beneficiary.errors %}
+                                    <div class="text-danger small">{{ form.beneficiary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tipo de Atividade *</label>
+                                {{ form.activity_type }}
+                                {% if form.activity_type.errors %}
+                                    <div class="text-danger small">{{ form.activity_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Título *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Descrição</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Objetivos *</label>
+                                {{ form.objectives }}
+                                {% if form.objectives.errors %}
+                                    <div class="text-danger small">{{ form.objectives.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Descreva os objetivos específicos desta atividade
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Resultados Esperados</label>
+                                {{ form.expected_outcomes }}
+                                {% if form.expected_outcomes.errors %}
+                                    <div class="text-danger small">{{ form.expected_outcomes.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Quais resultados você espera alcançar com esta atividade?
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Programação -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Programação</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Início *</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Término</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Deixe em branco se for atividade única
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Frequência</label>
+                                {{ form.frequency }}
+                                {% if form.frequency.errors %}
+                                    <div class="text-danger small">{{ form.frequency.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Prioridade</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger small">{{ form.priority.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recursos e Responsáveis -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Recursos e Responsáveis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Facilitador/Responsável *</label>
+                                {{ form.facilitator }}
+                                {% if form.facilitator.errors %}
+                                    <div class="text-danger small">{{ form.facilitator.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Local *</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Materiais Necessários</label>
+                                {{ form.materials_needed }}
+                                {% if form.materials_needed.errors %}
+                                    <div class="text-danger small">{{ form.materials_needed.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Liste os materiais e recursos necessários para a atividade
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integração Social -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Integração Social</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Anamnese Social Relacionada</label>
+                                {{ form.social_anamnesis }}
+                                {% if form.social_anamnesis.errors %}
+                                    <div class="text-danger small">{{ form.social_anamnesis.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Vincule a atividade a uma anamnese social específica
+                                </small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pontuação de Impacto (0-100)</label>
+                                {{ form.impact_score }}
+                                {% if form.impact_score.errors %}
+                                    <div class="text-danger small">{{ form.impact_score.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Estimativa do impacto social desta atividade
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'activities:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewActivity()">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Criar Atividade
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Preview e Informações -->
+            <div class="col-lg-4">
+                <!-- Preview da Atividade -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Preview da Atividade</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="activity-preview">
+                            <div class="activity-card" style="border: 2px dashed #dee2e6; border-radius: 8px; padding: 20px; text-align: center; color: #6c757d;">
+                                <i class="fas fa-calendar-alt fa-2x mb-3"></i>
+                                <p class="mb-0">Preview será atualizado conforme você preenche o formulário</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações da Beneficiária -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Informações da Beneficiária</h6>
+                    </div>
+                    <div class="card-body" id="beneficiary-info">
+                        <p class="text-muted text-center">Selecione uma beneficiária para ver suas informações</p>
+                    </div>
+                </div>
+
+                <!-- Dicas e Orientações -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            Dicas para Criação
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6 class="text-sm font-weight-bold">Título Claro</h6>
+                            <p class="text-xs text-muted">Use um título descritivo que identifique facilmente a atividade</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="text-sm font-weight-bold">Objetivos SMART</h6>
+                            <p class="text-xs text-muted">Defina objetivos Específicos, Mensuráveis, Alcançáveis, Relevantes e Temporais</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="text-sm font-weight-bold">Recursos Adequados</h6>
+                            <p class="text-xs text-muted">Liste todos os materiais necessários para evitar imprevistos</p>
+                        </div>
+                        <div class="mb-0">
+                            <h6 class="text-sm font-weight-bold">Impacto Social</h6>
+                            <p class="text-xs text-muted">Avalie o potencial de impacto da atividade na vida da beneficiária</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Atividades Recentes da Beneficiária -->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Atividades Recentes</h6>
+                    </div>
+                    <div class="card-body" id="beneficiary-activities">
+                        <p class="text-muted text-center">Selecione uma beneficiária para ver suas atividades recentes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview da Atividade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="full-preview">
+                    <!-- Preview completo será carregado aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="submitFromPreview()">
+                    <i class="fas fa-save me-2"></i>Criar Atividade
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Atualizar preview em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('activity-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', updatePreview);
+        input.addEventListener('input', updatePreview);
+    });
+    
+    // Listener especial para beneficiária
+    const beneficiarySelect = document.getElementById('id_beneficiary');
+    if (beneficiarySelect) {
+        beneficiarySelect.addEventListener('change', updateBeneficiaryInfo);
+    }
+    
+    // Inicializar preview
+    updatePreview();
+});
+
+function updatePreview() {
+    const title = document.getElementById('id_title')?.value || 'Título da Atividade';
+    const activityType = document.getElementById('id_activity_type');
+    const beneficiarySelect = document.getElementById('id_beneficiary');
+    const startDate = document.getElementById('id_start_date')?.value;
+    const facilitator = document.getElementById('id_facilitator')?.value || 'Facilitador';
+    const location = document.getElementById('id_location')?.value || 'Local';
+    const priority = document.getElementById('id_priority');
+    const description = document.getElementById('id_description')?.value;
+    
+    let typeDisplay = 'Tipo';
+    if (activityType && activityType.selectedIndex > 0) {
+        typeDisplay = activityType.options[activityType.selectedIndex].text;
+    }
+    
+    let beneficiaryName = 'Beneficiária';
+    if (beneficiarySelect && beneficiarySelect.selectedIndex > 0) {
+        beneficiaryName = beneficiarySelect.options[beneficiarySelect.selectedIndex].text;
+    }
+    
+    let priorityClass = 'bg-secondary';
+    let priorityText = 'Média';
+    if (priority && priority.value) {
+        switch (priority.value) {
+            case 'LOW':
+                priorityClass = 'bg-success';
+                priorityText = 'Baixa';
+                break;
+            case 'MEDIUM':
+                priorityClass = 'bg-warning';
+                priorityText = 'Média';
+                break;
+            case 'HIGH':
+                priorityClass = 'bg-danger';
+                priorityText = 'Alta';
+                break;
+            case 'URGENT':
+                priorityClass = 'bg-dark';
+                priorityText = 'Urgente';
+                break;
+        }
+    }
+    
+    const previewHtml = `
+        <div class="activity-card border border-primary" style="border-radius: 8px; padding: 20px;">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1 text-primary">${title}</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-info me-2">${typeDisplay}</span>
+                        <span class="badge ${priorityClass}">${priorityText}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-user text-muted me-2"></i>
+                    <span class="text-sm">${beneficiaryName}</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-user-tie text-muted me-2"></i>
+                    <span class="text-sm">${facilitator}</span>
+                </div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                    <span class="text-sm">${location}</span>
+                </div>
+                ${startDate ? `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar text-muted me-2"></i>
+                    <span class="text-sm">${new Date(startDate).toLocaleDateString('pt-BR')}</span>
+                </div>
+                ` : ''}
+            </div>
+            
+            ${description ? `
+            <div class="border-top pt-3">
+                <p class="text-sm text-muted mb-0">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</p>
+            </div>
+            ` : ''}
+        </div>
+    `;
+    
+    document.getElementById('activity-preview').innerHTML = previewHtml;
+}
+
+function updateBeneficiaryInfo() {
+    const beneficiarySelect = document.getElementById('id_beneficiary');
+    const beneficiaryInfo = document.getElementById('beneficiary-info');
+    const beneficiaryActivities = document.getElementById('beneficiary-activities');
+    
+    if (beneficiarySelect.value) {
+        // Fazer requisição AJAX para buscar informações da beneficiária
+        fetch(`/activities/beneficiary-info/${beneficiarySelect.value}/`)
+            .then(response => response.json())
+            .then(data => {
+                beneficiaryInfo.innerHTML = `
+                    <div class="d-flex align-items-center mb-3">
+                        ${data.photo ? `
+                            <img src="${data.photo}" alt="${data.name}" class="rounded-circle me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                        ` : `
+                            <div class="avatar avatar-lg bg-gradient-primary rounded-circle me-3 d-flex align-items-center justify-content-center">
+                                <span class="text-white text-lg">${data.initials}</span>
+                            </div>
+                        `}
+                        <div>
+                            <h6 class="mb-0">${data.name}</h6>
+                            <small class="text-muted">ID: ${data.id}</small>
+                        </div>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="text-primary h6">${data.total_activities}</div>
+                            <div class="text-xs text-muted">Atividades</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-success h6">${data.active_activities}</div>
+                            <div class="text-xs text-muted">Ativas</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-info h6">${data.attendance_rate}%</div>
+                            <div class="text-xs text-muted">Presença</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Atualizar atividades recentes
+                let activitiesHtml = '';
+                if (data.recent_activities && data.recent_activities.length > 0) {
+                    activitiesHtml = data.recent_activities.map(activity => `
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-calendar-alt text-primary text-xs opacity-10"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="text-sm font-weight-bold">${activity.title}</div>
+                                <small class="text-muted">${activity.type} - ${activity.date}</small>
+                            </div>
+                            <span class="badge bg-${activity.status_color}">${activity.status}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    activitiesHtml = '<p class="text-muted text-center">Nenhuma atividade anterior</p>';
+                }
+                
+                beneficiaryActivities.innerHTML = activitiesHtml;
+            })
+            .catch(error => {
+                console.error('Erro ao buscar informações da beneficiária:', error);
+                beneficiaryInfo.innerHTML = '<p class="text-danger text-center">Erro ao carregar informações</p>';
+            });
+    } else {
+        beneficiaryInfo.innerHTML = '<p class="text-muted text-center">Selecione uma beneficiária para ver suas informações</p>';
+        beneficiaryActivities.innerHTML = '<p class="text-muted text-center">Selecione uma beneficiária para ver suas atividades recentes</p>';
+    }
+}
+
+function previewActivity() {
+    // Coletar dados do formulário
+    const formData = new FormData(document.getElementById('activity-form'));
+    
+    // Gerar preview completo
+    const fullPreviewHtml = `
+        <div class="activity-full-preview">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">${formData.get('title') || 'Título da Atividade'}</h5>
+                    <div class="mb-3">
+                        <span class="badge bg-info me-2">${document.getElementById('id_activity_type').selectedOptions[0]?.text || 'Tipo'}</span>
+                        <span class="badge bg-warning">${document.getElementById('id_priority').selectedOptions[0]?.text || 'Média'}</span>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Beneficiária:</strong><br>
+                            ${document.getElementById('id_beneficiary').selectedOptions[0]?.text || 'Não selecionada'}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Facilitador:</strong><br>
+                            ${formData.get('facilitator') || 'Não definido'}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Data de Início:</strong><br>
+                            ${formData.get('start_date') ? new Date(formData.get('start_date')).toLocaleDateString('pt-BR') : 'Não definida'}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Local:</strong><br>
+                            ${formData.get('location') || 'Não definido'}
+                        </div>
+                    </div>
+                    ${formData.get('description') ? `
+                    <div class="mb-3">
+                        <strong>Descrição:</strong><br>
+                        <p class="text-muted">${formData.get('description')}</p>
+                    </div>
+                    ` : ''}
+                    ${formData.get('objectives') ? `
+                    <div class="mb-3">
+                        <strong>Objetivos:</strong><br>
+                        <p class="text-muted">${formData.get('objectives')}</p>
+                    </div>
+                    ` : ''}
+                    ${formData.get('expected_outcomes') ? `
+                    <div class="mb-3">
+                        <strong>Resultados Esperados:</strong><br>
+                        <p class="text-muted">${formData.get('expected_outcomes')}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('full-preview').innerHTML = fullPreviewHtml;
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+function submitFromPreview() {
+    const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+    previewModal.hide();
+    document.getElementById('activity-form').submit();
+}
+
+// Validação do formulário
+document.getElementById('activity-form').addEventListener('submit', function(e) {
+    const requiredFields = ['id_beneficiary', 'id_title', 'id_activity_type', 'id_start_date', 'id_facilitator', 'id_location', 'id_objectives'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field || !field.value.trim()) {
+            if (field) field.classList.add('is-invalid');
+            hasErrors = true;
+        } else {
+            if (field) field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+});
+</script>
+
+<style>
+.activity-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activity-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.avatar-lg {
+    width: 48px;
+    height: 48px;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.text-lg {
+    font-size: 1.125rem;
+}
+
+#activity-preview {
+    min-height: 200px;
+}
+
+.activity-full-preview {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

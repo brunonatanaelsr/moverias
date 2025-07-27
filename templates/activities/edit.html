@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Atividade - Move Marias{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
+                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                            <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-edit text-primary text-sm opacity-10"></i>
+                            </div>
+                            <h6 class="mb-0">Editar Atividade</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="activity-edit-form">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Formulário Principal -->
+            <div class="col-lg-8">
+                <!-- Informações Básicas -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6>Informações Básicas</h6>
+                            <div>
+                                <span class="badge bg-info">{{ activity.get_activity_type_display }}</span>
+                                {% if activity.status == 'ACTIVE' %}
+                                    <span class="badge bg-success ms-2">{{ activity.get_status_display }}</span>
+                                {% elif activity.status == 'COMPLETED' %}
+                                    <span class="badge bg-primary ms-2">{{ activity.get_status_display }}</span>
+                                {% elif activity.status == 'PLANNED' %}
+                                    <span class="badge bg-warning ms-2">{{ activity.get_status_display }}</span>
+                                {% elif activity.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger ms-2">{{ activity.get_status_display }}</span>
+                                {% elif activity.status == 'PAUSED' %}
+                                    <span class="badge bg-secondary ms-2">{{ activity.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Beneficiária *</label>
+                                {{ form.beneficiary }}
+                                {% if form.beneficiary.errors %}
+                                    <div class="text-danger small">{{ form.beneficiary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tipo de Atividade *</label>
+                                {{ form.activity_type }}
+                                {% if form.activity_type.errors %}
+                                    <div class="text-danger small">{{ form.activity_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Título *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Descrição</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Objetivos *</label>
+                                {{ form.objectives }}
+                                {% if form.objectives.errors %}
+                                    <div class="text-danger small">{{ form.objectives.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Resultados Esperados</label>
+                                {{ form.expected_outcomes }}
+                                {% if form.expected_outcomes.errors %}
+                                    <div class="text-danger small">{{ form.expected_outcomes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Programação -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Programação</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Início *</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Data de Término</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Frequência</label>
+                                {{ form.frequency }}
+                                {% if form.frequency.errors %}
+                                    <div class="text-danger small">{{ form.frequency.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Prioridade</label>
+                                {{ form.priority }}
+                                {% if form.priority.errors %}
+                                    <div class="text-danger small">{{ form.priority.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recursos e Responsáveis -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Recursos e Responsáveis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Facilitador/Responsável *</label>
+                                {{ form.facilitator }}
+                                {% if form.facilitator.errors %}
+                                    <div class="text-danger small">{{ form.facilitator.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Local *</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Materiais Necessários</label>
+                                {{ form.materials_needed }}
+                                {% if form.materials_needed.errors %}
+                                    <div class="text-danger small">{{ form.materials_needed.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progresso e Avaliação -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Progresso e Avaliação</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Percentual de Conclusão (%)</label>
+                                <div class="input-group">
+                                    {{ form.completion_percentage }}
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                {% if form.completion_percentage.errors %}
+                                    <div class="text-danger small">{{ form.completion_percentage.errors.0 }}</div>
+                                {% endif %}
+                                <div class="progress mt-2" style="height: 8px;">
+                                    <div class="progress-bar bg-success" 
+                                         role="progressbar" 
+                                         style="width: {{ activity.completion_percentage }}%"
+                                         id="progress-preview">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Pontuação de Impacto (0-100)</label>
+                                <div class="input-group">
+                                    {{ form.impact_score }}
+                                    <span class="input-group-text">/100</span>
+                                </div>
+                                {% if form.impact_score.errors %}
+                                    <div class="text-danger small">{{ form.impact_score.errors.0 }}</div>
+                                {% endif %}
+                                <div class="progress mt-2" style="height: 8px;">
+                                    <div class="progress-bar bg-info" 
+                                         role="progressbar" 
+                                         style="width: {{ activity.impact_score }}%"
+                                         id="impact-preview">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integração Social -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Integração Social</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Anamnese Social Relacionada</label>
+                                {{ form.social_anamnesis }}
+                                {% if form.social_anamnesis.errors %}
+                                    <div class="text-danger small">{{ form.social_anamnesis.errors.0 }}</div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Vincule a atividade a uma anamnese social específica
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'activities:detail' activity.id %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Cancelar
+                                </a>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewChanges()">
+                                    <i class="fas fa-eye me-2"></i>Visualizar
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Informações e Histórico -->
+            <div class="col-lg-4">
+                <!-- Preview das Alterações -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Preview das Alterações</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="changes-preview">
+                            <p class="text-muted text-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                As alterações aparecerão aqui conforme você edita
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Atuais -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Informações Atuais</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted">Beneficiária</small>
+                            <div>{{ activity.beneficiary.get_full_name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Criada em</small>
+                            <div>{{ activity.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Criada por</small>
+                            <div>{{ activity.created_by.get_full_name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Última atualização</small>
+                            <div>{{ activity.updated_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Sessões agendadas</small>
+                            <div>{{ activity.sessions.count }}</div>
+                        </div>
+                        <div class="mb-0">
+                            <small class="text-muted">Taxa de presença</small>
+                            <div>{{ activity.attendance_rate }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Histórico de Alterações -->
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>Histórico Recente</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if activity_history %}
+                            {% for history in activity_history %}
+                                <div class="d-flex align-items-start mb-3">
+                                    <div class="icon icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                                        {% if history.action == 'created' %}
+                                            <i class="fas fa-plus text-success text-xs opacity-10"></i>
+                                        {% elif history.action == 'updated' %}
+                                            <i class="fas fa-edit text-info text-xs opacity-10"></i>
+                                        {% elif history.action == 'status_changed' %}
+                                            <i class="fas fa-exchange-alt text-warning text-xs opacity-10"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="text-sm font-weight-bold">{{ history.description }}</div>
+                                        <small class="text-muted">
+                                            {{ history.created_at|date:"d/m/Y H:i" }} - {{ history.user.get_full_name }}
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center">Nenhum histórico disponível</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Ações Relacionadas -->
+                <div class="card">
+                    <div class="card-header pb-0">
+                        <h6>Ações Relacionadas</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'activities:sessions' activity.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-calendar me-2"></i>Gerenciar Sessões
+                            </a>
+                            <a href="{% url 'activities:attendance' activity.id %}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-check me-2"></i>Controle de Presença
+                            </a>
+                            <button class="btn btn-outline-info btn-sm" onclick="viewFeedback()">
+                                <i class="fas fa-comments me-2"></i>Ver Feedback
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="generateReport()">
+                                <i class="fas fa-chart-bar me-2"></i>Relatório
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal de Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview das Alterações</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="full-preview">
+                    <!-- Preview completo será carregado aqui -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="submitFromPreview()">
+                    <i class="fas fa-save me-2"></i>Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Valores originais para comparação
+const originalValues = {
+    title: '{{ activity.title|escapejs }}',
+    status: '{{ activity.status }}',
+    description: '{{ activity.description|escapejs }}',
+    completion_percentage: {{ activity.completion_percentage }},
+    impact_score: {{ activity.impact_score }},
+    facilitator: '{{ activity.facilitator|escapejs }}',
+    location: '{{ activity.location|escapejs }}'
+};
+
+// Atualizar preview em tempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('activity-edit-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', updateChangesPreview);
+        input.addEventListener('input', updateChangesPreview);
+    });
+    
+    // Listeners especiais para sliders de progresso
+    const completionInput = document.getElementById('id_completion_percentage');
+    const impactInput = document.getElementById('id_impact_score');
+    
+    if (completionInput) {
+        completionInput.addEventListener('input', function() {
+            document.getElementById('progress-preview').style.width = this.value + '%';
+        });
+    }
+    
+    if (impactInput) {
+        impactInput.addEventListener('input', function() {
+            document.getElementById('impact-preview').style.width = this.value + '%';
+        });
+    }
+    
+    // Inicializar preview
+    updateChangesPreview();
+});
+
+function updateChangesPreview() {
+    const changes = [];
+    
+    // Verificar mudanças nos campos principais
+    const currentTitle = document.getElementById('id_title')?.value || '';
+    if (currentTitle !== originalValues.title) {
+        changes.push({
+            field: 'Título',
+            old: originalValues.title,
+            new: currentTitle,
+            type: 'text'
+        });
+    }
+    
+    const currentStatus = document.getElementById('id_status')?.value || '';
+    if (currentStatus !== originalValues.status) {
+        const statusDisplay = document.getElementById('id_status').selectedOptions[0]?.text || currentStatus;
+        changes.push({
+            field: 'Status',
+            old: originalValues.status,
+            new: statusDisplay,
+            type: 'status'
+        });
+    }
+    
+    const currentCompletion = parseInt(document.getElementById('id_completion_percentage')?.value) || 0;
+    if (currentCompletion !== originalValues.completion_percentage) {
+        changes.push({
+            field: 'Progresso',
+            old: originalValues.completion_percentage + '%',
+            new: currentCompletion + '%',
+            type: 'progress'
+        });
+    }
+    
+    const currentImpact = parseInt(document.getElementById('id_impact_score')?.value) || 0;
+    if (currentImpact !== originalValues.impact_score) {
+        changes.push({
+            field: 'Impacto Social',
+            old: originalValues.impact_score + '/100',
+            new: currentImpact + '/100',
+            type: 'impact'
+        });
+    }
+    
+    // Renderizar preview das mudanças
+    const previewDiv = document.getElementById('changes-preview');
+    
+    if (changes.length === 0) {
+        previewDiv.innerHTML = `
+            <p class="text-muted text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Nenhuma alteração detectada
+            </p>
+        `;
+    } else {
+        let html = '<div class="changes-list">';
+        changes.forEach(change => {
+            html += `
+                <div class="change-item mb-3 p-3 border border-light rounded">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="text-sm">${change.field}</strong>
+                        <span class="badge bg-warning">Alterado</span>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Anterior:</small>
+                            <div class="text-sm">${change.old}</div>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted">Novo:</small>
+                            <div class="text-sm text-primary font-weight-bold">${change.new}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        previewDiv.innerHTML = html;
+    }
+}
+
+function previewChanges() {
+    const formData = new FormData(document.getElementById('activity-edit-form'));
+    
+    const previewHtml = `
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${formData.get('title') || 'Título da Atividade'}</h5>
+                        <div class="mb-3">
+                            <span class="badge bg-info me-2">${document.getElementById('id_activity_type').selectedOptions[0]?.text || 'Tipo'}</span>
+                            <span class="badge bg-warning">${document.getElementById('id_status').selectedOptions[0]?.text || 'Status'}</span>
+                            <span class="badge bg-secondary ms-2">${document.getElementById('id_priority').selectedOptions[0]?.text || 'Prioridade'}</span>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Beneficiária:</strong><br>
+                                ${document.getElementById('id_beneficiary').selectedOptions[0]?.text || 'Não selecionada'}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Facilitador:</strong><br>
+                                ${formData.get('facilitator') || 'Não definido'}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Progresso:</strong><br>
+                                <div class="progress mt-1" style="height: 20px;">
+                                    <div class="progress-bar bg-success" style="width: ${formData.get('completion_percentage') || 0}%">
+                                        ${formData.get('completion_percentage') || 0}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Impacto Social:</strong><br>
+                                <div class="progress mt-1" style="height: 20px;">
+                                    <div class="progress-bar bg-info" style="width: ${formData.get('impact_score') || 0}%">
+                                        ${formData.get('impact_score') || 0}/100
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${formData.get('description') ? `
+                        <div class="mb-3">
+                            <strong>Descrição:</strong><br>
+                            <p class="text-muted">${formData.get('description')}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${formData.get('objectives') ? `
+                        <div class="mb-3">
+                            <strong>Objetivos:</strong><br>
+                            <p class="text-muted">${formData.get('objectives')}</p>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('full-preview').innerHTML = previewHtml;
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+function submitFromPreview() {
+    const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+    previewModal.hide();
+    document.getElementById('activity-edit-form').submit();
+}
+
+function viewFeedback() {
+    window.location.href = `{% url 'activities:feedback' activity.id %}`;
+}
+
+function generateReport() {
+    window.open(`{% url 'activities:report' activity.id %}`, '_blank');
+}
+
+// Validação do formulário
+document.getElementById('activity-edit-form').addEventListener('submit', function(e) {
+    const requiredFields = ['id_beneficiary', 'id_title', 'id_activity_type', 'id_start_date', 'id_facilitator', 'id_location', 'id_objectives'];
+    let hasErrors = false;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field || !field.value.trim()) {
+            if (field) field.classList.add('is-invalid');
+            hasErrors = true;
+        } else {
+            if (field) field.classList.remove('is-invalid');
+        }
+    });
+    
+    if (hasErrors) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+});
+</script>
+
+<style>
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.change-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef !important;
+}
+
+.progress {
+    border-radius: 10px;
+}
+
+.progress-bar {
+    border-radius: 10px;
+}
+
+.text-xs {
+    font-size: 0.75rem;
+}
+
+.text-sm {
+    font-size: 0.875rem;
+}
+
+.border-light {
+    border-color: #e9ecef !important;
+}
+
+.changes-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+#full-preview {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
