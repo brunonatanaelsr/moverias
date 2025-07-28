@@ -26,4 +26,7 @@ urlpatterns = [
     path('validate/cpf/', validation_views.check_cpf_uniqueness, name='validate-cpf'),
     path('validate/field/', validation_views.validate_field_api, name='validate-field'),
     path('validate/email/', validation_views.check_email_uniqueness, name='validate-email'),
+    
+    # Chat interno API
+    path('chat/', include('api.chat_urls')),
 ]

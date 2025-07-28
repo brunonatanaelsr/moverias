@@ -1,0 +1,365 @@
+<!-- Chat Flutuante Interno -->
+<div x-data="chatWidget()" 
+     x-init="init()" 
+     class="fixed bottom-6 right-6 z-50">
+    
+    <!-- Botão do Chat -->
+    <div x-show="!isOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95">
+        <button @click="toggleChat()" 
+                class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 relative">
+            <!-- Ícone do Chat -->
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+            
+            <!-- Badge de notificação -->
+            <span x-show="unreadCount > 0" 
+                  x-text="unreadCount > 99 ? '99+' : unreadCount"
+                  class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold"></span>
+        </button>
+    </div>
+
+    <!-- Janela do Chat -->
+    <div x-show="isOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 transform translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 transform translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 transform translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 transform translate-y-4 scale-95"
+         class="bg-white rounded-lg shadow-2xl border border-gray-200"
+         style="width: 350px; height: 500px;">
+        
+        <!-- Cabeçalho do Chat -->
+        <div class="bg-indigo-600 text-white p-4 rounded-t-lg flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-2M3 16V4a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H7l-4 4z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-sm">Chat Interno</h3>
+                    <p class="text-xs text-indigo-200" x-text="onlineUsersCount + ' usuários online'"></p>
+                </div>
+            </div>
+            <button @click="toggleChat()" class="text-indigo-200 hover:text-white">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Lista de Conversas / Usuários -->
+        <div x-show="currentView === 'conversations'" class="h-96 flex flex-col">
+            <!-- Barra de busca -->
+            <div class="p-3 border-b border-gray-200">
+                <input type="text" 
+                       x-model="searchQuery"
+                       @input="searchUsers()"
+                       placeholder="Buscar usuários..."
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            </div>
+            
+            <!-- Lista de usuários -->
+            <div class="flex-1 overflow-y-auto">
+                <template x-for="user in filteredUsers" :key="user.id">
+                    <div @click="openConversation(user)" 
+                         class="flex items-center p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
+                        <div class="relative">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                <span x-text="user.name.charAt(0).toUpperCase()" class="font-semibold text-gray-600"></span>
+                            </div>
+                            <div x-show="user.is_online" class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium text-gray-900" x-text="user.name"></p>
+                            <p class="text-xs text-gray-500" x-text="user.last_message || 'Iniciar conversa'"></p>
+                        </div>
+                        <div x-show="user.unread_count > 0" 
+                             class="bg-indigo-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center"
+                             x-text="user.unread_count"></div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Conversa Individual -->
+        <div x-show="currentView === 'chat'" class="h-96 flex flex-col">
+            <!-- Cabeçalho da conversa -->
+            <div class="p-3 border-b border-gray-200 flex items-center">
+                <button @click="backToConversations()" class="mr-3 text-gray-500 hover:text-gray-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span x-text="selectedUser ? selectedUser.name.charAt(0).toUpperCase() : ''" class="font-semibold text-gray-600"></span>
+                    </div>
+                    <div class="ml-2">
+                        <p class="text-sm font-medium text-gray-900" x-text="selectedUser ? selectedUser.name : ''"></p>
+                        <p class="text-xs text-gray-500" x-text="selectedUser && selectedUser.is_online ? 'Online' : 'Offline'"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensagens -->
+            <div class="flex-1 overflow-y-auto p-3 space-y-3" x-ref="messagesContainer">
+                <template x-for="message in messages" :key="message.id">
+                    <div :class="message.is_own ? 'flex justify-end' : 'flex justify-start'">
+                        <div :class="message.is_own ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-900'" 
+                             class="max-w-xs px-3 py-2 rounded-lg text-sm">
+                            <p x-text="message.content"></p>
+                            <p :class="message.is_own ? 'text-indigo-200' : 'text-gray-500'" 
+                               class="text-xs mt-1" 
+                               x-text="formatTime(message.timestamp)"></p>
+                        </div>
+                    </div>
+                </template>
+                
+                <!-- Indicador de digitação -->
+                <div x-show="isTyping" class="flex justify-start">
+                    <div class="bg-gray-200 text-gray-900 px-3 py-2 rounded-lg text-sm">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input de mensagem -->
+            <div class="p-3 border-t border-gray-200">
+                <form @submit.prevent="sendMessage()" class="flex space-x-2">
+                    <input type="text" 
+                           x-model="newMessage"
+                           @keyup="handleTyping()"
+                           placeholder="Digite sua mensagem..."
+                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                    <button type="submit" 
+                            :disabled="!newMessage.trim()"
+                            class="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 text-white px-3 py-2 rounded-md">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function chatWidget() {
+    return {
+        isOpen: false,
+        currentView: 'conversations', // 'conversations' or 'chat'
+        selectedUser: null,
+        messages: [],
+        newMessage: '',
+        searchQuery: '',
+        users: [],
+        filteredUsers: [],
+        unreadCount: 0,
+        onlineUsersCount: 0,
+        isTyping: false,
+        
+        init() {
+            // Carregar dados iniciais
+            this.loadUsers();
+            this.loadUnreadCount();
+            
+            // Simular atualizações em tempo real
+            setInterval(() => {
+                this.loadUnreadCount();
+                this.updateOnlineStatus();
+            }, 30000);
+        },
+        
+        toggleChat() {
+            this.isOpen = !this.isOpen;
+            if (this.isOpen && this.currentView === 'chat') {
+                this.$nextTick(() => {
+                    this.scrollToBottom();
+                });
+            }
+        },
+        
+        loadUsers() {
+            // Simular carregamento de usuários
+            fetch('/api/chat/users/')
+                .then(response => response.json())
+                .then(data => {
+                    this.users = data.users || [];
+                    this.filteredUsers = this.users;
+                    this.onlineUsersCount = this.users.filter(u => u.is_online).length;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar usuários:', error);
+                    // Dados mockados para desenvolvimento
+                    this.users = [
+                        {id: 1, name: 'Maria Silva', is_online: true, last_message: 'Oi, tudo bem?', unread_count: 2},
+                        {id: 2, name: 'João Santos', is_online: false, last_message: 'Até logo!', unread_count: 0},
+                        {id: 3, name: 'Ana Costa', is_online: true, last_message: 'Preciso de ajuda', unread_count: 1},
+                    ];
+                    this.filteredUsers = this.users;
+                    this.onlineUsersCount = this.users.filter(u => u.is_online).length;
+                });
+        },
+        
+        loadUnreadCount() {
+            fetch('/api/chat/unread-count/')
+                .then(response => response.json())
+                .then(data => {
+                    this.unreadCount = data.count || 0;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar mensagens não lidas:', error);
+                });
+        },
+        
+        searchUsers() {
+            if (this.searchQuery.trim() === '') {
+                this.filteredUsers = this.users;
+            } else {
+                this.filteredUsers = this.users.filter(user => 
+                    user.name.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+            }
+        },
+        
+        openConversation(user) {
+            this.selectedUser = user;
+            this.currentView = 'chat';
+            this.loadMessages(user.id);
+            // Marcar como lida
+            user.unread_count = 0;
+            this.updateUnreadCount();
+        },
+        
+        backToConversations() {
+            this.currentView = 'conversations';
+            this.selectedUser = null;
+            this.messages = [];
+        },
+        
+        loadMessages(userId) {
+            fetch(`/api/chat/messages/${userId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    this.messages = data.messages || [];
+                    this.$nextTick(() => {
+                        this.scrollToBottom();
+                    });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar mensagens:', error);
+                    // Mensagens mockadas
+                    this.messages = [
+                        {
+                            id: 1,
+                            content: 'Olá! Como posso ajudar?',
+                            is_own: false,
+                            timestamp: new Date(Date.now() - 60000)
+                        },
+                        {
+                            id: 2,
+                            content: 'Oi! Preciso tirar uma dúvida sobre o projeto.',
+                            is_own: true,
+                            timestamp: new Date(Date.now() - 30000)
+                        }
+                    ];
+                    this.$nextTick(() => {
+                        this.scrollToBottom();
+                    });
+                });
+        },
+        
+        sendMessage() {
+            if (!this.newMessage.trim() || !this.selectedUser) return;
+            
+            const message = {
+                content: this.newMessage,
+                recipient_id: this.selectedUser.id
+            };
+            
+            fetch('/api/chat/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(message)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    this.messages.push({
+                        id: data.message_id,
+                        content: this.newMessage,
+                        is_own: true,
+                        timestamp: new Date()
+                    });
+                    this.newMessage = '';
+                    this.$nextTick(() => {
+                        this.scrollToBottom();
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao enviar mensagem:', error);
+                // Simular envio para desenvolvimento
+                this.messages.push({
+                    id: Date.now(),
+                    content: this.newMessage,
+                    is_own: true,
+                    timestamp: new Date()
+                });
+                this.newMessage = '';
+                this.$nextTick(() => {
+                    this.scrollToBottom();
+                });
+            });
+        },
+        
+        handleTyping() {
+            // Implementar indicador de digitação
+            if (this.selectedUser) {
+                // Enviar indicador de digitação via WebSocket ou polling
+            }
+        },
+        
+        scrollToBottom() {
+            const container = this.$refs.messagesContainer;
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        },
+        
+        formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        },
+        
+        updateUnreadCount() {
+            this.unreadCount = this.users.reduce((sum, user) => sum + user.unread_count, 0);
+        },
+        
+        updateOnlineStatus() {
+            // Atualizar status online dos usuários
+            this.onlineUsersCount = this.users.filter(u => u.is_online).length;
+        }
+    }
+}
+</script>

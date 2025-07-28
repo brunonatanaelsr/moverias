@@ -58,23 +58,108 @@ def dashboard_home(request):
         )
         
         # OTIMIZAÇÃO: Queries otimizadas com select_related/prefetch_related
-        workshop_stats = Workshop.objects.prefetch_related('enrollments').aggregate(
+        workshop_stats = Workshop.objects.aggregate(
             total=Count('id'),
             active=Count('id', filter=Q(status='ativo')),
-            total_participants=Count('enrollments', filter=Q(enrollments__status='ativo'), distinct=True)
+            completed=Count('id', filter=Q(status='concluido')),
+            this_month=Count('id', filter=Q(created_at__date__gte=last_month))
         )
         
-        project_stats = Project.objects.prefetch_related('enrollments').aggregate(
+        project_stats = Project.objects.aggregate(
             total=Count('id'),
-            active=Count('id', filter=Q(status='ATIVO')),
-            total_participants=Count('enrollments', filter=Q(enrollments__status='ATIVO'), distinct=True)
+            active=Count('id'),  # Todos os projetos são considerados ativos por padrão
+            this_month=Count('id', filter=Q(created_at__gte=last_month))
         )
+        
+        # Estatísticas de tarefas
+        try:
+            from tasks.models import Task
+            task_stats = Task.objects.aggregate(
+                total=Count('id'),
+                pending=Count('id', filter=Q(status='PENDENTE')),
+                in_progress=Count('id', filter=Q(status='EM_ANDAMENTO')),
+                completed=Count('id', filter=Q(status='CONCLUIDA')),
+                this_month=Count('id', filter=Q(created_at__date__gte=last_month))
+            )
+        except ImportError:
+            task_stats = {
+                'total': 0, 'pending': 0, 'in_progress': 0, 
+                'completed': 0, 'this_month': 0
+            }
+        
+        # Aniversariantes do dia
+        birthday_beneficiaries = Beneficiary.objects.filter(
+            dob__month=today.month,
+            dob__day=today.day,
+            status='ATIVA'
+        ).select_related()
+        
+        # Estatísticas adicionais
+        anamnesis_stats = SocialAnamnesis.objects.aggregate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(locked=True)),
+            pending=Count('id', filter=Q(locked=False))
+        )
+        
+        evolution_stats = EvolutionRecord.objects.aggregate(
+            total=Count('id'),
+            this_month=Count('id', filter=Q(created_at__date__gte=last_month))
+        )
+        
+        # Atividades recentes
+        recent_activities = []
+        try:
+            recent_activities.extend([
+                {
+                    'type': 'beneficiary',
+                    'title': f'Nova beneficiária: {b.full_name}',
+                    'timestamp': b.created_at,
+                    'url': f'/members/{b.id}/',
+                    'icon': 'fas fa-user-plus'
+                }
+                for b in Beneficiary.objects.order_by('-created_at')[:3]
+            ])
+            
+            recent_activities.extend([
+                {
+                    'type': 'anamnesis',
+                    'title': f'Anamnese criada para {a.beneficiary.full_name}',
+                    'timestamp': a.created_at,
+                    'url': f'/social/anamnesis/{a.id}/',
+                    'icon': 'fas fa-file-alt'
+                }
+                for a in SocialAnamnesis.objects.select_related('beneficiary').order_by('-created_at')[:3]
+            ])
+            
+            recent_activities.extend([
+                {
+                    'type': 'evolution',
+                    'title': f'Registro de evolução: {e.beneficiary.full_name}',
+                    'timestamp': e.created_at,
+                    'url': f'/evolution/{e.id}/',
+                    'icon': 'fas fa-chart-line'
+                }
+                for e in EvolutionRecord.objects.select_related('beneficiary').order_by('-created_at')[:2]
+            ])
+            
+            # Ordenar por timestamp
+            recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+            recent_activities = recent_activities[:8]  # Limitar a 8 atividades
+            
+        except Exception as e:
+            print(f"Erro ao buscar atividades recentes: {e}")
+            recent_activities = []
         
         stats = {
             'beneficiary_stats': beneficiary_stats,
             'workshop_stats': workshop_stats,
             'project_stats': project_stats,
+            'task_stats': task_stats,
+            'anamnesis_stats': anamnesis_stats,
+            'evolution_stats': evolution_stats,
+            'birthday_beneficiaries': list(birthday_beneficiaries),
             'user_count': User.objects.filter(is_active=True).count(),
+            'recent_activities': recent_activities,
             'updated_at': now.isoformat()
         }
         

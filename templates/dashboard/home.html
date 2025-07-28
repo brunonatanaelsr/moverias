@@ -29,7 +29,8 @@
         <div class="flex items-center">
             <div class="flex-1">
                 <h3 class="text-sm font-medium text-gray-500">Projetos Ativos</h3>
-                <p class="text-2xl font-semibold text-gray-900">0</p>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.project_stats.total|default:0 }}</p>
+                <p class="text-sm text-gray-500">Este mês: {{ stats.project_stats.this_month|default:0 }}</p>
             </div>
             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
                 <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -39,12 +40,13 @@
         </div>
     </div>
 
-    <!-- Card 3: Workshops do Mês -->
+    <!-- Card 3: Workshops -->
     <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
         <div class="flex items-center">
             <div class="flex-1">
-                <h3 class="text-sm font-medium text-gray-500">Workshops do Mês</h3>
-                <p class="text-2xl font-semibold text-gray-900">0</p>
+                <h3 class="text-sm font-medium text-gray-500">Workshops</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.workshop_stats.total|default:0 }}</p>
+                <p class="text-sm text-gray-500">Ativos: {{ stats.workshop_stats.active|default:0 }}</p>
             </div>
             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
                 <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -53,6 +55,143 @@
             </div>
         </div>
     </div>
+    
+    <!-- Card 4: Anamneses -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Anamneses</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.anamnesis_stats.total|default:0 }}</p>
+                <p class="text-sm text-gray-500">Concluídas: {{ stats.anamnesis_stats.completed|default:0 }}</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100">
+                <svg class="h-6 w-6 text-pink-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards adicionais de métricas -->
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
+    <!-- Tarefas -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Tarefas</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.task_stats.total|default:0 }}</p>
+                <p class="text-sm text-gray-500">
+                    Pendentes: {{ stats.task_stats.pending|default:0 }} | 
+                    Concluídas: {{ stats.task_stats.completed|default:0 }}
+                </p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+                <svg class="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3-3.75H21V18a2.25 2.25 0 01-2.25 2.25H3a2.25 2.25 0 01-2.25-2.25V6.75A2.25 2.25 0 013 4.5h15.75A2.25 2.25 0 0121 6.75v1.5M6.75 7.5V5.25a2.25 2.25 0 012.25-2.25h6A2.25 2.25 0 0117.25 5.25V7.5" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evolução -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Registros de Evolução</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.evolution_stats.total|default:0 }}</p>
+                <p class="text-sm text-gray-500">Este mês: {{ stats.evolution_stats.this_month|default:0 }}</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Usuários Ativos -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Usuários Ativos</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.user_count|default:0 }}</p>
+                <p class="text-sm text-gray-500">No sistema</p>
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aniversariantes do Dia -->
+    <div class="relative flex flex-col bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center">
+            <div class="flex-1">
+                <h3 class="text-sm font-medium text-gray-500">Aniversariantes Hoje</h3>
+                <p class="text-2xl font-semibold text-gray-900">{{ stats.birthday_beneficiaries|length }}</p>
+                {% if stats.birthday_beneficiaries %}
+                    <div class="mt-2 max-h-20 overflow-y-auto">
+                        {% for beneficiary in stats.birthday_beneficiaries %}
+                            <p class="text-xs text-gray-600">🎂 {{ beneficiary.full_name }}</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-sm text-gray-500">Nenhum aniversário hoje</p>
+                {% endif %}
+            </div>
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+                <svg class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 13.5M12 2.25c-1.355 0-2.697.056-4.024.166C6.845 2.51 6 3.473 6 4.608V6.75h12V4.608c0-1.135-.845-2.098-1.976-2.192A48.424 48.424 0 0012 2.25z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions expandido -->
+<div class="relative flex flex-col bg-white p-6 rounded-lg shadow mt-6">
+    <h3 class="text-sm font-medium text-gray-500 mb-4">Ações Rápidas</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <a href="{% url 'members:create' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-indigo-300 transition-colors">
+            <svg class="h-8 w-8 text-indigo-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Nova Beneficiária
+        </a>
+        <a href="{% url 'social:anamnesis-create' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-green-300 transition-colors">
+            <svg class="h-8 w-8 text-green-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Nova Anamnese
+        </a>
+        <a href="{% url 'workshops:workshop-create' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-pink-300 transition-colors">
+            <svg class="h-8 w-8 text-pink-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Novo Workshop
+        </a>
+                <a href="{% url 'tasks:task_list' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-orange-300 transition-colors">
+            <svg class="h-8 w-8 text-orange-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Tarefas
+        </a>
+        <a href="{% url 'projects:project-create' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-blue-300 transition-colors">
+            <svg class="h-8 w-8 text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-2h2m-2 0v10a2 2 0 01-2 2H3a2 2 0 01-2-2V9a2 2 0 012-2h2m14 2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v4" />
+            </svg>
+            Novo Projeto
+        </a>
+        <a href="{% url 'projects:project-list' %}" class="flex flex-col items-center p-3 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200 hover:border-blue-300 transition-colors">
+            <svg class="h-8 w-8 text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-2h2m-2 0v10a2 2 0 01-2 2H3a2 2 0 01-2-2V9a2 2 0 012-2h2m14 2V5a2 2 0 00-2-2H5a2 2 2 00-2 2v4" />
+            </svg>
+            Novo Projeto
+        </a>
+    </div>
 </div>
 
 <!-- Seção de Atividades Recentes -->
@@ -60,9 +199,56 @@
     <h2 class="text-lg font-medium text-gray-900 mb-4">Atividades Recentes</h2>
     <div class="bg-white shadow rounded-lg">
         <div class="p-6">
-            <div class="text-center text-gray-500">
-                Nenhuma atividade recente encontrada.
-            </div>
+            {% if recent_activities %}
+                <div class="flow-root">
+                    <ul role="list" class="-mb-8">
+                        {% for activity in recent_activities %}
+                        <li>
+                            <div class="relative pb-8">
+                                {% if not forloop.last %}
+                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                {% endif %}
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full {{ activity.icon_bg }} flex items-center justify-center ring-8 ring-white">
+                                            <svg class="h-5 w-5 {{ activity.icon_color }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                {{ activity.icon_svg }}
+                                            </svg>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">
+                                                <strong>{{ activity.title }}</strong>
+                                                <span class="text-gray-400">{{ activity.description }}</span>
+                                            </p>
+                                            {% if activity.url %}
+                                            <p class="mt-1">
+                                                <a href="{{ activity.url }}" class="text-sm text-indigo-600 hover:text-indigo-500">
+                                                    Ver detalhes →
+                                                </a>
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                            <time datetime="{{ activity.created_at|date:'c' }}">{{ activity.created_at|timesince }} atrás</time>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% else %}
+                <div class="text-center text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Nenhuma atividade recente</h3>
+                    <p class="mt-1 text-sm text-gray-500">As atividades aparecerão aqui conforme o sistema for utilizado.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
