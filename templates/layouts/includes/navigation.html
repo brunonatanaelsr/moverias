@@ -2,15 +2,51 @@
 <li>
     <div class="text-xs font-semibold leading-6 text-pink-200">Menu Principal</div>
     <ul role="list" class="-mx-2 mt-2 space-y-1">
-        <!-- Dashboard -->
-        <li>
-            <a href="{% url 'dashboard:home' %}" 
-               class="{% if request.resolver_match.namespace == 'dashboard' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+        <!-- Dashboard (Expandido) -->
+        <li x-data="{ open: false }">
+            <button type="button" 
+                    @click="open = !open"
+                    class="{% if request.resolver_match.namespace == 'dashboard' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} flex items-center w-full text-left rounded-md p-2 gap-x-3 text-sm leading-6 font-semibold">
                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
                 </svg>
                 Dashboard
-            </a>
+                <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'dashboard:home' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Visão Geral
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:beneficiaries-list' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Beneficiárias (Dashboard)
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:reports' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:custom-reports' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios Personalizados
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:advanced-analytics' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Análises Avançadas
+                    </a>
+                </li>
+            </ul>
         </li>
 
         <!-- Beneficiárias -->
@@ -30,13 +66,19 @@
                 <li>
                     <a href="{% url 'members:list' %}" 
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Beneficiárias
+                        <i class="fas fa-list mr-2"></i>Lista de Beneficiárias
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'members:create' %}" 
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Nova Beneficiária
+                        <i class="fas fa-plus mr-2"></i>Nova Beneficiária
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'members:dashboard' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-chart-bar mr-2"></i>Dashboard
                     </a>
                 </li>
             </ul>
@@ -59,13 +101,30 @@
                 <li>
                     <a href="{% url 'projects:project-list' %}" 
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Projetos
+                        <i class="fas fa-list mr-2"></i>Lista de Projetos
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'projects:project-create' %}" 
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Novo Projeto
+                        <i class="fas fa-plus mr-2"></i>Novo Projeto
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Matrículas</li>
+                
+                <li>
+                    <a href="{% url 'projects:enrollment-list' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-user-plus mr-2"></i>Lista de Matrículas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'projects:enrollment-create' %}" 
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus-circle mr-2"></i>Nova Matrícula
                     </a>
                 </li>
             </ul>
@@ -88,13 +147,13 @@
                 <li>
                     <a href="{% url 'coaching:wheel-list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Rodas da Vida
+                        <i class="fas fa-list mr-2"></i>Lista de Rodas da Vida
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'coaching:wheel-create' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Nova Roda da Vida
+                        <i class="fas fa-plus mr-2"></i>Nova Roda da Vida
                     </a>
                 </li>
             </ul>
@@ -117,19 +176,82 @@
                 <li>
                     <a href="{% url 'communication:dashboard' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Dashboard
+                        <i class="fas fa-chart-bar mr-2"></i>Dashboard
                     </a>
                 </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Comunicados</li>
+                
                 <li>
                     <a href="{% url 'communication:announcements_list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Comunicados
+                        <i class="fas fa-bullhorn mr-2"></i>Listar Comunicados
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'communication:create_announcement' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Novo Comunicado
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Mensagens</li>
+                
+                <li>
                     <a href="{% url 'communication:messages_list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Mensagens
+                        <i class="fas fa-envelope mr-2"></i>Listar Mensagens
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:create_message' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Nova Mensagem
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Outros</li>
+                
+                <li>
+                    <a href="{% url 'communication:newsletters_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-newspaper mr-2"></i>Newsletters
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:policies_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-contract mr-2"></i>Políticas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:feedback_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-comment-dots mr-2"></i>Feedback
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:surveys_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-poll mr-2"></i>Enquetes
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:resources_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-book mr-2"></i>Recursos de Aprendizado
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'communication:analytics' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-chart-line mr-2"></i>Analytics
                     </a>
                 </li>
             </ul>
@@ -152,13 +274,30 @@
                 <li>
                     <a href="{% url 'evolution:list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Registros de Evolução
+                        <i class="fas fa-list mr-2"></i>Registros de Evolução
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'evolution:create' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Novo Registro
+                        <i class="fas fa-plus mr-2"></i>Novo Registro
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Relatórios</li>
+                
+                <li>
+                    <a href="{% url 'evolution:export_excel' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'evolution:export_pdf' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-pdf mr-2"></i>Exportar PDF
                     </a>
                 </li>
             </ul>
@@ -181,25 +320,53 @@
                 <li>
                     <a href="{% url 'tasks:dashboard' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Dashboard
+                        <i class="fas fa-chart-bar mr-2"></i>Dashboard
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'tasks:task_list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Tarefas
+                        <i class="fas fa-list mr-2"></i>Lista de Tarefas
                     </a>
                 </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Quadros</li>
+                
                 <li>
                     <a href="{% url 'tasks:board_list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Quadros Kanban
+                        <i class="fas fa-columns mr-2"></i>Listar Quadros
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tasks:board_create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Novo Quadro
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Funcionalidades</li>
+                
+                <li>
+                    <a href="{% url 'tasks:search' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-search mr-2"></i>Buscar Tarefas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tasks:reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-alt mr-2"></i>Relatórios
                     </a>
                 </li>
             </ul>
         </li>
 
-        <!-- Social -->
+        <!-- Social (Expandido) -->
         <li x-data="{ open: false }">
             <button type="button"
                     @click="open = !open" 
@@ -207,22 +374,51 @@
                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                 </svg>
-                Social
+                Anamnese Social
                 <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
                 </svg>
             </button>
             <ul x-show="open" class="mt-1 px-2">
                 <li>
+                    <a href="{% url 'social:dashboard' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-chart-bar mr-2"></i>Dashboard Social
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'social:list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Anamnese Social
+                        <i class="fas fa-list mr-2"></i>Lista de Anamneses
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'social:anamnesis-create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Nova Anamnese
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Relatórios</li>
+                
+                <li>
+                    <a href="{% url 'social:social_reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-alt mr-2"></i>Relatórios Sociais
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'social:vulnerability_analytics' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-chart-line mr-2"></i>Análise de Vulnerabilidades
                     </a>
                 </li>
             </ul>
         </li>
 
-        <!-- Certificados -->
+        <!-- Certificados (Expandido) -->
         <li x-data="{ open: false }">
             <button type="button"
                     @click="open = !open" 
@@ -236,6 +432,12 @@
                 </svg>
             </button>
             <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'certificates:dashboard' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Dashboard de Certificados
+                    </a>
+                </li>
                 <li>
                     <a href="{% url 'certificates:list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
@@ -297,19 +499,20 @@
                 <li>
                     <a href="{% url 'coaching:action-plan-list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Planos
+                        <i class="fas fa-list mr-2"></i>Lista de Planos
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'coaching:action-plan-create' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Novo Plano
+                        <i class="fas fa-plus mr-2"></i>Novo Plano
                     </a>
                 </li>
             </ul>
         </li>
 
-        <!-- RH (Apenas para Coordenadores) -->
+
+        <!-- Recursos Humanos (Expandido) -->
         {% if user.is_staff or user.role == 'coordenador' %}
         <li x-data="{ open: false }">
             <button type="button"
@@ -331,9 +534,39 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'hr:employee_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Funcionários
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:department_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Departamentos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:job_position_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Cargos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:performance_review_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Avaliações
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'hr:training_dashboard' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
                         Treinamentos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:onboarding_dashboard' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Onboarding
                     </a>
                 </li>
                 <li>
@@ -348,9 +581,22 @@
                         Metas
                     </a>
                 </li>
+                <li>
+                    <a href="{% url 'hr:analytics_dashboard' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Analytics
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:reports_dashboard' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios
+                    </a>
+                </li>
             </ul>
         </li>
         {% endif %}
+
 
         <!-- Menu item comentado temporariamente até que o app de monitoramento seja implementado -->
         {% comment %}
@@ -380,17 +626,101 @@
                 <li>
                     <a href="{% url 'users:user-list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Usuários
+                        <i class="fas fa-list mr-2"></i>Lista de Usuários
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'users:user-create' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Novo Usuário
+                        <i class="fas fa-plus mr-2"></i>Novo Usuário
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'users:profile' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-user mr-2"></i>Meu Perfil
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Gerenciamento</li>
+                
+                <li>
+                    <a href="{% url 'users:group-management' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-users mr-2"></i>Grupos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'users:bulk-actions' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-tasks mr-2"></i>Ações em Lote
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'users:user-export' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-download mr-2"></i>Exportar Dados
                     </a>
                 </li>
             </ul>
         </li>
+
+        <!-- Sistema/Core (Apenas para Staff) -->
+        {% if user.is_staff %}
+        <li x-data="{ open: false }">
+            <button type="button"
+                    @click="open = !open" 
+                    class="{% if request.resolver_match.namespace == 'core' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} flex items-center w-full text-left rounded-md p-2 gap-x-3 text-sm leading-6 font-semibold">
+                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m16.5 0H21m-1.5 0H12m-8.457 3.077l1.41-.513m14.095-5.13l1.41-.513M5.106 17.785l1.15-.964m11.49-9.642l1.149-.964M7.501 19.795l.75-1.3m7.5-12.99l.75-1.3m-6.063 16.658l.26-1.477m2.605-14.772l.26-1.477m0 17.726l-.26-1.477M10.698 4.614l-.26-1.477M16.5 19.794l-.75-1.299M7.5 4.205L12 12m6.894 5.785l-1.149-.964M6.256 7.178l-1.15-.964m15.352 8.864l-1.41-.513M4.954 9.435l-1.41-.514M12.002 12l-3.75 6.495" />
+                </svg>
+                Sistema
+                <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'core:home' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-home mr-2"></i>Página Inicial
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core:global-search' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-search mr-2"></i>Busca Global
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core:settings' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-cog mr-2"></i>Configurações
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core:email-config' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-envelope-open mr-2"></i>Config. Email
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core:audit-logs' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-clipboard-list mr-2"></i>Logs de Auditoria
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core:health-check' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-heartbeat mr-2"></i>Status do Sistema
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
 
         <!-- Relatórios -->
         <li x-data="{ open: false }">
@@ -462,7 +792,7 @@
             </ul>
         </li>
 
-        <!-- Atividades -->
+        <!-- Atividades (Expandido) -->
         <li x-data="{ open: false }">
             <button type="button"
                     @click="open = !open" 
@@ -477,22 +807,180 @@
             </button>
             <ul x-show="open" class="mt-1 px-2">
                 <li>
-                    <a href="{% url 'activities:activities_list' %}"
+                    <a href="{% url 'activities:dashboard' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Atividades
+                        <i class="fas fa-chart-bar mr-2"></i>Dashboard de Atividades
                     </a>
                 </li>
                 <li>
-                    <a href="{% url 'activities:dashboard' %}"
+                    <a href="{% url 'activities:activities_list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Dashboard
+                        <i class="fas fa-list mr-2"></i>Lista de Atividades
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'activities:activity_create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Nova Atividade
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Relatórios</li>
+                
+                <li>
+                    <a href="{% url 'activities:activities_report' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-file-alt mr-2"></i>Relatórios de Atividades
                     </a>
                 </li>
             </ul>
         </li>
         {% endif %}
 
-        <!-- Workshops -->
+
+        <!-- Chat Interno -->
+        <li x-data="{ open: false }">
+            <button type="button"
+                    @click="open = !open" 
+                    class="{% if request.resolver_match.namespace == 'chat' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} flex items-center w-full text-left rounded-md p-2 gap-x-3 text-sm leading-6 font-semibold">
+                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                </svg>
+                Chat Interno
+                <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'chat:home' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-home mr-2"></i>Página Inicial
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'chat:channel_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-hashtag mr-2"></i>Canais
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'chat:dm_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-comment mr-2"></i>Mensagens Diretas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'chat:notifications' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-bell mr-2"></i>Notificações
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+
+        <!-- Relatórios Avançados -->
+        {% if user.is_staff %}
+        <li x-data="{ open: false }">
+            <button type="button"
+                    @click="open = !open" 
+                    class="{% if 'reports' in request.resolver_match.url_name or 'analytics' in request.resolver_match.url_name %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} flex items-center w-full text-left rounded-md p-2 gap-x-3 text-sm leading-6 font-semibold">
+                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                </svg>
+                Relatórios Avançados
+                <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'dashboard:reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios Gerais
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'social:social_reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios Sociais
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'activities:activities_report' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios de Atividades
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'tasks:reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios de Tarefas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'hr:turnover_report' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatório de Turnover
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:advanced-analytics' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Analytics Avançadas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'dashboard:custom-reports' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Relatórios Personalizados
+                    </a>
+                </li>
+            </ul>
+        </li>
+        {% endif %}
+
+
+        <!-- Gestão de Arquivos -->
+        <li x-data="{ open: false }">
+            <button type="button"
+                    @click="open = !open" 
+                    class="{% if request.resolver_match.namespace == 'core_uploads' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} flex items-center w-full text-left rounded-md p-2 gap-x-3 text-sm leading-6 font-semibold">
+                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                Gestão de Arquivos
+                <svg class="ml-auto h-5 w-5 shrink-0" :class="{'rotate-90': open}" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd" />
+                </svg>
+            </button>
+            <ul x-show="open" class="mt-1 px-2">
+                <li>
+                    <a href="{% url 'core_uploads:upload_file' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Novo Upload
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core_uploads:upload_list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Todos os Arquivos
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'core_uploads:my_uploads' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        Meus Arquivos
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Workshops (Atualizado) -->
         <li x-data="{ open: false }">
             <button type="button"
                     @click="open = !open" 
@@ -509,13 +997,64 @@
                 <li>
                     <a href="{% url 'workshops:workshop-list' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Lista de Workshops
+                        <i class="fas fa-list mr-2"></i>Listar Workshops
                     </a>
                 </li>
                 <li>
                     <a href="{% url 'workshops:workshop-create' %}"
                        class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
-                        Novo Workshop
+                        <i class="fas fa-plus mr-2"></i>Novo Workshop
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Matrículas</li>
+                
+                <li>
+                    <a href="{% url 'workshops:enrollment-list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-user-plus mr-2"></i>Listar Matrículas
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'workshops:enrollment-create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus-circle mr-2"></i>Nova Matrícula
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Sessões</li>
+                
+                <li>
+                    <a href="{% url 'workshops:session-list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-calendar mr-2"></i>Listar Sessões
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'workshops:session-create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Nova Sessão
+                    </a>
+                </li>
+                
+                <!-- Separator -->
+                <li><div class="border-t border-pink-500 my-2"></div></li>
+                <li class="text-xs font-semibold text-pink-200 px-2 py-1 uppercase tracking-wider">Avaliações</li>
+                
+                <li>
+                    <a href="{% url 'workshops:evaluation-list' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-star mr-2"></i>Listar Avaliações
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'workshops:evaluation-create' %}"
+                       class="text-pink-200 hover:text-white hover:bg-pink-700 block rounded-md py-2 pr-2 pl-9 text-sm leading-6">
+                        <i class="fas fa-plus mr-2"></i>Nova Avaliação
                     </a>
                 </li>
             </ul>
@@ -527,36 +1066,36 @@
 <li>
     <div class="text-xs font-semibold leading-6 text-pink-200">Ferramentas</div>
     <ul role="list" class="-mx-2 mt-2 space-y-1">
-        <!-- Coaching -->
+        <!-- Chat Integrado -->
         <li>
-            <a href="{% url 'coaching:action-plan-list' %}"
-               class="{% if request.resolver_match.namespace == 'coaching' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+            <a href="{% url 'chat:home' %}"
+               class="{% if request.resolver_match.namespace == 'chat' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
                 </svg>
-                Coaching
+                Chat Interno
             </a>
         </li>
 
-        <!-- Evolução -->
+        <!-- Notificações -->
         <li>
-            <a href="{% url 'evolution:list' %}"
-               class="{% if request.resolver_match.namespace == 'evolution' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+            <a href="{% url 'notifications:list' %}"
+               class="{% if request.resolver_match.namespace == 'notifications' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
-                Evolução
+                Notificações
             </a>
         </li>
 
-        <!-- Certificados -->
+        <!-- Uploads -->
         <li>
-            <a href="{% url 'certificates:dashboard' %}"
-               class="{% if request.resolver_match.namespace == 'certificates' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+            <a href="{% url 'core_uploads:upload_file' %}"
+               class="{% if request.resolver_match.namespace == 'core_uploads' %}bg-pink-700 text-white{% else %}text-pink-200 hover:text-white hover:bg-pink-700{% endif %} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
                 <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
-                Certificados
+                Uploads
             </a>
         </li>
     </ul>

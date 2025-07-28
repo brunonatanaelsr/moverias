@@ -48,12 +48,21 @@
                     </button>
                 </div>
 
-                <a href="{% url 'tasks:task_create' %}" class="btn-primary">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Nova Tarefa
-                </a>
+                {% if boards and boards.first %}
+                    <a href="{% url 'tasks:task_create' board_id=boards.first.id %}" class="btn-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Nova Tarefa
+                    </a>
+                {% else %}
+                    <a href="{% url 'tasks:board_create' %}" class="btn-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                        Criar Quadro Primeiro
+                    </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -341,12 +350,21 @@
                                     </svg>
                                     <p class="empty-title">Nenhuma tarefa encontrada</p>
                                     <p class="empty-description">Tente ajustar os filtros ou criar uma nova tarefa</p>
-                                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        Criar Tarefa
-                                    </a>
+                                    {% if boards and boards.first %}
+                                        <a href="{% url 'tasks:task_create' board_id=boards.first.id %}" class="btn-primary">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Criar Tarefa
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'tasks:board_create' %}" class="btn-secondary">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Criar Quadro Primeiro
+                                        </a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -496,12 +514,21 @@
                     </svg>
                     <p class="empty-title">Nenhuma tarefa encontrada</p>
                     <p class="empty-description">Tente ajustar os filtros ou criar uma nova tarefa</p>
-                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Criar Tarefa
-                    </a>
+                    {% if boards %}
+                        <a href="{% url 'tasks:task_create' board_id=boards.first.id %}" class="btn-primary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Criar Tarefa
+                        </a>
+                    {% else %}
+                        <a href="{% url 'tasks:board_create' %}" class="btn-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Criar Quadro Primeiro
+                        </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

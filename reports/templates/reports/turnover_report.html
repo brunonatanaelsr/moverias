@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Relatório de Turnover - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-card {
+        background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+        border-radius: 0.75rem;
+        color: white;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    .feature-icon {
+        width: 3rem;
+        height: 3rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    .coming-soon {
+        background: #f3f4f6;
+        border: 2px dashed #d1d5db;
+        border-radius: 0.75rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        margin: 2rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold mb-2">Relatório de Turnover</h1>
+                <p class="opacity-90">Funcionalidade implementada recentemente</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="d-flex align-items-center">
+                        <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+                            <i class="ni ni-app text-primary text-sm opacity-10"></i>
+                        </div>
+                        <h6 class="mb-0">Relatório de Turnover</h6>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="coming-soon">
+                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-2.828 0l-7.071 7.07a2 2 0 102.828 2.829l7.071-7.071a2 2 0 000-2.828z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Funcionalidade em Desenvolvimento</h3>
+                        <p class="text-gray-500 mb-4">
+                            Esta funcionalidade foi recentemente adicionada à navegação e está sendo implementada.
+                        </p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-medium text-blue-800 mb-2">Informações Técnicas:</h4>
+                            <ul class="text-sm text-blue-700 text-left">
+                                <li><strong>URL:</strong> /hr/reports/turnover/</li>
+                                <li><strong>Módulo:</strong> reports</li>
+                                <li><strong>View:</strong> turnover_report</li>
+                                <li><strong>Template:</strong> turnover_report.html</li>
+                                <li><strong>Status:</strong> Template básico criado automaticamente</li>
+                            </ul>
+                        </div>
+                        <p class="text-sm text-gray-500">
+                            <strong>Próximos passos:</strong> Implementar lógica da view e customizar este template conforme necessário.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    console.log('Template básico carregado para: Relatório de Turnover');
+    console.log('URL: /hr/reports/turnover/');
+    console.log('Módulo: reports');
+    
+    // Registrar evento de página visitada
+    if (window.gtag) {
+        gtag('event', 'page_view', {
+            'page_title':  + friendly_title + ,
+            'page_location': window.location.href,
+            'page_path':  + url_path + ,
+            'custom_module':  + module + 
+        });
+    }
+</script>
+{% endblock %}

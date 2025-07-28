@@ -72,7 +72,7 @@
                     <div class="flex justify-between items-start mb-4">
                         <div>
                             <h2 class="text-xl font-semibold text-gray-800">
-                                <a href="{% url 'communication:memo_detail' memo.pk %}" 
+                                <a href="{% url 'communication:message_detail' memo.pk %}" 
                                    class="hover:text-primary">
                                     {{ memo.subject }}
                                 </a>
@@ -127,7 +127,7 @@
                                 {% endif %}
                             {% endif %}
                         </div>
-                        <a href="{% url 'communication:memo_detail' memo.pk %}" 
+                        <a href="{% url 'communication:message_detail' memo.pk %}" 
                            class="text-primary hover:text-primary-dark font-medium">
                             Ver detalhes →
                         </a>

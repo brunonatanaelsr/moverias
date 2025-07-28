@@ -655,6 +655,39 @@ def task_list(request):
         Q(owner=request.user) | Q(members=request.user)
     ).distinct()
     
+    # Se não há boards, criar um padrão
+    if not boards.exists():
+        default_board = TaskBoard.objects.create(
+            name='Quadro Principal',
+            description='Quadro principal para tarefas',
+            owner=request.user
+        )
+        
+        # Criar colunas básicas
+        TaskColumn.objects.create(
+            board=default_board,
+            name='A Fazer',
+            position=1,
+            color='#3B82F6'
+        )
+        TaskColumn.objects.create(
+            board=default_board,
+            name='Em Progresso',
+            position=2,
+            color='#F59E0B'
+        )
+        TaskColumn.objects.create(
+            board=default_board,
+            name='Concluído',
+            position=3,
+            color='#10B981'
+        )
+        
+        # Refazer a consulta
+        boards = TaskBoard.objects.filter(
+            Q(owner=request.user) | Q(members=request.user)
+        ).distinct()
+    
     context = {
         'page_obj': page_obj,
         'boards': boards,

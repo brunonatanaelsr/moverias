@@ -3,6 +3,10 @@
 {% block title %}{{ message.subject|default:"Mensagem" }} - Move Marias{% endblock %}
 
 {% block content %}
+<!-- CSRF Token for AJAX -->
+{% csrf_token %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+
 <div class="container-fluid py-4">
     <!-- Header -->
     <div class="row mb-4">
@@ -245,6 +249,22 @@ function editMessage() {
     alert('Funcionalidade em desenvolvimento');
 }
 
+// Função para obter cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function deleteMessage() {
     if (confirm('Tem certeza que deseja excluir esta mensagem?')) {
         alert('Funcionalidade em desenvolvimento');
@@ -270,10 +290,32 @@ function printMessage() {
 }
 
 function markAsRead() {
+    // Obter token CSRF de múltiplas formas
+    let csrfToken = null;
+    
+    // Tentar pegar do meta tag
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) {
+        csrfToken = metaToken.getAttribute('content');
+    }
+    
+    // Tentar pegar do input hidden
+    if (!csrfToken) {
+        const inputToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (inputToken) {
+            csrfToken = inputToken.value;
+        }
+    }
+    
+    // Usar token do cookie como fallback
+    if (!csrfToken) {
+        csrfToken = getCookie('csrftoken');
+    }
+    
     fetch('{% url "communication:mark_message_read" message.id %}', {
         method: 'POST',
         headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-CSRFToken': csrfToken,
             'Content-Type': 'application/json',
         },
     })

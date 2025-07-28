@@ -318,7 +318,7 @@ input:checked + .toggle-slider:before {
                 </p>
             </div>
         </div>
-        <a href="{% url 'hr:position_list' %}" class="btn-secondary">
+        <a href="{% url 'hr:job_position_list' %}" class="btn-secondary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
@@ -628,7 +628,7 @@ input:checked + .toggle-slider:before {
 
         <!-- Botões de Ação -->
         <div class="flex items-center justify-between bg-white rounded-lg p-6 shadow-sm">
-            <a href="{% url 'hr:position_list' %}" class="btn-secondary">
+            <a href="{% url 'hr:job_position_list' %}" class="btn-secondary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
@@ -682,7 +682,7 @@ input:checked + .toggle-slider:before {
             <button type="button" onclick="closeDeleteModal()" class="btn-secondary">
                 Cancelar
             </button>
-            <a href="{% url 'hr:position_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
+            <a href="{% url 'hr:job_position_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
                 Confirmar Exclusão
             </a>
         </div>

@@ -17,7 +17,7 @@
         <div class="header-content">
             <div class="header-nav">
                 <nav class="breadcrumb">
-                    <a href="{% url 'dashboard:dashboard' %}" class="breadcrumb-link">
+                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
                         <svg class="breadcrumb-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
                         </svg>
@@ -54,7 +54,7 @@
                     {% trans 'Atualizar' %}
                 </button>
                 
-                <a href="{% url 'tasks:create' %}" class="btn-primary">
+                <a href="{% url 'tasks:task_create' %}" class="btn-primary">
                     <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
                     </svg>
@@ -196,7 +196,7 @@
             <div class="task-list-container">
                 <div class="list-header">
                     <h3 class="list-title">{% trans 'Tarefas Prioritárias' %}</h3>
-                    <a href="{% url 'tasks:list' %}?priority=high" class="view-all-link">
+                    <a href="{% url 'tasks:task_list' %}?priority=high" class="view-all-link">
                         {% trans 'Ver Todas' %}
                         <svg class="link-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
@@ -254,7 +254,7 @@
             <div class="task-list-container">
                 <div class="list-header">
                     <h3 class="list-title">{% trans 'Vencendo Hoje' %}</h3>
-                    <a href="{% url 'tasks:list' %}?due=today" class="view-all-link">
+                    <a href="{% url 'tasks:task_list' %}?due=today" class="view-all-link">
                         {% trans 'Ver Todas' %}
                         <svg class="link-icon" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>

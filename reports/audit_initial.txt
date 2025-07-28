@@ -1,0 +1,1315 @@
+=== AUDITORIA DE URLs DO SISTEMA MOVE MARIAS ===
+Data: Mon Jul 28 13:47:38 UTC 2025
+
+1. URLs definidas em arquivos urls.py:
+----------------------------------------
+=== ./movemarias/urls.py ===
+=== ./workshops/urls.py ===
+8:    path('', views.WorkshopListView.as_view(), name='workshop-list'),
+9:    path('create/', views.WorkshopCreateView.as_view(), name='workshop-create'),
+10:    path('<int:pk>/', views.WorkshopDetailView.as_view(), name='workshop-detail'),
+11:    path('<int:pk>/edit/', views.WorkshopUpdateView.as_view(), name='workshop-update'),
+12:    path('<int:pk>/delete/', views.WorkshopDeleteView.as_view(), name='workshop-delete'),
+13:    path('<int:pk>/report/', views.workshop_report, name='workshop-report'),
+16:    path('enrollments/', views.WorkshopEnrollmentListView.as_view(), name='enrollment-list'),
+17:    path('enrollments/create/', views.WorkshopEnrollmentCreateView.as_view(), name='enrollment-create'),
+18:    path('enrollments/<int:pk>/edit/', views.WorkshopEnrollmentUpdateView.as_view(), name='enrollment-update'),
+19:    path('enrollments/<int:pk>/delete/', views.WorkshopEnrollmentDeleteView.as_view(), name='enrollment-delete'),
+22:    path('sessions/', views.WorkshopSessionListView.as_view(), name='session-list'),
+23:    path('sessions/create/', views.WorkshopSessionCreateView.as_view(), name='session-create'),
+24:    path('sessions/<int:pk>/edit/', views.WorkshopSessionUpdateView.as_view(), name='session-update'),
+25:    path('sessions/<int:pk>/delete/', views.WorkshopSessionDeleteView.as_view(), name='session-delete'),
+28:    path('sessions/<int:session_id>/attendance/', views.bulk_attendance, name='bulk-attendance'),
+31:    path('evaluations/', views.WorkshopEvaluationListView.as_view(), name='evaluation-list'),
+32:    path('evaluations/create/', views.WorkshopEvaluationCreateView.as_view(), name='evaluation-create'),
+35:    path('api/stats/<int:workshop_id>/', views.get_workshop_stats, name='workshop-stats'),
+=== ./communication/urls.py ===
+12:    path('', views_simple.communication_dashboard, name='dashboard'),
+15:    path('announcements/', views_simple.announcements_list, name='announcements_list'),
+16:    path('announcements/<int:announcement_id>/', views_simple.announcement_detail, name='announcement_detail'),
+17:    path('announcements/create/', views_simple.create_announcement, name='create_announcement'),
+18:    path('announcements/<int:announcement_id>/edit/', views_simple.edit_announcement, name='edit_announcement'),
+19:    path('announcements/<int:announcement_id>/delete/', views_simple.delete_announcement, name='delete_announcement'),
+22:    path('messages/', views_simple.messages_list, name='messages_list'),
+23:    path('messages/<int:message_id>/', views_simple.message_detail, name='message_detail'),
+24:    path('messages/create/', views_simple.create_message, name='create_message'),
+25:    path('messages/<int:message_id>/read/', views_simple.mark_message_read, name='mark_message_read'),
+28:    path('newsletters/', views_simple.newsletters_list, name='newsletters_list'),
+29:    path('newsletters/<int:newsletter_id>/', views_simple.newsletter_detail, name='newsletter_detail'),
+32:    path('policies/', views_simple.policies_list, name='policies_list'),
+33:    path('policies/<int:policy_id>/', views_simple.policy_detail, name='policy_detail'),
+34:    path('policies/<int:policy_id>/acknowledge/', views_simple.acknowledge_policy, name='acknowledge_policy'),
+37:    path('feedback/', views_simple.feedback_list, name='feedback_list'),
+38:    path('feedback/create/', views_simple.create_feedback, name='create_feedback'),
+41:    path('surveys/', views_simple.surveys_list, name='surveys_list'),
+42:    path('surveys/<int:survey_id>/', views_simple.survey_detail, name='survey_detail'),
+45:    path('resources/', views_simple.resources_list, name='resources_list'),
+46:    path('resources/<int:resource_id>/', views_simple.resource_detail, name='resource_detail'),
+49:    path('analytics/', views_simple.communication_analytics, name='analytics'),
+52:    path('api/metrics/', views_simple.metrics_api, name='metrics_api'),
+53:    path('api/search/', views_simple.search_api, name='search_api'),
+=== ./chat/urls.py ===
+9:    path('', views.chat_home, name='home'),
+12:    path('channels/', views.chat_home, name='channel_list'),
+13:    path('channels/create/', views.channel_create, name='channel_create'),
+14:    path('channels/<uuid:channel_id>/', views.channel_detail, name='channel_detail'),
+15:    path('channels/<uuid:channel_id>/edit/', views.channel_edit, name='channel_edit'),
+16:    path('channels/<uuid:channel_id>/members/', views.channel_members, name='channel_members'),
+19:    path('dm/', views.dm_list, name='dm_list'),
+20:    path('dm/<int:user_id>/', views.dm_conversation, name='dm_conversation'),
+23:    path('send/', views.send_message, name='send_message'),
+24:    path('channels/<uuid:channel_id>/send/', views.send_message, name='send_channel_message'),
+27:    path('api/channels/<uuid:channel_id>/messages/', views.get_messages, name='get_messages'),
+28:    path('api/messages/', views.get_messages, name='get_all_messages'),
+31:    path('api/messages/<uuid:message_id>/react/', views.toggle_reaction, name='toggle_reaction'),
+34:    path('search/', views.search_messages, name='search'),
+37:    path('notifications/', views.notifications, name='notifications'),
+38:    path('notifications/<int:notification_id>/read/', views.mark_notification_read, name='mark_notification_read'),
+41:    path('search/', views.search_messages, name='search'),
+=== ./coaching/urls.py ===
+8:    path('action-plans/', views.ActionPlanListView.as_view(), name='action-plan-list'),
+9:    path('action-plans/create/', views.ActionPlanCreateView.as_view(), name='action-plan-create'),
+10:    path('action-plans/<int:pk>/', views.ActionPlanDetailView.as_view(), name='action-plan-detail'),
+11:    path('action-plans/<int:pk>/edit/', views.ActionPlanUpdateView.as_view(), name='action-plan-edit'),
+12:    path('action-plans/<int:pk>/delete/', views.ActionPlanDeleteView.as_view(), name='action-plan-delete'),
+15:    path('wheel-of-life/', views.WheelOfLifeListView.as_view(), name='wheel-list'),
+16:    path('wheel-of-life/create/', views.WheelOfLifeCreateView.as_view(), name='wheel-create'),
+17:    path('wheel-of-life/<int:pk>/', views.WheelOfLifeDetailView.as_view(), name='wheel-detail'),
+18:    path('wheel-of-life/<int:pk>/edit/', views.WheelOfLifeUpdateView.as_view(), name='wheel-edit'),
+19:    path('wheel-of-life/<int:pk>/delete/', views.WheelOfLifeDeleteView.as_view(), name='wheel-delete'),
+=== ./social/urls.py ===
+8:    path('dashboard/', views.SocialDashboardView.as_view(), name='dashboard'),
+11:    path('anamnesis/new/', views.SocialAnamnesisWizard.as_view(), name='anamnesis-create'),
+12:    path('anamnesis/new/<int:beneficiary_id>/', views.SocialAnamnesisWizard.as_view(), name='anamnesis-create-for-beneficiary'),
+15:    path('anamnesis/<int:pk>/', views.SocialAnamnesisDetailView.as_view(), name='detail'),
+16:    path('anamnesis/<int:pk>/edit/', views.SocialAnamnesisUpdateView.as_view(), name='edit'),
+17:    path('anamnesis/<int:pk>/delete/', views.SocialAnamnesisDeleteView.as_view(), name='delete'),
+18:    path('anamnesis/<int:pk>/lock/', views.lock_anamnesis, name='lock'),
+19:    path('anamnesis/', views.SocialAnamnesisListView.as_view(), name='list'),
+20:    path('', views.SocialAnamnesisListView.as_view(), name='index'),  # Redirect para lista
+23:    path('anamnesis/<int:pk>/evolution/', views.add_evolution, name='add-evolution'),
+24:    path('api/vulnerability-categories/', views.vulnerability_categories_api, name='vulnerability-categories-api'),
+27:    path('anamnesis/<int:pk>/signature/', views.wizard_signature_view, name='wizard_signature'),
+28:    path('anamnesis/<int:pk>/pdf/', views.generate_anamnesis_pdf, name='anamnesis_pdf'),
+31:    path('reports/', views.SocialReportsView.as_view(), name='social_reports'),
+32:    path('analytics/vulnerabilities/', views.VulnerabilityAnalyticsView.as_view(), name='vulnerability_analytics'),
+=== ./projects/urls.py ===
+8:    path('', views.project_list, name='project-list'),
+9:    path('<int:pk>/', views.project_detail, name='project-detail'),
+10:    path('create/', views.ProjectCreateView.as_view(), name='project-create'),
+11:    path('<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='project-update'),
+14:    path('enrollments/', views.project_enrollment_list, name='enrollment-list'),
+15:    path('enrollment/create/', views.ProjectEnrollmentCreateView.as_view(), name='enrollment-create'),
+16:    path('enrollment/<int:pk>/', views.ProjectEnrollmentDetailView.as_view(), name='enrollment-detail'),
+17:    path('enrollment/<int:pk>/edit/', views.ProjectEnrollmentUpdateView.as_view(), name='enrollment-update'),
+18:    path('enrollment/<int:pk>/delete/', views.ProjectEnrollmentDeleteView.as_view(), name='enrollment-delete'),
+21:    path('<int:pk>/delete/', views.project_delete, name='project-delete'),
+24:    path('<int:pk>/export/', views.export_project_data, name='project-export'),
+=== ./hr/urls.py ===
+8:    path('', views.hr_dashboard, name='dashboard'),
+11:    path('employees/', views.employee_list, name='employee_list'),
+12:    path('employees/create/', views.employee_create, name='employee_create'),
+13:    path('employees/<int:pk>/edit/', views.employee_edit, name='employee_edit'),
+14:    path('employees/<int:pk>/delete/', views.employee_delete, name='employee_delete'),
+15:    path('employees/<int:pk>/', views.employee_detail, name='employee_detail'),
+18:    path('departments/', views.department_list, name='department_list'),
+19:    path('departments/create/', views.department_create, name='department_create'),
+20:    path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
+21:    path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+22:    path('departments/<int:pk>/', views.department_detail, name='department_detail'),
+25:    path('positions/', views.job_position_list, name='job_position_list'),
+26:    path('positions/create/', views.job_position_create, name='job_position_create'),
+27:    path('positions/<int:pk>/edit/', views.job_position_edit, name='job_position_edit'),
+28:    path('positions/<int:pk>/delete/', views.job_position_delete, name='job_position_delete'),
+29:    path('positions/<int:pk>/', views.job_position_detail, name='job_position_detail'),
+32:    path('reviews/', views.performance_reviews, name='performance_review_list'),
+35:    path('trainings/', views.training_records, name='training_record_list'),
+40:    path('onboarding/', views.onboarding_dashboard, name='onboarding_dashboard'),
+41:    path('onboarding/programs/', views.onboarding_programs, name='onboarding_programs'),
+42:    path('onboarding/programs/create/', views.onboarding_program_create, name='onboarding_program_create'),
+43:    path('onboarding/programs/<int:pk>/', views.onboarding_program_detail, name='onboarding_program_detail'),
+44:    path('onboarding/instances/', views.onboarding_instances, name='onboarding_instances'),
+45:    path('onboarding/instances/create/', views.onboarding_instance_create, name='onboarding_instance_create'),
+46:    path('onboarding/instances/<int:pk>/', views.onboarding_instance_detail, name='onboarding_instance_detail'),
+49:    path('goals/', views.goals_dashboard, name='goals_dashboard'),
+50:    path('goals/create/', views.goal_create, name='goal_create'),
+51:    path('goals/<int:pk>/', views.goal_detail, name='goal_detail'),
+52:    path('goals/<int:pk>/edit/', views.goal_edit, name='goal_edit'),
+53:    path('goals/<int:pk>/update-progress/', views.goal_update_progress, name='goal_update_progress'),
+56:    path('feedback/', views.feedback_dashboard, name='feedback_dashboard'),
+57:    path('feedback/give/', views.give_feedback, name='give_feedback'),
+58:    path('feedback/<int:pk>/', views.feedback_detail, name='feedback_detail'),
+59:    path('feedback/<int:pk>/mark-read/', views.mark_feedback_read, name='mark_feedback_read'),
+62:    path('advanced-training/', views.training_dashboard, name='training_dashboard'),
+63:    path('advanced-training/create/', views.advanced_training_create, name='advanced_training_create'),
+64:    path('advanced-training/<int:pk>/', views.advanced_training_detail, name='advanced_training_detail'),
+65:    path('advanced-training/<int:pk>/register/', views.training_register, name='training_register'),
+66:    path('advanced-training/<int:pk>/registrations/', views.training_registrations, name='training_registrations'),
+69:    path('analytics/', views.analytics_dashboard, name='analytics_dashboard'),
+70:    path('analytics/export/', views.analytics_export, name='analytics_export'),
+73:    path('reports/', views.reports_dashboard, name='reports_dashboard'),
+74:    path('reports/turnover/', views.turnover_report, name='turnover_report'),
+75:    path('reports/performance/', views.performance_report, name='performance_report'),
+76:    path('reports/training/', views.training_report, name='training_report'),
+79:    path('api/employees/search/', views.employee_search_api, name='employee_search_api'),
+80:    path('api/goals/progress/', views.goals_progress_api, name='goals_progress_api'),
+81:    path('api/feedback/stats/', views.feedback_stats_api, name='feedback_stats_api'),
+82:    path('api/analytics/charts/', views.analytics_charts_api, name='analytics_charts_api'),
+85:    path('documents/', views.document_list, name='document_list'),
+86:    path('documents/create/', views.document_create, name='document_create'),
+87:    path('documents/<int:pk>/edit/', views.document_edit, name='document_edit'),
+88:    path('documents/<int:pk>/delete/', views.document_delete, name='document_delete'),
+89:    path('documents/<int:pk>/', views.document_detail, name='document_detail'),
+=== ./certificates/urls.py ===
+11:    path('', views.certificates_dashboard, name='dashboard'),
+12:    path('list/', views.certificates_dashboard, name='list'),  # Alias para dashboard
+13:    path('certificate/<uuid:certificate_id>/', views.certificate_detail, name='detail'),
+14:    path('certificate/<uuid:certificate_id>/download/', views.download_certificate, name='download'),
+17:    path('create/', views.certificate_create, name='create'),
+18:    path('certificate/<uuid:certificate_id>/edit/', views.certificate_edit, name='edit'),
+19:    path('certificate/<uuid:certificate_id>/delete/', views.certificate_delete, name='delete'),
+22:    path('request/<int:workshop_id>/', views.request_certificate, name='request'),
+25:    path('verify/<str:code>/', views.verify_certificate_view, name='verify'),
+26:    path('api/verify/', views.verify_certificate_api, name='verify_api'),
+29:    path('admin/certificates/', views.admin_certificates_list, name='admin_certificates'),
+30:    path('admin/requests/', views.admin_certificate_requests, name='admin_requests'),
+31:    path('admin/approve/<int:request_id>/', views.approve_certificate_request, name='approve_request'),
+32:    path('admin/auto-generate/', views.auto_generate_certificates_view, name='auto_generate'),
+33:    path('admin/send-email/<uuid:certificate_id>/', views.send_certificate_email_view, name='send_email'),
+36:    path('admin/templates/', views.CertificateTemplateListView.as_view(), name='template_list'),
+37:    path('admin/templates/create/', views.CertificateTemplateCreateView.as_view(), name='template_create'),
+38:    path('admin/templates/<int:pk>/edit/', views.CertificateTemplateUpdateView.as_view(), name='template_edit'),
+=== ./core/urls.py ===
+9:    path('', views.home, name='home'),
+10:    path('search/', views.global_search, name='global-search'),
+11:    path('config/email/', views.email_config, name='email-config'),
+12:    path('settings/', views.settings_view, name='settings'),
+13:    path('audit-logs/', views.audit_logs, name='audit-logs'),
+16:    path('test-csrf/', test_views.test_csrf, name='test-csrf'),
+22:    path('health/', monitoring_views.health_check, name='health-check'),
+23:    path('health/detailed/', monitoring_views.health_detailed, name='health-detailed'),
+=== ./users/urls.py ===
+8:    path('', views.UserListView.as_view(), name='user-list'),
+9:    path('profile/', views.ProfileView.as_view(), name='profile'),
+10:    path('create/', views.UserCreateView.as_view(), name='user-create'),
+11:    path('<int:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+12:    path('<int:pk>/edit/', views.UserUpdateView.as_view(), name='user-update'),
+13:    path('<int:pk>/delete/', views.UserDeleteView.as_view(), name='user-delete'),
+14:    path('<int:pk>/permissions/', views.PermissionManagementView.as_view(), name='user-permissions'),
+15:    path('<int:pk>/toggle-status/', views.toggle_user_status, name='toggle-user-status'),
+16:    path('<int:pk>/activity-log/', views.user_activity_log, name='user-activity-log'),
+17:    path('<int:pk>/reset-password/', views.user_reset_password, name='user-reset-password'),
+20:    path('bulk-actions/', views.bulk_user_actions, name='bulk-actions'),
+21:    path('export/', views.user_export, name='user-export'),
+24:    path('groups/', views.group_management, name='group-management'),
+25:    path('groups/create/', views.create_group, name='create-group'),
+26:    path('groups/<int:pk>/edit/', views.edit_group, name='edit-group'),
+27:    path('groups/<int:pk>/delete/', views.delete_group, name='delete-group'),
+30:    # path('profile/', views.user_profile_edit, name='profile'),
+31:    # path('change-password/', views.change_password, name='change_password'),
+=== ./evolution/urls.py ===
+8:    path('', views.EvolutionRecordListView.as_view(), name='list'),
+11:    path('create/', views.EvolutionRecordCreateView.as_view(), name='create'),
+12:    path('<int:pk>/', views.EvolutionRecordDetailView.as_view(), name='detail'),
+13:    path('<int:pk>/edit/', views.EvolutionRecordUpdateView.as_view(), name='edit'),
+14:    path('<int:pk>/delete/', views.EvolutionRecordDeleteView.as_view(), name='delete'),
+16:    path('export/excel/', views.EvolutionExportExcelView.as_view(), name='export_excel'),
+17:    path('export/pdf/', views.EvolutionExportPDFView.as_view(), name='export_pdf'),
+=== ./activities/urls.py ===
+12:    path('dashboard/', views.activities_dashboard, name='dashboard'),
+16:        name='beneficiary_dashboard'
+20:    path('', views.activities_list, name='activities_list'),
+21:    path('create/', views.BeneficiaryActivityCreateView.as_view(), name='activity_create'),
+22:    path('<uuid:pk>/', views.BeneficiaryActivityDetailView.as_view(), name='activity_detail'),
+23:    path('<uuid:pk>/edit/', views.BeneficiaryActivityUpdateView.as_view(), name='activity_edit'),
+26:    path('<uuid:activity_id>/session/create/', views.activity_session_create, name='session_create'),
+27:    path('session/<uuid:session_id>/attendance/', views.attendance_record, name='attendance_record'),
+30:    path('<uuid:activity_id>/feedback/', views.activity_feedback, name='activity_feedback'),
+31:    path('<uuid:activity_id>/note/create/', views.activity_note_create, name='note_create'),
+37:        name='beneficiary_activities_api'
+39:    path('api/metrics/', views.activities_metrics_api, name='activities_metrics_api'),
+42:    path('reports/', views.activities_report, name='activities_report'),
+=== ./dashboard/urls.py ===
+7:    path('', views.dashboard_home, name='home'),
+8:    path('beneficiaries/', views.beneficiaries_list, name='beneficiaries-list'),
+9:    path('beneficiaries/export/', views.beneficiaries_export, name='beneficiaries-export'),
+10:    path('beneficiaries/<int:pk>/', views.beneficiary_detail, name='beneficiary-detail'),
+11:    path('beneficiaries/create/', views.beneficiary_create, name='beneficiary-create'),
+12:    path('beneficiaries/<int:pk>/edit/', views.beneficiary_edit, name='beneficiary-edit'),
+13:    path('reports/', views.reports, name='reports'),
+14:    path('custom-reports/', views.custom_reports, name='custom-reports'),
+15:    path('advanced-analytics/', views.advanced_analytics, name='advanced-analytics'),
+=== ./notifications/urls.py ===
+17:    path('', views.NotificationListView.as_view(), name='list'),
+18:    path('<int:pk>/', views.NotificationDetailView.as_view(), name='detail'),
+19:    path('<int:pk>/delete/', views.NotificationDeleteView.as_view(), name='delete'),
+22:    path('create/', views.NotificationCreateView.as_view(), name='create'),
+23:    path('<int:pk>/edit/', views.NotificationUpdateView.as_view(), name='edit'),
+26:    path('preferences/', views.NotificationPreferenceView.as_view(), name='preferences'),
+29:    path('mark-read/<int:notification_id>/', views.mark_as_read, name='mark_read'),
+30:    path('mark-all-read/', views.mark_all_as_read, name='mark_all_read'),
+31:    path('mark-important/<int:notification_id>/', views.mark_as_important, name='mark_important'),
+32:    path('bulk-delete/', views.bulk_delete, name='bulk_delete'),
+33:    path('bulk-mark-read/', views.bulk_mark_as_read, name='bulk_mark_read'),
+34:    path('count/', views.notification_count, name='count'),
+35:    path('popup/', views.notification_popup, name='popup'),
+36:    path('stats/', views.notification_stats, name='stats'),
+37:    path('test/create/', views.create_test_notifications, name='create_test'),
+40:    path('search/', views.NotificationSearchView.as_view(), name='search'),
+43:    path('analytics/', views.notification_analytics, name='analytics'),
+46:    path('export/', views.NotificationExportView.as_view(), name='export'),
+49:    path('channels/', views.NotificationChannelListView.as_view(), name='channels'),
+52:    path('templates/', views.NotificationTemplateListView.as_view(), name='template_list'),
+53:    path('templates/create/', views.NotificationTemplateCreateView.as_view(), name='template_create'),
+54:    path('templates/<int:pk>/edit/', views.NotificationTemplateUpdateView.as_view(), name='template_edit'),
+57:    path('test/', views.send_test_notification, name='test'),
+61:        path('list/', views.NotificationListView.as_view(), name='api_list'),
+62:        path('count/', views.notification_count, name='api_count'),
+63:        path('popup/', views.notification_popup, name='api_popup'),
+64:        path('search/', views.NotificationSearchView.as_view(), name='api_search'),
+65:        path('analytics/', views.notification_analytics, name='api_analytics'),
+66:        path('stats/', views.notification_stats, name='api_stats'),
+67:        path('mark-read/<int:notification_id>/', views.mark_as_read, name='api_mark_read'),
+68:        path('mark-all-read/', views.mark_all_as_read, name='api_mark_all_read'),
+69:        path('mark-important/<int:notification_id>/', views.mark_as_important, name='api_mark_important'),
+70:        path('bulk-delete/', views.bulk_delete, name='api_bulk_delete'),
+71:        path('bulk-mark-read/', views.bulk_mark_as_read, name='api_bulk_mark_read'),
+75:    path('stream/', NotificationStreamView.as_view(), name='notification-stream'),
+76:    path('api/count/', notification_count_api, name='notification-count-api'),
+77:    path('api/mark-read/<int:notification_id>/', mark_notification_read_api, name='mark-read-api'),
+78:    path('api/mark-all-read/', mark_all_read_api, name='mark-all-read-api'),
+=== ./members/urls.py ===
+10:    path('', BeneficiaryListView.as_view(), name='list'),
+11:    path('create/', BeneficiaryCreateView.as_view(), name='create'),
+12:    path('<int:pk>/', BeneficiaryDetailView.as_view(), name='detail'),
+13:    path('<int:pk>/edit/', BeneficiaryUpdateView.as_view(), name='update'),
+14:    path('<int:pk>/delete/', BeneficiaryDeleteView.as_view(), name='delete'),
+15:    path('dashboard/', BeneficiaryDashboardView.as_view(), name='dashboard'),
+=== ./tasks/urls.py ===
+8:    path('', views.dashboard, name='dashboard'),
+11:    path('boards/', views.board_list, name='board_list'),
+12:    path('boards/create/', views.board_create, name='board_create'),
+13:    path('boards/<int:board_id>/', views.board_detail, name='board_detail'),
+14:    path('boards/<int:board_id>/edit/', views.board_edit, name='board_edit'),
+17:    path('tasks/', views.task_list, name='task_list'),
+18:    path('boards/<int:board_id>/tasks/create/', views.task_create, name='task_create'),
+19:    path('tasks/<uuid:task_id>/', views.task_detail, name='task_detail'),
+20:    path('tasks/<uuid:task_id>/edit/', views.task_edit, name='task_edit'),
+21:    path('tasks/<uuid:task_id>/comment/', views.add_comment, name='add_comment'),
+24:    path('reports/', views.task_reports, name='reports'),
+27:    path('api/task/create/', views.task_create_ajax, name='task_create_ajax'),
+28:    path('api/task/update-column/', views.task_update_column, name='task_update_column'),
+29:    path('api/task/<uuid:task_id>/detail/', views.task_detail_ajax, name='task_detail_ajax'),
+30:    path('api/task/<uuid:task_id>/update/', views.task_update_ajax, name='task_update_ajax'),
+31:    path('api/task/<uuid:task_id>/delete/', views.task_delete_ajax, name='task_delete_ajax'),
+32:    path('api/task/<uuid:task_id>/comment/', views.task_comment_add, name='task_comment_add'),
+33:    path('api/task/<uuid:task_id>/label/add/', views.task_label_add, name='task_label_add'),
+34:    path('api/task/<uuid:task_id>/label/remove/', views.task_label_remove, name='task_label_remove'),
+35:    path('api/task/<uuid:task_id>/watcher/add/', views.task_watcher_add, name='task_watcher_add'),
+36:    path('api/task/<uuid:task_id>/watcher/remove/', views.task_watcher_remove, name='task_watcher_remove'),
+39:    path('search/', views.task_search, name='search'),
+=== ./api/urls.py ===
+23:    path('beneficiaries/<int:pk>/export/', views.BeneficiaryExportView.as_view(), name='beneficiary-export'),
+26:    path('validate/cpf/', validation_views.check_cpf_uniqueness, name='validate-cpf'),
+27:    path('validate/field/', validation_views.validate_field_api, name='validate-field'),
+28:    path('validate/email/', validation_views.check_email_uniqueness, name='validate-email'),
+
+2. URLs referenciadas em templates:
+-----------------------------------
+=== templates/workshops/workshop_list.html ===
+13:            <a href="{% url 'workshops:workshop-create' %}" class="block rounded-md bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+41:                                <a href="{% url 'workshops:workshop-detail' workshop.id %}" class="hover:text-pink-600">
+58:                                <a href="{% url 'workshops:workshop-update' workshop.id %}" class="text-pink-600 hover:text-pink-900 mr-4">Editar</a>
+59:                                <form method="post" action="{% url 'workshops:workshop-delete' workshop.id %}" class="inline">
+76:                        <a href="{% url 'workshops:workshop-create' %}" class="inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+=== templates/workshops/workshop_form.html ===
+38:                        <a href="{% url 'workshops:workshop-list' %}" 
+=== templates/communication/memo_detail.html ===
+756:            <a href="{% url 'communication:messages_list' %}" class="btn btn-secondary">
+762:            <a href="{% url 'communication:message_detail' memo.pk %}" class="btn btn-primary">
+=== templates/communication/newsletter_create.html ===
+663:                <a href="{% url 'communication:newsletter_list' %}" class="btn btn-secondary">
+=== templates/communication/announcement_board.html ===
+615:                        <a href="{% url 'communication:announcement_detail' announcement.pk %}" class="btn btn-primary">
+697:                        <a href="{% url 'communication:announcement_detail' announcement.pk %}" class="btn btn-primary">
+751:    <a href="{% url 'communication:announcement_create' %}" class="fab" title="Novo Comunicado">
+781:    fetch('{% url "communication:mark_multiple_as_read" %}', {
+799:    fetch('{% url "communication:get_unread_count" %}')
+=== templates/communication/memo_create.html ===
+632:                <a href="{% url 'communication:messages_list' %}" class="btn btn-secondary">
+=== templates/communication/announcement_list.html ===
+12:        <a href="{% url 'communication:create_announcement' %}" 
+74:                                <a href="{% url 'communication:announcement_detail' announcement.pk %}" 
+104:                        <a href="{% url 'communication:announcement_detail' announcement.pk %}" 
+145:                    <a href="{% url 'communication:create_announcement' %}" 
+=== templates/communication/announcement_detail.html ===
+538:            <a href="{% url 'communication:announcements_list' %}" class="btn btn-secondary">
+544:            <a href="{% url 'communication:announcement_edit' announcement.pk %}" class="btn btn-primary">
+631:    fetch('{% url "communication:mark_as_read" announcement.pk %}', {
+=== templates/communication/announcement_create.html ===
+487:                <a href="{% url 'communication:dashboard' %}" class="btn btn-secondary">
+=== templates/communication/memo_list.html ===
+12:        <a href="{% url 'communication:create_memo' %}" 
+75:                                <a href="{% url 'communication:message_detail' memo.pk %}" 
+130:                        <a href="{% url 'communication:message_detail' memo.pk %}" 
+171:                    <a href="{% url 'communication:create_memo' %}" 
+=== templates/communication/dashboard.html ===
+503:                <a href="{% url 'communication:announcements_list' %}" class="section-action">
+549:                        <a href="{% url 'communication:announcement_create' %}" class="quick-action">
+554:                        <a href="{% url 'communication:create_message' %}" class="quick-action">
+559:                        <a href="{% url 'communication:announcement_board' %}" class="quick-action">
+564:                        <a href="{% url 'communication:settings' %}" class="quick-action">
+665:                <a href="{% url 'communication:announcements_list' %}" class="quick-action">
+670:                <a href="{% url 'communication:messages_list' %}" class="quick-action">
+675:                <a href="{% url 'communication:newsletter_list' %}" class="quick-action">
+680:                <a href="{% url 'communication:suggestion_list' %}" class="quick-action">
+694:    fetch('{% url "communication:get_dashboard_stats" %}')
+=== templates/account/password_reset.html ===
+89:                <a href="{% url 'account_login' %}" class="text-sm text-pink-600 hover:text-pink-500">
+=== templates/account/logout.html ===
+55:                    <a href="{% url 'dashboard:home' %}" 
+=== templates/account/password_reset_from_key_done.html ===
+81:            <a href="{% url 'account_login' %}" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition duration-150 ease-in-out">
+=== templates/account/password_reset_done.html ===
+82:                <a href="{% url 'account_login' %}" class="flex-1 text-center py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition duration-150 ease-in-out">
+85:                <a href="{% url 'account_reset_password' %}" class="flex-1 text-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition duration-150 ease-in-out">
+=== templates/account/login.html ===
+116:                <a href="{% url 'account_reset_password' %}" class="text-sm text-pink-600 hover:text-pink-500">
+=== templates/account/logged_out.html ===
+49:                <a href="{% url 'account_login' %}" 
+58:                <a href="{% url 'core:home' %}" 
+=== templates/chat/channel_form.html ===
+186:                <a href="{% url 'chat:home' %}" class="btn btn-secondary">
+=== templates/chat/channel_members.html ===
+250:                <a href="{% url 'chat:home' %}?channel={{ channel.id }}" class="btn btn-secondary">
+=== templates/chat/chat_home.html ===
+897:        window.location.href = `{% url 'chat:chat_home' %}?channel=${channelId}`;
+=== templates/coaching/wheel_form.html ===
+81:                <a href="{% url 'coaching:wheel-list' %}" 
+243:                    <a href="{% url 'coaching:wheel-list' %}" 
+=== templates/coaching/action_plan_form.html ===
+38:                        <a href="{% url 'coaching:action-plan-list' %}" 
+=== templates/coaching/wheel_confirm_delete.html ===
+51:                <a href="{% url 'coaching:wheel-list' %}" 
+100:                    <a href="{% url 'coaching:wheel-list' %}" 
+=== templates/coaching/wheel_list.html ===
+45:            <a href="{% url 'coaching:wheel-create' %}" class="group flex items-center px-2 py-2 text-base font-medium rounded-md hover:bg-pink-700">
+74:                <a href="{% url 'coaching:wheel-create' %}" 
+169:                                <a href="{% url 'coaching:wheel-detail' wheel.pk %}" 
+176:                                <a href="{% url 'coaching:wheel-edit' wheel.pk %}" 
+279:                <a href="{% url 'coaching:wheel-create' %}" 
+=== templates/coaching/action_plan_list.html ===
+19:            <a href="{% url 'coaching:action-plan-create' %}" 
+38:                                    <a href="{% url 'coaching:action-plan-detail' plan.id %}" class="block">
+54:                                        <a href="{% url 'coaching:action-plan-update' plan.id %}" 
+60:                                        <form method="post" action="{% url 'coaching:action-plan-delete' plan.id %}" class="inline">
+86:                    <a href="{% url 'coaching:action-plan-create' %}" 
+=== templates/coaching/wheel_detail.html ===
+63:                <a href="{% url 'coaching:wheel-list' %}" 
+213:                    <a href="{% url 'coaching:wheel-edit' object.pk %}" 
+=== templates/social/anamnesis_list.html ===
+11:        <a href="{% url 'social:anamnesis-create' %}" 
+84:                                    <a href="{% url 'social:detail' anamnesis.pk %}" 
+112:                                    <a href="{% url 'social:edit' anamnesis.pk %}" class="text-primary hover:text-primary-dark mr-3">
+115:                                    <a href="{% url 'social:detail' anamnesis.pk %}" class="text-gray-600 hover:text-gray-800">
+=== templates/social/anamnesis_wizard.html ===
+18:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+27:                    <a href="{% url 'social:list' %}" class="breadcrumb-link">
+489:                window.location.href = '{% url 'social:list' %}';
+=== templates/projects/project_confirm_delete.html ===
+22:                        <a href="{% url 'projects:project-detail' project.id %}" 
+=== templates/projects/project_list.html ===
+13:            <a href="{% url 'projects:project-create' %}" class="block rounded-md bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+41:                                <a href="{% url 'projects:project-detail' project.id %}" class="hover:text-pink-600">
+58:                                <a href="{% url 'projects:project-update' project.id %}" class="text-pink-600 hover:text-pink-900 mr-4">Editar</a>
+59:                                <form method="post" action="{% url 'projects:project-delete' project.id %}" class="inline">
+76:                        <a href="{% url 'projects:project-create' %}" class="inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+=== templates/projects/project_form.html ===
+38:                        <a href="{% url 'projects:project-list' %}" 
+=== templates/hr/department_form.html ===
+225:        <a href="{% url 'hr:department_list' %}" class="btn-secondary">
+473:            <a href="{% url 'hr:department_list' %}" class="btn-secondary">
+527:            <a href="{% url 'hr:department_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
+=== templates/hr/document_detail.html ===
+629:                <a href="{% url 'hr:document_edit' document.id %}" class="btn-secondary">
+636:                <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+660:                <form method="post" action="{% url 'hr:document_approve' document.id %}" class="approval-form">
+885:            <a href="{% url 'hr:document_delete' document.id %}" class="btn-primary" style="background: #ef4444;">
+=== templates/hr/document_list.html ===
+301:        <a href="{% url 'hr:document_upload' %}" class="btn-primary">
+463:                    <a href="{% url 'hr:document_detail' document.id %}" class="btn-icon" title="Detalhes">
+487:            <a href="{% url 'hr:document_upload' %}" class="btn-primary">
+=== templates/hr/evaluation_complete.html ===
+1267:            window.location.href = '{% url "hr:evaluation_detail" evaluation.id %}';
+=== templates/hr/employee_detail.html ===
+19:                <a href="{% url 'hr:dashboard' %}" class="text-gray-500 hover:text-gray-700 transition-colors">
+28:                <a href="{% url 'hr:employee_list' %}" class="text-gray-500 hover:text-gray-700 transition-colors">Funcionários</a>
+577:                    window.location.href = "{% url 'hr:employee_edit' employee.pk %}";
+=== templates/hr/employee_confirm_delete.html ===
+188:                <a href="{% url 'hr:employee_detail' object.id %}" class="btn-secondary">
+=== templates/hr/document_upload.html ===
+417:        <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+670:            <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+=== templates/hr/feedback_dashboard.html ===
+11:        <a href="{% url 'hr:give_feedback' %}" 
+64:                            <a href="{% url 'hr:feedback_detail' feedback.pk %}" 
+92:                            <a href="{% url 'hr:feedback_detail' feedback.pk %}" 
+=== templates/hr/job_position_list.html ===
+296:        <a href="{% url 'hr:job_position_create' %}" class="btn-primary">
+442:                    <a href="{% url 'hr:job_position_detail' position.id %}" class="btn-icon" title="Ver detalhes">
+448:                    <a href="{% url 'hr:job_position_edit' position.id %}" class="btn-icon" title="Editar">
+480:            <a href="{% url 'hr:job_position_create' %}" class="btn-primary">
+=== templates/hr/department_list.html ===
+224:        <a href="{% url 'hr:department_create' %}" class="btn-primary">
+323:                    <a href="{% url 'hr:department_detail' department.id %}" class="btn-secondary">
+330:                    <a href="{% url 'hr:department_edit' department.id %}" class="btn-secondary">
+362:                <a href="{% url 'hr:department_create' %}" class="btn-primary">
+=== templates/hr/employee_list.html ===
+111:                    <a href="{% url 'hr:employee_create' %}" 
+330:                        <a href="{% url 'hr:employee_detail' employee.pk %}" 
+334:                        <a href="{% url 'hr:employee_edit' employee.pk %}" 
+350:                <a href="{% url 'hr:employee_create' %}" 
+=== templates/hr/document_form.html ===
+453:            <a href="{% url 'hr:document_detail' document.id %}" class="btn-secondary">
+460:            <a href="{% url 'hr:document_list' %}" class="btn-secondary">
+759:                <a href="{% url 'hr:document_detail' document.id %}" class="btn-secondary">
+766:                <a href="{% url 'hr:document_delete' document.id %}" 
+=== templates/hr/evaluation_reports.html ===
+1029:                        <a href="{% url 'hr:evaluation_detail' evaluation.id %}" class="btn-table-action btn-export-table">
+=== templates/hr/evaluation_detail.html ===
+754:            <a href="{% url 'hr:evaluation_edit' evaluation.id %}" class="btn-action btn-primary">
+761:            <a href="{% url 'hr:evaluation_complete' evaluation.id %}" class="btn-action btn-secondary">
+776:            <a href="{% url 'hr:evaluation_list' %}" class="btn-action btn-secondary">
+800:                    <a href="{% url 'hr:evaluation_edit' evaluation.id %}#competencies" class="card-action">
+852:                    <a href="{% url 'hr:evaluation_edit' evaluation.id %}#goals" class="card-action">
+924:                    <a href="{% url 'hr:evaluation_edit' evaluation.id %}#feedback" class="card-action">
+1157:            <a href="{% url 'hr:evaluation_export' evaluation.id %}" class="btn-action btn-secondary">
+1305:                window.location.href = '{% url "hr:evaluation_edit" evaluation.id %}';
+1309:                window.location.href = '{% url "hr:evaluation_list" %}';
+=== templates/hr/document_delete.html ===
+354:        <a href="{% url 'hr:document_list' %}">Documentos</a>
+356:        <a href="{% url 'hr:document_detail' document.id %}">{{ document.name|truncatechars:30 }}</a>
+518:            <a href="{% url 'hr:document_detail' document.id %}" class="btn-secondary">
+525:            <a href="{% url 'hr:document_list' %}" class="btn-primary">
+=== templates/hr/training_dashboard.html ===
+11:        <a href="{% url 'hr:training_record_list' %}" 
+=== templates/hr/employee_form.html ===
+151:        <a href="{% url 'hr:employee_list' %}" class="btn-secondary">
+345:            <a href="{% url 'hr:employee_list' %}" class="btn-secondary">
+394:            <a href="{% url 'hr:employee_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
+=== templates/hr/position_form.html ===
+321:        <a href="{% url 'hr:job_position_list' %}" class="btn-secondary">
+631:            <a href="{% url 'hr:job_position_list' %}" class="btn-secondary">
+685:            <a href="{% url 'hr:job_position_delete' object.id %}" class="btn-primary bg-red-600 hover:bg-red-700">
+=== templates/hr/evaluation_list.html ===
+713:                <a href="{% url 'hr:evaluation_create' %}" class="btn-primary">
+720:                <a href="{% url 'hr:evaluation_reports' %}" class="btn-secondary">
+928:                    <a href="{% url 'hr:evaluation_detail' evaluation.id %}" class="btn-action btn-view">
+937:                    <a href="{% url 'hr:evaluation_edit' evaluation.id %}" class="btn-action btn-edit">
+944:                    <a href="{% url 'hr:evaluation_complete' evaluation.id %}" class="btn-action btn-complete">
+977:            <a href="{% url 'hr:evaluation_create' %}" class="btn-primary">
+1122:                window.location.href = '{% url "hr:evaluation_create" %}';
+1126:                window.location.href = '{% url "hr:evaluation_reports" %}';
+=== templates/hr/goals_dashboard.html ===
+11:        <a href="{% url 'hr:goal_create' %}" 
+75:                                    <a href="{% url 'hr:goal_detail' goal.pk %}" 
+77:                                    <a href="{% url 'hr:goal_edit' goal.pk %}" 
+79:                                    <a href="{% url 'hr:goal_update_progress' goal.pk %}" 
+=== templates/hr/document_approval.html ===
+655:                    <a href="{% url 'hr:document_detail' document.id %}" class="btn-view">
+664:                    <form method="post" action="{% url 'hr:document_approve' document.id %}" style="display: inline;">
+675:                    <form method="post" action="{% url 'hr:document_approve' document.id %}" style="display: inline;">
+706:            <a href="{% url 'hr:document_list' %}" class="btn-view">
+=== templates/hr/dashboard.html ===
+200:                        <a href="{% url 'hr:employee_create' %}" 
+213:                        <a href="{% url 'hr:training_dashboard' %}" 
+226:                        <a href="{% url 'hr:goals_dashboard' %}" 
+401:                        <a href="{% url 'hr:employee_list' %}" class="block text-sm text-blue-600 hover:text-blue-800">
+404:                        <a href="{% url 'hr:department_list' %}" class="block text-sm text-blue-600 hover:text-blue-800">
+407:                        <a href="{% url 'hr:job_position_list' %}" class="block text-sm text-blue-600 hover:text-blue-800">
+419:                        <a href="{% url 'hr:training_dashboard' %}" class="block text-sm text-green-600 hover:text-green-800">
+422:                        <a href="{% url 'hr:onboarding_dashboard' %}" class="block text-sm text-green-600 hover:text-green-800">
+425:                        <a href="{% url 'hr:goals_dashboard' %}" class="block text-sm text-green-600 hover:text-green-800">
+437:                        <a href="{% url 'hr:performance_review_list' %}" class="block text-sm text-purple-600 hover:text-purple-800">
+440:                        <a href="{% url 'hr:feedback_dashboard' %}" class="block text-sm text-purple-600 hover:text-purple-800">
+443:                        <a href="{% url 'hr:analytics_dashboard' %}" class="block text-sm text-purple-600 hover:text-purple-800">
+468:                <a href="{% url 'hr:employee_create' %}" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+477:                <a href="{% url 'hr:training_create' %}" class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+486:                <a href="{% url 'hr:performance_review_create' %}" class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+=== templates/certificates/templates.html ===
+14:                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+66:                            <a href="{% url 'certificates:templates' %}" class="btn btn-outline-secondary">
+199:                                <a href="{% url 'certificates:templates' %}">limpar a busca</a>
+261:            <form method="post" action="{% url 'certificates:template_create' %}" enctype="multipart/form-data">
+=== templates/certificates/verify.html ===
+228:                            <form method="get" action="{% url 'certificates:verify_form' %}">
+317:                        <a href="{% url 'certificates:verify_form' %}" class="btn btn-outline-secondary">
+=== templates/certificates/reports.html ===
+43:                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+408:                                            <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-sm btn-outline-primary">
+=== templates/certificates/list.html ===
+20:            <a href="{% url 'certificates:request_certificate' %}" 
+66:                                        <a href="{% url 'certificates:download_certificate' certificate.id %}" 
+73:                                        <form method="post" action="{% url 'certificates:delete_certificate' certificate.id %}" class="inline">
+101:                    <a href="{% url 'certificates:request_certificate' %}" 
+=== templates/certificates/edit.html ===
+14:                            <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-sm btn-outline-primary me-3">
+148:                                <a href="{% url 'certificates:detail' certificate.id %}" class="btn btn-outline-secondary">
+383:    fetch('{% url "certificates:preview" certificate.id %}', {
+=== templates/certificates/create.html ===
+12:            <a href="{% url 'certificates:list' %}" 
+186:                <a href="{% url 'certificates:list' %}" 
+=== templates/certificates/detail.html ===
+14:                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+=== templates/certificates/bulk_generate.html ===
+14:                            <a href="{% url 'certificates:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+208:                                <a href="{% url 'certificates:dashboard' %}" class="btn btn-outline-secondary">
+456:    fetch('{% url "certificates:bulk_preview" %}', {
+=== templates/certificates/dashboard.html ===
+21:                                <a href="{% url 'certificates:create_template' %}" class="btn btn-primary btn-sm me-2">
+225:                                                            <a href="{% url 'certificates:detail' certificate.id %}" 
+319:                                                            <a href="{% url 'certificates:detail' certificate.id %}" 
+356:                                    <a href="{% url 'certificates:create_template' %}" class="btn btn-primary btn-sm">
+388:                                                            <a href="{% url 'certificates:edit_template' template.id %}" 
+424:    window.location.href = '{% url "certificates:export" %}';
+=== templates/core/home.html ===
+21:                    <a href="{% url 'account_login' %}" class="rounded-md bg-pink-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+30:                    <a href="{% url 'dashboard:home' %}" class="rounded-md bg-pink-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+=== templates/core/uploads/delete.html ===
+17:                <a href="{% url 'core_uploads:upload_detail' upload.pk %}" 
+99:                    <a href="{% url 'core_uploads:upload_detail' upload.pk %}" 
+=== templates/core/uploads/list.html ===
+23:                    <a href="{% url 'core_uploads:upload_file' %}" 
+63:                        <a href="{% url 'core_uploads:upload_list' %}" 
+110:                                    <a href="{% url 'core:download_file' upload.pk %}" 
+118:                                    <a href="{% url 'core_uploads:upload_detail' upload.pk %}" 
+128:                                        <a href="{% url 'core:delete_upload' upload.pk %}" 
+241:                        <a href="{% url 'core_uploads:upload_file' %}" 
+=== templates/core/uploads/detail.html ===
+19:                    <a href="{% url 'core_uploads:upload_list' %}" 
+27:                    <a href="{% url 'core:download_file' upload.pk %}" 
+36:                        <a href="{% url 'core:delete_upload' upload.pk %}" 
+204:                            <a href="{% url 'core:download_file' upload.pk %}" 
+221:                                <a href="{% url 'core:delete_upload' upload.pk %}" 
+=== templates/core/uploads/upload.html ===
+18:                <a href="{% url 'core_uploads:upload_list' %}" 
+154:                    <a href="{% url 'core_uploads:upload_list' %}" 
+=== templates/core/uploads/my_uploads.html ===
+23:                    <a href="{% url 'core_uploads:upload_list' %}" 
+30:                    <a href="{% url 'core_uploads:upload_file' %}" 
+58:                            <a href="{% url 'core_uploads:my_uploads' %}" 
+106:                                    <a href="{% url 'core_uploads:download_file' upload.pk %}" 
+114:                                    <a href="{% url 'core_uploads:upload_detail' upload.pk %}" 
+123:                                    <a href="{% url 'core_uploads:delete_upload' upload.pk %}" 
+241:                        <a href="{% url 'core_uploads:upload_file' %}" 
+=== templates/users/user_list.html ===
+24:                <a href="{% url 'users:user-create' %}" 
+236:                            <a href="{% url 'users:user-detail' user.pk %}" 
+244:                            <a href="{% url 'users:user-update' user.pk %}" 
+270:                                <a href="{% url 'users:user-create' %}" 
+=== templates/users/user_form.html ===
+18:            <a href="{% url 'users:user-list' %}" 
+279:                <a href="{% url 'users:user-list' %}" 
+=== templates/users/profile.html ===
+126:                    <a href="{% url 'dashboard:home' %}" 
+=== templates/evolution/evolution_form.html ===
+37:                    <a href="{% url 'evolution:list' %}" 
+=== templates/evolution/evolution_list.html ===
+19:            <a href="{% url 'evolution:create' %}" 
+38:                                    <a href="{% url 'evolution:detail' record.id %}" class="block">
+67:                                        <a href="{% url 'evolution:edit' record.id %}" 
+73:                                        <form method="post" action="{% url 'evolution:delete' record.id %}" class="inline">
+99:                    <a href="{% url 'evolution:create' %}" 
+=== templates/activities/activities_list.html ===
+20:                            <a href="{% url 'activities:create' %}" class="btn btn-success btn-sm">
+26:                            <a href="{% url 'activities:dashboard' %}" class="btn btn-outline-primary btn-sm">
+64:                                                            <a href="{% url 'activities:detail' activity.id %}" class="text-decoration-none">
+107:                                                    <a href="{% url 'activities:detail' activity.id %}" class="btn btn-outline-primary btn-sm" title="Ver detalhes">
+110:                                                    <a href="{% url 'activities:edit' activity.id %}" class="btn btn-outline-secondary btn-sm" title="Editar">
+118:                                                            <li><a class="dropdown-item" href="{% url 'activities:sessions' activity.id %}">
+121:                                                            <li><a class="dropdown-item" href="{% url 'activities:attendance' activity.id %}">
+124:                                                            <li><a class="dropdown-item" href="{% url 'activities:feedback' activity.id %}">
+127:                                                            <li><a class="dropdown-item" href="{% url 'activities:report' activity.id %}">
+144:                            <a href="{% url 'activities:create' %}" class="btn btn-primary">
+157:    window.open('{% url "activities:export" %}', '_blank');
+=== templates/activities/feedback.html ===
+14:                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+428:                        <a href="{% url 'activities:report' activity.id %}" class="btn btn-outline-warning btn-sm">
+625:        fetch('{% url "activities:create_feedback" %}', {
+763:    window.open(`{% url 'activities:export_feedback' activity.id %}`, '_blank');
+767:    window.open(`{% url 'activities:feedback_report' activity.id %}`, '_blank');
+=== templates/activities/sessions.html ===
+19:                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+554:        fetch('{% url "activities:create_session" %}', {
+582:        fetch('{% url "activities:bulk_schedule" %}', {
+614:    fetch('{% url "activities:preview_bulk_schedule" %}', {
+714:    window.open(`{% url 'activities:export_sessions' activity.id %}`, '_blank');
+=== templates/activities/report.html ===
+25:                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+456:                        <a href="{% url 'activities:edit' activity.id %}" class="btn btn-outline-primary btn-sm">
+459:                        <a href="{% url 'activities:sessions' activity.id %}" class="btn btn-outline-info btn-sm">
+552:    const url = `{% url 'activities:export_excel' activity.id %}`;
+557:    const url = `{% url 'activities:export_pdf' activity.id %}`;
+=== templates/activities/edit.html ===
+14:                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+269:                                <a href="{% url 'activities:detail' activity.id %}" class="btn btn-outline-secondary">
+375:                            <a href="{% url 'activities:sessions' activity.id %}" class="btn btn-outline-primary btn-sm">
+378:                            <a href="{% url 'activities:attendance' activity.id %}" class="btn btn-outline-success btn-sm">
+618:    window.location.href = `{% url 'activities:feedback' activity.id %}`;
+622:    window.open(`{% url 'activities:report' activity.id %}`, '_blank');
+=== templates/activities/create.html ===
+14:                            <a href="{% url 'activities:dashboard' %}" class="btn btn-sm btn-outline-primary me-3">
+223:                                <a href="{% url 'activities:dashboard' %}" class="btn btn-outline-secondary">
+=== templates/activities/detail.html ===
+14:                            <a href="{% url 'activities:list' %}" class="btn btn-sm btn-outline-primary me-3">
+26:                            <a href="{% url 'activities:edit' activity.id %}" class="btn btn-info btn-sm me-2">
+40:                                        <a class="dropdown-item" href="{% url 'activities:sessions' activity.id %}">
+45:                                        <a class="dropdown-item" href="{% url 'activities:attendance' activity.id %}">
+107:                                        <a href="{% url 'activities:beneficiary_dashboard' activity.beneficiary.id %}" class="text-decoration-none">
+259:                        <a href="{% url 'activities:session_create' activity.id %}" class="btn btn-primary btn-sm">
+309:                                                    <a href="{% url 'activities:session_detail' session.id %}" class="btn btn-outline-primary">
+312:                                                    <a href="{% url 'activities:session_edit' session.id %}" class="btn btn-outline-info">
+326:                            <a href="{% url 'activities:session_create' activity.id %}" class="btn btn-primary">
+427:                            <a href="{% url 'social:anamnesis_detail' activity.social_anamnesis.id %}" class="text-decoration-none">
+511:            <form method="post" action="{% url 'activities:note_create' activity.id %}">
+537:        fetch(`{% url 'activities:change_status' activity.id %}`, {
+558:        fetch(`{% url 'activities:duplicate' activity.id %}`, {
+577:        fetch(`{% url 'activities:delete' activity.id %}`, {
+586:                window.location.href = '{% url "activities:list" %}';
+595:    window.open(`{% url 'activities:report' activity.id %}`, '_blank');
+599:    window.location.href = `{% url 'activities:export_single' activity.id %}`;
+=== templates/activities/dashboard.html ===
+21:                            <a href="{% url 'activities:create' %}" class="btn btn-primary">
+206:                                                        <a href="{% url 'activities:beneficiary_dashboard' beneficiary_stat.beneficiary.id %}" class="text-decoration-none">
+309:                                <a href="{% url 'activities:list' %}" class="btn btn-sm btn-outline-primary">
+372:                                                        <a href="{% url 'activities:detail' activity.id %}" class="btn btn-outline-primary">
+375:                                                        <a href="{% url 'activities:edit' activity.id %}" class="btn btn-outline-info">
+407:                                    <a href="{% url 'activities:reports' %}" class="btn btn-primary">
+558:                url: '{% url "activities:detail" event.id %}'
+585:    const url = `{% url 'activities:export' %}?format=${format}`;
+590:    const url = `{% url 'activities:attendance_report' %}`;
+595:    const url = `{% url 'activities:beneficiary_report' %}`;
+=== templates/activities/attendance.html ===
+14:                            <a href="{% url 'activities:detail' activity.id %}" class="btn btn-sm btn-outline-primary me-3">
+358:                        <a href="{% url 'activities:report' activity.id %}" class="btn btn-outline-warning btn-sm">
+736:    window.open(`{% url 'activities:export_attendance' activity.id %}`, '_blank');
+=== templates/dashboard/custom_reports.html ===
+11:        <a href="{% url 'dashboard:reports' %}" 
+=== templates/dashboard/reports.html ===
+12:            <a href="{% url 'dashboard:custom-reports' %}" 
+16:            <a href="{% url 'dashboard:advanced-analytics' %}" 
+228:    window.open('{% url "dashboard:reports" %}?format=pdf&' + new URLSearchParams(window.location.search));
+232:    window.open('{% url "dashboard:reports" %}?format=excel&' + new URLSearchParams(window.location.search));
+=== templates/dashboard/advanced_analytics.html ===
+12:            <a href="{% url 'dashboard:reports' %}" 
+=== templates/layouts/base.html ===
+154:                                    <a href="{% url 'users:profile' %}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150" role="menuitem" tabindex="-1">
+160:                                    <a href="{% url 'account_logout' %}" class="group flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-900 transition-colors duration-150" role="menuitem" tabindex="-1">
+=== templates/layouts/public_base.html ===
+25:                            <a href="{% url 'dashboard:home' %}" class="bg-pink-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-700 transition duration-150 ease-in-out">
+28:                            <a href="{% url 'account_logout' %}" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+34:                            <a href="{% url 'account_login' %}" class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+37:                            <a href="{% url 'account_login' %}" class="bg-pink-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-pink-700 transition duration-150 ease-in-out">
+70:                                    <a href="{% url 'dashboard:home' %}" class="text-base text-gray-300 hover:text-white">
+76:                                    <a href="{% url 'account_login' %}" class="text-base text-gray-300 hover:text-white">
+=== templates/layouts/includes/navigation.html ===
+7:            <a href="{% url 'dashboard:home' %}" 
+31:                    <a href="{% url 'members:list' %}" 
+37:                    <a href="{% url 'members:create' %}" 
+60:                    <a href="{% url 'projects:project-list' %}" 
+66:                    <a href="{% url 'projects:project-create' %}" 
+89:                    <a href="{% url 'coaching:wheel-list' %}"
+95:                    <a href="{% url 'coaching:wheel-create' %}"
+118:                    <a href="{% url 'communication:dashboard' %}"
+124:                    <a href="{% url 'communication:announcements_list' %}"
+130:                    <a href="{% url 'communication:messages_list' %}"
+153:                    <a href="{% url 'evolution:list' %}"
+159:                    <a href="{% url 'evolution:create' %}"
+182:                    <a href="{% url 'tasks:dashboard' %}"
+188:                    <a href="{% url 'tasks:task_list' %}"
+194:                    <a href="{% url 'tasks:board_list' %}"
+217:                    <a href="{% url 'social:list' %}"
+240:                    <a href="{% url 'certificates:list' %}"
+246:                    <a href="{% url 'certificates:create' %}"
+269:                    <a href="{% url 'notifications:list' %}"
+275:                    <a href="{% url 'notifications:preferences' %}"
+298:                    <a href="{% url 'coaching:action-plan-list' %}"
+304:                    <a href="{% url 'coaching:action-plan-create' %}"
+328:                    <a href="{% url 'hr:dashboard' %}"
+334:                    <a href="{% url 'hr:training_dashboard' %}"
+340:                    <a href="{% url 'hr:feedback_dashboard' %}"
+346:                    <a href="{% url 'hr:goals_dashboard' %}"
+381:                    <a href="{% url 'users:user-list' %}"
+387:                    <a href="{% url 'users:user-create' %}"
+410:                    <a href="{% url 'dashboard:reports' %}"
+416:                    <a href="{% url 'dashboard:custom-reports' %}"
+422:                    <a href="{% url 'dashboard:advanced-analytics' %}"
+445:                    <a href="{% url 'core_uploads:upload_file' %}"
+451:                    <a href="{% url 'core_uploads:upload_list' %}"
+457:                    <a href="{% url 'core_uploads:my_uploads' %}"
+480:                    <a href="{% url 'activities:activities_list' %}"
+486:                    <a href="{% url 'activities:dashboard' %}"
+510:                    <a href="{% url 'workshops:workshop-list' %}"
+516:                    <a href="{% url 'workshops:workshop-create' %}"
+532:            <a href="{% url 'coaching:action-plan-list' %}"
+543:            <a href="{% url 'evolution:list' %}"
+554:            <a href="{% url 'certificates:dashboard' %}"
+=== templates/notifications/notification_preferences.html ===
+12:            <a href="{% url 'notifications:list' %}" 
+251:                <a href="{% url 'notifications:list' %}" 
+=== templates/notifications/preferences.html ===
+11:        <a href="{% url 'notifications:list' %}" 
+131:                <a href="{% url 'notifications:list' %}" 
+=== templates/notifications/notification_list_unified.html ===
+29:            <a href="{% url 'notifications:preferences' %}" 
+170:                    <a href="{% url 'notifications:list' %}" 
+319:                        <a href="{% url 'notifications:list' %}" 
+=== templates/notifications/list.html ===
+18:            <a href="{% url 'notifications:preferences' %}" 
+142:                                            <a href="{% url 'notifications:detail' notification.pk %}" 
+=== templates/members/beneficiary_detail.html ===
+39:            <a href="{% url 'members:update' beneficiary.pk %}" class="ml-3 inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+=== templates/members/beneficiary_confirm_delete.html ===
+19:                <a href="{% url 'members:detail' beneficiary.pk %}" class="text-sm font-semibold leading-6 text-gray-900">
+=== templates/members/beneficiary_list.html ===
+10:<a href="{% url 'members:create' %}" class="block rounded-md bg-pink-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600">
+40:            <a href="{% url 'members:detail' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+43:            <a href="{% url 'members:update' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+46:            <a href="{% url 'members:delete' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+=== templates/tasks/task_dependencies.html ===
+17:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_settings.html ===
+17:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+=== templates/tasks/board_list.html ===
+18:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+60:                <a href="{% url 'tasks:board_create' %}" class="btn-primary">
+132:                                <a href="{% url 'tasks:board_detail' board.id %}">{{ board.name }}</a>
+144:                                <a href="{% url 'tasks:board_detail' board.id %}" class="dropdown-item">
+152:                                <a href="{% url 'tasks:board_edit' board.id %}" class="dropdown-item">
+222:                        <a href="{% url 'tasks:board_detail' board.id %}" class="action-btn primary">
+249:                            <a href="{% url 'tasks:board_detail' board.id %}">{{ board.name }}</a>
+277:                            <a href="{% url 'tasks:board_detail' board.id %}" class="list-action" title="Visualizar">
+284:                            <a href="{% url 'tasks:board_edit' board.id %}" class="list-action" title="Editar">
+307:                <a href="{% url 'tasks:board_create' %}" class="btn-primary">
+364:                                    <a href="{% url 'tasks:board_detail' board.id %}" 
+373:                            <a href="{% url 'tasks:board_edit' board.id %}" 
+421:                    <a href="{% url 'tasks:board_create' %}" 
+=== templates/tasks/task_archive.html ===
+17:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+=== templates/tasks/task_notifications.html ===
+17:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_team_collaboration.html ===
+17:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_timeline.html ===
+17:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:board_detail' task.board.id %}" class="breadcrumb-link">
+32:                    <a href="{% url 'tasks:task_detail' task.id %}" class="breadcrumb-link">
+57:                <a href="{% url 'tasks:task_detail' task.id %}" class="btn-primary">
+=== templates/tasks/task_reports.html ===
+19:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+=== templates/tasks/task_dashboard.html ===
+20:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+57:                <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+199:                    <a href="{% url 'tasks:task_list' %}?priority=high" class="view-all-link">
+257:                    <a href="{% url 'tasks:task_list' %}?due=today" class="view-all-link">
+318:                    <a href="{% url 'activities:list' %}" class="view-all-link">
+=== templates/tasks/task_form.html ===
+23:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+27:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">Tarefas</a>
+57:                <a href="{% url 'tasks:task_detail' object.id %}" class="btn-secondary">
+484:                                <a href="{% url 'tasks:task_list' %}" class="btn-cancel">
+805:                    window.location.href = '{% url "tasks:task_list" %}';
+=== templates/tasks/board_kanban.html ===
+20:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+24:                    <a href="{% url 'tasks:board_list' %}" class="breadcrumb-link">Quadros</a>
+396:                const response = await fetch("{% url 'tasks:task_update_column' %}", {
+=== templates/tasks/task_time_tracking.html ===
+17:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_workflow_templates.html ===
+17:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+26:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_integration.html ===
+18:                    <a href="{% url 'dashboard:home' %}" class="breadcrumb-link">
+27:                    <a href="{% url 'tasks:task_list' %}" class="breadcrumb-link">
+=== templates/tasks/task_list.html ===
+19:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+51:                <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+209:                                        <a href="{% url 'tasks:task_detail' task.id %}" class="task-title-link">
+234:                                <a href="{% url 'tasks:board_detail' task.board.id %}" class="board-link">
+291:                                    <a href="{% url 'tasks:task_detail' task.id %}" 
+298:                                    <a href="{% url 'tasks:task_edit' task.id %}" 
+344:                                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+376:                                    <a href="{% url 'tasks:task_detail' task.id %}" class="dropdown-item">
+383:                                    <a href="{% url 'tasks:task_edit' task.id %}" class="dropdown-item">
+396:                        <a href="{% url 'tasks:task_detail' task.id %}" class="card-title">
+419:                                <a href="{% url 'tasks:board_detail' task.board.id %}" class="board-name">
+499:                    <a href="{% url 'tasks:task_create' %}" class="btn-primary">
+=== templates/tasks/dashboard.html ===
+41:                    <a href="{% url 'tasks:board_list' %}" class="btn-primary">
+54:                            <a href="{% url 'tasks:reports' %}" class="dropdown-item">
+428:                const response = await fetch("{% url 'tasks:task_create_ajax' %}", {
+458:            window.location.href = "{% url 'tasks:board_create' %}";
+=== templates/tasks/board_form.html ===
+19:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+28:                    <a href="{% url 'tasks:board_list' %}" class="breadcrumb-link">Quadros</a>
+67:                <a href="{% url 'tasks:board_list' %}" class="btn-cancel">
+743:                window.location.href = '{% url "tasks:board_delete" board.id %}';
+=== templates/tasks/column_form.html ===
+19:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+28:                    <a href="{% url 'tasks:board_list' %}" class="breadcrumb-link">Quadros</a>
+32:                    <a href="{% url 'tasks:board_detail' board.id %}" class="breadcrumb-link">{{ board.name }}</a>
+71:                <a href="{% url 'tasks:board_detail' board.id %}" class="btn-cancel">
+785:                window.location.href = '{% if column %}{% url "tasks:column_delete" column.id %}{% endif %}';
+=== templates/tasks/task_detail.html ===
+20:                <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">Dashboard</a>
+24:                <a href="{% url 'tasks:board_detail' task.board.id %}" class="breadcrumb-link">{{ task.board.name }}</a>
+95:                    <a href="{% url 'tasks:task_edit' task.id %}" class="action-btn primary">
+=== templates/tasks/task_analytics.html ===
+19:                    <a href="{% url 'tasks:dashboard' %}" class="breadcrumb-link">
+
+3. Possíveis inconsistências:
+-----------------------------
+URLs usadas em templates mas não definidas:
+account_login
+account_logout
+account_reset_password
+activities:activities_list
+activities:attendance
+activities:attendance_report
+activities:beneficiary_dashboard
+activities:beneficiary_report
+activities:bulk_schedule
+activities:change_status
+activities:create
+activities:create_feedback
+activities:create_session
+activities:dashboard
+activities:delete
+activities:detail
+activities:duplicate
+activities:edit
+activities:export
+activities:export_attendance
+activities:export_excel
+activities:export_feedback
+activities:export_pdf
+activities:export_sessions
+activities:export_single
+activities:feedback
+activities:feedback_report
+activities:list
+activities:note_create
+activities:preview_bulk_schedule
+activities:report
+activities:reports
+activities:session_create
+activities:session_detail
+activities:session_edit
+activities:sessions
+certificates:bulk_preview
+certificates:create
+certificates:create_template
+certificates:dashboard
+certificates:delete_certificate
+certificates:detail
+certificates:download_certificate
+certificates:edit_template
+certificates:export
+certificates:list
+certificates:preview
+certificates:request_certificate
+certificates:template_create
+certificates:templates
+certificates:verify_form
+chat:chat_home
+chat:home
+coaching:action-plan-create
+coaching:action-plan-delete
+coaching:action-plan-detail
+coaching:action-plan-list
+coaching:action-plan-update
+coaching:wheel-create
+coaching:wheel-detail
+coaching:wheel-edit
+coaching:wheel-list
+communication:announcement_board
+communication:announcement_create
+communication:announcement_detail
+communication:announcement_edit
+communication:announcements_list
+communication:create_announcement
+communication:create_memo
+communication:create_message
+communication:dashboard
+communication:get_dashboard_stats
+communication:get_unread_count
+communication:mark_as_read
+communication:mark_multiple_as_read
+communication:message_detail
+communication:messages_list
+communication:newsletter_list
+communication:settings
+communication:suggestion_list
+core:delete_upload
+core:download_file
+core:home
+core_uploads:delete_upload
+core_uploads:download_file
+core_uploads:my_uploads
+core_uploads:upload_detail
+core_uploads:upload_file
+core_uploads:upload_list
+dashboard:advanced-analytics
+dashboard:custom-reports
+dashboard:home
+dashboard:reports
+evolution:create
+evolution:delete
+evolution:detail
+evolution:edit
+evolution:list
+hr:analytics_dashboard
+hr:dashboard
+hr:department_create
+hr:department_delete
+hr:department_detail
+hr:department_edit
+hr:department_list
+hr:document_approve
+hr:document_delete
+hr:document_detail
+hr:document_edit
+hr:document_list
+hr:document_upload
+hr:employee_create
+hr:employee_delete
+hr:employee_detail
+hr:employee_edit
+hr:employee_list
+hr:evaluation_complete
+hr:evaluation_create
+hr:evaluation_detail
+hr:evaluation_edit
+hr:evaluation_export
+hr:evaluation_list
+hr:evaluation_reports
+hr:feedback_dashboard
+hr:feedback_detail
+hr:give_feedback
+hr:goal_create
+hr:goal_detail
+hr:goal_edit
+hr:goal_update_progress
+hr:goals_dashboard
+hr:job_position_create
+hr:job_position_delete
+hr:job_position_detail
+hr:job_position_edit
+hr:job_position_list
+hr:onboarding_dashboard
+hr:performance_review_create
+hr:performance_review_list
+hr:training_create
+hr:training_dashboard
+hr:training_record_list
+members:create
+members:delete
+members:detail
+members:list
+members:update
+notifications:detail
+notifications:list
+notifications:preferences
+projects:project-create
+projects:project-delete
+projects:project-detail
+projects:project-list
+projects:project-update
+social:anamnesis-create
+social:anamnesis_detail
+social:detail
+social:edit
+social:list
+tasks:board_create
+tasks:board_delete
+tasks:board_detail
+tasks:board_edit
+tasks:board_list
+tasks:column_delete
+tasks:dashboard
+tasks:reports
+tasks:task_create
+tasks:task_create_ajax
+tasks:task_detail
+tasks:task_edit
+tasks:task_list
+tasks:task_update_column
+users:profile
+users:user-create
+users:user-detail
+users:user-list
+users:user-update
+workshops:workshop-create
+workshops:workshop-delete
+workshops:workshop-detail
+workshops:workshop-list
+workshops:workshop-update
+
+URLs definidas mas não usadas:
+acknowledge_policy
+action-plan-create
+action-plan-delete
+action-plan-detail
+action-plan-edit
+action-plan-list
+activities_list
+activities_metrics_api
+activities_report
+activity_create
+activity_detail
+activity_edit
+activity_feedback
+add-evolution
+add_comment
+admin_certificates
+admin_requests
+advanced-analytics
+advanced_training_create
+advanced_training_detail
+analytics
+analytics_charts_api
+analytics_dashboard
+analytics_export
+anamnesis-create
+anamnesis-create-for-beneficiary
+anamnesis_pdf
+announcement_detail
+announcements_list
+api_analytics
+api_bulk_delete
+api_bulk_mark_read
+api_count
+api_list
+api_mark_all_read
+api_mark_important
+api_mark_read
+api_popup
+api_search
+api_stats
+approve_request
+attendance_record
+audit-logs
+auto_generate
+beneficiaries-export
+beneficiaries-list
+beneficiary-create
+beneficiary-detail
+beneficiary-edit
+beneficiary-export
+beneficiary_activities_api
+beneficiary_dashboard
+board_create
+board_detail
+board_edit
+board_list
+bulk-actions
+bulk-attendance
+bulk_delete
+bulk_mark_read
+change_password
+channel_create
+channel_detail
+channel_edit
+channel_list
+channel_members
+channels
+count
+create
+create-group
+create_announcement
+create_feedback
+create_message
+create_test
+custom-reports
+dashboard
+delete
+delete-group
+delete_announcement
+department_create
+department_delete
+department_detail
+department_edit
+department_list
+detail
+dm_conversation
+dm_list
+document_create
+document_delete
+document_detail
+document_edit
+document_list
+download
+edit
+edit-group
+edit_announcement
+email-config
+employee_create
+employee_delete
+employee_detail
+employee_edit
+employee_list
+employee_search_api
+enrollment-create
+enrollment-delete
+enrollment-detail
+enrollment-list
+enrollment-update
+evaluation-create
+evaluation-list
+export
+export_excel
+export_pdf
+feedback_dashboard
+feedback_detail
+feedback_list
+feedback_stats_api
+get_all_messages
+get_messages
+give_feedback
+global-search
+goal_create
+goal_detail
+goal_edit
+goal_update_progress
+goals_dashboard
+goals_progress_api
+group-management
+health-check
+health-detailed
+home
+index
+job_position_create
+job_position_delete
+job_position_detail
+job_position_edit
+job_position_list
+list
+lock
+mark-all-read-api
+mark-read-api
+mark_all_read
+mark_feedback_read
+mark_important
+mark_message_read
+mark_notification_read
+mark_read
+message_detail
+messages_list
+metrics_api
+newsletter_detail
+newsletters_list
+note_create
+notification-count-api
+notification-stream
+notifications
+onboarding_dashboard
+onboarding_instance_create
+onboarding_instance_detail
+onboarding_instances
+onboarding_program_create
+onboarding_program_detail
+onboarding_programs
+performance_report
+performance_review_list
+policies_list
+policy_detail
+popup
+preferences
+profile
+project-create
+project-delete
+project-detail
+project-export
+project-list
+project-update
+reports
+reports_dashboard
+request
+resource_detail
+resources_list
+search
+search_api
+send_channel_message
+send_email
+send_message
+session-create
+session-delete
+session-list
+session-update
+session_create
+settings
+social_reports
+stats
+survey_detail
+surveys_list
+task_comment_add
+task_create
+task_create_ajax
+task_delete_ajax
+task_detail
+task_detail_ajax
+task_edit
+task_label_add
+task_label_remove
+task_list
+task_update_ajax
+task_update_column
+task_watcher_add
+task_watcher_remove
+template_create
+template_edit
+template_list
+test
+test-csrf
+toggle-user-status
+toggle_reaction
+training_dashboard
+training_record_list
+training_register
+training_registrations
+training_report
+turnover_report
+update
+user-activity-log
+user-create
+user-delete
+user-detail
+user-export
+user-list
+user-permissions
+user-reset-password
+user-update
+validate-cpf
+validate-email
+validate-field
+verify
+verify_api
+vulnerability-categories-api
+vulnerability_analytics
+wheel-create
+wheel-delete
+wheel-detail
+wheel-edit
+wheel-list
+wizard_signature
+workshop-create
+workshop-delete
+workshop-detail
+workshop-list
+workshop-report
+workshop-stats
+workshop-update
