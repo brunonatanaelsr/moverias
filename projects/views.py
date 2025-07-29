@@ -26,6 +26,11 @@ from core.unified_permissions import (
     TechnicianRequiredMixin,
     AdminRequiredMixin as UnifiedAdminRequiredMixin
 )
+from core.decorators import (
+    requires_confirmation, delete_confirmation, edit_confirmation, 
+    create_confirmation, CreateConfirmationMixin, EditConfirmationMixin, 
+    DeleteConfirmationMixin
+)
 
 
 @login_required
@@ -35,7 +40,7 @@ def project_list(request):
     query = request.GET.get('q', '')
     status_filter = request.GET.get('status', '')
     
-    projects = Project.objects.all().order_by('-created_at')
+    projects = Project.optimized_objects.with_statistics().order_by('-created_at')
     
     if query:
         projects = projects.filter(
@@ -88,30 +93,42 @@ def project_detail(request, pk):
     return render(request, 'projects/project_detail.html', context)
 
 
-class ProjectCreateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
+class ProjectCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
     """View para criar projeto"""
     model = Project
     form_class = ProjectForm
     template_name = 'projects/project_form.html'
     success_url = reverse_lazy('projects:project-list')
     
+    # Configurações de confirmação
+    entity_name = "novo projeto"
+    confirmation_message = "Confirma o cadastro deste novo projeto?"
+    success_message = "Projeto criado com sucesso!"
+    
     def form_valid(self, form):
         form.instance.coordinator = self.request.user
-        messages.success(self.request, 'Projeto criado com sucesso!')
         return super().form_valid(form)
 
 
-class ProjectUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
+class ProjectUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
     """View para editar projeto"""
     model = Project
     form_class = ProjectForm
     template_name = 'projects/project_form.html'
     
+    # Configurações de confirmação
+    entity_name = "projeto"
+    confirmation_message = "Confirma as alterações neste projeto?"
+    success_message = "Projeto atualizado com sucesso!"
+    
+    def get_entity_name(self, request, *args, **kwargs):
+        """Nome específico da entidade sendo editada"""
+        return f'projeto "{self.get_object().name}"'
+    
     def get_success_url(self):
         return reverse_lazy('projects:project-detail', kwargs={'pk': self.object.pk})
     
     def form_valid(self, form):
-        messages.success(self.request, 'Projeto atualizado com sucesso!')
         return super().form_valid(form)
 
 
@@ -142,7 +159,7 @@ def project_enrollment_list(request, project_pk):
     return render(request, 'projects/enrollment_list.html', context)
 
 
-class ProjectEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
+class ProjectEnrollmentCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, CreateView):
     """View para criar matrícula em projeto"""
     model = ProjectEnrollment
     form_class = ProjectEnrollmentForm
@@ -151,7 +168,7 @@ class ProjectEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, A
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['projects'] = Project.objects.filter(status='active')
+        context['projects'] = Project.optimized_objects.filter(status='active')
         return context
     
     def form_valid(self, form):
@@ -172,25 +189,50 @@ class ProjectEnrollmentDetailView(LoginRequiredMixin, TechnicianRequiredMixin, D
         return context
 
 
-class ProjectEnrollmentUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
+class ProjectEnrollmentUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, AuditMixin, UpdateView):
     """Editar matrícula em projeto"""
     model = ProjectEnrollment
     form_class = ProjectEnrollmentForm
     template_name = 'projects/enrollment_form.html'
     
+    # Configurações de confirmação
+    entity_name = "matrícula"
+    confirmation_message = "Confirma as alterações nesta matrícula?"
+    success_message = "Matrícula atualizada com sucesso!"
+    
+    def get_entity_name(self, request, *args, **kwargs):
+        """Nome específico da entidade sendo editada"""
+        enrollment = self.get_object()
+        return f'matrícula de "{enrollment.beneficiary.full_name}" no projeto "{enrollment.project.name}"'
+    
     def get_success_url(self):
         return reverse_lazy('projects:enrollment-detail', kwargs={'pk': self.object.pk})
     
     def form_valid(self, form):
-        messages.success(self.request, 'Matrícula atualizada com sucesso!')
         return super().form_valid(form)
 
 
-class ProjectEnrollmentDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
-    """Excluir matrícula em projeto"""
+class ProjectEnrollmentDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este projeto?"
+    confirmation_entity = "projeto"
+    dangerous_operation = True"""Excluir matrícula em projeto"""
     model = ProjectEnrollment
     template_name = 'projects/enrollment_confirm_delete.html'
     success_url = reverse_lazy('projects:enrollment-list')
+    
+    # Configurações de confirmação
+    entity_name = "matrícula"
+    confirmation_message = "Tem certeza que deseja excluir esta matrícula?"
+    confirmation_warning = "Esta ação não pode ser desfeita. Todos os registros de presença e avaliações relacionados também serão removidos."
+    success_message = "Matrícula excluída com sucesso!"
+    
+    def get_entity_name(self, request, *args, **kwargs):
+        """Nome específico da entidade sendo excluída"""
+        enrollment = self.get_object()
+        return f'matrícula de "{enrollment.beneficiary.full_name}" no projeto "{enrollment.project.name}"'
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Matrícula excluída com sucesso!')
@@ -230,7 +272,7 @@ def project_enrollment_list(request):
     
     context = {
         'page_obj': page_obj,
-        'projects': Project.objects.all(),
+        'projects': Project.optimized_objects.with_statistics(),
         'project_filter': project_filter,
         'status_filter': status_filter,
         'search': search,

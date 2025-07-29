@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -164,8 +165,12 @@ class EvolutionRecordDetailView(LoginRequiredMixin, TechnicianRequiredMixin, Det
         return record
 
 
-class EvolutionRecordCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
-    """Criar novo registro de evolução"""
+class EvolutionRecordCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo evolução?"
+    confirmation_entity = "evolução""""Criar novo registro de evolução"""
     
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -234,8 +239,12 @@ class EvolutionRecordCreateView(LoginRequiredMixin, TechnicianRequiredMixin, Cre
         return response
 
 
-class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    def form_valid(self, form):
+class EvolutionRecordUpdateView(EditConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste evolução?"
+    confirmation_entity = "evolução"def form_valid(self, form):
         old_values = {field.name: getattr(self.get_object(), field.name) for field in self.model._meta.fields}
         response = super().form_valid(form)
         # Auditoria: log de edição
@@ -289,8 +298,13 @@ class EvolutionRecordUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateV
         return response
 
 
-class EvolutionRecordDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    def delete(self, request, *args, **kwargs):
+class EvolutionRecordDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este evolução?"
+    confirmation_entity = "evolução"
+    dangerous_operation = Truedef delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         # Auditoria: log de exclusão
         from core.audit import log_user_action

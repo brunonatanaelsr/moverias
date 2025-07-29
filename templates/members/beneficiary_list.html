@@ -40,10 +40,21 @@
             <a href="{% url 'members:detail' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
                 Ver<span class="sr-only">, {{ beneficiary.full_name }}</span>
             </a>
-            <a href="{% url 'members:update' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+            <a href="{% url 'members:update' beneficiary.pk %}" 
+               class="text-pink-600 hover:text-pink-900"
+               data-confirm="true"
+               data-action="editar"
+               data-entity="beneficiária {{ beneficiary.full_name }}"
+               data-confirm-message="Deseja editar os dados da beneficiária {{ beneficiary.full_name }}?">
                 Editar<span class="sr-only">, {{ beneficiary.full_name }}</span>
             </a>
-            <a href="{% url 'members:delete' beneficiary.pk %}" class="text-pink-600 hover:text-pink-900">
+            <a href="{% url 'members:delete' beneficiary.pk %}" 
+               class="text-red-600 hover:text-red-900"
+               data-confirm="true"
+               data-action="excluir"
+               data-entity="beneficiária {{ beneficiary.full_name }}"
+               data-confirm-message="Tem certeza que deseja excluir a beneficiária {{ beneficiary.full_name }}?"
+               data-confirm-warning="Esta ação não pode ser desfeita. Todos os dados relacionados também serão removidos.">
                 Excluir<span class="sr-only">, {{ beneficiary.full_name }}</span>
             </a>
         </div>

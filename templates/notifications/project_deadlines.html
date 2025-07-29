@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Projetos com Prazos Próximos</title>
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #dc3545; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .project-item { border-left: 4px solid #dc3545; padding: 10px; margin: 10px 0; background: #f8f9fa; }
+        .urgent { border-left-color: #dc3545; background: #f8d7da; }
+        .warning { border-left-color: #ffc107; background: #fff3cd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🚨 Alerta: Prazos de Projetos</h2>
+        </div>
+        
+        <div class="content">
+            <p><strong>{{ count }} projeto(s)</strong> têm prazos vencendo nos próximos 7 dias:</p>
+            
+            {% for project in expiring_projects %}
+            <div class="project-item {% if project.days_remaining <= 2 %}urgent{% else %}warning{% endif %}">
+                <h4>{{ project.name }}</h4>
+                <p>
+                    <strong>Prazo:</strong> {{ project.end_date|date:"d/m/Y" }}<br>
+                    <strong>Dias restantes:</strong> {{ project.days_remaining }}<br>
+                    <strong>Participantes:</strong> {{ project.enrollment_count }}<br>
+                    <strong>Status:</strong> {{ project.status }}
+                </p>
+            </div>
+            {% endfor %}
+            
+            <p style="margin-top: 20px;">
+                <strong>Ação requerida:</strong> Verifique o progresso desses projetos e tome as medidas necessárias antes do vencimento.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

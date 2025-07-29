@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Relatório de Beneficiárias Inativas</title>
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #007bff; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .beneficiary-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .alert { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Relatório: Beneficiárias com Baixa Atividade</h2>
+        </div>
+        
+        <div class="content">
+            <div class="alert">
+                <strong>⚠️ Atenção:</strong> {{ count }} beneficiárias não tiveram registros de evolução nos últimos {{ threshold_days }} dias.
+            </div>
+            
+            <h3>Beneficiárias que necessitam atenção:</h3>
+            
+            {% for beneficiary in inactive_beneficiaries %}
+            <div class="beneficiary-item">
+                <strong>{{ beneficiary.name }}</strong><br>
+                <small>
+                    Status: {{ beneficiary.status }} | 
+                    Última evolução: {{ beneficiary.last_evolution|date:"d/m/Y"|default:"Nunca" }}
+                </small>
+            </div>
+            {% endfor %}
+            
+            <p style="margin-top: 20px;">
+                <strong>Recomendação:</strong> Entre em contato com essas beneficiárias para verificar seu status atual e agendar novos atendimentos se necessário.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

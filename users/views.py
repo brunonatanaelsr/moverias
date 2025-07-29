@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.contrib.auth.models import Group, Permission
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -147,21 +148,29 @@ class UserDetailView(UserManagementMixin, LoginRequiredMixin, DetailView):
         
         return context
 
-class UserCreateView(UserManagementMixin, LoginRequiredMixin, CreateView):
+class UserCreateView(CreateConfirmationMixin, UserManagementMixin, LoginRequiredMixin, CreateView):
     model = CustomUser
     form_class = UserCreateForm
     template_name = 'users/user_form.html'
     success_url = reverse_lazy('users:user-list')
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo usuário?"
+    confirmation_entity = "usuário"
 
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, f'Usuário {self.object.full_name} criado com sucesso!')
         return response
 
-class UserUpdateView(UserManagementMixin, LoginRequiredMixin, UpdateView):
+class UserUpdateView(EditConfirmationMixin, UserManagementMixin, LoginRequiredMixin, UpdateView):
     model = CustomUser
     form_class = UserUpdateForm
     template_name = 'users/user_form.html'
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste usuário?"
+    confirmation_entity = "usuário"
 
     def get_success_url(self):
         return reverse('users:user-detail', kwargs={'pk': self.object.pk})
@@ -171,8 +180,13 @@ class UserUpdateView(UserManagementMixin, LoginRequiredMixin, UpdateView):
         messages.success(self.request, f'Usuário {self.object.full_name} atualizado com sucesso!')
         return response
 
-class UserDeleteView(UserManagementMixin, LoginRequiredMixin, DeleteView):
-    model = CustomUser
+class UserDeleteView(DeleteConfirmationMixin, UserManagementMixin, LoginRequiredMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este usuário?"
+    confirmation_entity = "usuário"
+    dangerous_operation = Truemodel = CustomUser
     template_name = 'users/user_confirm_delete.html'
     success_url = reverse_lazy('users:user-list')
 

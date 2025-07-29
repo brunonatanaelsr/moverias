@@ -152,6 +152,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 SITE_ID = 1
 
 MIDDLEWARE = [
+    'core.middleware.AutoConfirmationMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'core.middleware.SecurityHeadersMiddleware',  # ENHANCED: Custom security headers
     'core.middleware.ErrorLoggingMiddleware',  # Custom error logging
@@ -205,6 +206,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'ATOMIC_REQUESTS': True,  # Enable atomic transactions
         'OPTIONS': {
             # Increase timeout for concurrent access
             'timeout': 30,
@@ -588,6 +590,8 @@ if REDIS_URL:
 if not DEBUG:
     # Database connection pooling
     DATABASES['default']['CONN_MAX_AGE'] = 60
+    # Ensure ATOMIC_REQUESTS is set in production overrides too
+    DATABASES['default']['ATOMIC_REQUESTS'] = True
     
     # Static files compression
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'

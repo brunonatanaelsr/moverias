@@ -129,11 +129,11 @@ class ProjectEnrollmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # Filtrar beneficiárias ativas
-        self.fields['beneficiary'].queryset = Beneficiary.objects.filter(status='ATIVA')
+        self.fields['beneficiary'].queryset = Beneficiary.optimized_objects.filter(status='ATIVA')
         self.fields['beneficiary'].empty_label = "Selecione uma beneficiária"
         
         # Filtrar projetos ativos
-        self.fields['project'].queryset = Project.objects.filter(status='ATIVO')
+        self.fields['project'].queryset = Project.optimized_objects.filter(status='ATIVO')
         self.fields['project'].empty_label = "Selecione um projeto"
         
         # Configurar campos obrigatórios
@@ -221,7 +221,7 @@ class ProjectSessionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # Filtrar projetos ativos
-        self.fields['project'].queryset = Project.objects.filter(status='ATIVO')
+        self.fields['project'].queryset = Project.optimized_objects.filter(status='ATIVO')
         self.fields['project'].empty_label = "Selecione um projeto"
         
         # Configurar campos obrigatórios
@@ -376,7 +376,7 @@ class ProjectResourceForm(forms.ModelForm):
         self.fields['quantity'].initial = 1
         self.fields['is_available'].initial = True
     project = forms.ModelChoiceField(
-        queryset=Project.objects.all().order_by('name'),
+        queryset=Project.optimized_objects.all().order_by('name'),
         widget=forms.Select(attrs={'class': 'form-select'}),
         label='Projeto',
         empty_label=None  # Ensure no "-- -----" empty label by default
@@ -399,21 +399,21 @@ class ProjectResourceForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # Handle the case where no projects exist
-        if not Project.objects.exists():
-            self.fields['project'].queryset = Project.objects.none()
+        if not Project.optimized_objects.exists():
+            self.fields['project'].queryset = Project.optimized_objects.none()
             self.fields['project'].widget.attrs['disabled'] = True
             self.fields['project'].help_text = 'Não há projetos cadastrados. Crie um projeto antes de matricular beneficiárias.'
             # Optionally, make it not required if disabled, though Django might handle this.
             # self.fields['project'].required = False 
         else:
              # Ensure the queryset is fresh if projects were added after form class definition
-            self.fields['project'].queryset = Project.objects.all().order_by('name')
+            self.fields['project'].queryset = Project.optimized_objects.all().order_by('name')
 
 
         # If editing an existing instance, ensure the project field is correctly set
         if self.instance and self.instance.pk and self.instance.project:
             self.fields['project'].initial = self.instance.project
-        elif not Project.objects.exists():
+        elif not Project.optimized_objects.exists():
              self.fields['project'].initial = None
 
 

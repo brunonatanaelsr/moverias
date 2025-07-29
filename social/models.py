@@ -4,11 +4,16 @@ from django.utils import timezone
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from members.models import Beneficiary
+from core.optimized_managers import SocialAnamnesisManager
 
 
 class SocialAnamnesis(models.Model):
     """Modelo para armazenar informações da anamnese social"""
     
+
+    objects = models.Manager()  # Manager padrão
+    optimized_objects = SocialAnamnesisManager()
+
     beneficiary = models.ForeignKey(
         Beneficiary, 
         on_delete=models.CASCADE, 

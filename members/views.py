@@ -21,6 +21,11 @@ from core.unified_permissions import (
     CoordinatorRequiredMixin, requires_technician, requires_coordinator
 )
 from core.smart_cache import SmartCacheManager, list_cache, detail_cache
+from core.decorators import (
+    requires_confirmation, delete_confirmation, edit_confirmation, 
+    create_confirmation, CreateConfirmationMixin, EditConfirmationMixin, 
+    DeleteConfirmationMixin
+)
 from .models import Beneficiary, Consent
 from .forms import BeneficiaryForm
 from workshops.models import WorkshopEnrollment
@@ -84,8 +89,8 @@ class BeneficiaryListView(LoginRequiredMixin, TechnicianRequiredMixin, ListView)
         stats = SmartCacheManager.get_cache(cache_key)
         if stats is None:
             stats = {
-                'total_active': Beneficiary.objects.filter(status='ATIVA').count(),
-                'total_inactive': Beneficiary.objects.filter(status='INATIVA').count()
+                'total_active': Beneficiary.optimized_objects.filter(status='ATIVA').count(),
+                'total_inactive': Beneficiary.optimized_objects.filter(status='INATIVA').count()
             }
             SmartCacheManager.set_cache(cache_key, stats, 'short')
         
@@ -136,13 +141,22 @@ class BeneficiaryDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailV
         return context
 
 
-class BeneficiaryCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
-    """Criar nova beneficiária"""
+class BeneficiaryCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo beneficiária?"
+    confirmation_entity = "beneficiária""""Criar nova beneficiária"""
     
     model = Beneficiary
     form_class = BeneficiaryForm
     template_name = 'members/beneficiary_form.html'
     success_url = reverse_lazy('members:beneficiary-list')
+    
+    # Configurações de confirmação
+    entity_name = "nova beneficiária"
+    confirmation_message = "Confirma o cadastro desta nova beneficiária?"
+    success_message = "Beneficiária cadastrada com sucesso!"
     
     def test_func(self):
         return is_technician(self.request.user)
@@ -153,20 +167,32 @@ class BeneficiaryCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateV
         # Invalidar caches relacionados
         cache.delete_many([key for key in cache._cache.keys() if key.startswith('beneficiaries_list_')])
         
-        messages.success(self.request, f'Beneficiária {form.instance.full_name} cadastrada com sucesso!')
         return response
 
 
-class BeneficiaryUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
-    """Editar beneficiária"""
+class BeneficiaryUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste beneficiária?"
+    confirmation_entity = "beneficiária""""Editar beneficiária"""
     
     model = Beneficiary
     form_class = BeneficiaryForm
     template_name = 'members/beneficiary_form.html'
     success_url = reverse_lazy('members:beneficiary-list')
     
+    # Configurações de confirmação
+    entity_name = "beneficiária"
+    confirmation_message = "Confirma as alterações nos dados desta beneficiária?"
+    success_message = "Dados da beneficiária atualizados com sucesso!"
+    
     def test_func(self):
         return is_technician(self.request.user)
+    
+    def get_entity_name(self, request, *args, **kwargs):
+        """Nome específico da entidade sendo editada"""
+        return f'beneficiária "{self.get_object().full_name}"'
     
     def get_object(self, queryset=None):
         """Otimizar query do objeto"""
@@ -185,27 +211,76 @@ class BeneficiaryUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateV
         cache.delete(f"beneficiary_detail_{self.object.pk}")
         cache.delete_many([key for key in cache._cache.keys() if key.startswith('beneficiaries_list_')])
         
-        messages.success(self.request, f'Beneficiária {form.instance.full_name} atualizada com sucesso!')
         return response
 
 
-class BeneficiaryDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
-    """Excluir beneficiária"""
+class BeneficiaryDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este beneficiária?"
+    confirmation_entity = "beneficiária"
+    dangerous_operation = True"""Excluir beneficiária"""
     
     model = Beneficiary
     template_name = 'members/beneficiary_confirm_delete.html'
     success_url = reverse_lazy('members:beneficiary-list')
     
+    # Configurações de confirmação
+    entity_name = "beneficiária"
+    confirmation_message = "Tem certeza que deseja excluir esta beneficiária?"
+    confirmation_warning = "Esta ação não pode ser desfeita. Todos os dados relacionados à beneficiária também serão removidos permanentemente."
+    success_message = "Beneficiária excluída com sucesso!"
+    
     def test_func(self):
         return is_technician(self.request.user)
+    
+    def get_entity_name(self, request, *args, **kwargs):
+        """Nome específico da entidade sendo excluída"""
+        return f'beneficiária "{self.get_object().full_name}"'
+    
+    def get_confirmation_warning(self, request, *args, **kwargs):
+        """Aviso específico baseado nas dependências"""
+        beneficiary = self.get_object()
+        
+        # Verificar dependências
+        warnings = []
+        
+        active_enrollments = beneficiary.project_enrollments.filter(status='ATIVO').count()
+        if active_enrollments > 0:
+            warnings.append(f"{active_enrollments} matrícula(s) ativa(s) em projetos")
+        
+        workshop_enrollments = beneficiary.workshop_enrollments.count()
+        if workshop_enrollments > 0:
+            warnings.append(f"{workshop_enrollments} inscrição(ões) em workshops")
+        
+        social_records = beneficiary.social_anamneses.count()
+        if social_records > 0:
+            warnings.append(f"{social_records} registro(s) de anamnese social")
+        
+        evolution_records = beneficiary.evolution_records.count()
+        if evolution_records > 0:
+            warnings.append(f"{evolution_records} registro(s) de evolução")
+        
+        if warnings:
+            warning_text = "Esta beneficiária possui: " + ", ".join(warnings) + ". "
+            warning_text += "Todos esses dados também serão excluídos permanentemente."
+            return warning_text
+        
+        return self.confirmation_warning
     
     def delete(self, request, *args, **kwargs):
         beneficiary = self.get_object()
         
-        # Verificar se há matrículas ativas
+        # Verificar se há impedimentos para exclusão
         active_enrollments = beneficiary.project_enrollments.filter(status='ATIVO').count()
-        if active_enrollments > 0:
-            messages.error(request, f'Não é possível excluir a beneficiária "{beneficiary.full_name}" pois ela possui {active_enrollments} matrícula(s) ativa(s) em projetos.')
+        if active_enrollments > 0 and not request.POST.get('force_delete'):
+            messages.error(
+                request, 
+                f'A beneficiária "{beneficiary.full_name}" possui {active_enrollments} '
+                f'matrícula(s) ativa(s). Para excluir, primeiro desative as matrículas ou '
+                f'use a opção "Forçar Exclusão" se necessário.'
+            )
             return redirect('members:beneficiary-detail', pk=beneficiary.pk)
         
         beneficiary_name = beneficiary.full_name
@@ -317,7 +392,7 @@ class BeneficiaryReportDashboardView(LoginRequiredMixin, TechnicianRequiredMixin
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        beneficiaries = Beneficiary.objects.all()
+        beneficiaries = Beneficiary.optimized_objects.with_statistics()
         # Filtros
         status = self.request.GET.get('status', '')
         neighbourhood = self.request.GET.get('neighbourhood', '')
@@ -356,8 +431,8 @@ class BeneficiaryReportDashboardView(LoginRequiredMixin, TechnicianRequiredMixin
 
         # Insights
         total = len(beneficiaries)
-        total_active = Beneficiary.objects.filter(status='ATIVA').count()
-        total_inactive = Beneficiary.objects.filter(status='INATIVA').count()
+        total_active = Beneficiary.optimized_objects.filter(status='ATIVA').count()
+        total_inactive = Beneficiary.optimized_objects.filter(status='INATIVA').count()
         avg_age = int(sum([b.age for b in beneficiaries if hasattr(b, 'age') and b.age]) / total) if total else 0
         min_age_val = min([b.age for b in beneficiaries if hasattr(b, 'age') and b.age], default=None)
         max_age_val = max([b.age for b in beneficiaries if hasattr(b, 'age') and b.age], default=None)

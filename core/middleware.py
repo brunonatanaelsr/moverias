@@ -183,3 +183,90 @@ class SecurityHeadersMiddleware:
                 logger.info(f"Security action: {request.method} {request.path} by {request.user.email}")
         
         return response
+
+
+"""
+Middleware para adicionar confirmações automáticas em operações CRUD
+"""
+
+from django.utils.deprecation import MiddlewareMixin
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.urls import resolve
+import json
+
+
+class AutoConfirmationMiddleware(MiddlewareMixin):
+    """
+    Middleware que adiciona confirmações automáticas baseadas na URL e método
+    """
+    
+    # URLs que requerem confirmação automática
+    CONFIRMATION_PATTERNS = {
+        # Beneficiárias
+        'members:create': {'entity': 'beneficiária', 'action': 'cadastrar'},
+        'members:update': {'entity': 'beneficiária', 'action': 'editar'},
+        'members:delete': {'entity': 'beneficiária', 'action': 'excluir'},
+        
+        # Projetos
+        'projects:create': {'entity': 'projeto', 'action': 'cadastrar'},
+        'projects:update': {'entity': 'projeto', 'action': 'editar'},
+        'projects:delete': {'entity': 'projeto', 'action': 'excluir'},
+        
+        # Atividades
+        'activities:create': {'entity': 'atividade', 'action': 'cadastrar'},
+        'activities:update': {'entity': 'atividade', 'action': 'editar'},
+        'activities:delete': {'entity': 'atividade', 'action': 'excluir'},
+        
+        # Workshops
+        'workshops:create': {'entity': 'workshop', 'action': 'cadastrar'},
+        'workshops:update': {'entity': 'workshop', 'action': 'editar'},
+        'workshops:delete': {'entity': 'workshop', 'action': 'excluir'},
+    }
+    
+    def process_request(self, request):
+        """Processa requisições para adicionar confirmações"""
+        
+        # Só processar POST/PUT/PATCH/DELETE
+        if request.method not in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return None
+        
+        # Verificar se já foi confirmado
+        if request.POST.get('confirmed') == 'true':
+            return None
+        
+        # Resolver URL para obter view name
+        try:
+            url_match = resolve(request.path_info)
+            view_name = url_match.view_name
+        except:
+            return None
+        
+        # Verificar se URL requer confirmação
+        if view_name not in self.CONFIRMATION_PATTERNS:
+            return None
+        
+        # Obter configuração de confirmação
+        config = self.CONFIRMATION_PATTERNS[view_name]
+        
+        # Se for AJAX, retornar JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'requires_confirmation': True,
+                'entity': config['entity'],
+                'action': config['action'],
+                'message': f"Confirma {config['action']} {config['entity']}?",
+                'confirm_url': request.build_absolute_uri(),
+            })
+        
+        # Para requisições normais, renderizar página de confirmação
+        context = {
+            'entity': config['entity'],
+            'action': config['action'],
+            'message': f"Confirma {config['action']} {config['entity']}?",
+            'confirm_url': request.build_absolute_uri(),
+            'cancel_url': request.META.get('HTTP_REFERER', '/'),
+            'form_data': request.POST if request.method == 'POST' else None,
+        }
+        
+        return render_to_string('core/confirmation.html', context, request=request)

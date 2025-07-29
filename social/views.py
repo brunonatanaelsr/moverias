@@ -5,6 +5,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.views.generic import CreateView, UpdateView, DetailView, ListView, DeleteView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -92,8 +93,12 @@ class SocialAnamnesisWizard(LoginRequiredMixin, TechnicianRequiredMixin, Session
         return redirect('social:detail', pk=anamnesis.pk)
 
 
-class SocialAnamnesisUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
-    """Editar anamnese social existente"""
+class SocialAnamnesisUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste anamnese social?"
+    confirmation_entity = "anamnese social""""Editar anamnese social existente"""
     
     model = SocialAnamnesis
     form_class = SocialAnamnesisUpdateForm
@@ -303,8 +308,13 @@ def lock_anamnesis(request, pk):
     return redirect('social:detail', pk=pk)
 
 
-class SocialAnamnesisDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """Excluir anamnese social"""
+class SocialAnamnesisDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este anamnese social?"
+    confirmation_entity = "anamnese social"
+    dangerous_operation = True"""Excluir anamnese social"""
     
     model = SocialAnamnesis
     template_name = 'social/anamnesis_confirm_delete.html'

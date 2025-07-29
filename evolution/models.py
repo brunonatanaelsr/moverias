@@ -6,9 +6,14 @@
 from django.db import models
 from django.conf import settings
 from members.models import Beneficiary
+from core.optimized_managers import EvolutionManager
 
 
 class EvolutionRecord(models.Model):
+
+    objects = models.Manager()  # Manager padrão
+    optimized_objects = EvolutionManager()
+
     beneficiary = models.ForeignKey(Beneficiary, on_delete=models.CASCADE, related_name='evolution_records')
     date = models.DateField('Data do Registro')
     description = models.TextField('Descrição da Evolução')

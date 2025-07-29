@@ -19,6 +19,8 @@ from django.core.paginator import Paginator
 from django.core.cache import cache
 from datetime import date, timedelta, datetime
 
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
+
 @login_required
 def activities_dashboard(request):
     """
@@ -286,13 +288,21 @@ class BeneficiaryActivityDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class BeneficiaryActivityCreateView(LoginRequiredMixin, CreateView):
-    """
+class BeneficiaryActivityCreateView(CreateConfirmationMixin, LoginRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo atividade?"
+    confirmation_entity = "atividade""""
     Criação de nova atividade para beneficiária.
     """
     model = BeneficiaryActivity
     form_class = BeneficiaryActivityForm
     template_name = 'activities/activity_form.html'
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro desta nova atividade?"
+    confirmation_entity = "atividade"
     
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -309,13 +319,21 @@ class BeneficiaryActivityCreateView(LoginRequiredMixin, CreateView):
         )
 
 
-class BeneficiaryActivityUpdateView(LoginRequiredMixin, UpdateView):
-    """
+class BeneficiaryActivityUpdateView(EditConfirmationMixin, LoginRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste atividade?"
+    confirmation_entity = "atividade""""
     Atualização de atividade existente.
     """
     model = BeneficiaryActivity
     form_class = BeneficiaryActivityForm
     template_name = 'activities/activity_form.html'
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações nesta atividade?"
+    confirmation_entity = "atividade"
     
     def form_valid(self, form):
         messages.success(

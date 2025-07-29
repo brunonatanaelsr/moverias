@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Confirmação Necessária{% endblock %}
+
+{% block extra_css %}
+<style>
+.confirmation-container {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirmation-card {
+    max-width: 600px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 12px;
+}
+
+.confirmation-header {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+    border-radius: 12px 12px 0 0;
+    padding: 1.5rem;
+}
+
+.confirmation-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+}
+
+.confirmation-body {
+    padding: 2rem;
+}
+
+.warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.confirmation-footer {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    gap: 1rem;
+    justify-content: end;
+}
+
+.btn-confirm {
+    min-width: 120px;
+}
+
+.checkbox-confirm {
+    background: #ffe8e8;
+    border: 1px solid #ffb3b3;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.confirmation-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid #007bff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="card confirmation-card">
+        <div class="confirmation-header text-center text-white">
+            <div class="confirmation-icon">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </div>
+            <h4 class="mb-0">Confirmação Necessária</h4>
+        </div>
+        
+        <div class="confirmation-body">
+            <div class="text-center mb-4">
+                <h5 class="text-primary">{{ message }}</h5>
+            </div>
+            
+            {% if warning %}
+            <div class="warning-box">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle text-warning me-2 mt-1"></i>
+                    <div>
+                        <strong>Atenção:</strong>
+                        <p class="mb-0 mt-1">{{ warning }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if entity_name %}
+            <div class="confirmation-details">
+                <strong>Item:</strong> {{ entity_name }}
+            </div>
+            {% endif %}
+            
+            {% if form_data %}
+            <div class="confirmation-details">
+                <strong>Dados que serão processados:</strong>
+                <ul class="list-unstyled mt-2 mb-0">
+                    {% for key, value in form_data.items %}
+                        {% if key != 'csrfmiddlewaretoken' and key != 'confirmed' %}
+                        <li><strong>{{ key|capfirst }}:</strong> {{ value }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if warning %}
+            <div class="checkbox-confirm">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="confirmCheck" required>
+                    <label class="form-check-label fw-bold text-danger" for="confirmCheck">
+                        Confirmo que entendo as consequências desta ação
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="confirmation-footer">
+            <a href="{{ cancel_url }}" class="btn btn-secondary">
+                <i class="fas fa-times me-1"></i> Cancelar
+            </a>
+            
+            <form method="post" action="{{ confirm_url }}" class="d-inline" id="confirmForm">
+                {% csrf_token %}
+                {% if form_data %}
+                    {% for key, value in form_data.items %}
+                        {% if key != 'csrfmiddlewaretoken' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                <input type="hidden" name="confirmed" value="true">
+                <button type="submit" class="btn btn-danger btn-confirm" id="confirmButton"
+                        {% if warning %}disabled{% endif %}>
+                    <i class="fas fa-check me-1"></i> Confirmar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkbox = document.getElementById('confirmCheck');
+    const confirmButton = document.getElementById('confirmButton');
+    
+    if (checkbox && confirmButton) {
+        checkbox.addEventListener('change', function() {
+            confirmButton.disabled = !this.checked;
+        });
+    }
+    
+    // Auto-focus no checkbox se existir
+    if (checkbox) {
+        checkbox.focus();
+    } else if (confirmButton && !confirmButton.disabled) {
+        confirmButton.focus();
+    }
+});
+</script>
+{% endblock %}

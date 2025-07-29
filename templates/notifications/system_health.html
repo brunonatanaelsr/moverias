@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Relatório de Saúde do Sistema</title>
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .stat-item { background: #f8f9fa; padding: 15px; border-radius: 5px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>📊 Relatório Diário do Sistema</h2>
+            <p>{{ date|date:"d/m/Y" }}</p>
+        </div>
+        
+        <div class="content">
+            <h3>Estatísticas Gerais</h3>
+            
+            <div class="stat-grid">
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.beneficiaries_count }}</div>
+                    <div>Total de Beneficiárias</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.active_beneficiaries }}</div>
+                    <div>Beneficiárias Ativas</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.active_projects }}</div>
+                    <div>Projetos Ativos</div>
+                </div>
+                
+                <div class="stat-item">
+                    <div class="stat-number">{{ stats.upcoming_workshops }}</div>
+                    <div>Workshops esta Semana</div>
+                </div>
+            </div>
+            
+            <h3>Saúde Técnica</h3>
+            <ul>
+                <li><strong>Tabelas no banco:</strong> {{ stats.database_tables }}</li>
+                <li><strong>Erros recentes:</strong> {{ stats.recent_errors }}</li>
+            </ul>
+            
+            {% if stats.recent_errors > 10 %}
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                <strong>⚠️ Atenção:</strong> Alto número de erros detectados. Verificar logs do sistema.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

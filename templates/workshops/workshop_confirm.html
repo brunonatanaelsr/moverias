@@ -1,0 +1,102 @@
+{% extends 'layouts/base.html' %}
+{% load static %}
+
+{% block title %}Confirmação - Oficina{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning text-dark">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <h5 class="mb-0">Confirmação Necessária</h5>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-warning d-flex align-items-start mb-4">
+                        <i class="fas fa-info-circle mt-1 me-3"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">Atenção!</h6>
+                            <p class="mb-0">{{ confirmation_message|default:"Confirma esta operação?" }}</p>
+                        </div>
+                    </div>
+
+                    {% if object %}
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Detalhes da Oficina:</h6>
+                        <div class="bg-light rounded p-3">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>Nome:</strong></div>
+                                <div class="col-sm-8">{{ object.name|default:"Não informado" }}</div>
+                            </div>
+                            {% if object.category %}
+                            <div class="row mt-2">
+                                <div class="col-sm-4"><strong>Categoria:</strong></div>
+                                <div class="col-sm-8">{{ object.get_category_display }}</div>
+                            </div>
+                            {% endif %}
+                            {% if object.max_participants %}
+                            <div class="row mt-2">
+                                <div class="col-sm-4"><strong>Vagas:</strong></div>
+                                <div class="col-sm-8">{{ object.max_participants }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if dangerous_operation %}
+                    <div class="alert alert-danger">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="dangerConfirm" name="danger_confirm" required>
+                            <label class="form-check-label text-danger fw-bold" for="dangerConfirm">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Tenho certeza desta operação irreversível
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{{ cancel_url|default:request.META.HTTP_REFERER|default:'/' }}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            {% for key, value in request.POST.items %}
+                                {% if key != 'csrfmiddlewaretoken' %}
+                                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                                {% endif %}
+                            {% endfor %}
+                            <input type="hidden" name="confirmed" value="true">
+                            
+                            <button type="submit" class="btn btn-warning text-dark fw-bold"
+                                    {% if dangerous_operation %}disabled data-requires-danger-confirm="true"{% endif %}>
+                                <i class="fas fa-check me-2"></i>Confirmar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dangerConfirm = document.getElementById('dangerConfirm');
+    const submitBtn = document.querySelector('button[data-requires-danger-confirm]');
+    
+    if (dangerConfirm && submitBtn) {
+        dangerConfirm.addEventListener('change', function() {
+            submitBtn.disabled = !this.checked;
+        });
+    }
+});
+</script>
+{% endblock %}

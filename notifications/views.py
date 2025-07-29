@@ -4,6 +4,7 @@ Views para o sistema de notificações
 import json
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
@@ -151,8 +152,12 @@ class NotificationDetailView(LoginRequiredMixin, DetailView):
         return obj
 
 
-class NotificationCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
-    """Criar nova notificação (para admins)"""
+class NotificationCreateView(CreateConfirmationMixin, LoginRequiredMixin, AdminRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo notificação?"
+    confirmation_entity = "notificação""""Criar nova notificação (para admins)"""
     model = Notification
     form_class = NotificationForm
     template_name = 'notifications/notification_form_unified.html'
@@ -174,8 +179,12 @@ class NotificationCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView)
         return super().form_valid(form)
 
 
-class NotificationUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
-    """Editar notificação (para admins)"""
+class NotificationUpdateView(EditConfirmationMixin, LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste notificação?"
+    confirmation_entity = "notificação""""Editar notificação (para admins)"""
     model = Notification
     form_class = NotificationForm
     template_name = 'notifications/notification_form_unified.html'
@@ -320,7 +329,7 @@ class NotificationTemplateListView(LoginRequiredMixin, ListView):
         return NotificationTemplate.objects.filter(is_active=True)
 
 
-class NotificationTemplateCreateView(LoginRequiredMixin, CreateView):
+class NotificationTemplateCreateView(CreateConfirmationMixin, LoginRequiredMixin, CreateView):
     """Criar template de notificação"""
     model = NotificationTemplate
     form_class = NotificationTemplateForm
@@ -332,7 +341,7 @@ class NotificationTemplateCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class NotificationTemplateUpdateView(LoginRequiredMixin, UpdateView):
+class NotificationTemplateUpdateView(EditConfirmationMixin, LoginRequiredMixin, UpdateView):
     """Editar template de notificação"""
     model = NotificationTemplate
     form_class = NotificationTemplateForm
@@ -573,8 +582,13 @@ def create_test_notifications(request):
     })
 
 
-class NotificationDeleteView(LoginRequiredMixin, DeleteView):
-    """Excluir notificação"""
+class NotificationDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este notificação?"
+    confirmation_entity = "notificação"
+    dangerous_operation = True"""Excluir notificação"""
     model = Notification
     success_url = reverse_lazy('notifications:list')
     

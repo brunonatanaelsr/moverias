@@ -11,9 +11,14 @@ from members.models import Beneficiary
 from datetime import date, datetime, timedelta
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Count, Avg
+from core.optimized_managers import ProjectManager
 
 
 class Project(models.Model):
+
+    objects = models.Manager()  # Manager padrão
+    optimized_objects = ProjectManager()
+
     STATUS_CHOICES = [
         ('ATIVO', 'Ativo'),
         ('PAUSADO', 'Pausado'),

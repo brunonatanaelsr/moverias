@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from core.unified_permissions import (
@@ -386,8 +387,12 @@ class CertificateTemplateListView(LoginRequiredMixin, AdminRequiredMixin, ListVi
         return CertificateTemplate.objects.filter(is_active=True)
 
 
-class CertificateTemplateCreateView(LoginRequiredMixin, AdminRequiredMixin, CreateView):
-    model = CertificateTemplate
+class CertificateTemplateCreateView(CreateConfirmationMixin, LoginRequiredMixin, AdminRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo certificado?"
+    confirmation_entity = "certificado"model = CertificateTemplate
     form_class = CertificateTemplateForm
     template_name = 'certificates/template_form.html'
     success_url = reverse_lazy('certificates:template_list')
@@ -400,8 +405,12 @@ class CertificateTemplateCreateView(LoginRequiredMixin, AdminRequiredMixin, Crea
         return super().form_valid(form)
 
 
-class CertificateTemplateUpdateView(LoginRequiredMixin, AdminRequiredMixin, UpdateView):
-    model = CertificateTemplate
+class CertificateTemplateUpdateView(EditConfirmationMixin, LoginRequiredMixin, AdminRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste certificado?"
+    confirmation_entity = "certificado"model = CertificateTemplate
     form_class = CertificateTemplateForm
     template_name = 'certificates/template_form.html'
     success_url = reverse_lazy('certificates:template_list')

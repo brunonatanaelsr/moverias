@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -40,8 +41,12 @@ class ActionPlanDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return is_technician(self.request.user)
 
 
-class ActionPlanCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    """Criar novo plano de ação"""
+class ActionPlanCreateView(CreateConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo coaching?"
+    confirmation_entity = "coaching""""Criar novo plano de ação"""
     
     model = ActionPlan
     template_name = 'coaching/action_plan_form.html'
@@ -69,8 +74,12 @@ class ActionPlanCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return response
 
 
-class ActionPlanUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    """Editar plano de ação"""
+class ActionPlanUpdateView(EditConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste coaching?"
+    confirmation_entity = "coaching""""Editar plano de ação"""
     
     model = ActionPlan
     template_name = 'coaching/action_plan_form.html'
@@ -86,8 +95,13 @@ class ActionPlanUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return response
 
 
-class ActionPlanDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    """Excluir plano de ação"""
+class ActionPlanDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este coaching?"
+    confirmation_entity = "coaching"
+    dangerous_operation = True"""Excluir plano de ação"""
     
     model = ActionPlan
     template_name = 'coaching/action_plan_confirm_delete.html'
@@ -148,7 +162,7 @@ class WheelOfLifeDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView)
         return is_technician(self.request.user)
 
 
-class WheelOfLifeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class WheelOfLifeCreateView(CreateConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     """Criar nova roda da vida"""
     
     model = WheelOfLife
@@ -181,7 +195,7 @@ class WheelOfLifeCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView)
         return response
 
 
-class WheelOfLifeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class WheelOfLifeUpdateView(EditConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """Editar roda da vida"""
     
     model = WheelOfLife
@@ -202,7 +216,7 @@ class WheelOfLifeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         return response
 
 
-class WheelOfLifeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class WheelOfLifeDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Excluir roda da vida"""
     
     model = WheelOfLife

@@ -1,9 +1,14 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from members.models import Beneficiary
+from core.optimized_managers import WorkshopManager
 
 
 class Workshop(models.Model):
+
+    objects = models.Manager()  # Manager padrão
+    optimized_objects = WorkshopManager()
+
     WORKSHOP_TYPES = [
         ('artesanato', 'Artesanato'),
         ('culinaria', 'Culinária'),

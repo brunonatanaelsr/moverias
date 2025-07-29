@@ -125,17 +125,17 @@ class BeneficiaryActivityForm(ModelForm):
         super().__init__(*args, **kwargs)
         
         # Filtrar beneficiárias ativas
-        self.fields['beneficiary'].queryset = Beneficiary.objects.filter(
+        self.fields['beneficiary'].queryset = Beneficiary.optimized_objects.filter(
             status='ATIVA'
         ).order_by('full_name')
         
         # Filtrar anamneses sociais se beneficiária já foi selecionada
         if self.instance and self.instance.beneficiary:
-            self.fields['social_anamnesis'].queryset = SocialAnamnesis.objects.filter(
+            self.fields['social_anamnesis'].queryset = SocialAnamnesis.optimized_objects.filter(
                 beneficiary=self.instance.beneficiary
             ).order_by('-created_at')
         else:
-            self.fields['social_anamnesis'].queryset = SocialAnamnesis.objects.none()
+            self.fields['social_anamnesis'].queryset = SocialAnamnesis.optimized_objects.none()
     
     def clean(self):
         cleaned_data = super().clean()
@@ -424,7 +424,7 @@ class ActivityFilterForm(forms.Form):
     """
     
     beneficiary = forms.ModelChoiceField(
-        queryset=Beneficiary.objects.filter(status='ATIVA').order_by('full_name'),
+        queryset=Beneficiary.optimized_objects.filter(status='ATIVA').order_by('full_name'),
         empty_label="Todas as beneficiárias",
         required=False,
         widget=Select(attrs={'class': 'form-select'})

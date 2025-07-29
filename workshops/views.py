@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from core.unified_permissions import (
     is_technician, TechnicianRequiredMixin, requires_technician
 )
+from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
 from .models import Workshop, WorkshopSession, WorkshopEnrollment, SessionAttendance, WorkshopEvaluation
 from .forms import (
     WorkshopForm, WorkshopSessionForm, WorkshopEnrollmentForm, 
@@ -116,11 +117,19 @@ class WorkshopDetailView(LoginRequiredMixin, TechnicianRequiredMixin, DetailView
         return context
 
 
-class WorkshopCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
-    model = Workshop
+class WorkshopCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro deste novo oficina?"
+    confirmation_entity = "oficina"model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
     success_url = reverse_lazy('workshops:workshop-list')
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma o cadastro desta nova oficina?"
+    confirmation_entity = "oficina"
 
     def test_func(self):
         return is_technician(self.request.user)
@@ -130,11 +139,19 @@ class WorkshopCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView
         return super().form_valid(form)
 
 
-class WorkshopUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
-    model = Workshop
+class WorkshopUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações neste oficina?"
+    confirmation_entity = "oficina"model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
     success_url = reverse_lazy('workshops:workshop-list')
+    
+    # Configurações da confirmação
+    confirmation_message = "Confirma as alterações nesta oficina?"
+    confirmation_entity = "oficina"
 
     def test_func(self):
         return is_technician(self.request.user)
@@ -145,10 +162,20 @@ class WorkshopUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView
         return super().form_valid(form)
 
 
-class WorkshopDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
-    model = Workshop
+class WorkshopDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+    
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir este oficina?"
+    confirmation_entity = "oficina"
+    dangerous_operation = Truemodel = Workshop
     template_name = 'workshops/workshop_confirm_delete.html'
     success_url = reverse_lazy('workshops:workshop-list')
+    
+    # Configurações da confirmação
+    confirmation_message = "Tem certeza que deseja excluir esta oficina?"
+    confirmation_entity = "oficina"
+    dangerous_operation = True
 
     def test_func(self):
         return is_technician(self.request.user)
@@ -207,7 +234,7 @@ class WorkshopEnrollmentListView(LoginRequiredMixin, TechnicianRequiredMixin, Li
         return context
 
 
-class WorkshopEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+class WorkshopEnrollmentCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopEnrollment
     form_class = WorkshopEnrollmentForm
     template_name = 'workshops/enrollment_form.html'
@@ -259,7 +286,7 @@ class WorkshopEnrollmentCreateView(LoginRequiredMixin, TechnicianRequiredMixin, 
         return response
 
 
-class WorkshopEnrollmentUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
+class WorkshopEnrollmentUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     model = WorkshopEnrollment
     form_class = WorkshopEnrollmentForm
     template_name = 'workshops/enrollment_form.html'
@@ -274,7 +301,7 @@ class WorkshopEnrollmentUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, 
         return response
 
 
-class WorkshopEnrollmentDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+class WorkshopEnrollmentDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
     model = WorkshopEnrollment
     template_name = 'workshops/enrollment_confirm_delete.html'
     success_url = reverse_lazy('workshops:enrollment-list')
@@ -320,7 +347,7 @@ class WorkshopSessionListView(LoginRequiredMixin, TechnicianRequiredMixin, ListV
         return context
 
 
-class WorkshopSessionCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+class WorkshopSessionCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopSession
     form_class = WorkshopSessionForm
     template_name = 'workshops/session_form.html'
@@ -335,7 +362,7 @@ class WorkshopSessionCreateView(LoginRequiredMixin, TechnicianRequiredMixin, Cre
         return response
 
 
-class WorkshopSessionUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
+class WorkshopSessionUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, UpdateView):
     model = WorkshopSession
     form_class = WorkshopSessionForm
     template_name = 'workshops/session_form.html'
@@ -350,7 +377,7 @@ class WorkshopSessionUpdateView(LoginRequiredMixin, TechnicianRequiredMixin, Upd
         return response
 
 
-class WorkshopSessionDeleteView(LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
+class WorkshopSessionDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, DeleteView):
     model = WorkshopSession
     template_name = 'workshops/session_confirm_delete.html'
     success_url = reverse_lazy('workshops:session-list')
@@ -438,7 +465,7 @@ class WorkshopEvaluationListView(LoginRequiredMixin, TechnicianRequiredMixin, Li
         return context
 
 
-class WorkshopEvaluationCreateView(LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
+class WorkshopEvaluationCreateView(CreateConfirmationMixin, LoginRequiredMixin, TechnicianRequiredMixin, CreateView):
     model = WorkshopEvaluation
     form_class = WorkshopEvaluationForm
     template_name = 'workshops/evaluation_form.html'

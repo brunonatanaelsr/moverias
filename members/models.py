@@ -10,9 +10,14 @@ from django.db import models
 import hashlib
 import os
 from datetime import date
+from core.optimized_managers import BeneficiaryManager
 
 
 class Beneficiary(models.Model):
+
+    objects = models.Manager()  # Manager padrão - essencial!
+    optimized_objects = BeneficiaryManager()
+
     STATUS_CHOICES = [
         ('ATIVA', 'Ativa'),
         ('INATIVA', 'Inativa'),
