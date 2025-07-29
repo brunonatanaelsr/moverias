@@ -53,5 +53,6 @@ urlpatterns = [
     
     # APIs
     path('api/metrics/', views.metrics_api, name='metrics_api'),
+    path('api/dashboard-stats/', views.dashboard_stats_api, name='dashboard_stats_api'),
     path('api/search/', views.search_api, name='search_api'),
 ]

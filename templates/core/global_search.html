@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Busca Global{% if query %} - "{{ query }}"{% endif %} - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .search-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .search-box {
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        font-size: 1.2rem;
+    }
+    
+    .search-stats {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #6b7280;
+    }
+    
+    .results-section {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        font-weight: 600;
+        color: #374151;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .section-icon {
+        color: #ec4899;
+    }
+    
+    .result-item {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        transition: background-color 0.15s;
+    }
+    
+    .result-item:last-child {
+        border-bottom: none;
+    }
+    
+    .result-item:hover {
+        background-color: #f9fafb;
+    }
+    
+    .result-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .result-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+    
+    .result-title a:hover {
+        color: #ec4899;
+    }
+    
+    .result-description {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .result-meta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6b7280;
+    }
+    
+    .no-results-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+    
+    .no-results h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+    
+    .search-tips {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .search-tips h4 {
+        color: #92400e;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .search-tips ul {
+        color: #92400e;
+        font-size: 0.875rem;
+        margin-left: 1rem;
+    }
+    
+    .highlight {
+        background-color: #fef3c7;
+        font-weight: 600;
+        padding: 0.1rem 0.2rem;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Header da Busca -->
+    <div class="search-header">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            <i class="fas fa-search mr-3 text-pink-600"></i>
+            Busca Global
+        </h1>
+        
+        <!-- Caixa de Busca -->
+        <div class="search-box">
+            <form method="GET" action="{% url 'core:global-search' %}">
+                <div class="relative">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ query }}"
+                        placeholder="Busque por usuários, membros, projetos, workshops..."
+                        class="search-input"
+                        autofocus
+                    >
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if query %}
+        <!-- Estatísticas da Busca -->
+        <div class="search-stats">
+            <p>
+                {% if total_count > 0 %}
+                    Encontrados <strong>{{ total_count }}</strong> resultado{{ total_count|pluralize }} para "<strong>{{ query }}</strong>"
+                {% else %}
+                    Nenhum resultado encontrado para "<strong>{{ query }}</strong>"
+                {% endif %}
+            </p>
+        </div>
+
+        {% if total_count > 0 %}
+            <!-- Resultados: Usuários -->
+            {% if users %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-users section-icon"></i>
+                    Usuários ({{ users|length }})
+                </div>
+                {% for user in users %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{% url 'users:user-detail' user.pk %}">{{ user.full_name|default:user.username }}</a>
+                    </div>
+                    <div class="result-description">{{ user.email }}</div>
+                    {% if user.profile %}
+                    <div class="result-meta">
+                        <span>{{ user.profile.role|default:"Usuário" }}</span>
+                        <span>•</span>
+                        <span>Ativo desde {{ user.date_joined|date:"M Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Resultados: Membros/Beneficiários -->
+            {% if members %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-user-friends section-icon"></i>
+                    Beneficiários ({{ members|length }})
+                </div>
+                {% for member in members %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{% url 'members:detail' member.pk %}">{{ member.name }}</a>
+                    </div>
+                    <div class="result-description">
+                        {% if member.email %}{{ member.email }}{% endif %}
+                        {% if member.phone and member.email %} • {% endif %}
+                        {% if member.phone %}{{ member.phone }}{% endif %}
+                    </div>
+                    <div class="result-meta">
+                        {% if member.neighbourhood %}<span>{{ member.neighbourhood }}</span>{% endif %}
+                        {% if member.created_at %}<span>Cadastrado em {{ member.created_at|date:"d/m/Y" }}</span>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Resultados: Projetos -->
+            {% if projects %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-project-diagram section-icon"></i>
+                    Projetos ({{ projects|length }})
+                </div>
+                {% for project in projects %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{% url 'projects:project-detail' project.pk %}">{{ project.name }}</a>
+                    </div>
+                    <div class="result-description">{{ project.description|truncatewords:20 }}</div>
+                    <div class="result-meta">
+                        {% if project.start_date %}<span>Início: {{ project.start_date|date:"d/m/Y" }}</span>{% endif %}
+                        {% if project.status %}<span>Status: {{ project.get_status_display }}</span>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Resultados: Workshops -->
+            {% if workshops %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-chalkboard-teacher section-icon"></i>
+                    Workshops ({{ workshops|length }})
+                </div>
+                {% for workshop in workshops %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{% url 'workshops:workshop-detail' workshop.pk %}">{{ workshop.title }}</a>
+                    </div>
+                    <div class="result-description">{{ workshop.description|truncatewords:20 }}</div>
+                    <div class="result-meta">
+                        {% if workshop.date %}<span>{{ workshop.date|date:"d/m/Y" }}</span>{% endif %}
+                        {% if workshop.duration %}<span>{{ workshop.duration }}h</span>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Resultados: Certificados -->
+            {% if certificates %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-certificate section-icon"></i>
+                    Certificados ({{ certificates|length }})
+                </div>
+                {% for certificate in certificates %}
+                <div class="result-item">
+                    <div class="result-title">
+                        <a href="{% url 'certificates:detail' certificate.id %}">{{ certificate.title }}</a>
+                    </div>
+                    <div class="result-description">Código: {{ certificate.verification_code }}</div>
+                    <div class="result-meta">
+                        {% if certificate.issued_date %}<span>Emitido em {{ certificate.issued_date|date:"d/m/Y" }}</span>{% endif %}
+                        {% if certificate.recipient %}<span>Para: {{ certificate.recipient.name }}</span>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Resultados: Notificações -->
+            {% if notifications %}
+            <div class="results-section">
+                <div class="section-header">
+                    <i class="fas fa-bell section-icon"></i>
+                    Notificações ({{ notifications|length }})
+                </div>
+                {% for notification in notifications %}
+                <div class="result-item">
+                    <div class="result-title">{{ notification.title }}</div>
+                    <div class="result-description">{{ notification.message|truncatewords:15 }}</div>
+                    <div class="result-meta">
+                        {% if notification.created_at %}<span>{{ notification.created_at|date:"d/m/Y H:i" }}</span>{% endif %}
+                        {% if notification.type %}<span>{{ notification.get_type_display }}</span>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Nenhum Resultado -->
+            <div class="no-results">
+                <i class="fas fa-search no-results-icon"></i>
+                <h3>Nenhum resultado encontrado</h3>
+                <p>Não encontramos nada relacionado a "{{ query }}"</p>
+                
+                <div class="search-tips">
+                    <h4><i class="fas fa-lightbulb mr-2"></i>Dicas de busca:</h4>
+                    <ul>
+                        <li>Verifique se não há erros de digitação</li>
+                        <li>Use termos mais genéricos</li>
+                        <li>Tente buscar por parte do nome ou código</li>
+                        <li>Use pelo menos 2 caracteres</li>
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+    {% else %}
+        <!-- Tela Inicial da Busca -->
+        <div class="no-results">
+            <i class="fas fa-search no-results-icon"></i>
+            <h3>Busca Global do Sistema</h3>
+            <p>Digite pelo menos 2 caracteres para iniciar a busca</p>
+            
+            <div class="search-tips">
+                <h4><i class="fas fa-info-circle mr-2"></i>O que você pode buscar:</h4>
+                <ul>
+                    <li><strong>Usuários:</strong> nome, email, username</li>
+                    <li><strong>Beneficiários:</strong> nome, email, telefone, CPF</li>
+                    <li><strong>Projetos:</strong> nome, descrição</li>
+                    <li><strong>Workshops:</strong> título, descrição</li>
+                    <li><strong>Certificados:</strong> título, código de verificação</li>
+                    <li><strong>Notificações:</strong> título, mensagem</li>
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Destacar termos de busca nos resultados
+    const query = '{{ query|escapejs }}';
+    if (query) {
+        const resultItems = document.querySelectorAll('.result-item');
+        resultItems.forEach(item => {
+            const title = item.querySelector('.result-title a');
+            const description = item.querySelector('.result-description');
+            
+            if (title) {
+                title.innerHTML = highlightText(title.innerHTML, query);
+            }
+            if (description) {
+                description.innerHTML = highlightText(description.innerHTML, query);
+            }
+        });
+    }
+    
+    function highlightText(text, query) {
+        if (!query || query.length < 2) return text;
+        
+        const regex = new RegExp(`(${query})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
+    }
+    
+    // Auto-focus no campo de busca
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput && !query) {
+        searchInput.focus();
+    }
+});
+</script>
+{% endblock %}

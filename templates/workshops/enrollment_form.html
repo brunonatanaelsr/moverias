@@ -1,0 +1,217 @@
+{% extends "layouts/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if form.instance.pk %}Editar Inscrição{% else %}Nova Inscrição em Workshop{% endif %} - Move Marias{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="md:grid md:grid-cols-3 md:gap-6">
+        <div class="md:col-span-1">
+            <div class="px-4 sm:px-0">
+                <h3 class="text-lg font-medium leading-6 text-gray-900">
+                    {% if form.instance.pk %}
+                        Editar Inscrição
+                    {% else %}
+                        Nova Inscrição em Workshop
+                    {% endif %}
+                </h3>
+                
+                {% if workshop %}
+                    <div class="mt-4 p-4 bg-pink-50 border border-pink-200 rounded-md">
+                        <h4 class="text-sm font-medium text-pink-800">Workshop Selecionado:</h4>
+                        <p class="text-sm text-pink-700 mt-1">{{ workshop.title }}</p>
+                        <p class="text-xs text-pink-600 mt-1">{{ workshop.category }} • {{ workshop.start_date|date:"d/m/Y" }}</p>
+                    </div>
+                {% endif %}
+                
+                <p class="mt-4 text-sm text-gray-600">
+                    {% if form.instance.pk %}
+                        Atualize as informações da inscrição no workshop.
+                    {% else %}
+                        Preencha as informações para inscrever uma beneficiária no workshop.
+                    {% endif %}
+                </p>
+                
+                {% if beneficiaries %}
+                    <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            {{ beneficiaries.count }} beneficiária{{ beneficiaries.count|pluralize }} disponível{{ beneficiaries.count|pluralize }} para inscrição
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mt-5 md:mt-0 md:col-span-2">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="shadow sm:rounded-md sm:overflow-hidden">
+                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
+                        {% if form.errors %}
+                            <div class="bg-red-50 border border-red-200 rounded-md p-4">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle text-red-400"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h3 class="text-sm font-medium text-red-800">
+                                            Erro{{ form.errors|length|pluralize }} encontrado{{ form.errors|length|pluralize }}:
+                                        </h3>
+                                        <div class="mt-2 text-sm text-red-700">
+                                            {% for field, errors in form.errors.items %}
+                                                <ul class="list-disc pl-5 space-y-1">
+                                                    {% for error in errors %}
+                                                        <li>
+                                                            {% if field == '__all__' %}
+                                                                {{ error }}
+                                                            {% else %}
+                                                                {{ form.fields|default:field.label|capfirst }}: {{ error }}
+                                                            {% endif %}
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="grid grid-cols-1 gap-6">
+                            <!-- Campo Workshop -->
+                            <div class="col-span-1">
+                                <label for="{{ form.workshop.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Workshop *
+                                </label>
+                                {{ form.workshop }}
+                                {% if form.workshop.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.workshop.help_text }}</p>
+                                {% endif %}
+                                {% if form.workshop.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.workshop.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Campo Beneficiária -->
+                            <div class="col-span-1">
+                                <label for="{{ form.beneficiary.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Beneficiária *
+                                </label>
+                                {{ form.beneficiary }}
+                                {% if form.beneficiary.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.beneficiary.help_text }}</p>
+                                {% endif %}
+                                {% if form.beneficiary.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.beneficiary.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Campo Data de Inscrição -->
+                            <div class="col-span-1">
+                                <label for="{{ form.enrollment_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Data de Inscrição *
+                                </label>
+                                {{ form.enrollment_date }}
+                                {% if form.enrollment_date.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.enrollment_date.help_text }}</p>
+                                {% endif %}
+                                {% if form.enrollment_date.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.enrollment_date.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Campo Status -->
+                            <div class="col-span-1">
+                                <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Status da Inscrição *
+                                </label>
+                                {{ form.status }}
+                                {% if form.status.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.status.help_text }}</p>
+                                {% endif %}
+                                {% if form.status.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.status.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Campo Observações -->
+                            <div class="col-span-1">
+                                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Observações
+                                </label>
+                                {{ form.notes }}
+                                {% if form.notes.help_text %}
+                                    <p class="mt-1 text-xs text-gray-500">{{ form.notes.help_text }}</p>
+                                {% endif %}
+                                {% if form.notes.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Informações de Ajuda -->
+                        <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-md">
+                            <h4 class="text-sm font-medium text-gray-800 mb-2">
+                                <i class="fas fa-info-circle text-gray-500 mr-1"></i>
+                                Informações Importantes
+                            </h4>
+                            <ul class="text-xs text-gray-600 space-y-1">
+                                <li>• Campos marcados com * são obrigatórios</li>
+                                <li>• A data de inscrição não pode ser anterior à data de início do workshop</li>
+                                <li>• Beneficiárias só podem se inscrever em workshops se estiverem com status "Ativa"</li>
+                                <li>• Cada beneficiária pode ter apenas uma inscrição ativa por workshop</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="px-4 py-3 bg-gray-50 text-right sm:px-6">
+                        <a href="{% url 'workshops:enrollment-list' %}" 
+                           class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 mr-3">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit"
+                                class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                            <i class="fas fa-save mr-2"></i>
+                            {% if form.instance.pk %}
+                                Atualizar Inscrição
+                            {% else %}
+                                Criar Inscrição
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts para melhorar a experiência do usuário -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus no primeiro campo obrigatório se não estiver preenchido
+    const workshopField = document.getElementById('{{ form.workshop.id_for_label }}');
+    const beneficiaryField = document.getElementById('{{ form.beneficiary.id_for_label }}');
+    
+    if (workshopField && !workshopField.value) {
+        workshopField.focus();
+    } else if (beneficiaryField && !beneficiaryField.value) {
+        beneficiaryField.focus();
+    }
+    
+    // Atualizar informações quando o workshop é selecionado
+    if (workshopField) {
+        workshopField.addEventListener('change', function() {
+            if (this.value) {
+                // Recarregar a página com o workshop selecionado para filtrar beneficiárias
+                const url = new URL(window.location);
+                url.searchParams.set('workshop', this.value);
+                window.location.href = url.toString();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

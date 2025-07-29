@@ -691,13 +691,20 @@
 <script>
 // Atualizar estatísticas em tempo real
 function updateStats() {
-    fetch('{% url "communication:get_dashboard_stats" %}')
+    fetch('{% url "communication:dashboard_stats_api" %}')
     .then(response => response.json())
     .then(data => {
-        document.getElementById('announcementsCount').textContent = data.announcements;
-        document.getElementById('memosCount').textContent = data.memos;
-        document.getElementById('pendingCount').textContent = data.pending;
-        document.getElementById('engagementRate').textContent = data.engagement + '%';
+        // Atualizar baseado na estrutura da API simplificada
+        if (data.announcements) {
+            document.getElementById('announcementsCount').textContent = data.announcements.published || 0;
+        }
+        if (data.messages) {
+            document.getElementById('memosCount').textContent = data.messages.active || 0;
+        }
+        document.getElementById('pendingCount').textContent = '0'; // Placeholder
+        if (data.engagement) {
+            document.getElementById('engagementRate').textContent = data.engagement.read_rate + '%';
+        }
     })
     .catch(error => console.error('Erro ao atualizar estatísticas:', error));
 }

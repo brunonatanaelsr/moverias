@@ -437,3 +437,26 @@ def communication_settings(request):
         'user': request.user,
     }
     return render(request, 'communication/settings.html', context)
+
+@login_required
+@require_http_methods(["GET"])
+def dashboard_stats_api(request):
+    """API simplificada de estatísticas para o dashboard"""
+    
+    # Estatísticas básicas acessíveis a todos os usuários logados
+    stats = {
+        'announcements': {
+            'published': Announcement.objects.filter(
+                is_active=True,
+                publish_date__lte=timezone.now()
+            ).count(),
+        },
+        'messages': {
+            'active': CommunicationMessage.objects.filter(status='published').count(),
+        },
+        'engagement': {
+            'read_rate': 85.5,  # Placeholder
+        }
+    }
+    
+    return JsonResponse(stats)
