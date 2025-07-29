@@ -428,3 +428,12 @@ def mark_message_read(request, message_id):
 def acknowledge_policy(request, policy_id):
     """Confirmar leitura de política - placeholder"""
     return JsonResponse({'success': True, 'created': False})
+
+@login_required
+def communication_settings(request):
+    """Configurações do módulo de comunicação"""
+    context = {
+        'title': 'Configurações - Comunicação',
+        'user': request.user,
+    }
+    return render(request, 'communication/settings.html', context)

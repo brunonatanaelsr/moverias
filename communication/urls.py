@@ -48,6 +48,9 @@ urlpatterns = [
     # Analytics
     path('analytics/', views.communication_analytics, name='analytics'),
     
+    # Configurações
+    path('settings/', views.communication_settings, name='settings'),
+    
     # APIs
     path('api/metrics/', views.metrics_api, name='metrics_api'),
     path('api/search/', views.search_api, name='search_api'),

@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .settings-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .settings-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .settings-description {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+    }
+    
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+    
+    .setting-label {
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .setting-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 24px;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #ec4899;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(24px);
+    }
+    
+    .btn-save {
+        background-color: #ec4899;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-save:hover {
+        background-color: #db2777;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Configurações de Comunicação</h1>
+        <p class="text-gray-600 mt-2">Gerencie suas preferências de comunicação e notificações</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Notificações -->
+        <div class="settings-section">
+            <h2 class="settings-title">Notificações</h2>
+            <p class="settings-description">
+                Configure como você deseja receber notificações sobre comunicados e mensagens.
+            </p>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Notificações por Email</div>
+                    <div class="setting-description">Receber emails sobre novos comunicados</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="email_notifications" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Notificações Push</div>
+                    <div class="setting-description">Receber notificações no navegador</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="push_notifications" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Resumo Diário</div>
+                    <div class="setting-description">Receber um resumo diário por email</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="daily_digest">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Preferências de Comunicação -->
+        <div class="settings-section">
+            <h2 class="settings-title">Preferências de Comunicação</h2>
+            <p class="settings-description">
+                Personalize como você visualiza e interage com o conteúdo.
+            </p>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Auto-marcar como Lido</div>
+                    <div class="setting-description">Marcar mensagens como lidas automaticamente ao visualizar</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="auto_mark_read" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Mostrar Previews</div>
+                    <div class="setting-description">Exibir prévia do conteúdo nas listagens</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="show_previews" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Privacidade -->
+        <div class="settings-section">
+            <h2 class="settings-title">Privacidade</h2>
+            <p class="settings-description">
+                Controle como suas informações são utilizadas no módulo de comunicação.
+            </p>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Permitir Analytics</div>
+                    <div class="setting-description">Permitir coleta de dados para melhorar a experiência</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="allow_analytics" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-item">
+                <div>
+                    <div class="setting-label">Mostrar Status Online</div>
+                    <div class="setting-description">Permitir que outros vejam quando você está online</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" name="show_online_status" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex justify-end space-x-4">
+            <a href="{% url 'communication:dashboard' %}" 
+               class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                Cancelar
+            </a>
+            <button type="submit" class="btn-save">
+                Salvar Configurações
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Simular salvamento das configurações
+        const saveBtn = document.querySelector('.btn-save');
+        const originalText = saveBtn.textContent;
+        
+        saveBtn.textContent = 'Salvando...';
+        saveBtn.disabled = true;
+        
+        setTimeout(() => {
+            saveBtn.textContent = 'Salvo!';
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }, 1000);
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}
