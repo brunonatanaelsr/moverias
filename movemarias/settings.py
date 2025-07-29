@@ -187,6 +187,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.global_context',
                 'core.context_processors.permissions_context_processor',  # Sistema de permissões unificado
+                'core.context_processors_enhanced.enhanced_sidebar_context',  # Context processor melhorado para sidebar
                 'notifications.realtime.notification_context_processor',  # Notification context
             ],
         },

@@ -344,7 +344,7 @@ class CustomJobManager:
                     'new_this_month': Beneficiary.objects.filter(
                         created_at__gte=month_ago
                     ).count(),
-                    'active': Beneficiary.objects.filter(is_active=True).count(),
+                    'active': Beneficiary.objects.filter(status='ATIVA').count(),
                 },
                 'workshops': {
                     'total': Workshop.objects.count(),

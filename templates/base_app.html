@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-full">
+    <main>
+        <div class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+            {% block app_content %}
+            <div class="px-4 py-6 sm:px-0">
+                <p class="text-gray-500">Conteúdo da aplicação aqui</p>
+            </div>
+            {% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}

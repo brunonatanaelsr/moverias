@@ -368,3 +368,10 @@ def global_search(request):
     
     # Retornar template para navegação normal
     return render(request, 'core/global_search.html', results)
+
+
+# Importar função de diagnóstico
+def template_diagnostics(request):
+    """Importar e executar diagnóstico de templates"""
+    from .views.diagnostics import template_diagnostics as diagnostics_view
+    return diagnostics_view(request)

@@ -12,6 +12,9 @@ urlpatterns = [
     path('settings/', views.settings_view, name='settings'),
     path('audit-logs/', views.audit_logs, name='audit-logs'),
     
+    # Diagnóstico do sistema
+    path('diagnostics/', views.template_diagnostics, name='diagnostics'),
+    
     # Test URLs (temporary)
     path('test-csrf/', test_views.test_csrf, name='test-csrf'),
     

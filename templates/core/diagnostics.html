@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Diagnóstico do Sistema - Move Marias{% endblock %}
+
+{% block extra_css %}
+<style>
+    .diagnostic-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .diagnostic-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+    
+    .diagnostic-content {
+        padding: 20px;
+    }
+    
+    .status-good { color: #10b981; }
+    .status-warning { color: #f59e0b; }
+    .status-critical { color: #ef4444; }
+    
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .metric-item {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid #3b82f6;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #1e293b;
+    }
+    
+    .metric-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .issue-item {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .recommendation-item {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 8px;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    .error-text {
+        color: #dc2626;
+        background: #fef2f2;
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid #dc2626;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Diagnóstico Completo do Sistema</h1>
+        <p class="text-gray-600">Análise detalhada da saúde e configuração do sistema Move Marias</p>
+    </div>
+
+    {% if diagnostics.error %}
+        <div class="error-text">
+            <h3 class="font-bold mb-2">❌ Erro durante o diagnóstico:</h3>
+            <p>{{ diagnostics.error }}</p>
+            {% if diagnostics.traceback %}
+                <details class="mt-3">
+                    <summary class="cursor-pointer font-semibold">Ver detalhes técnicos</summary>
+                    <pre class="mt-2 text-xs overflow-x-auto">{{ diagnostics.traceback }}</pre>
+                </details>
+            {% endif %}
+        </div>
+    {% else %}
+        <!-- Resumo Executivo -->
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                📊 Resumo Executivo
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value 
+                            {% if diagnostics.summary.system_health == 'Bom' %}status-good
+                            {% elif diagnostics.summary.system_health == 'Atenção' %}status-warning
+                            {% else %}status-critical{% endif %}">
+                            {{ diagnostics.summary.system_health }}
+                        </div>
+                        <div class="metric-label">Saúde do Sistema</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.summary.total_issues }}</div>
+                        <div class="metric-label">Problemas Identificados</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.template_analysis.total_templates }}</div>
+                        <div class="metric-label">Templates Encontrados</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.url_analysis.total_patterns }}</div>
+                        <div class="metric-label">Padrões de URL</div>
+                    </div>
+                </div>
+
+                {% if diagnostics.summary.issues %}
+                    <h4 class="font-bold text-red-600 mb-3">🚨 Problemas Identificados:</h4>
+                    {% for issue in diagnostics.summary.issues %}
+                        <div class="issue-item">{{ issue }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if diagnostics.summary.recommendations %}
+                    <h4 class="font-bold text-green-600 mb-3 mt-6">💡 Recomendações:</h4>
+                    {% for rec in diagnostics.summary.recommendations %}
+                        <div class="recommendation-item">{{ rec }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Análise de Templates -->
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                📄 Análise de Templates
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.template_analysis.total_templates }}</div>
+                        <div class="metric-label">Templates Totais</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value status-critical">{{ diagnostics.template_analysis.templates_with_errors }}</div>
+                        <div class="metric-label">Com Erros</div>
+                    </div>
+                </div>
+
+                {% if diagnostics.template_analysis.error_list %}
+                    <h4 class="font-bold text-red-600 mb-3">Templates com Problemas:</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Template</th>
+                                    <th>App</th>
+                                    <th>Erro</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for error in diagnostics.template_analysis.error_list %}
+                                <tr>
+                                    <td><code>{{ error.path }}</code></td>
+                                    <td>{{ error.app }}</td>
+                                    <td class="text-red-600 text-sm">{{ error.error }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+
+                {% if diagnostics.template_analysis.inheritance_tree %}
+                    <h4 class="font-bold mt-6 mb-3">Hierarquia de Templates:</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        {% for child, parent in diagnostics.template_analysis.inheritance_tree.items %}
+                            <div class="mb-2">
+                                <code class="text-blue-600">{{ child }}</code> 
+                                <span class="text-gray-500">extends</span> 
+                                <code class="text-green-600">{{ parent }}</code>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Análise de URLs -->
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                🔗 Análise de URLs
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.url_analysis.total_patterns }}</div>
+                        <div class="metric-label">Padrões de URL</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.url_analysis.namespaces|length }}</div>
+                        <div class="metric-label">Namespaces</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value status-warning">{{ diagnostics.url_analysis.namespace_conflicts|length }}</div>
+                        <div class="metric-label">Conflitos</div>
+                    </div>
+                </div>
+
+                {% if diagnostics.url_analysis.namespace_conflicts %}
+                    <h4 class="font-bold text-orange-600 mb-3">Conflitos de Namespace:</h4>
+                    {% for conflict in diagnostics.url_analysis.namespace_conflicts %}
+                        <div class="issue-item">{{ conflict }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if diagnostics.url_analysis.namespaces %}
+                    <h4 class="font-bold mt-6 mb-3">Namespaces Configurados:</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {% for namespace in diagnostics.url_analysis.namespaces %}
+                            <code class="bg-blue-50 text-blue-800 px-3 py-1 rounded text-sm">{{ namespace }}</code>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Análise de Permissões -->
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                🔐 Análise de Permissões
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-grid">
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.permission_analysis.total_users }}</div>
+                        <div class="metric-label">Usuários Totais</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value status-good">{{ diagnostics.permission_analysis.active_users }}</div>
+                        <div class="metric-label">Usuários Ativos</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.permission_analysis.staff_users }}</div>
+                        <div class="metric-label">Staff</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.permission_analysis.superusers }}</div>
+                        <div class="metric-label">Superusuários</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">{{ diagnostics.permission_analysis.total_groups }}</div>
+                        <div class="metric-label">Grupos</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value status-warning">{{ diagnostics.permission_analysis.users_without_groups }}</div>
+                        <div class="metric-label">Usuários sem Grupo</div>
+                    </div>
+                </div>
+
+                {% if diagnostics.permission_analysis.groups_list %}
+                    <h4 class="font-bold mt-6 mb-3">Grupos Configurados:</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {% for group in diagnostics.permission_analysis.groups_list %}
+                            <span class="bg-green-50 text-green-800 px-3 py-1 rounded text-sm">{{ group }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Context Processors -->
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                ⚙️ Context Processors
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-item">
+                    <div class="metric-value">{{ diagnostics.context_processors.total_processors }}</div>
+                    <div class="metric-label">Processors Configurados</div>
+                </div>
+
+                {% if diagnostics.context_processors.processors %}
+                    <div class="table-responsive mt-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Processor</th>
+                                    <th>Status</th>
+                                    <th>Callable</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for processor in diagnostics.context_processors.processors %}
+                                <tr>
+                                    <td><code class="text-sm">{{ processor.name }}</code></td>
+                                    <td>
+                                        {% if 'OK' in processor.status %}
+                                            <span class="status-good">✅ {{ processor.status }}</span>
+                                        {% else %}
+                                            <span class="status-critical">❌ {{ processor.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if processor.callable %}
+                                            <span class="status-good">✅ Sim</span>
+                                        {% else %}
+                                            <span class="status-critical">❌ Não</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Análise de Modelos -->
+        {% if diagnostics.model_analysis.models %}
+        <div class="diagnostic-card">
+            <div class="diagnostic-header">
+                🗄️ Análise de Modelos
+            </div>
+            <div class="diagnostic-content">
+                <div class="metric-item mb-4">
+                    <div class="metric-value">{{ diagnostics.model_analysis.total_models }}</div>
+                    <div class="metric-label">Modelos Totais</div>
+                </div>
+
+                <h4 class="font-bold mb-3">Modelos por App (amostra):</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Modelo</th>
+                                <th>App</th>
+                                <th>Tabela</th>
+                                <th>Campos</th>
+                                <th>Registros</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in diagnostics.model_analysis.models %}
+                            <tr>
+                                <td><strong>{{ model.name }}</strong></td>
+                                <td><code>{{ model.app }}</code></td>
+                                <td><code>{{ model.table_name }}</code></td>
+                                <td>{{ model.fields_count }}</td>
+                                <td>
+                                    {% if model.error %}
+                                        <span class="text-red-600 text-sm">{{ model.error }}</span>
+                                    {% else %}
+                                        {{ model.record_count }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{% url 'dashboard:home' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            ← Voltar ao Dashboard
+        </a>
+        <button onclick="window.location.reload()" class="ml-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+            🔄 Executar Novamente
+        </button>
+    </div>
+</div>
+{% endblock %}

@@ -50,6 +50,22 @@ class BeneficiaryDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_beneficiaries'] = Beneficiary.objects.count()
-        context['active_beneficiaries'] = Beneficiary.objects.filter(is_active=True).count()
+        total_beneficiaries = Beneficiary.objects.count()
+        active_beneficiaries = Beneficiary.objects.filter(status='ATIVA').count()
+        
+        context['total_beneficiaries'] = total_beneficiaries
+        context['active_beneficiaries'] = active_beneficiaries
+        context['inactive_beneficiaries'] = total_beneficiaries - active_beneficiaries
+        
+        # Calcular taxa de atividade
+        if total_beneficiaries > 0:
+            context['activity_rate'] = round((active_beneficiaries / total_beneficiaries) * 100, 1)
+        else:
+            context['activity_rate'] = 0
+        
+        # Adicionar beneficiárias recentes (últimas 5)
+        context['recent_beneficiaries'] = Beneficiary.objects.filter(
+            status='ATIVA'
+        ).order_by('-created_at')[:5]
+        
         return context

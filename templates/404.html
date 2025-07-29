@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Erro 404 - MoveMarias{% endblock %}
+
+{% block content %}
+<div class="min-h-full flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full text-center">
+        <h1 class="text-6xl font-bold text-gray-900">404</h1>
+        <h2 class="mt-4 text-2xl font-semibold text-gray-600">Erro 404</h2>
+        <div class="mt-8">
+            <a href="{% url 'core:home' %}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
+                Voltar ao início
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

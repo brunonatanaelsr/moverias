@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Diagnóstico de Templates - MoveMarias{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            🔍 Diagnóstico Completo do Sistema
+        </h1>
+        
+        <!-- Informações do Sistema -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">📊 Informações do Sistema</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Modo Debug</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if system_info.debug_mode %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    ⚠️ DEBUG Ativo
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✅ Produção
+                                </span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Ambiente</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ system_info.environment|title }}</dd>
+                    </div>
+                    <div class="col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">Diretórios de Templates</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% for dir in system_info.template_dirs %}
+                                <code class="bg-gray-100 px-2 py-1 rounded text-xs mr-2">{{ dir }}</code>
+                            {% endfor %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">APP_DIRS</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if system_info.app_dirs_enabled %}
+                                <span class="text-green-600">✅ Habilitado</span>
+                            {% else %}
+                                <span class="text-red-600">❌ Desabilitado</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Context Processors -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">⚙️ Context Processors</h2>
+            <div class="space-y-3">
+                {% for cp in context_processors %}
+                <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                    <div class="flex-1">
+                        <code class="text-sm text-gray-800">{{ cp.path }}</code>
+                        {% if cp.working %}
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                ✅ Funcionando
+                            </span>
+                            {% if cp.context_keys %}
+                                <div class="mt-1 text-xs text-gray-600">
+                                    Context keys: {{ cp.context_keys|join:", " }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                ❌ Erro
+                            </span>
+                            {% if cp.error %}
+                                <div class="mt-1 text-xs text-red-600">
+                                    {{ cp.error }}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Templates Scan -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">📄 Análise de Templates</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ templates_scan.total_count }}</div>
+                        <div class="text-sm text-gray-600">Total de Templates</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ templates_scan.main_templates|length }}</div>
+                        <div class="text-sm text-gray-600">Templates Principais</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600">{{ templates_scan.app_templates|length }}</div>
+                        <div class="text-sm text-gray-600">Apps com Templates</div>
+                    </div>
+                </div>
+                
+                <!-- Templates com Problemas -->
+                {% if templates_scan.issues %}
+                <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                    <h4 class="text-sm font-medium text-red-800 mb-2">⚠️ Templates com Problemas:</h4>
+                    {% for issue in templates_scan.issues %}
+                        <div class="text-xs text-red-600">{{ issue }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Detalhes dos Templates por App -->
+            <div class="mt-4 space-y-4">
+                {% for app_name, templates in templates_scan.app_templates.items %}
+                <details class="bg-white border rounded-lg">
+                    <summary class="px-4 py-3 cursor-pointer font-medium text-gray-900 hover:bg-gray-50">
+                        📁 {{ app_name|title }} ({{ templates|length }} templates)
+                    </summary>
+                    <div class="px-4 pb-3">
+                        <div class="space-y-2">
+                            {% for template in templates %}
+                            <div class="flex items-center justify-between text-sm">
+                                <code class="text-gray-700">{{ template.path }}</code>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-500">{{ template.size }} bytes</span>
+                                    {% if template.issues %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            {{ template.issues|length }} problema(s)
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                            ✅ OK
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if template.issues %}
+                                <div class="ml-4 text-xs text-red-600">
+                                    {% for issue in template.issues %}
+                                        <div>• {{ issue }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </details>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- URLs e Views -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">🔗 Análise de URLs</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ urls_scan.total_patterns }}</div>
+                        <div class="text-sm text-gray-600">Padrões de URL</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ urls_scan.with_templates }}</div>
+                        <div class="text-sm text-gray-600">Com Templates</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-600">{{ urls_scan.without_templates }}</div>
+                        <div class="text-sm text-gray-600">Templates Ausentes</div>
+                    </div>
+                </div>
+                
+                {% if urls_scan.issues %}
+                <div class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">❌ URLs com Templates Ausentes:</h4>
+                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                        {% for issue in urls_scan.issues %}
+                        <div class="text-xs bg-white p-2 rounded border">
+                            <strong>URL:</strong> <code>{{ issue.url }}</code><br>
+                            <strong>View:</strong> {{ issue.view }}<br>
+                            <strong>Template:</strong> <code class="text-red-600">{{ issue.template }}</code>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Permissões do Usuário -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">👤 Permissões do Usuário Atual</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if user_permissions.is_superuser %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    👑 Superusuário
+                                </span>
+                            {% elif user_permissions.is_staff %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    👩‍💼 Staff
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    👤 Usuário Regular
+                                </span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Grupos</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% for group in user_permissions.groups %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-1">
+                                    {{ group }}
+                                </span>
+                            {% empty %}
+                                <span class="text-gray-500">Nenhum grupo</span>
+                            {% endfor %}
+                        </dd>
+                    </div>
+                </dl>
+                
+                {% if user_permissions.unified_permissions %}
+                <div class="mt-4 p-3 bg-white rounded-lg border">
+                    <h4 class="text-sm font-medium text-gray-900 mb-2">Sistema de Permissões Unificadas:</h4>
+                    <div class="text-xs text-gray-600">
+                        <strong>É Técnico:</strong> {{ user_permissions.unified_permissions.is_technician|yesno:"Sim,Não" }}<br>
+                        <strong>É Coordenador:</strong> {{ user_permissions.unified_permissions.is_coordinator|yesno:"Sim,Não" }}<br>
+                        <strong>É Admin:</strong> {{ user_permissions.unified_permissions.is_admin|yesno:"Sim,Não" }}<br>
+                        <strong>Módulos:</strong> {{ user_permissions.unified_permissions.modules|length }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                    <span class="text-red-800 text-sm">⚠️ Sistema de permissões unificadas não disponível</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Navegação -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">🧭 Análise de Navegação</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+                {% if navigation_analysis.template_exists %}
+                    <div class="flex items-center mb-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            ✅ Template de navegação encontrado
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">URLs Válidas ({{ navigation_analysis.valid_urls|length }})</h4>
+                            <div class="max-h-40 overflow-y-auto space-y-1">
+                                {% for url in navigation_analysis.valid_urls %}
+                                    <div class="text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                                        ✅ {{ url }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">URLs Inválidas ({{ navigation_analysis.invalid_urls|length }})</h4>
+                            <div class="max-h-40 overflow-y-auto space-y-1">
+                                {% for url in navigation_analysis.invalid_urls %}
+                                    <div class="text-xs text-red-700 bg-red-50 px-2 py-1 rounded">
+                                        ❌ {{ url.url_name }}
+                                        <div class="text-xs text-gray-600 mt-1">{{ url.error }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            ❌ Template de navegação não encontrado
+                        </span>
+                    </div>
+                {% endif %}
+                
+                {% if navigation_analysis.issues %}
+                <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                    <h4 class="text-sm font-medium text-red-800 mb-2">Problemas Identificados:</h4>
+                    {% for issue in navigation_analysis.issues %}
+                        <div class="text-xs text-red-600">• {{ issue }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Apps Instaladas -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">📱 Apps Instaladas</h2>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {% for app in installed_apps %}
+                <div class="bg-white border rounded-lg p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-medium text-gray-900">{{ app.label }}</h4>
+                        <div class="flex items-center space-x-1">
+                            {% if app.has_templates %}
+                                <span class="w-2 h-2 bg-green-400 rounded-full" title="Tem templates"></span>
+                            {% endif %}
+                            {% if app.has_urls %}
+                                <span class="w-2 h-2 bg-blue-400 rounded-full" title="Tem URLs"></span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-600">
+                        <div><strong>Nome:</strong> {{ app.name }}</div>
+                        <div class="mt-1">
+                            {% if app.has_templates %}
+                                <span class="text-green-600">✅ Templates</span>
+                            {% else %}
+                                <span class="text-gray-400">⭕ Sem templates</span>
+                            {% endif %}
+                            |
+                            {% if app.has_urls %}
+                                <span class="text-blue-600">✅ URLs</span>
+                            {% else %}
+                                <span class="text-gray-400">⭕ Sem URLs</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Ações Recomendadas -->
+        <div class="mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">🚀 Ações Recomendadas</h2>
+            <div class="bg-blue-50 rounded-lg p-4">
+                <ul class="space-y-2 text-sm text-blue-800">
+                    <li>• Execute o comando de diagnóstico completo: <code>python manage.py diagnose_templates</code></li>
+                    <li>• Verifique os logs de erro do Django para templates não encontrados</li>
+                    <li>• Teste a navegação com diferentes tipos de usuário</li>
+                    <li>• Implemente context processor melhorado para sidebar completo</li>
+                    <li>• Considere adicionar fallbacks para templates ausentes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botão de Refresh -->
+<div class="fixed bottom-4 right-4">
+    <button onclick="window.location.reload()" 
+            class="bg-pink-600 text-white p-3 rounded-full shadow-lg hover:bg-pink-700 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+    </button>
+</div>
+{% endblock %}

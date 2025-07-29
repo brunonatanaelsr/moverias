@@ -28,25 +28,25 @@ User = get_user_model()
 def communication_dashboard(request):
     """Dashboard principal de comunicação"""
     
-    # Estatísticas gerais
+    # Estatísticas gerais  
     total_announcements = Announcement.objects.filter(
-        is_published=True,
+        is_active=True,
         publish_date__lte=timezone.now()
     ).count()
     
     total_messages = CommunicationMessage.objects.filter(
-        is_active=True
+        status='published'
     ).count()
     
     # Comunicados recentes
     recent_announcements = Announcement.objects.filter(
-        is_published=True,
+        is_active=True,
         publish_date__lte=timezone.now()
     ).order_by('-publish_date')[:5]
     
     # Mensagens recentes
     recent_messages = CommunicationMessage.objects.filter(
-        is_active=True
+        status='published'
     ).order_by('-created_at')[:10]
     
     # Newsletters ativas
@@ -86,7 +86,7 @@ def announcements_list(request):
     search = request.GET.get('search')
     
     announcements = Announcement.objects.filter(
-        is_published=True,
+        is_active=True,
         publish_date__lte=timezone.now()
     )
     
@@ -169,7 +169,7 @@ def messages_list(request):
     """Lista de mensagens do usuário"""
     
     messages_qs = CommunicationMessage.objects.filter(
-        is_active=True
+        status='published'
     ).order_by('-created_at')
     
     # Paginação
@@ -192,7 +192,7 @@ def message_detail(request, message_id):
     message = get_object_or_404(
         CommunicationMessage,
         id=message_id,
-        is_active=True
+        status='published'
     )
     
     context = {
@@ -362,14 +362,14 @@ def metrics_api(request):
     metrics = {
         'announcements': {
             'total': Announcement.objects.count(),
-            'published': Announcement.objects.filter(is_published=True).count(),
+            'published': Announcement.objects.filter(is_active=True).count(),
             'this_month': Announcement.objects.filter(
                 created_at__gte=timezone.now().replace(day=1)
             ).count(),
         },
         'messages': {
             'total': CommunicationMessage.objects.count(),
-            'active': CommunicationMessage.objects.filter(is_active=True).count(),
+            'active': CommunicationMessage.objects.filter(status='published').count(),
             'this_week': CommunicationMessage.objects.filter(
                 created_at__gte=timezone.now() - timedelta(days=7)
             ).count(),
@@ -396,7 +396,7 @@ def search_api(request):
     # Buscar em comunicados
     announcements = Announcement.objects.filter(
         Q(title__icontains=query) | Q(content__icontains=query),
-        is_published=True
+        is_active=True
     )[:5]
     
     for announcement in announcements:

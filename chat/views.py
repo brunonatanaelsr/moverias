@@ -75,7 +75,7 @@ def chat_home(request):
     favorite_channels = ChatChannel.objects.filter(
         members=request.user,
         is_active=True,
-        memberships__is_favorite=True,
+        memberships__is_pinned=True,
         memberships__user=request.user
     ).annotate(
         last_message_time=Max('messages__created_at'),
@@ -143,7 +143,7 @@ def chat_home(request):
     if selected_channel:
         messages_list = selected_channel.messages.filter(
             is_deleted=False
-        ).select_related('author').order_by('-created_at')[:50]
+        ).select_related('sender').order_by('-created_at')[:50]
         
         # Marcar como lida
         try:
@@ -171,8 +171,14 @@ def chat_home(request):
             user.status = 'online'
 
     # Estatísticas
+    # Obter todos os canais do usuário para calcular mensagens
+    user_channels = ChatChannel.objects.filter(
+        members=request.user,
+        is_active=True
+    ).values_list('id', flat=True)
+    
     total_messages = ChatMessage.objects.filter(
-        channel__in=public_channels.union(private_channels).union(department_channels).union(project_channels).union(direct_messages),
+        channel_id__in=user_channels,
         created_at__date=timezone.now().date()
     ).count()
     
@@ -400,9 +406,8 @@ def notifications(request):
     """Página de notificações do chat - using analytics instead"""
     # Get recent chat activity as notifications
     recent_activity = ChatAnalytics.objects.filter(
-        user=request.user,
-        metric_type='message_sent'
-    ).order_by('-period_start')[:20]
+        message_count__gt=0
+    ).order_by('-created_at')[:20]
     
     context = {
         'recent_activity': recent_activity,
