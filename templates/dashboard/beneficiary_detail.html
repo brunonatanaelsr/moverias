@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}{{ beneficiary.full_name }} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <div class="pb-32 bg-gradient-to-r from-pink-800 to-pink-600">
+        <header class="py-10">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center space-x-5">
+                    <div class="flex-shrink-0">
+                        <div class="relative">
+                            <div class="h-16 w-16 rounded-full bg-white flex items-center justify-center">
+                                <span class="text-xl font-semibold text-pink-600">
+                                    {{ beneficiary.full_name|slice:":1"|upper }}
+                                </span>
+                            </div>
+                            <span class="absolute inset-0 rounded-full shadow-inner" aria-hidden="true"></span>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">{{ beneficiary.full_name }}</h1>
+                        <p class="text-sm font-medium text-pink-100">
+                            Beneficiária • Cadastrada em {{ beneficiary.created_at|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <main class="relative -mt-32">
+        <div class="mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 lg:px-8 lg:pb-16">
+            <!-- Navegação rápida -->
+            <div class="mb-8">
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol role="list" class="flex items-center space-x-4">
+                        <li>
+                            <div>
+                                <a href="{% url 'dashboard:home' %}" class="text-gray-400 hover:text-gray-500">
+                                    <svg class="h-5 w-5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clip-rule="evenodd" />
+                                    </svg>
+                                    <span class="sr-only">Dashboard</span>
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                                </svg>
+                                <a href="{% url 'dashboard:beneficiaries-list' %}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700">
+                                    Beneficiárias
+                                </a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="h-5 w-5 flex-shrink-0 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                                </svg>
+                                <span class="ml-4 text-sm font-medium text-gray-500">{{ beneficiary.full_name }}</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- Informações principais -->
+            <div class="overflow-hidden rounded-lg bg-white shadow">
+                <div class="px-4 py-5 sm:p-6">
+                    <!-- Cabeçalho com ações -->
+                    <div class="sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <h3 class="text-lg font-medium leading-6 text-gray-900">
+                                Informações da Beneficiária
+                            </h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                                Dados cadastrais e informações de contato
+                            </p>
+                        </div>
+                        <div class="mt-5 sm:mt-0 sm:ml-6 sm:flex-shrink-0 sm:flex sm:items-center">
+                            <a href="{% url 'members:update' beneficiary.pk %}" 
+                               class="inline-flex items-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500">
+                                Editar Beneficiária
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Grid de informações -->
+                    <div class="mt-6 border-t border-gray-200">
+                        <dl class="divide-y divide-gray-200">
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Nome completo</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    {{ beneficiary.full_name }}
+                                </dd>
+                            </div>
+                            
+                            {% if beneficiary.email %}
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Email</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    {{ beneficiary.email }}
+                                </dd>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Data de nascimento</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    {{ beneficiary.dob|date:"d/m/Y" }}
+                                    {% if beneficiary.dob %}
+                                    <span class="text-gray-500">
+                                        ({{ beneficiary.dob|timesince|split:','|first }})
+                                    </span>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Telefones</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    <div>{{ beneficiary.phone_1|default:"-" }}</div>
+                                    {% if beneficiary.phone_2 %}
+                                    <div class="text-gray-500">{{ beneficiary.phone_2 }}</div>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            
+                            {% if beneficiary.nis %}
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">NIS</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    {{ beneficiary.nis }}
+                                </dd>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Endereço</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    <div>{{ beneficiary.address|default:"-" }}</div>
+                                    {% if beneficiary.neighbourhood %}
+                                    <div class="text-gray-500">{{ beneficiary.neighbourhood }}</div>
+                                    {% endif %}
+                                    {% if beneficiary.reference %}
+                                    <div class="text-xs text-gray-400 mt-1">
+                                        Referência: {{ beneficiary.reference }}
+                                    </div>
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            
+                            <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
+                                <dt class="text-sm font-medium text-gray-500">Data de cadastro</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:col-span-2 sm:mt-0">
+                                    {{ beneficiary.created_at|date:"d/m/Y à\s H:i" }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Ações rápidas -->
+                    <div class="mt-6 border-t border-gray-200 pt-6">
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Ações rápidas</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <a href="{% url 'members:detail' beneficiary.pk %}" 
+                               class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                Ver perfil completo
+                            </a>
+                            <a href="{% url 'social:anamnesis-create-for-beneficiary' beneficiary.pk %}" 
+                               class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                Nova anamnese
+                            </a>
+                            <a href="{% url 'evolution:create' %}?beneficiary={{ beneficiary.pk }}" 
+                               class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                Registrar evolução
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
