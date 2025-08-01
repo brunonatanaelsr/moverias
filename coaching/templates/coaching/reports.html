@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted">Estatísticas e métricas do sistema de coaching</p>
+                </div>
+                <div class="badge badge-success px-3 py-2">
+                    <i class="fas fa-check-circle me-2"></i>{{ feature_status }}
+                </div>
+            </div>
+
+            <!-- Cards de Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Planos de Ação</div>
+                                    <div class="h2 mb-0">{{ total_action_plans }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-bullseye fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Ativos</div>
+                                    <div class="h2 mb-0">{{ active_action_plans }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-play-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Concluídos</div>
+                                    <div class="h2 mb-0">{{ completed_action_plans }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Rodas da Vida</div>
+                                    <div class="h2 mb-0">{{ total_wheels }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-circle-notch fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabelas de Relatórios -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-star me-2"></i>
+                                Beneficiárias Mais Ativas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Beneficiária</th>
+                                            <th class="text-center">Planos de Ação</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for beneficiary in top_beneficiaries %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'members:detail' beneficiary.pk %}" class="text-decoration-none">
+                                                    {{ beneficiary.full_name }}
+                                                </a>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ beneficiary.action_plan_count }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center text-muted">
+                                                Nenhuma beneficiária encontrada
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Status dos Planos de Ação
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-center">Percentual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stat in action_plan_stats %}
+                                        <tr>
+                                            <td>
+                                                {% if stat.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success me-2"></span>Ativo
+                                                {% elif stat.status == 'COMPLETED' %}
+                                                    <span class="badge bg-info me-2"></span>Concluído
+                                                {% elif stat.status == 'PAUSED' %}
+                                                    <span class="badge bg-warning me-2"></span>Pausado
+                                                {% else %}
+                                                    <span class="badge bg-secondary me-2"></span>{{ stat.status }}
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">{{ stat.count }}</td>
+                                            <td class="text-center">
+                                                {% if total_action_plans > 0 %}
+                                                    {% widthratio stat.count total_action_plans 100 %}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">
+                                                Nenhum dado disponível
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="mt-4">
+                <a href="{% url 'coaching:action-plan-list' %}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar para Coaching
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Imprimir Relatório
+                </button>
+            </div>
+
+            <!-- Info Footer -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Última Atualização:</strong> {{ last_updated|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

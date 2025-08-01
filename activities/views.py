@@ -293,9 +293,7 @@ class BeneficiaryActivityCreateView(CreateConfirmationMixin, LoginRequiredMixin,
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo atividade?"
-    confirmation_entity = "atividade""""
-    Criação de nova atividade para beneficiária.
-    """
+    confirmation_entity = "atividade"  # Criação de nova atividade para beneficiária.
     model = BeneficiaryActivity
     form_class = BeneficiaryActivityForm
     template_name = 'activities/activity_form.html'
@@ -324,9 +322,7 @@ class BeneficiaryActivityUpdateView(EditConfirmationMixin, LoginRequiredMixin, U
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste atividade?"
-    confirmation_entity = "atividade""""
-    Atualização de atividade existente.
-    """
+    confirmation_entity = "atividade"  # Atualização de atividade existente.
     model = BeneficiaryActivity
     form_class = BeneficiaryActivityForm
     template_name = 'activities/activity_form.html'

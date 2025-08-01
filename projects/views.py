@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db import transaction
@@ -218,7 +218,7 @@ class ProjectEnrollmentDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, T
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este projeto?"
     confirmation_entity = "projeto"
-    dangerous_operation = True"""Excluir matrícula em projeto"""
+    dangerous_operation = True  # Excluir matrícula em projeto
     model = ProjectEnrollment
     template_name = 'projects/enrollment_confirm_delete.html'
     success_url = reverse_lazy('projects:enrollment-list')
@@ -334,4 +334,53 @@ def project_delete(request, pk):
         return redirect('projects:project-list')
     
     return render(request, 'projects/project_confirm_delete.html', {'project': project})
+
+
+# ============================================================================
+# VIEWS ADICIONAIS - FUNCIONALIDADES CRÍTICAS
+# ============================================================================
+
+class ProjectReportsView(LoginRequiredMixin, TechnicianRequiredMixin, TemplateView):
+    """View para relatórios de projetos"""
+    template_name = 'projects/reports.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estatísticas básicas
+        total_projects = Project.objects.count()
+        active_projects = Project.objects.filter(status='ACTIVE').count()
+        completed_projects = Project.objects.filter(status='COMPLETED').count()
+        
+        # Inscrições
+        total_enrollments = ProjectEnrollment.objects.count()
+        active_enrollments = ProjectEnrollment.objects.filter(status='ACTIVE').count()
+        
+        # Projetos por categoria (se existir campo category)
+        try:
+            category_stats = Project.objects.values('category').annotate(
+                count=Count('id')
+            ).order_by('category')
+        except:
+            category_stats = []
+        
+        # Projetos com mais inscrições
+        top_projects = Project.objects.annotate(
+            enrollment_count=Count('enrollments')
+        ).order_by('-enrollment_count')[:5]
+        
+        context.update({
+            'title': 'Relatórios de Projetos',
+            'total_projects': total_projects,
+            'active_projects': active_projects,
+            'completed_projects': completed_projects,
+            'pending_projects': total_projects - active_projects - completed_projects,
+            'total_enrollments': total_enrollments,
+            'active_enrollments': active_enrollments,
+            'category_stats': list(category_stats),
+            'top_projects': top_projects,
+            'feature_status': 'Funcional com dados básicos',
+            'last_updated': timezone.now(),
+        })
+        return context
 

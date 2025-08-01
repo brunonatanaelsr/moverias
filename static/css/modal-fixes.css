@@ -1,0 +1,245 @@
+/* 
+ * Correções para modais e sobreposições de z-index
+ * Garante que modais de confirmação sempre apareçam acima da sidebar
+ */
+
+/* === RESET BOOTSTRAP CONFLITOS COM TAILWIND === */
+/* Evita conflitos de CSS entre Bootstrap e Tailwind */
+.modal * {
+    box-sizing: border-box;
+}
+
+/* === CONFIGURAÇÃO MODAL BASE === */
+/* Modal DEVE estar oculto por padrão */
+#confirmationModal {
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    outline: 0 !important;
+}
+
+#confirmationModal.show {
+    display: block !important;
+}
+
+/* Modal/Confirmation overlays */
+.confirmation-container,
+.modal-overlay,
+.confirmation-modal,
+.delete-confirmation-modal,
+#confirmationModal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important; /* Muito maior que sidebar (z-50) */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    padding: 1rem !important;
+}
+
+/* Modal content */
+.confirmation-card,
+.modal-content,
+.confirmation-dialog,
+.modal-dialog {
+    position: relative !important;
+    z-index: 10000 !important; /* Ainda maior para garantir */
+    max-width: 600px !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1) !important;
+    margin: auto !important;
+}
+
+/* Botões de confirmação */
+.confirmation-footer,
+.modal-footer {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    border-top: 1px solid #dee2e6 !important;
+    z-index: 10001 !important; /* O mais alto de todos */
+}
+
+/* Dropdown menus e outros elementos */
+.dropdown-menu {
+    z-index: 1000 !important;
+}
+
+/* Tooltips */
+.tooltip {
+    z-index: 1070 !important;
+}
+
+/* Popovers */
+.popover {
+    z-index: 1060 !important;
+}
+
+/* Fix para sidebar mobile não sobrepor modais */
+@media (max-width: 1023px) {
+    .lg\\:z-50 {
+        z-index: 40 !important;
+    }
+}
+
+/* Garantir que o body não role quando modal está aberto */
+body.modal-open {
+    overflow: hidden !important;
+}
+
+/* Ajustes específicos para componentes Tailwind */
+.z-50 {
+    z-index: 50 !important;
+}
+
+.modal-backdrop {
+    z-index: 55 !important;
+}
+
+.confirmation-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+    z-index: 55 !important;
+}
+
+/* Para componentes que usam AlpineJS */
+[x-show] .confirmation-container {
+    z-index: 60 !important;
+}
+
+/* Específico para formulários de confirmação em modal */
+.confirmation-form-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 60 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+.confirmation-form-content {
+    background: white !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    max-width: 28rem !important;
+    width: 100% !important;
+    margin: 1rem !important;
+    z-index: 61 !important;
+    position: relative !important;
+}
+
+/* Animações suaves para modais */
+.modal-enter {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.modal-enter-active {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.modal-exit {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.modal-exit-active {
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.15s ease-in, transform 0.15s ease-in;
+}
+
+/* === CORREÇÕES CRÍTICAS PARA Z-INDEX === */
+
+/* Modal DEVE estar oculto por padrão */
+#confirmationModal {
+    display: none !important;
+}
+
+#confirmationModal.show {
+    display: block !important;
+}
+
+/* Todos os modais Bootstrap devem estar acima da sidebar */
+.modal,
+.modal.show,
+.modal.fade.show {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop,
+.modal-backdrop.show {
+    z-index: 9998 !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.modal-dialog {
+    z-index: 10000 !important;
+    margin: 1.75rem auto !important;
+}
+
+/* Força centralização dos modais */
+.modal.show .modal-dialog {
+    position: relative !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}
+
+/* Corrige backdrop do template confirmation.html */
+.confirmation-backdrop {
+    z-index: 9999 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+}
+
+.confirmation-container {
+    z-index: 10000 !important;
+}
+
+.confirmation-card {
+    z-index: 10001 !important;
+}
+
+/* Previne scroll do body quando modal está aberto */
+body.modal-open,
+body:has(.modal.show) {
+    overflow: hidden !important;
+    padding-right: 0 !important;
+}
+
+/* Garante que modais estejam sempre invisíveis até serem ativados */
+.modal:not(.show) {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+.modal.fade:not(.show) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Força visibilidade apenas quando show */
+.modal.show {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}

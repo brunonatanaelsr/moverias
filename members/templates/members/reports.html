@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted">Estatísticas e relatórios do sistema de beneficiárias</p>
+                </div>
+                <div class="badge badge-success px-3 py-2">
+                    <i class="fas fa-check-circle me-2"></i>{{ feature_status }}
+                </div>
+            </div>
+
+            <!-- Cards de Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Total de Beneficiárias</div>
+                                    <div class="h2 mb-0">{{ total_beneficiaries }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Ativas</div>
+                                    <div class="h2 mb-0">{{ active_beneficiaries }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-user-check fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Inativas</div>
+                                    <div class="h2 mb-0">{{ inactive_beneficiaries }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-user-times fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Taxa de Atividade</div>
+                                    <div class="h2 mb-0">
+                                        {% if total_beneficiaries > 0 %}
+                                            {{ active_beneficiaries|floatformat:0 }}:{{ inactive_beneficiaries|floatformat:0 }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-chart-pie fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-birthday-cake me-2"></i>
+                                Distribuição por Faixa Etária
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="ageChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-graduation-cap me-2"></i>
+                                Nível de Escolaridade
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="educationChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Detalhes -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-table me-2"></i>
+                                Resumo Detalhado
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Métrica</th>
+                                            <th>Valor</th>
+                                            <th>Percentual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Total de Beneficiárias</td>
+                                            <td>{{ total_beneficiaries }}</td>
+                                            <td>100%</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Beneficiárias Ativas</td>
+                                            <td>{{ active_beneficiaries }}</td>
+                                            <td>
+                                                {% if total_beneficiaries > 0 %}
+                                                    {{ active_beneficiaries|mul:100|div:total_beneficiaries|floatformat:1 }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Beneficiárias Inativas</td>
+                                            <td>{{ inactive_beneficiaries }}</td>
+                                            <td>
+                                                {% if total_beneficiaries > 0 %}
+                                                    {{ inactive_beneficiaries|mul:100|div:total_beneficiaries|floatformat:1 }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="mt-4">
+                <a href="{% url 'members:list' %}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar para Lista
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Imprimir Relatório
+                </button>
+            </div>
+
+            <!-- Info Footer -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Última Atualização:</strong> {{ last_updated|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gráfico de Faixas Etárias
+const ageCtx = document.getElementById('ageChart').getContext('2d');
+new Chart(ageCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['18-25 anos', '26-35 anos', '36-50 anos', '50+ anos'],
+        datasets: [{
+            data: [
+                {{ age_ranges.age_18_25|default:0 }},
+                {{ age_ranges.age_26_35|default:0 }},
+                {{ age_ranges.age_36_50|default:0 }},
+                {{ age_ranges.age_50_plus|default:0 }}
+            ],
+            backgroundColor: [
+                '#FF6384',
+                '#36A2EB', 
+                '#FFCE56',
+                '#4BC0C0'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfico de Escolaridade
+const educationCtx = document.getElementById('educationChart').getContext('2d');
+new Chart(educationCtx, {
+    type: 'bar',
+    data: {
+        labels: [
+            {% for stat in education_stats %}
+                '{{ stat.education_level|default:"Não informado" }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Quantidade',
+            data: [
+                {% for stat in education_stats %}
+                    {{ stat.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ],
+            backgroundColor: '#36A2EB'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

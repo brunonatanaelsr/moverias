@@ -36,6 +36,7 @@ def enhanced_sidebar_context(request):
             'children': [
                 {'name': 'Lista de Beneficiárias', 'url_name': 'members:list'},
                 {'name': 'Cadastrar Beneficiária', 'url_name': 'members:create'},
+                {'name': 'Dashboard', 'url_name': 'members:dashboard'},
                 {'name': 'Importar Dados', 'url_name': 'members:import'},
                 {'name': 'Relatórios', 'url_name': 'members:reports'},
             ]
@@ -47,30 +48,30 @@ def enhanced_sidebar_context(request):
             'permission': 'social.view_socialanamnesis',
             'children': [
                 {'name': 'Lista de Anamneses', 'url_name': 'social:list'},
-                {'name': 'Nova Anamnese', 'url_name': 'social:create'},
-                {'name': 'Relatórios', 'url_name': 'social:reports'},
+                {'name': 'Nova Anamnese', 'url_name': 'social:anamnesis-create'},
+                {'name': 'Relatórios', 'url_name': 'social:social_reports'},
             ]
         },
         {
             'name': 'Projetos',
             'icon': 'folder',
-            'url_name': 'projects:list',
+            'url_name': 'projects:project-list',
             'permission': 'projects.view_project',
             'children': [
-                {'name': 'Lista de Projetos', 'url_name': 'projects:list'},
-                {'name': 'Criar Projeto', 'url_name': 'projects:create'},
-                {'name': 'Inscrições', 'url_name': 'projects:enrollments'},
+                {'name': 'Lista de Projetos', 'url_name': 'projects:project-list'},
+                {'name': 'Criar Projeto', 'url_name': 'projects:project-create'},
+                {'name': 'Inscrições', 'url_name': 'projects:enrollment-list'},
                 {'name': 'Relatórios', 'url_name': 'projects:reports'},
             ]
         },
         {
             'name': 'Coaching',
             'icon': 'chart-bar',
-            'url_name': 'coaching:list',
+            'url_name': 'coaching:action-plan-list',
             'permission': 'coaching.view_actionplan',
             'children': [
-                {'name': 'Planos de Ação', 'url_name': 'coaching:list'},
-                {'name': 'Roda da Vida', 'url_name': 'coaching:wheel_of_life'},
+                {'name': 'Planos de Ação', 'url_name': 'coaching:action-plan-list'},
+                {'name': 'Roda da Vida', 'url_name': 'coaching:wheel-list'},
                 {'name': 'Sessões', 'url_name': 'coaching:sessions'},
                 {'name': 'Relatórios', 'url_name': 'coaching:reports'},
             ]

@@ -146,7 +146,7 @@ class BeneficiaryCreateView(CreateConfirmationMixin, LoginRequiredMixin, Technic
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo beneficiária?"
-    confirmation_entity = "beneficiária""""Criar nova beneficiária"""
+    confirmation_entity = "beneficiária"  # Criar nova beneficiária
     
     model = Beneficiary
     form_class = BeneficiaryForm
@@ -175,7 +175,7 @@ class BeneficiaryUpdateView(EditConfirmationMixin, LoginRequiredMixin, Technicia
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste beneficiária?"
-    confirmation_entity = "beneficiária""""Editar beneficiária"""
+    confirmation_entity = "beneficiária"  # Editar beneficiária
     
     model = Beneficiary
     form_class = BeneficiaryForm
@@ -220,7 +220,7 @@ class BeneficiaryDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, Technic
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este beneficiária?"
     confirmation_entity = "beneficiária"
-    dangerous_operation = True"""Excluir beneficiária"""
+    dangerous_operation = True  # Excluir beneficiária
     
     model = Beneficiary
     template_name = 'members/beneficiary_confirm_delete.html'
@@ -1022,3 +1022,71 @@ class BeneficiaryDashboardView(LoginRequiredMixin, TechnicianRequiredMixin, Deta
             })
         
         return sorted(actions, key=lambda x: x['priority'])[:5]
+
+
+# ============================================================================
+# VIEWS ADICIONAIS - FUNCIONALIDADES CRÍTICAS
+# ============================================================================
+
+class BeneficiaryImportView(LoginRequiredMixin, CoordinatorRequiredMixin, TemplateView):
+    """View para importação de dados de beneficiárias"""
+    template_name = 'members/import.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Importar Dados de Beneficiárias',
+            'subtitle': 'Upload de arquivo CSV ou Excel com dados das beneficiárias',
+            'feature_status': 'Em desenvolvimento',
+            'expected_release': 'Próxima sprint',
+            'contact_support': 'Entre em contato com a equipe técnica para mais informações'
+        })
+        return context
+
+
+class BeneficiaryReportsView(LoginRequiredMixin, TechnicianRequiredMixin, TemplateView):
+    """View para relatórios de beneficiárias"""
+    template_name = 'members/reports.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estatísticas básicas
+        total_beneficiaries = Beneficiary.objects.count()
+        active_beneficiaries = Beneficiary.objects.filter(status='ACTIVE').count()
+        
+        # Dados por idade
+        age_ranges = {
+            'age_18_25': Beneficiary.objects.filter(
+                birth_date__gte=date.today() - relativedelta(years=25),
+                birth_date__lt=date.today() - relativedelta(years=18)
+            ).count(),
+            'age_26_35': Beneficiary.objects.filter(
+                birth_date__gte=date.today() - relativedelta(years=35),
+                birth_date__lt=date.today() - relativedelta(years=26)
+            ).count(),
+            'age_36_50': Beneficiary.objects.filter(
+                birth_date__gte=date.today() - relativedelta(years=50),
+                birth_date__lt=date.today() - relativedelta(years=36)
+            ).count(),
+            'age_50_plus': Beneficiary.objects.filter(
+                birth_date__lt=date.today() - relativedelta(years=50)
+            ).count(),
+        }
+        
+        # Dados por escolaridade
+        education_stats = Beneficiary.objects.values('education_level').annotate(
+            count=Count('id')
+        ).order_by('education_level')
+        
+        context.update({
+            'title': 'Relatórios de Beneficiárias',
+            'total_beneficiaries': total_beneficiaries,
+            'active_beneficiaries': active_beneficiaries,
+            'inactive_beneficiaries': total_beneficiaries - active_beneficiaries,
+            'age_ranges': age_ranges,
+            'education_stats': list(education_stats),
+            'feature_status': 'Funcional com dados básicos',
+            'last_updated': timezone.now(),
+        })
+        return context

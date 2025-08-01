@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted">Estatísticas e métricas dos projetos do sistema</p>
+                </div>
+                <div class="badge badge-success px-3 py-2">
+                    <i class="fas fa-check-circle me-2"></i>{{ feature_status }}
+                </div>
+            </div>
+
+            <!-- Cards de Estatísticas -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Total de Projetos</div>
+                                    <div class="h2 mb-0">{{ total_projects }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-folder fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Projetos Ativos</div>
+                                    <div class="h2 mb-0">{{ active_projects }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-play-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Projetos Concluídos</div>
+                                    <div class="h2 mb-0">{{ completed_projects }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-75">Total de Inscrições</div>
+                                    <div class="h2 mb-0">{{ total_enrollments }}</div>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabelas de Relatórios -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-star me-2"></i>
+                                Projetos com Mais Inscrições
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Projeto</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Inscrições</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for project in top_projects %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'projects:project-detail' project.pk %}" class="text-decoration-none">
+                                                    {{ project.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if project.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">Ativo</span>
+                                                {% elif project.status == 'COMPLETED' %}
+                                                    <span class="badge bg-info">Concluído</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ project.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ project.enrollment_count }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted">
+                                                Nenhum projeto encontrado
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Resumo por Status
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Status</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-center">Percentual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-success me-2"></span>
+                                                Ativos
+                                            </td>
+                                            <td class="text-center">{{ active_projects }}</td>
+                                            <td class="text-center">
+                                                {% if total_projects > 0 %}
+                                                    {% widthratio active_projects total_projects 100 %}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-info me-2"></span>
+                                                Concluídos
+                                            </td>
+                                            <td class="text-center">{{ completed_projects }}</td>
+                                            <td class="text-center">
+                                                {% if total_projects > 0 %}
+                                                    {% widthratio completed_projects total_projects 100 %}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-warning me-2"></span>
+                                                Outros
+                                            </td>
+                                            <td class="text-center">{{ pending_projects }}</td>
+                                            <td class="text-center">
+                                                {% if total_projects > 0 %}
+                                                    {% widthratio pending_projects total_projects 100 %}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estatísticas de Inscrições -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Estatísticas de Inscrições
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h3 class="text-primary">{{ total_enrollments }}</h3>
+                                        <p class="text-muted mb-0">Total de Inscrições</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h3 class="text-success">{{ active_enrollments }}</h3>
+                                        <p class="text-muted mb-0">Inscrições Ativas</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h3 class="text-info">
+                                            {% if total_projects > 0 %}
+                                                {% widthratio total_enrollments total_projects 1 %}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </h3>
+                                        <p class="text-muted mb-0">Média por Projeto</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="mt-4">
+                <a href="{% url 'projects:project-list' %}" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar para Lista
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>
+                    Imprimir Relatório
+                </button>
+            </div>
+
+            <!-- Info Footer -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Última Atualização:</strong> {{ last_updated|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Future: Adicionar gráficos interativos
+    console.log('Project reports loaded successfully');
+</script>
+{% endblock %}

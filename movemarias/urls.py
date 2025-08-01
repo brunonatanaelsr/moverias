@@ -25,6 +25,7 @@ urlpatterns = [
     path('chat/', include('chat.urls')),  # Internal Chat
     path('communication/', include('communication.urls')),  # Internal Communication
     path('activities/', include('activities.urls')),  # Unified activities system
+    path('test/', include('test_urls')),  # URLs de teste para debug
     path('uploads/', include('core.upload_simple_urls')),  # File upload system - simplified
     path('', include('core.urls')),  # Home page and core views
 ]

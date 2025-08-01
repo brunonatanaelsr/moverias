@@ -16,9 +16,9 @@ class ConfirmationSystem {
     createModalHTML() {
         const modalHTML = `
         <!-- Modal de Confirmação -->
-        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" style="display: none; z-index: 9999 !important;">
+            <div class="modal-dialog modal-dialog-centered" style="z-index: 10000 !important;">
+                <div class="modal-content" style="z-index: 10001 !important;">
                     <div class="modal-header">
                         <h5 class="modal-title" id="confirmationModalLabel">
                             <i class="fas fa-exclamation-triangle text-warning me-2"></i>
@@ -64,6 +64,29 @@ class ConfirmationSystem {
         // Adicionar modal ao body se não existir
         if (!document.getElementById('confirmationModal')) {
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Garantir que o modal está oculto inicialmente
+            const modal = document.getElementById('confirmationModal');
+            modal.style.display = 'none';
+            modal.classList.add('d-none');
+            
+            // Garantir que o backdrop tenha z-index correto
+            modal.addEventListener('show.bs.modal', function () {
+                modal.classList.remove('d-none');
+                modal.style.display = 'block';
+                setTimeout(() => {
+                    const backdrop = document.querySelector('.modal-backdrop');
+                    if (backdrop) {
+                        backdrop.style.zIndex = '9998';
+                    }
+                }, 10);
+            });
+            
+            // Ocultar quando fechar
+            modal.addEventListener('hidden.bs.modal', function () {
+                modal.classList.add('d-none');
+                modal.style.display = 'none';
+            });
         }
     }
 

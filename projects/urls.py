@@ -22,4 +22,7 @@ urlpatterns = [
     
     # Exportação
     path('<int:pk>/export/', views.export_project_data, name='project-export'),
+    
+    # Relatórios
+    path('reports/', views.ProjectReportsView.as_view(), name='reports'),
 ]

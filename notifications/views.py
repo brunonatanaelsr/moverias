@@ -157,7 +157,7 @@ class NotificationCreateView(CreateConfirmationMixin, LoginRequiredMixin, AdminR
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo notificação?"
-    confirmation_entity = "notificação""""Criar nova notificação (para admins)"""
+    confirmation_entity = "notificação"  # "Criar nova notificação (para admins)"""
     model = Notification
     form_class = NotificationForm
     template_name = 'notifications/notification_form_unified.html'
@@ -184,7 +184,7 @@ class NotificationUpdateView(EditConfirmationMixin, LoginRequiredMixin, AdminReq
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste notificação?"
-    confirmation_entity = "notificação""""Editar notificação (para admins)"""
+    confirmation_entity = "notificação"  # "Editar notificação (para admins)"""
     model = Notification
     form_class = NotificationForm
     template_name = 'notifications/notification_form_unified.html'
@@ -588,7 +588,7 @@ class NotificationDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, Delete
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este notificação?"
     confirmation_entity = "notificação"
-    dangerous_operation = True"""Excluir notificação"""
+    dangerous_operation = True  # Excluir notificação
     model = Notification
     success_url = reverse_lazy('notifications:list')
     

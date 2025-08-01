@@ -392,7 +392,8 @@ class CertificateTemplateCreateView(CreateConfirmationMixin, LoginRequiredMixin,
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo certificado?"
-    confirmation_entity = "certificado"model = CertificateTemplate
+    confirmation_entity = "certificado"
+    model = CertificateTemplate
     form_class = CertificateTemplateForm
     template_name = 'certificates/template_form.html'
     success_url = reverse_lazy('certificates:template_list')
@@ -410,7 +411,8 @@ class CertificateTemplateUpdateView(EditConfirmationMixin, LoginRequiredMixin, A
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste certificado?"
-    confirmation_entity = "certificado"model = CertificateTemplate
+    confirmation_entity = "certificado"
+    model = CertificateTemplate
     form_class = CertificateTemplateForm
     template_name = 'certificates/template_form.html'
     success_url = reverse_lazy('certificates:template_list')

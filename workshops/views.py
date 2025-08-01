@@ -122,7 +122,8 @@ class WorkshopCreateView(CreateConfirmationMixin, LoginRequiredMixin, Technician
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo oficina?"
-    confirmation_entity = "oficina"model = Workshop
+    confirmation_entity = "oficina"
+    model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
     success_url = reverse_lazy('workshops:workshop-list')
@@ -144,7 +145,8 @@ class WorkshopUpdateView(EditConfirmationMixin, LoginRequiredMixin, TechnicianRe
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste oficina?"
-    confirmation_entity = "oficina"model = Workshop
+    confirmation_entity = "oficina"
+    model = Workshop
     form_class = WorkshopForm
     template_name = 'workshops/workshop_form.html'
     success_url = reverse_lazy('workshops:workshop-list')

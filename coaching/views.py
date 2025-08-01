@@ -1,9 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.db.models import Count
+from django.utils import timezone
 from core.permissions import is_technician
 from .models import ActionPlan, WheelOfLife
 from members.models import Beneficiary
@@ -46,7 +48,7 @@ class ActionPlanCreateView(CreateConfirmationMixin, LoginRequiredMixin, UserPass
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo coaching?"
-    confirmation_entity = "coaching""""Criar novo plano de ação"""
+    confirmation_entity = "coaching"  # "Criar novo plano de ação"""
     
     model = ActionPlan
     template_name = 'coaching/action_plan_form.html'
@@ -79,7 +81,7 @@ class ActionPlanUpdateView(EditConfirmationMixin, LoginRequiredMixin, UserPasses
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste coaching?"
-    confirmation_entity = "coaching""""Editar plano de ação"""
+    confirmation_entity = "coaching"  # "Editar plano de ação"""
     
     model = ActionPlan
     template_name = 'coaching/action_plan_form.html'
@@ -101,7 +103,7 @@ class ActionPlanDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPass
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este coaching?"
     confirmation_entity = "coaching"
-    dangerous_operation = True"""Excluir plano de ação"""
+    dangerous_operation = True  # Excluir plano de ação
     
     model = ActionPlan
     template_name = 'coaching/action_plan_confirm_delete.html'
@@ -244,3 +246,81 @@ class WheelOfLifeDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, UserPas
         
         messages.success(request, f'Roda da vida de {self.object.beneficiary.full_name} excluída com sucesso!')
         return redirect(success_url)
+
+
+# ============================================================================
+# VIEWS ADICIONAIS - FUNCIONALIDADES CRÍTICAS
+# ============================================================================
+
+class CoachingSessionListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """View para listagem de sessões de coaching"""
+    template_name = 'coaching/sessions.html'
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'title': 'Sessões de Coaching',
+            'subtitle': 'Gestão de sessões individuais e em grupo',
+            'feature_status': 'Em desenvolvimento',
+            'expected_release': 'Próxima sprint',
+            'contact_support': 'Entre em contato com a equipe técnica para mais informações'
+        })
+        return context
+
+
+class CoachingSessionCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """View para criação de sessões de coaching"""
+    template_name = 'coaching/session_create.html'
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+
+
+class CoachingSessionDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """View para detalhes de sessão de coaching"""
+    template_name = 'coaching/session_detail.html'
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+
+
+class CoachingReportsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """View para relatórios de coaching"""
+    template_name = 'coaching/reports.html'
+    
+    def test_func(self):
+        return is_technician(self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estatísticas básicas
+        total_action_plans = ActionPlan.objects.count()
+        active_action_plans = ActionPlan.objects.filter(status='ACTIVE').count()
+        total_wheels = WheelOfLife.objects.count()
+        
+        # Action plans por status
+        action_plan_stats = ActionPlan.objects.values('status').annotate(
+            count=Count('id')
+        ).order_by('status')
+        
+        # Beneficiárias com mais action plans
+        top_beneficiaries = Beneficiary.objects.annotate(
+            action_plan_count=Count('action_plans')
+        ).filter(action_plan_count__gt=0).order_by('-action_plan_count')[:5]
+        
+        context.update({
+            'title': 'Relatórios de Coaching',
+            'total_action_plans': total_action_plans,
+            'active_action_plans': active_action_plans,
+            'completed_action_plans': ActionPlan.objects.filter(status='COMPLETED').count(),
+            'total_wheels': total_wheels,
+            'action_plan_stats': list(action_plan_stats),
+            'top_beneficiaries': top_beneficiaries,
+            'feature_status': 'Funcional com dados básicos',
+            'last_updated': timezone.now(),
+        })
+        return context

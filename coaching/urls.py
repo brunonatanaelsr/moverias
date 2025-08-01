@@ -17,4 +17,12 @@ urlpatterns = [
     path('wheel-of-life/<int:pk>/', views.WheelOfLifeDetailView.as_view(), name='wheel-detail'),
     path('wheel-of-life/<int:pk>/edit/', views.WheelOfLifeUpdateView.as_view(), name='wheel-edit'),
     path('wheel-of-life/<int:pk>/delete/', views.WheelOfLifeDeleteView.as_view(), name='wheel-delete'),
+    
+    # Sessions
+    path('sessions/', views.CoachingSessionListView.as_view(), name='sessions'),
+    path('sessions/create/', views.CoachingSessionCreateView.as_view(), name='session-create'),
+    path('sessions/<int:pk>/', views.CoachingSessionDetailView.as_view(), name='session-detail'),
+    
+    # Reports
+    path('reports/', views.CoachingReportsView.as_view(), name='reports'),
 ]

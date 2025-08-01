@@ -170,7 +170,7 @@ class EvolutionRecordCreateView(CreateConfirmationMixin, LoginRequiredMixin, Tec
     
     # Configurações da confirmação
     confirmation_message = "Confirma o cadastro deste novo evolução?"
-    confirmation_entity = "evolução""""Criar novo registro de evolução"""
+    confirmation_entity = "evolução"  # "Criar novo registro de evolução"""
     
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -244,7 +244,9 @@ class EvolutionRecordUpdateView(EditConfirmationMixin, LoginRequiredMixin, UserP
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste evolução?"
-    confirmation_entity = "evolução"def form_valid(self, form):
+    confirmation_entity = "evolução"
+    
+    def form_valid(self, form):
         old_values = {field.name: getattr(self.get_object(), field.name) for field in self.model._meta.fields}
         response = super().form_valid(form)
         # Auditoria: log de edição
@@ -304,7 +306,9 @@ class EvolutionRecordDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, Use
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este evolução?"
     confirmation_entity = "evolução"
-    dangerous_operation = Truedef delete(self, request, *args, **kwargs):
+    dangerous_operation = True
+    
+    def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         # Auditoria: log de exclusão
         from core.audit import log_user_action

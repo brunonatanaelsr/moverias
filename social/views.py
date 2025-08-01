@@ -98,7 +98,7 @@ class SocialAnamnesisUpdateView(EditConfirmationMixin, LoginRequiredMixin, Techn
     
     # Configurações da confirmação
     confirmation_message = "Confirma as alterações neste anamnese social?"
-    confirmation_entity = "anamnese social""""Editar anamnese social existente"""
+    confirmation_entity = "anamnese social"  # Editar anamnese social existente
     
     model = SocialAnamnesis
     form_class = SocialAnamnesisUpdateForm
@@ -314,7 +314,7 @@ class SocialAnamnesisDeleteView(DeleteConfirmationMixin, LoginRequiredMixin, Use
     # Configurações da confirmação
     confirmation_message = "Tem certeza que deseja excluir este anamnese social?"
     confirmation_entity = "anamnese social"
-    dangerous_operation = True"""Excluir anamnese social"""
+    dangerous_operation = True  # Excluir anamnese social
     
     model = SocialAnamnesis
     template_name = 'social/anamnesis_confirm_delete.html'

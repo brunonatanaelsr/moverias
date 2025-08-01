@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">{{ title }}</h2>
+                    <p class="text-muted">{{ subtitle }}</p>
+                </div>
+                <div class="badge badge-warning px-3 py-2">
+                    <i class="fas fa-tools me-2"></i>{{ feature_status }}
+                </div>
+            </div>
+
+            <!-- Em Desenvolvimento Card -->
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-construction me-2"></i>
+                        Funcionalidade em Desenvolvimento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Sistema de Sessões de Coaching</h6>
+                            <p class="mb-3">
+                                Esta funcionalidade permitirá o agendamento, acompanhamento e gestão de sessões
+                                individuais e em grupo de coaching com as beneficiárias.
+                            </p>
+                            
+                            <h6>Funcionalidades Planejadas:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Agendamento de sessões</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Gestão de participantes</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Registro de atividades</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Acompanhamento de progresso</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Relatórios de sessões</li>
+                                <li><i class="fas fa-check-circle text-success me-2"></i>Notificações automáticas</li>
+                            </ul>
+
+                            <div class="alert alert-info mt-3">
+                                <strong>Previsão de Lançamento:</strong> {{ expected_release }}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-users text-warning" style="font-size: 4rem;"></i>
+                                <h6 class="mt-3">Sessões de Coaching</h6>
+                                <p class="text-muted small">
+                                    Aguarde a implementação desta funcionalidade
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <small class="text-muted">
+                                {{ contact_support }}
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <a href="mailto:suporte@movemarias.org" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-envelope me-1"></i>
+                                Contatar Suporte
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ações -->
+            <div class="mt-4">
+                <a href="{% url 'coaching:action-plan-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Voltar para Coaching
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
