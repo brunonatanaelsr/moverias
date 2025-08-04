@@ -8,11 +8,12 @@ from django.core.cache import cache
 from django.conf import settings
 from django.db.models import Q, Count, Avg, Prefetch
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from core.unified_permissions import (
     is_technician, TechnicianRequiredMixin, requires_technician
 )
 from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
+from core.export_utils import export_universal, DataFormatter, ExportManager
 from .models import Workshop, WorkshopSession, WorkshopEnrollment, SessionAttendance, WorkshopEvaluation
 from .forms import (
     WorkshopForm, WorkshopSessionForm, WorkshopEnrollmentForm, 
@@ -557,3 +558,145 @@ def clear_workshop_cache():
     except Exception:
         # Fallback: clear all cache if pattern deletion fails
         cache.clear()
+
+
+# =============================================================================
+# EXPORT VIEWS
+# =============================================================================
+
+@login_required
+@requires_technician
+def workshops_export(request):
+    """
+    Exporta lista de workshops em CSV, Excel ou PDF
+    """
+    return export_universal(
+        request=request,
+        model_class=Workshop,
+        formatter_method=DataFormatter.format_workshop_data,
+        filename_prefix="workshops",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Workshops',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+@requires_technician
+def workshop_enrollments_export(request, pk):
+    """
+    Exporta matrículas de um workshop específico
+    """
+    workshop = get_object_or_404(Workshop, pk=pk)
+    enrollments = WorkshopEnrollment.objects.filter(workshop=workshop).select_related('beneficiary')
+    
+    # Formatar dados para exportação
+    headers = [
+        'Beneficiária', 'Telefone', 'Bairro', 'Status da Matrícula', 
+        'Data de Matrícula', 'Data de Última Presença'
+    ]
+    
+    data = []
+    for enrollment in enrollments:
+        # Buscar última presença
+        last_attendance = SessionAttendance.objects.filter(
+            enrollment=enrollment, present=True
+        ).order_by('-session__date').first()
+        
+        data.append([
+            enrollment.beneficiary.full_name,
+            enrollment.beneficiary.phone_1 or '',
+            enrollment.beneficiary.neighbourhood or '',
+            enrollment.get_status_display(),
+            enrollment.created_at.strftime('%d/%m/%Y') if enrollment.created_at else '',
+            last_attendance.session.date.strftime('%d/%m/%Y') if last_attendance else 'Nunca'
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"matriculas_workshop_{workshop.name.replace(' ', '_')}_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, f"Matrículas - {workshop.name}")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Matrículas - {workshop.name}',
+                'generated_at': timezone.now(),
+                'workshop': workshop,
+                'total_enrollments': len(data),
+                'report_type': 'Matrículas de Workshop',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('workshops:workshop_detail', pk=workshop.pk)
+
+
+@login_required
+@requires_technician
+def workshop_attendance_export(request, pk):
+    """
+    Exporta relatório de frequência de um workshop
+    """
+    workshop = get_object_or_404(Workshop, pk=pk)
+    sessions = WorkshopSession.objects.filter(workshop=workshop).order_by('date')
+    enrollments = WorkshopEnrollment.objects.filter(workshop=workshop).select_related('beneficiary')
+    
+    # Cabeçalhos dinâmicos com as datas das sessões
+    headers = ['Beneficiária', 'Telefone', 'Total de Presenças', 'Percentual de Frequência']
+    session_headers = [f"Sessão {session.date.strftime('%d/%m')}" for session in sessions]
+    headers.extend(session_headers)
+    
+    data = []
+    for enrollment in enrollments:
+        attendances = SessionAttendance.objects.filter(enrollment=enrollment).select_related('session')
+        attendance_dict = {att.session.id: att.present for att in attendances}
+        
+        total_sessions = sessions.count()
+        total_present = sum(1 for session in sessions if attendance_dict.get(session.id, False))
+        percentage = (total_present / total_sessions * 100) if total_sessions > 0 else 0
+        
+        row = [
+            enrollment.beneficiary.full_name,
+            enrollment.beneficiary.phone_1 or '',
+            total_present,
+            f"{percentage:.1f}%"
+        ]
+        
+        # Adicionar presença de cada sessão
+        for session in sessions:
+            present = attendance_dict.get(session.id, False)
+            row.append("✓" if present else "✗")
+        
+        data.append(row)
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"frequencia_workshop_{workshop.name.replace(' ', '_')}_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, f"Frequência - {workshop.name}")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Relatório de Frequência - {workshop.name}',
+                'generated_at': timezone.now(),
+                'workshop': workshop,
+                'total_sessions': sessions.count(),
+                'report_type': 'Relatório de Frequência',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar relatório: {str(e)}')
+        return redirect('workshops:workshop_detail', pk=workshop.pk)

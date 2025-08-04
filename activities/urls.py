@@ -40,4 +40,9 @@ urlpatterns = [
     
     # Relatórios
     path('reports/', views.activities_report, name='activities_report'),
+    
+    # Export URLs
+    path('export/', views.activities_export, name='activities_export'),
+    path('<uuid:pk>/export/sessions/', views.activity_sessions_export, name='activity_sessions_export'),
+    path('beneficiary/<int:beneficiary_id>/export/', views.beneficiary_activities_export, name='beneficiary_activities_export'),
 ]

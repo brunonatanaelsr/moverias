@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.utils import timezone
+from core.export_utils import export_universal, DataFormatter, ExportManager
 from .models import TaskBoard, Task, TaskColumn, TaskComment, TaskActivity
 from .forms import TaskBoardForm, TaskForm, TaskCommentForm
 import json
@@ -760,3 +761,190 @@ def task_reports(request):
         'board_stats': board_stats_with_percentage,
     }
     return render(request, 'tasks/reports.html', context)
+
+
+# =============================================================================
+# EXPORT VIEWS
+# =============================================================================
+
+@login_required
+def tasks_export(request):
+    """
+    Exporta lista de tarefas em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de tarefas
+    def format_task_data_custom(tasks):
+        headers = [
+            'Título', 'Descrição', 'Status', 'Prioridade', 'Responsável',
+            'Quadro', 'Coluna', 'Data de Criação', 'Data de Vencimento', 
+            'Data de Conclusão', 'Tags'
+        ]
+        
+        data = []
+        for task in tasks:
+            data.append([
+                task.title,
+                task.description[:100] + '...' if task.description and len(task.description) > 100 else (task.description or ''),
+                task.get_status_display() if hasattr(task, 'get_status_display') else task.status,
+                task.get_priority_display() if hasattr(task, 'get_priority_display') else task.priority,
+                str(task.assigned_to) if task.assigned_to else 'Não atribuído',
+                str(task.board) if hasattr(task, 'board') else '',
+                str(task.column) if hasattr(task, 'column') else '',
+                task.created_at.strftime('%d/%m/%Y %H:%M') if task.created_at else '',
+                task.due_date.strftime('%d/%m/%Y') if hasattr(task, 'due_date') and task.due_date else '',
+                task.completed_at.strftime('%d/%m/%Y %H:%M') if hasattr(task, 'completed_at') and task.completed_at else '',
+                ', '.join([tag.name for tag in task.tags.all()]) if hasattr(task, 'tags') else ''
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=Task,
+        formatter_method=format_task_data_custom,
+        filename_prefix="tasks",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Tarefas',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def board_tasks_export(request, board_id):
+    """
+    Exporta tarefas de um quadro específico
+    """
+    board = get_object_or_404(TaskBoard, id=board_id)
+    
+    # Verificar se o usuário tem acesso ao quadro
+    if board.owner != request.user and not board.members.filter(id=request.user.id).exists():
+        messages.error(request, 'Você não tem acesso a este quadro.')
+        return redirect('tasks:board_list')
+    
+    tasks = Task.objects.filter(board=board).order_by('-created_at')
+    
+    headers = [
+        'Título', 'Descrição', 'Status', 'Prioridade', 'Responsável',
+        'Coluna', 'Data de Criação', 'Data de Vencimento', 'Data de Conclusão',
+        'Tempo gasto (estimado)', 'Tags', 'Comentários'
+    ]
+    
+    data = []
+    for task in tasks:
+        # Contar comentários
+        comment_count = TaskComment.objects.filter(task=task).count()
+        
+        data.append([
+            task.title,
+            task.description[:150] + '...' if task.description and len(task.description) > 150 else (task.description or ''),
+            task.get_status_display() if hasattr(task, 'get_status_display') else task.status,
+            task.get_priority_display() if hasattr(task, 'get_priority_display') else task.priority,
+            str(task.assigned_to) if task.assigned_to else 'Não atribuído',
+            str(task.column) if hasattr(task, 'column') else '',
+            task.created_at.strftime('%d/%m/%Y %H:%M') if task.created_at else '',
+            task.due_date.strftime('%d/%m/%Y') if hasattr(task, 'due_date') and task.due_date else '',
+            task.completed_at.strftime('%d/%m/%Y %H:%M') if hasattr(task, 'completed_at') and task.completed_at else '',
+            f"{task.estimated_hours}h" if hasattr(task, 'estimated_hours') and task.estimated_hours else '',
+            ', '.join([tag.name for tag in task.tags.all()]) if hasattr(task, 'tags') else '',
+            f"{comment_count} comentário(s)"
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"tarefas_quadro_{board.name.replace(' ', '_')}_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, f"Tarefas - {board.name}")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Tarefas do Quadro - {board.name}',
+                'generated_at': timezone.now(),
+                'board': board,
+                'total_tasks': len(data),
+                'report_type': 'Tarefas por Quadro',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('tasks:board_detail', board_id=board.id)
+
+
+@login_required
+def user_tasks_export(request, user_id=None):
+    """
+    Exporta tarefas atribuídas a um usuário específico
+    """
+    if user_id:
+        from django.contrib.auth.models import User
+        user = get_object_or_404(User, id=user_id)
+        tasks = Task.objects.filter(assigned_to=user)
+        title_suffix = f" - {user.get_full_name() or user.username}"
+    else:
+        user = request.user
+        tasks = Task.objects.filter(assigned_to=request.user)
+        title_suffix = " - Minhas Tarefas"
+    
+    tasks = tasks.order_by('-created_at')
+    
+    headers = [
+        'Título', 'Descrição', 'Status', 'Prioridade', 'Quadro',
+        'Data de Criação', 'Data de Vencimento', 'Data de Conclusão',
+        'Dias em atraso', 'Progresso (%)'
+    ]
+    
+    data = []
+    today = timezone.now().date()
+    
+    for task in tasks:
+        # Calcular dias em atraso
+        if hasattr(task, 'due_date') and task.due_date and task.status != 'CONCLUIDA':
+            days_overdue = (today - task.due_date).days if today > task.due_date else 0
+        else:
+            days_overdue = 0
+        
+        # Calcular progresso (simplificado)
+        progress = 100 if task.status == 'CONCLUIDA' else (50 if task.status == 'EM_ANDAMENTO' else 0)
+        
+        data.append([
+            task.title,
+            task.description[:100] + '...' if task.description and len(task.description) > 100 else (task.description or ''),
+            task.get_status_display() if hasattr(task, 'get_status_display') else task.status,
+            task.get_priority_display() if hasattr(task, 'get_priority_display') else task.priority,
+            str(task.board) if hasattr(task, 'board') else '',
+            task.created_at.strftime('%d/%m/%Y') if task.created_at else '',
+            task.due_date.strftime('%d/%m/%Y') if hasattr(task, 'due_date') and task.due_date else '',
+            task.completed_at.strftime('%d/%m/%Y') if hasattr(task, 'completed_at') and task.completed_at else '',
+            f"{days_overdue} dias" if days_overdue > 0 else "No prazo",
+            f"{progress}%"
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"minhas_tarefas_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, "Minhas Tarefas")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Relatório de Tarefas{title_suffix}',
+                'generated_at': timezone.now(),
+                'user': user,
+                'total_tasks': len(data),
+                'report_type': 'Tarefas por Usuário',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('tasks:board_list')

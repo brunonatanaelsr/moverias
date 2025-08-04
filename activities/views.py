@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db.models import Count, Q, Avg, Max, Min
 from django.db.models.functions import TruncMonth
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.generic import (
     ListView, DetailView, CreateView, UpdateView, DeleteView
 )
@@ -20,6 +20,7 @@ from django.core.cache import cache
 from datetime import date, timedelta, datetime
 
 from core.decorators import CreateConfirmationMixin, EditConfirmationMixin, DeleteConfirmationMixin
+from core.export_utils import export_universal, DataFormatter, ExportManager
 
 @login_required
 def activities_dashboard(request):
@@ -690,3 +691,176 @@ def activities_report(request):
     }
     
     return render(request, 'activities/report.html', context)
+
+
+# =============================================================================
+# EXPORT VIEWS
+# =============================================================================
+
+@login_required
+def activities_export(request):
+    """
+    Exporta lista de atividades em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de atividades
+    def format_activity_data_custom(activities):
+        headers = [
+            'Nome da Atividade', 'Tipo', 'Data', 'Beneficiária', 'Responsável',
+            'Status', 'Total de Sessões', 'Frequência (%)', 'Observações', 'Data de Criação'
+        ]
+        
+        data = []
+        for activity in activities:
+            # Calcular estatísticas da atividade
+            total_sessions = activity.sessions.count() if hasattr(activity, 'sessions') else 0
+            attended_sessions = ActivityAttendance.objects.filter(
+                session__activity=activity, present=True
+            ).count()
+            attendance_rate = (attended_sessions / total_sessions * 100) if total_sessions > 0 else 0
+            
+            data.append([
+                activity.name,
+                activity.get_activity_type_display() if hasattr(activity, 'get_activity_type_display') else activity.activity_type,
+                activity.date.strftime('%d/%m/%Y') if hasattr(activity, 'date') and activity.date else '',
+                str(activity.beneficiary) if hasattr(activity, 'beneficiary') else '',
+                str(activity.responsible) if hasattr(activity, 'responsible') else '',
+                activity.get_status_display() if hasattr(activity, 'get_status_display') else activity.status,
+                total_sessions,
+                f"{attendance_rate:.1f}%",
+                activity.notes[:100] + '...' if hasattr(activity, 'notes') and activity.notes and len(activity.notes) > 100 else (activity.notes if hasattr(activity, 'notes') else ''),
+                activity.created_at.strftime('%d/%m/%Y %H:%M') if activity.created_at else ''
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=BeneficiaryActivity,
+        formatter_method=format_activity_data_custom,
+        filename_prefix="activities",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Atividades',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def activity_sessions_export(request, pk):
+    """
+    Exporta sessões de uma atividade específica
+    """
+    activity = get_object_or_404(BeneficiaryActivity, pk=pk)
+    sessions = ActivitySession.objects.filter(activity=activity).order_by('date')
+    
+    headers = [
+        'Data da Sessão', 'Duração (min)', 'Beneficiária Presente', 'Observações', 
+        'Feedback', 'Criado em'
+    ]
+    
+    data = []
+    for session in sessions:
+        # Verificar presença
+        attendance = ActivityAttendance.objects.filter(session=session).first()
+        present = "Sim" if attendance and attendance.present else "Não"
+        
+        # Buscar feedback
+        feedback = ActivityFeedback.objects.filter(session=session).first()
+        feedback_text = feedback.feedback if feedback else ""
+        
+        data.append([
+            session.date.strftime('%d/%m/%Y') if session.date else '',
+            session.duration if hasattr(session, 'duration') else '',
+            present,
+            session.notes[:100] + '...' if hasattr(session, 'notes') and session.notes and len(session.notes) > 100 else (session.notes if hasattr(session, 'notes') else ''),
+            feedback_text[:100] + '...' if feedback_text and len(feedback_text) > 100 else feedback_text,
+            session.created_at.strftime('%d/%m/%Y %H:%M') if session.created_at else ''
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"sessoes_atividade_{activity.name.replace(' ', '_')}_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, f"Sessões - {activity.name}")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Sessões da Atividade - {activity.name}',
+                'generated_at': timezone.now(),
+                'activity': activity,
+                'total_sessions': len(data),
+                'report_type': 'Sessões de Atividade',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('activities:activity_detail', pk=activity.pk)
+
+
+@login_required
+def beneficiary_activities_export(request, beneficiary_id):
+    """
+    Exporta todas as atividades de uma beneficiária específica
+    """
+    beneficiary = get_object_or_404(Beneficiary, pk=beneficiary_id)
+    activities = BeneficiaryActivity.objects.filter(beneficiary=beneficiary).order_by('-created_at')
+    
+    headers = [
+        'Nome da Atividade', 'Tipo', 'Data de Início', 'Status', 'Total de Sessões',
+        'Sessões Participadas', 'Frequência (%)', 'Última Sessão', 'Observações'
+    ]
+    
+    data = []
+    for activity in activities:
+        # Calcular estatísticas
+        total_sessions = activity.sessions.count() if hasattr(activity, 'sessions') else 0
+        attended_sessions = ActivityAttendance.objects.filter(
+            session__activity=activity, present=True
+        ).count()
+        attendance_rate = (attended_sessions / total_sessions * 100) if total_sessions > 0 else 0
+        
+        # Última sessão
+        last_session = activity.sessions.order_by('-date').first() if hasattr(activity, 'sessions') else None
+        last_session_date = last_session.date.strftime('%d/%m/%Y') if last_session and last_session.date else 'N/A'
+        
+        data.append([
+            activity.name,
+            activity.get_activity_type_display() if hasattr(activity, 'get_activity_type_display') else activity.activity_type,
+            activity.created_at.strftime('%d/%m/%Y') if activity.created_at else '',
+            activity.get_status_display() if hasattr(activity, 'get_status_display') else activity.status,
+            total_sessions,
+            attended_sessions,
+            f"{attendance_rate:.1f}%",
+            last_session_date,
+            activity.notes[:100] + '...' if hasattr(activity, 'notes') and activity.notes and len(activity.notes) > 100 else (activity.notes if hasattr(activity, 'notes') else '')
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"atividades_beneficiaria_{beneficiary.full_name.replace(' ', '_')}_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, f"Atividades - {beneficiary.full_name}")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': f'Atividades de {beneficiary.full_name}',
+                'generated_at': timezone.now(),
+                'beneficiary': beneficiary,
+                'total_activities': len(data),
+                'report_type': 'Atividades por Beneficiária',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('members:beneficiary_detail', pk=beneficiary.pk)

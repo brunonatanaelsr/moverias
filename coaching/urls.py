@@ -25,4 +25,9 @@ urlpatterns = [
     
     # Reports
     path('reports/', views.CoachingReportsView.as_view(), name='reports'),
+    
+    # Export URLs
+    path('export/action-plans/', views.action_plans_export, name='action_plans_export'),
+    path('export/wheels/', views.wheels_of_life_export, name='wheels_export'),
+    path('export/beneficiary/<int:beneficiary_id>/', views.beneficiary_coaching_export, name='beneficiary_coaching_export'),
 ]

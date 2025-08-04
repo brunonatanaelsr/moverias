@@ -31,6 +31,11 @@ urlpatterns = [
     path('evaluations/', views.WorkshopEvaluationListView.as_view(), name='evaluation-list'),
     path('evaluations/create/', views.WorkshopEvaluationCreateView.as_view(), name='evaluation-create'),
     
+    # Export URLs
+    path('export/', views.workshops_export, name='workshops-export'),
+    path('<int:pk>/export/enrollments/', views.workshop_enrollments_export, name='workshop-enrollments-export'),
+    path('<int:pk>/export/attendance/', views.workshop_attendance_export, name='workshop-attendance-export'),
+    
     # API endpoints
     path('api/stats/<int:workshop_id>/', views.get_workshop_stats, name='workshop-stats'),
 ]

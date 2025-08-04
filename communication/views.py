@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
+from core.export_utils import export_universal, DataFormatter, ExportManager
 
 from .models import (
     Announcement, InternalMemo, Newsletter, 
@@ -460,3 +461,224 @@ def dashboard_stats_api(request):
     }
     
     return JsonResponse(stats)
+
+
+# =============================================================================
+# EXPORT VIEWS
+# =============================================================================
+
+@login_required
+def announcements_export(request):
+    """
+    Exporta lista de comunicados em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de comunicados
+    def format_announcement_data(announcements):
+        headers = [
+            'Título', 'Conteúdo', 'Status', 'Data de Publicação',
+            'Data de Criação', 'Autor', 'Prioridade', 'Categoria',
+            'Visualizações', 'Ativo'
+        ]
+        
+        data = []
+        for announcement in announcements:
+            data.append([
+                announcement.title,
+                announcement.content[:100] + '...' if announcement.content and len(announcement.content) > 100 else (announcement.content or ''),
+                'Publicado' if announcement.is_active and announcement.publish_date <= timezone.now() else 'Rascunho',
+                announcement.publish_date.strftime('%d/%m/%Y %H:%M') if announcement.publish_date else '',
+                announcement.created_at.strftime('%d/%m/%Y %H:%M') if announcement.created_at else '',
+                str(announcement.author) if hasattr(announcement, 'author') and announcement.author else '',
+                getattr(announcement, 'priority', 'Normal'),
+                getattr(announcement, 'category', 'Geral'),
+                getattr(announcement, 'views_count', 0) or 0,
+                'Sim' if announcement.is_active else 'Não'
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=Announcement,
+        formatter_method=format_announcement_data,
+        filename_prefix="comunicados",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Comunicados',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def messages_export(request):
+    """
+    Exporta lista de mensagens de comunicação em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de mensagens
+    def format_message_data(messages):
+        headers = [
+            'Título', 'Conteúdo', 'Status', 'Tipo', 'Destinatário',
+            'Data de Envio', 'Data de Criação', 'Autor', 'Lida'
+        ]
+        
+        data = []
+        for message in messages:
+            data.append([
+                getattr(message, 'title', '') or getattr(message, 'subject', ''),
+                message.content[:100] + '...' if message.content and len(message.content) > 100 else (message.content or ''),
+                message.get_status_display() if hasattr(message, 'get_status_display') else message.status,
+                getattr(message, 'message_type', 'Geral'),
+                str(message.recipient) if hasattr(message, 'recipient') and message.recipient else 'Todos',
+                message.sent_at.strftime('%d/%m/%Y %H:%M') if hasattr(message, 'sent_at') and message.sent_at else '',
+                message.created_at.strftime('%d/%m/%Y %H:%M') if message.created_at else '',
+                str(message.sender) if hasattr(message, 'sender') and message.sender else '',
+                'Sim' if getattr(message, 'is_read', False) else 'Não'
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=CommunicationMessage,
+        formatter_method=format_message_data,
+        filename_prefix="mensagens_comunicacao",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Mensagens de Comunicação',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def newsletters_export(request):
+    """
+    Exporta lista de newsletters em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de newsletters
+    def format_newsletter_data(newsletters):
+        headers = [
+            'Título', 'Descrição', 'Status', 'Data de Envio',
+            'Data de Criação', 'Autor', 'Destinatários', 'Taxa de Abertura'
+        ]
+        
+        data = []
+        for newsletter in newsletters:
+            data.append([
+                newsletter.title,
+                newsletter.description[:100] + '...' if hasattr(newsletter, 'description') and newsletter.description and len(newsletter.description) > 100 else (getattr(newsletter, 'description', '') or ''),
+                newsletter.get_status_display() if hasattr(newsletter, 'get_status_display') else getattr(newsletter, 'status', 'Rascunho'),
+                newsletter.sent_at.strftime('%d/%m/%Y %H:%M') if hasattr(newsletter, 'sent_at') and newsletter.sent_at else '',
+                newsletter.created_at.strftime('%d/%m/%Y %H:%M') if newsletter.created_at else '',
+                str(newsletter.author) if hasattr(newsletter, 'author') and newsletter.author else '',
+                getattr(newsletter, 'recipients_count', 0) or 0,
+                f"{getattr(newsletter, 'open_rate', 0) or 0}%"
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=Newsletter,
+        formatter_method=format_newsletter_data,
+        filename_prefix="newsletters",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Newsletters',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def suggestions_export(request):
+    """
+    Exporta lista de sugestões da caixa de sugestões em CSV, Excel ou PDF
+    """
+    # Função personalizada para formatar dados de sugestões
+    def format_suggestion_data(suggestions):
+        headers = [
+            'Título', 'Descrição', 'Status', 'Categoria', 'Autor',
+            'Data de Criação', 'Data de Resposta', 'Prioridade', 'Votos'
+        ]
+        
+        data = []
+        for suggestion in suggestions:
+            data.append([
+                getattr(suggestion, 'title', '') or getattr(suggestion, 'subject', ''),
+                suggestion.description[:100] + '...' if hasattr(suggestion, 'description') and suggestion.description and len(suggestion.description) > 100 else (getattr(suggestion, 'description', '') or ''),
+                suggestion.get_status_display() if hasattr(suggestion, 'get_status_display') else getattr(suggestion, 'status', 'Pendente'),
+                getattr(suggestion, 'category', 'Geral'),
+                str(suggestion.author) if hasattr(suggestion, 'author') and suggestion.author else 'Anônimo',
+                suggestion.created_at.strftime('%d/%m/%Y %H:%M') if suggestion.created_at else '',
+                suggestion.responded_at.strftime('%d/%m/%Y %H:%M') if hasattr(suggestion, 'responded_at') and suggestion.responded_at else '',
+                getattr(suggestion, 'priority', 'Normal'),
+                getattr(suggestion, 'votes_count', 0) or 0
+            ])
+        
+        return data, headers
+    
+    return export_universal(
+        request=request,
+        model_class=SuggestionBox,
+        formatter_method=format_suggestion_data,
+        filename_prefix="sugestoes",
+        template_name="core/exports/pdf_report.html",
+        extra_context={
+            'report_type': 'Caixa de Sugestões',
+            'user': request.user
+        }
+    )
+
+
+@login_required
+def communication_analytics_export(request):
+    """
+    Exporta relatório de analytics de comunicação
+    """
+    # Coletar dados de analytics
+    analytics = CommunicationAnalytics.objects.all().order_by('-created_at')
+    
+    headers = [
+        'Data', 'Tipo de Conteúdo', 'Título', 'Visualizações',
+        'Engajamento', 'Taxa de Clique', 'Taxa de Abertura',
+        'Compartilhamentos', 'Comentários'
+    ]
+    
+    data = []
+    for analytic in analytics:
+        data.append([
+            analytic.created_at.strftime('%d/%m/%Y') if analytic.created_at else '',
+            getattr(analytic, 'content_type', 'N/A'),
+            getattr(analytic, 'content_title', 'N/A'),
+            getattr(analytic, 'views', 0) or 0,
+            f"{getattr(analytic, 'engagement_rate', 0) or 0}%",
+            f"{getattr(analytic, 'click_rate', 0) or 0}%",
+            f"{getattr(analytic, 'open_rate', 0) or 0}%",
+            getattr(analytic, 'shares', 0) or 0,
+            getattr(analytic, 'comments', 0) or 0
+        ])
+    
+    export_format = request.GET.get('format', 'csv')
+    filename = f"analytics_comunicacao_{timezone.now().strftime('%Y%m%d')}"
+    
+    try:
+        if export_format == 'csv':
+            return ExportManager.export_to_csv(data, filename, headers)
+        elif export_format == 'excel':
+            return ExportManager.export_to_excel(data, filename, headers, "Analytics de Comunicação")
+        elif export_format == 'pdf':
+            context = {
+                'data': data,
+                'headers': headers,
+                'title': 'Relatório de Analytics de Comunicação',
+                'generated_at': timezone.now(),
+                'total_records': len(data),
+                'report_type': 'Analytics de Comunicação',
+                'user': request.user
+            }
+            return ExportManager.export_to_pdf('core/exports/pdf_report.html', context, filename)
+    except Exception as e:
+        messages.error(request, f'Erro ao exportar dados: {str(e)}')
+        return redirect('communication:dashboard')

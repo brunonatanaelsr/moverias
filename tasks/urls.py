@@ -23,6 +23,12 @@ urlpatterns = [
     # Relatórios
     path('reports/', views.task_reports, name='reports'),
     
+    # Export URLs
+    path('export/', views.tasks_export, name='tasks_export'),
+    path('boards/<int:board_id>/export/', views.board_tasks_export, name='board_tasks_export'),
+    path('export/user/<int:user_id>/', views.user_tasks_export, name='user_tasks_export'),
+    path('export/my-tasks/', views.user_tasks_export, name='my_tasks_export'),
+    
     # AJAX Endpoints
     path('api/task/create/', views.task_create_ajax, name='task_create_ajax'),
     path('api/task/update-column/', views.task_update_column, name='task_update_column'),

@@ -66,9 +66,29 @@ if not DEBUG:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY')
 
-# Simple secret key validation
-if not DEBUG and SECRET_KEY == '':
-    raise ValueError("SECRET_KEY must be set in production environment")
+# Enhanced secret key validation
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ValueError("SECRET_KEY must be set in production environment")
+    else:
+        # Gerar SECRET_KEY para desenvolvimento se não existir
+        import secrets
+        import string
+        SECRET_KEY = ''.join(secrets.choice(string.ascii_letters + string.digits + '!@#$%^&*') for _ in range(50))
+        print("⚠️ WARNING: Using auto-generated SECRET_KEY for development")
+
+# Validar força da SECRET_KEY
+if len(SECRET_KEY) < 50:
+    if not DEBUG:
+        raise ValueError("SECRET_KEY must have at least 50 characters in production")
+    else:
+        print("⚠️ WARNING: SECRET_KEY is too short for production use")
+
+if SECRET_KEY.startswith('django-insecure-'):
+    if not DEBUG:
+        raise ValueError("Cannot use development SECRET_KEY in production")
+    else:
+        print("⚠️ WARNING: Using development SECRET_KEY")
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
     'localhost', 
@@ -152,8 +172,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 SITE_ID = 1
 
 MIDDLEWARE = [
-    'core.middleware.AutoConfirmationMiddleware',
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',  # Must be first for security
     'core.middleware.SecurityHeadersMiddleware',  # ENHANCED: Custom security headers
     'core.middleware.ErrorLoggingMiddleware',  # Custom error logging
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -167,7 +186,7 @@ MIDDLEWARE = [
     'notifications.realtime.NotificationMiddleware',  # Notification context
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.SecurityMiddleware',  # Additional security headers
+    'core.middleware.AutoConfirmationMiddleware',  # Moved after auth
 ]
 
 # Custom User Model
@@ -593,7 +612,7 @@ if not DEBUG:
     # Ensure ATOMIC_REQUESTS is set in production overrides too
     DATABASES['default']['ATOMIC_REQUESTS'] = True
     
-    # Static files compression
+    # Static files compression - PERFORMANCE OPTIMIZATION
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
     
     # Template caching - disable APP_DIRS when using custom loaders
@@ -604,6 +623,9 @@ if not DEBUG:
             'django.template.loaders.app_directories.Loader',
         ]),
     ]
+else:
+    # Development: keep simple storage for easier debugging
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Swagger/OpenAPI Configuration
 SWAGGER_SETTINGS = {

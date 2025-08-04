@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-size: 10px;
+                color: #666;
+            }
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #366092;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #366092;
+            font-size: 18px;
+            margin: 0;
+            font-weight: bold;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin: 5px 0;
+        }
+        
+        .info-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #366092;
+        }
+        
+        .info-section h3 {
+            margin: 0 0 10px 0;
+            color: #366092;
+            font-size: 14px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .info-item {
+            display: flex;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            width: 120px;
+            color: #555;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+        
+        table th {
+            background-color: #366092;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #ddd;
+        }
+        
+        table td {
+            padding: 6px 8px;
+            border: 1px solid #ddd;
+        }
+        
+        table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        table tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        .summary-box {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-box h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 16px;
+            font-weight: bold;
+            color: #366092;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <div class="subtitle">Move Marias - Sistema de Gestão de Beneficiárias</div>
+        <div class="subtitle">Gerado em: {{ generated_at|date:"d/m/Y H:i" }}</div>
+    </div>
+    
+    {% if summary_stats %}
+    <div class="summary-box">
+        <h4>Resumo Executivo</h4>
+        <div class="stats-grid">
+            {% for stat in summary_stats %}
+            <div class="stat-card">
+                <div class="stat-number">{{ stat.value }}</div>
+                <div class="stat-label">{{ stat.label }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if period_info %}
+    <div class="info-section">
+        <h3>Informações do Relatório</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Período:</span>
+                <span class="info-value">{{ period_info.start }} a {{ period_info.end }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Total de registros:</span>
+                <span class="info-value">{{ data|length }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Usuário:</span>
+                <span class="info-value">{{ user.get_full_name|default:user.username }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tipo de relatório:</span>
+                <span class="info-value">{{ report_type|default:"Geral" }}</span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if data %}
+    <table>
+        <thead>
+            <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell|default:"-" }}</td>
+                {% endfor %}
+            </tr>
+            {% if forloop.counter|divisibleby:25 and not forloop.last %}
+            </tbody>
+        </table>
+        <div class="page-break"></div>
+        <table>
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="info-section">
+        <h3>Nenhum dado encontrado</h3>
+        <p>Não foram encontrados registros para os critérios selecionados.</p>
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>Move Marias - Sistema de Gestão de Beneficiárias</p>
+        <p>Relatório gerado automaticamente em {{ generated_at|date:"d/m/Y \à\s H:i" }}</p>
+    </div>
+</body>
+</html>

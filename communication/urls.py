@@ -48,6 +48,13 @@ urlpatterns = [
     # Analytics
     path('analytics/', views.communication_analytics, name='analytics'),
     
+    # Export URLs
+    path('export/announcements/', views.announcements_export, name='announcements_export'),
+    path('export/messages/', views.messages_export, name='messages_export'),
+    path('export/newsletters/', views.newsletters_export, name='newsletters_export'),
+    path('export/suggestions/', views.suggestions_export, name='suggestions_export'),
+    path('export/analytics/', views.communication_analytics_export, name='analytics_export'),
+    
     # Configurações
     path('settings/', views.communication_settings, name='settings'),
     
