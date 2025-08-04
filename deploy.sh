@@ -181,9 +181,12 @@ fi
 python manage.py migrate
 python manage.py collectstatic --noinput
 
+# Criar superusuário bruno@move.com
+python create_superuser.py
+
 EOF
 
-    log_success "Aplicação deployada!"
+    log_success "Aplicação deployada com superusuário bruno@move.com criado!"
 }
 
 setup_nginx() {

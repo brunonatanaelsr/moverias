@@ -128,6 +128,17 @@ sudo systemctl status nginx redis-server
 
 # Testar aplicação
 curl -I https://move.squadsolucoes.com.br
+
+# Testar login do admin
+curl -I https://move.squadsolucoes.com.br/admin/
+```
+
+### **4. Acesso ao Sistema**
+```bash
+# Superusuário criado automaticamente:
+# 📧 Email: bruno@move.com
+# 🔑 Senha: 15002031
+# 🌐 Admin: https://move.squadsolucoes.com.br/admin/
 ```
 
 ---
@@ -166,8 +177,9 @@ curl -I https://move.squadsolucoes.com.br
 1. 🔄 Executar script de deploy: `./deploy.sh`
 2. 🔑 Configurar chaves secretas no `.env`
 3. 🧪 Executar testes de validação
-4. 📊 Verificar monitoramento
-5. 📱 Notificar equipe do deploy
+4. � Verificar login admin: bruno@move.com
+5. �📊 Verificar monitoramento
+6. 📱 Notificar equipe do deploy
 
 ### **Nas Primeiras 24h**
 1. 👀 Monitorar logs em tempo real
